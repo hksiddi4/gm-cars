@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <%- include('../partials/head'); %>
+</head>
+
+<body>
+    <%- include('../partials/sidebar'); %>
+
+      <div class="custom-container">
+          <div class="row">
+            <h1 style="text-align: center; text-decoration: underline;">ZL1 Collector's Edition</h1>
+            <h4 style="text-align: center;"><%= locals.ce_data.length %>/350</h4>
+            <h7 style="text-align: center;">Mexico-bound vehicles are not all known</h7>
+            <!-- ZL1 CE Table -->
+            <div class="table-responsive">
+              <% if (locals.ce_data) { %>
+              <table class="table table-sm table-hover border border shadow" id="allTable" style="text-align: center;">
+                <thead>
+                  <tr style="--bs-table-bg: #b8b8b8; --bs-table-color: #434343;">
+                    <th scope="col">VIN</th>
+                    <th scope="col">Body</th>
+                    <th scope="col">Transmission</th>
+                    <th scope="col" style="font-style: italic;" id="msrpHeader">MSRP<span id="msrpSortIndicator"></span></th>
+                    <th scope="col">Markup</th>
+                    <th scope="col">###/350</th>
+                    <th scope="col">Owner</th>
+                    <th scope="col">Country</th>
+                    <th scope="col">Dealer</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% locals.ce_data.forEach(function(data) { %>
+                    <tr style="cursor: pointer;" onmousedown="handleMouseDown(event);" onclick="handleRowClick('/search?vin=<%= data.VIN %>');">
+                      <td scope="row"><%= data.VIN %></td>
+                      <td scope="row"><%= data.BODY %></td>
+                      <td scope="row"><%= data.TRANS %></td>
+                      <td scope="row" style="text-align: right;" class="msrp"><span class="accounting"><%= data.MSRP %></span></td>
+                      <td scope="row" style="text-align: right;"><span class="accounting"><%= data.MARKUP %></span></td>
+                      <td scope="row"><%= data.NUM ? data.NUM.toString().padStart(3, '0') : '' %></td>
+                      <td scope="row"><%= data.OWNER %></td>
+                      <td scope="row">
+                        <% if (data.STATE === "AB" || data.STATE === "BC" || data.STATE === "MB" || data.STATE === "NB" || data.STATE === "NF" || data.STATE === "NS" || data.STATE === "NT" || data.STATE === "OH" || data.STATE === "ON" || data.STATE === "PE" || data.STATE === "PQ" || data.STATE === "SK") { %>
+                          <img src="../img/canada_flag.png" alt="Canada" width="20">
+                        <% } else if (data.STATE === "PU" || data.STATE === "JA" || data.STATE === "SI" || data.STATE === null) { %>
+                          <img src="../img/mexico_flag.png" alt="Mexico" width="20"
+                          <% } else { %>
+                          <img src="../img/usa_flag.png" alt="USA" width="20"
+                        <% } %>
+                      </td>
+                      <td scope="row"><%= data.DEALER %></td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+              <% } %>
+            </div>
+          </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    let startX;
+
+    function handleMouseDown(event) {
+      // Store the starting X coordinate of the mouse
+      startX = event.clientX;
+    }
+
+    function handleRowClick(url) {
+      // Calculate the horizontal distance the mouse has moved
+      const distance = Math.abs(event.clientX - startX);
+
+      // If the mouse has moved more than 5 pixels horizontally, consider it as text selection
+      if (distance > 5) {
+        return;
+      }
+
+      // Navigate to the specified URL
+      window.location.href = url;
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+      const msrpHeader = document.getElementById("msrpHeader");
+      const msrpSortIndicator = document.getElementById("msrpSortIndicator");
+      let ascending = false;
+
+      msrpHeader.addEventListener("click", function() {
+          const rows = document.querySelectorAll(".msrp");
+          const sortedRows = Array.from(rows).sort((a, b) => {
+              const priceA = parseFloat(a.innerText.replace(/[^0-9.-]+/g, ''));
+              const priceB = parseFloat(b.innerText.replace(/[^0-9.-]+/g, ''));
+              return ascending ? priceA - priceB : priceB - priceA;
+          });
+          ascending = !ascending;
+          const tbody = document.querySelector("tbody");
+          tbody.innerHTML = "";
+          sortedRows.forEach(row => {
+              tbody.appendChild(row.parentElement);
+          });
+
+          msrpSortIndicator.innerText = ascending ? '↑' : '↓';
+      });
+    });
+
+  </script>
+</body>
+
+</html>

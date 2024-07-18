@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <%- include('../partials/head'); %>
+</head>
+
+<body>
+  <%- include('../partials/sidebar'); %>
+
+    <div class="container">
+        <div class="row">
+          <% if (vin_data.length > 0) { %>
+            <h1><%= vin_data[0].VIN %></h1>
+            <a href="https://cws.gm.com/vs-cws/vehshop/v2/vehicle/windowsticker?vin=<%= vin_data[0].VIN %>" target="_blank">
+                <i class="bi bi-file-earmark-text">Window Sticker</i>
+            </a>
+            <table class="table table-hover border border shadow" id="vinTable">
+              <tbody>
+                  <% locals.vin_data.forEach(function(data) { %>
+                  <tr>
+                      <td><strong>ORDER NUMBER:</strong></td>
+                      <td><%= data.ORDERNUM %></td>
+                  </tr>
+                  <tr>
+                      <td><strong>YEAR:</strong></td>
+                      <td><%= data.YEAR %></td>
+                  </tr>
+                  <tr>
+                      <td><strong>TRIM:</strong></td>
+                      <td><%= data.TRIM %></td>
+                  </tr>
+                  <tr>
+                      <td><strong>BODY:</strong></td>
+                      <td><%= data.BODY %></td>
+                  </tr>
+                  <tr>
+                      <td><strong>TRANS:</strong></td>
+                      <td><%= data.TRANS %></td>
+                  </tr>
+                  <tr>
+                      <td><strong>COLOR:</strong></td>
+                      <td><%= data.COLOR %></td>
+                  </tr>
+                  <tr>
+                      <td><strong>MSRP:</strong></td>
+                      <td>$<%= data.MSRP %></td>
+                  </tr>
+                  <tr>
+                      <td><strong>DEALER:</strong></td>
+                      <td><%= data.DEALER %></td>
+                  </tr>
+                  <tr>
+                      <td><strong>LOCATION:</strong></td>
+                      <td><%= data.CITY +', ' + data.STATE %></td>
+                  </tr>
+                  <% }) %>
+              </tbody>
+            </table>
+            <table class="table table-hover border border shadow" id="rpoTable">
+              <thead>
+                  <tr>
+                      <th scope="col">RPO Code</th>
+                      <th scope="col">Description</th>
+                  </tr>
+              </thead>
+              <tbody>
+                  <% locals.vin_data.forEach(function(data) { %>
+                      <% if (data.RPOS) { %>
+                          <% data.RPOS.split(' ').forEach(function(rpo) { %>
+                              <tr>
+                                  <td><%= rpo %></td>
+                                  <td><%= rpoDescriptions[rpo] || "Description not found" %></td>
+                              </tr>
+                          <% }) %>
+                      <% } else { %>
+                          <tr>
+                              <td colspan="2">No RPOS available</td>
+                          </tr>
+                      <% } %>
+                  <% }) %>
+              </tbody>
+            </table>
+          <% } else { %>
+            <h2>No VIN data found</h2>
+          <% } %>
+        </div>
+    </div>
+  </div>
+</div>
+</body>
+
+</html>

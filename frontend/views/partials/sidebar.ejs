@@ -1,0 +1,84 @@
+<div class="row g-0 flex-nowrap">
+<div class="sidebar col-md-3 col-xl-2 px-sm-0 px-0" role="navigation">
+    <div class="d-flex flex-column align-items-center align-items-sm-start px-3 min-vh-100 justify-content-center">
+        <a href="/" class="d-flex mx-auto" style="margin-bottom: 10px;">
+            <img id="rotatingImage" width="190" height="95" class="mx-auto"/>
+        </a>
+        <!-- Navigation links begins -->
+        <ul class="nav nav-pills btn-toggle-nav col-auto flex-column mb-sm-auto mb-0 align-items-center align-items-sm-start" id="menu" style="display: block; width: 100%;">
+            <!-- All -->
+            <li class="nav-item">
+                <a href="/all" class="nav-link align-middle px-2 mb-2 csslink">
+                    <i class="fs-4 bi bi-car-front-fill"></i> <span class="ms-1 d-none d-sm-inline">All Builds</span>
+                </a>
+            </li>
+            <!-- MSRP -->
+            <li class="nav-item">
+                <a href="/msrp" class="nav-link align-middle px-2 mb-2 csslink">
+                    <i class="fs-4 bi bi-currency-dollar"></i> <span class="ms-1 d-none d-sm-inline">Highest MSRPs</span>
+                </a>
+            </li>
+            <!-- CEZL1 -->
+            <li class="nav-item">
+                <a href="/panther350" class="nav-link align-middle px-2 mb-2 csslink">
+                    <i class="fs-4 bi bi-collection-fill"></i> <span class="ms-1 d-none d-sm-inline">ZL1 Collector's Edition</span>
+                </a>
+            </li>
+            <!-- Filter -->
+            <li class="nav-item">
+                <a href="/test" class="nav-link align-middle px-2 mb-2 csslink">
+                    <i class="fs-4 bi bi-braces"></i> <span class="ms-1 d-none d-sm-inline">TEST</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
+<div class="content col">
+    <!-- Page header -->
+    <h1 class="p-4" style="background-color: #000000">
+      <div class="container-fluid">
+          <div class="row align-items-center">
+              <div class="col">
+                  <a href="/" style="color: #ffffff; text-decoration: none;">
+                      Camaro 2020-2024 Build Counts
+                  </a>
+              </div>
+              <div class="col-auto">
+                <form id="searchVIN" action="/search" method="GET" class="d-flex">
+                  <input type="text" id="searchInput" name="vin" class="form-control" placeholder="Search VIN...">
+                  <button type="submit" class="btn btn-secondary">Search</button>
+                </form>
+              </div>
+          </div>
+      </div>
+    </h1>
+
+<script>
+    var imageURLs = [
+        '../img/camaro_sidebar_1.png',
+        '../img/camaro_sidebar_2.png',
+        '../img/camaro_sidebar_3.png',
+        '../img/camaro_sidebar_4.png',
+        '../img/camaro_sidebar_5.png',
+        '../img/camaro_sidebar_6.png',
+        '../img/camaro_sidebar_7.png',
+    ]
+
+    var randomIndex = Math.floor(Math.random() * imageURLs.length)
+
+    document.getElementById('rotatingImage').src = imageURLs[randomIndex]
+
+
+    // Get the current URL path
+    var path = window.location.pathname;
+
+    // Get all navigation links
+    var navLinks = document.querySelectorAll('.csslink');
+
+    // Loop through the links and add the csslinkactive class to the active link
+    for (var i = 0; i < navLinks.length; i++) {
+        if (navLinks[i].getAttribute('href') === path) {
+            navLinks[i].classList.add('csslinkactive');
+        }
+    }
+</script>

@@ -1,3 +1,3 @@
-# Camaro/CT4/CT5 2020-2024 Data
+# Website for Camaro/CT4/CT5 scraped data to be displayed
 
-Pulled from GM Window Sticker API
+Scraped by [vin-finder](https://github.com/hksiddi4/vin-finder)

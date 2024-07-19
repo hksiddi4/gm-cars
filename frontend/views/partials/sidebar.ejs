@@ -8,8 +8,8 @@
         <ul class="nav nav-pills btn-toggle-nav col-auto flex-column mb-sm-auto mb-0 align-items-center align-items-sm-start" id="menu" style="display: block; width: 100%;">
             <!-- All -->
             <li class="nav-item">
-                <a href="/all" class="nav-link align-middle px-2 mb-2 csslink">
-                    <i class="fs-4 bi bi-car-front-fill"></i> <span class="ms-1 d-none d-sm-inline">All Builds</span>
+                <a href="/rand" class="nav-link align-middle px-2 mb-2 csslink">
+                    <i class="fs-4 bi bi-question-lg"></i> <span class="ms-1 d-none d-sm-inline">Random</span>
                 </a>
             </li>
             <!-- MSRP -->
@@ -18,19 +18,25 @@
                     <i class="fs-4 bi bi-currency-dollar"></i> <span class="ms-1 d-none d-sm-inline">Highest MSRPs</span>
                 </a>
             </li>
-            <!-- CEZL1 -->
-            <li class="nav-item">
-                <a href="/panther350" class="nav-link align-middle px-2 mb-2 csslink">
-                    <i class="fs-4 bi bi-collection-fill"></i> <span class="ms-1 d-none d-sm-inline">ZL1 Collector's Edition</span>
-                </a>
-            </li>
-            <!-- Filter -->
-            <li class="nav-item">
-                <a href="/test" class="nav-link align-middle px-2 mb-2 csslink">
-                    <i class="fs-4 bi bi-braces"></i> <span class="ms-1 d-none d-sm-inline">TEST</span>
-                </a>
-            </li>
         </ul>
+        <div class="filter-section mt-4">
+            <h5>Model</h5>
+            <form id="modelFilter">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="Camaro" id="Camaro" name="model">
+                    <label class="form-check-label" for="Camaro">Camaro</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="CT4" id="CT4" name="model">
+                    <label class="form-check-label" for="CT4">CT4</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="CT5" id="CT5" name="model">
+                    <label class="form-check-label" for="CT5">CT5</label>
+                </div>
+                <button type="submit" class="btn btn-primary mt-2">Apply Filter</button>
+            </form>
+        </div>
     </div>
 </div>
 <div class="content col">
@@ -40,13 +46,13 @@
           <div class="row align-items-center">
               <div class="col">
                   <a href="/" style="color: #ffffff; text-decoration: none;">
-                      Camaro 2020-2024 Build Counts
+                      GM 2020-2024 Build Counts
                   </a>
               </div>
               <div class="col-auto">
                 <form id="searchVIN" action="/search" method="GET" class="d-flex">
                   <input type="text" id="searchInput" name="vin" class="form-control" placeholder="Search VIN...">
-                  <button type="submit" class="btn btn-secondary">Search</button>
+                  <button type="submit" class="btn btn-secondary ms-2">Search</button>
                 </form>
               </div>
           </div>
@@ -68,7 +74,6 @@
 
     document.getElementById('rotatingImage').src = imageURLs[randomIndex]
 
-
     // Get the current URL path
     var path = window.location.pathname;
 
@@ -81,4 +86,14 @@
             navLinks[i].classList.add('csslinkactive');
         }
     }
+
+    // Filter form submission handler
+    document.getElementById('modelFilter').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const formData = new FormData(event.target);
+        const selectedModels = formData.getAll('model');
+        const params = new URLSearchParams();
+        selectedModels.forEach(model => params.append('model', model));
+        window.location.href = '/msrp?' + params.toString();
+    });
 </script>

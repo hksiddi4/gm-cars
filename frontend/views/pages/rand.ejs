@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <%- include('../partials/head'); %>
+</head>
+
+<body>
+    <%- include('../partials/sidebar'); %>
+
+      <div class="custom-container">
+        <div class="row">
+          <h1 style="text-align: center; text-decoration: underline;">Random Cars</h1>
+        </div>
+        <div class="row">
+          <!-- All Table -->
+          <div class="table-responsive">
+            <% if (locals.all_data) { %>
+            <table class="table table-sm table-hover border border shadow" id="allTable" style="text-align: center;">
+              <thead>
+                <tr style="--bs-table-bg: #b8b8b8; --bs-table-color: #434343;">
+                  <th scope="col">VIN</th>
+                  <th scope="col">Year</th>
+                  <th scope="col">Model</th>
+                  <th scope="col">Body</th>
+                  <th scope="col">Trim</th>
+                  <th scope="col">Engine</th>
+                  <th scope="col">Transmission</th>
+                  <th scope="col">Drivetrain</th>
+                  <th scope="col">Exterior Color</th>
+                  <th scope="col">MSRP</th>
+                  <th scope="col">Country</th>
+                  <th scope="col">Dealer</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% locals.all_data.forEach(function(data) { %>
+                  <tr style="cursor: pointer;" onmousedown="handleMouseDown(event);" onclick="handleRowClick('/search?vin=<%= data.vin %>');">
+                    <td scope="row"><%= data.vin %></td>
+                    <td scope="row"><%= data.modelYear %></td>
+                    <td scope="row"><%= data.model %></td>
+                    <td scope="row"><%= data.body %></td>
+                    <td scope="row"><%= data.trim %></td>
+                    <td scope="row"><%= data.vehicleEngine %></td>
+                    <td scope="row"><%= data.transmission %></td>
+                    <td scope="row"><%= data.drivetrain %></td>
+                    <td scope="row"><%= data.exterior_color %></td>
+                    <td scope="row" style="text-align: right;"><%= data.msrp %></td>
+                    <td scope="row">
+                      <% const state = data.location.split(',')[1].trim().split(' ')[0];
+                        if (["AB", "BC", "MB", "NF", "NT", "ON", "PE", "PQ", "SK"].includes(state)) { %>
+                        <img src="../img/canada_flag.png" alt="Canada" width="20">
+                      <% } else { %>
+                        <img src="../img/usa_flag.png" alt="USA" width="20">
+                      <% } %>
+                    </td>
+                    <td scope="row"><%= data.dealer %></td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let startX;
+
+    function handleMouseDown(event) {
+      // Store the starting X coordinate of the mouse
+      startX = event.clientX;
+    }
+
+    function handleRowClick(url) {
+      // Calculate the horizontal distance the mouse has moved
+      const distance = Math.abs(event.clientX - startX);
+
+      // If the mouse has moved more than 5 pixels horizontally, consider it as text selection
+      if (distance > 5) {
+        return;
+      }
+
+      // Navigate to the specified URL
+      window.location.href = url;
+    }
+  </script>
+</body>
+
+</html>

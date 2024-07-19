@@ -11,48 +11,60 @@
     <div class="container">
         <div class="row">
           <% if (vin_data.length > 0) { %>
-            <h1><%= vin_data[0].VIN %></h1>
-            <a href="https://cws.gm.com/vs-cws/vehshop/v2/vehicle/windowsticker?vin=<%= vin_data[0].VIN %>" target="_blank">
-                <i class="bi bi-file-earmark-text">Window Sticker</i>
+            <h1><%= vin_data[0].modelYear %> <%= vin_data[0].model %> <%= vin_data[0].trim %></h1>
+            <a href="https://cws.gm.com/vs-cws/vehshop/v2/vehicle/windowsticker?vin=<%= vin_data[0].vin %>" target="_blank">
+                <i class="bi bi-file-earmark-text"><%= vin_data[0].vin %></i>
             </a>
             <table class="table table-hover border border shadow" id="vinTable">
               <tbody>
                   <% locals.vin_data.forEach(function(data) { %>
                   <tr>
                       <td><strong>ORDER NUMBER:</strong></td>
-                      <td><%= data.ORDERNUM %></td>
+                      <td><%= data.ordernum %></td>
                   </tr>
                   <tr>
                       <td><strong>YEAR:</strong></td>
-                      <td><%= data.YEAR %></td>
+                      <td><%= data.modelYear %></td>
+                  </tr>
+                  <tr>
+                    <td><strong>MODEL:</strong></td>
+                    <td><%= data.model %></td>
                   </tr>
                   <tr>
                       <td><strong>TRIM:</strong></td>
-                      <td><%= data.TRIM %></td>
+                      <td><%= data.trim %></td>
                   </tr>
                   <tr>
                       <td><strong>BODY:</strong></td>
-                      <td><%= data.BODY %></td>
+                      <td><%= data.body %></td>
                   </tr>
                   <tr>
-                      <td><strong>TRANS:</strong></td>
-                      <td><%= data.TRANS %></td>
+                      <td><strong>ENGINE:</strong></td>
+                      <td><%= data.vehicleEngine %></td>
+                  </tr>
+                  <tr>
+                      <td><strong>TRANSMISSION:</strong></td>
+                      <td><%= data.transmission %></td>
+                  </tr>
+                  <tr>
+                      <td><strong>DRIVETRAIN:</strong></td>
+                      <td><%= data.drivetrain %></td>
                   </tr>
                   <tr>
                       <td><strong>COLOR:</strong></td>
-                      <td><%= data.COLOR %></td>
+                      <td><%= data.exterior_color %></td>
                   </tr>
                   <tr>
                       <td><strong>MSRP:</strong></td>
-                      <td>$<%= data.MSRP %></td>
+                      <td><%= data.msrp %></td>
                   </tr>
                   <tr>
                       <td><strong>DEALER:</strong></td>
-                      <td><%= data.DEALER %></td>
+                      <td><%= data.dealer %></td>
                   </tr>
                   <tr>
                       <td><strong>LOCATION:</strong></td>
-                      <td><%= data.CITY +', ' + data.STATE %></td>
+                      <td><%= data.location %></td>
                   </tr>
                   <% }) %>
               </tbody>
@@ -66,8 +78,8 @@
               </thead>
               <tbody>
                   <% locals.vin_data.forEach(function(data) { %>
-                      <% if (data.RPOS) { %>
-                          <% data.RPOS.split(' ').forEach(function(rpo) { %>
+                      <% if (data.allJson.Options) { %>
+                          <% data.allJson.Options.split(' ').forEach(function(rpo) { %>
                               <tr>
                                   <td><%= rpo %></td>
                                   <td><%= rpoDescriptions[rpo] || "Description not found" %></td>

@@ -18,42 +18,33 @@ myCreds = parameters.Creds()
 conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
 
 # ========================= View Pages =========================
-# inventory view
-@app.route('/all', methods=['GET'])
+# Random 25 view
+@app.route('/rand', methods=['GET'])
 def all_inv():
-    page = int(request.args.get('page', 1))  # Get the page number from the request, default to 1
-    year = request.args.get('year')
-    page_size = 500  # Number of items per page
-    offset = (page - 1) * page_size  # Calculate the offset
-    if year and year != 'undefined':
-        sqlStatement = f"SELECT * FROM stats WHERE YEAR = {year} LIMIT {page_size} OFFSET {offset}"
-    else:
-        sqlStatement = f"SELECT * FROM stats LIMIT {page_size} OFFSET {offset}"
+    sqlStatement = f"SELECT * FROM gm ORDER BY RAND() LIMIT 25"
     viewTable = execute_read_query(conn, sqlStatement)
     return jsonify(viewTable)
 
 @app.route('/search', methods=['GET'])
 def search_inv():
     vin = request.args.get('vin')
-    sqlStatement = f"SELECT * FROM stats WHERE VIN = '{vin}'"
+    sqlStatement = f"SELECT * FROM gm WHERE VIN = '{vin}'"
     viewTable = execute_read_query(conn, sqlStatement)
     return jsonify(viewTable)
 
 @app.route('/msrp', methods=['GET'])
 def sort_price():
-    sqlStatement = f"SELECT * FROM stats ORDER BY MSRP DESC LIMIT 500"
-    viewTable = execute_read_query(conn, sqlStatement)
-    return jsonify(viewTable)
-
-@app.route('/panther350', methods=['GET'])
-def collectors():
-    sqlStatement = f"SELECT STATS.*, CEZL1.MARKUP, CEZL1.NUM, CEZL1.OWNER FROM STATS JOIN CEZL1 ON STATS.VIN = CEZL1.VIN"
-    viewTable = execute_read_query(conn, sqlStatement)
-    return jsonify(viewTable)
-
-@app.route('/test', methods=['GET'])
-def testend():
-    sqlStatement = f"SELECT RPOS FROM STATS"
+    models = request.args.get('model')
+    
+    # Build the SQL query
+    sqlStatement = "SELECT * FROM gm"
+    
+    if models:
+        models_str = "', '".join(models)
+        sqlStatement += f" WHERE model IN ('{models_str}')"
+    
+    sqlStatement += " ORDER BY msrp DESC LIMIT 100"
+    
     viewTable = execute_read_query(conn, sqlStatement)
     return jsonify(viewTable)
 # ========================= View Pages =========================

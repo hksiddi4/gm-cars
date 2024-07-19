@@ -10,19 +10,23 @@
 
       <div class="custom-container">
           <div class="row">
-            <h1 style="text-align: center; text-decoration: underline;">Top 500 Highest MSRPs</h1>
+            <h1 style="text-align: center; text-decoration: underline;">Top 100 Highest MSRPs</h1>
+          </div>
+          <div class="row">
             <!-- Top MSRP Table -->
             <div class="table-responsive">
               <% if (locals.msrp_data) { %>
               <table class="table table-sm table-hover border border shadow" id="allTable" style="text-align: center;">
                 <thead>
                   <tr style="--bs-table-bg: #b8b8b8; --bs-table-color: #434343;">
-                    <th scope="col">Sequence</th>
                     <th scope="col">VIN</th>
                     <th scope="col">Year</th>
-                    <th scope="col">Trim</th>
+                    <th scope="col">Model</th>
                     <th scope="col">Body</th>
+                    <th scope="col">Trim</th>
+                    <th scope="col">Engine</th>
                     <th scope="col">Transmission</th>
+                    <th scope="col">Drivetrain</th>
                     <th scope="col">Exterior Color</th>
                     <th scope="col">MSRP</th>
                     <th scope="col">Country</th>
@@ -31,25 +35,26 @@
                 </thead>
                 <tbody>
                   <% locals.msrp_data.forEach(function(data) { %>
-                    <tr style="cursor: pointer;" onmousedown="handleMouseDown(event);" onclick="handleRowClick('/search?vin=<%= data.VIN %>');">
-                      <td scope="row"><%= data.SEQUENCE %></td>
-                      <td scope="row"><%= data.VIN %></td>
-                      <td scope="row"><%= data.YEAR %></td>
-                      <td scope="row"><%= data.TRIM %></td>
-                      <td scope="row"><%= data.BODY %></td>
-                      <td scope="row"><%= data.TRANS %></td>
-                      <td scope="row"><%= data.COLOR %></td>
-                      <td scope="row" style="text-align: right;" class="msrp"><span class="accounting"><%= data.MSRP %></span></td>
+                    <tr style="cursor: pointer;" onmousedown="handleMouseDown(event);" onclick="handleRowClick('/search?vin=<%= data.vin %>');">
+                      <td scope="row"><%= data.vin %></td>
+                      <td scope="row"><%= data.modelYear %></td>
+                      <td scope="row"><%= data.model %></td>
+                      <td scope="row"><%= data.body %></td>
+                      <td scope="row"><%= data.trim %></td>
+                      <td scope="row"><%= data.vehicleEngine %></td>
+                      <td scope="row"><%= data.transmission %></td>
+                      <td scope="row"><%= data.drivetrain %></td>
+                      <td scope="row"><%= data.exterior_color %></td>
+                      <td scope="row" style="text-align: right;"><%= data.msrp %></td>
                       <td scope="row">
-                        <% if (data.STATE === "AB" || data.STATE === "BC" || data.STATE === "MB" || data.STATE === "NB" || data.STATE === "NF" || data.STATE === "NS" || data.STATE === "NT" || data.STATE === "OH" || data.STATE === "ON" || data.STATE === "PE" || data.STATE === "PQ" || data.STATE === "SK") { %>
+                        <% const state = data.location.split(',')[1].trim().split(' ')[0];
+                          if (["AB", "BC", "MB", "NF", "NT", "ON", "PE", "PQ", "SK"].includes(state)) { %>
                           <img src="../img/canada_flag.png" alt="Canada" width="20">
-                        <% } else if (data.STATE === "PU" || data.STATE === "JA" || data.STATE === "SI" || data.STATE === null) { %>
-                          <img src="../img/mexico_flag.png" alt="Mexico" width="20"
-                          <% } else { %>
-                          <img src="../img/usa_flag.png" alt="USA" width="20"
+                        <% } else { %>
+                          <img src="../img/usa_flag.png" alt="USA" width="20">
                         <% } %>
-                      </td>  
-                      <td scope="row"><%= data.DEALER %></td>
+                      </td>
+                      <td scope="row"><%= data.dealer %></td>
                     </tr>
                   <% }) %>
                 </tbody>

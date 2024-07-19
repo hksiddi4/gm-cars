@@ -12,7 +12,7 @@ def create_connection(host_name, user_name, user_password, db_name):
         )
         print("Connection to MySQL db successful!")
     except Error as e:
-        print(f"The error {e} occured.")
+        print(f"Unsuccessful DB Connection, the error: {e} occured.")
     return connection
 
 def execute_query(connection, query):

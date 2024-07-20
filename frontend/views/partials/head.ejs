@@ -21,24 +21,35 @@
     body { 
         padding-top: 0px; 
         font-family: 'Inter', sans-serif;
+        background-color: #2e2e2e;
+    }
+
+    h1 {
+        color: white;
     }
 
     .table tbody > tr > td {
         vertical-align: middle;
+        text-align: center;
+    }
+
+    .table thead th {
+        background-color: #2e2e2e;
+        color: white;
+        border-bottom: 2px solid #000;
+    }
+
+    .table td, .table th {
+        border: 1px solid #dee2e6;
     }
 
     .custom-container {
-        width: 90%;
+        width: 95%;
         margin: 0 auto;
     }
 
-    .accounting {
-        text-align: right;
-    }
-
-    .accounting::before {
-        content: "$";
-        float: left;
+    .highlight {
+        background-color: #ff7f7f;
     }
 
     .nav-pills .nav-link:hover { 
@@ -60,7 +71,7 @@
     }
     
     .csslinkactive {
-        color: #828282;
+        color: #303030;
     }
     
     .buttoncss {
@@ -129,5 +140,9 @@
 
     .nav-link:hover {
         color:#8bb3d8
+    }
+
+    .form-check-label {
+        color: white;
     }
 </style>

@@ -5,16 +5,16 @@
 # Run by:
 # python start.py
 
-import parameters
+import sql
 import flask
 from flask import request, jsonify
-from sql import create_connection, execute_query, execute_read_query
+from sql import create_connection, execute_query, execute_read_query, Creds
 
 app = flask.Flask(__name__)
 app.config["DEBUG"] = True
 
 # Create connection to MySQL database
-myCreds = parameters.Creds()
+myCreds = sql.Creds()
 conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
 
 # ========================= View Pages =========================
@@ -45,6 +45,24 @@ def sort_price():
     
     sqlStatement += " ORDER BY msrp DESC LIMIT 100"
     
+    viewTable = execute_read_query(conn, sqlStatement)
+    return jsonify(viewTable)
+
+@app.route('/panther350', methods=['GET'])
+def panther():
+    sqlStatement = "SELECT * FROM gm WHERE model = 'CAMARO' AND exterior_color = 'PANTHER BLACK MATTE' ORDER BY SUBSTRING(vin, -6)"    
+    viewTable = execute_read_query(conn, sqlStatement)
+    return jsonify(viewTable)
+
+@app.route('/garage56', methods=['GET'])
+def garage():
+    sqlStatement = "SELECT * FROM gm WHERE model = 'CAMARO' AND JSON_CONTAINS(allJson->'$.Options', '[\"X56\"]') ORDER BY SUBSTRING(vin, -6)"    
+    viewTable = execute_read_query(conn, sqlStatement)
+    return jsonify(viewTable)
+
+@app.route('/blackwing', methods=['GET'])
+def allblackwing():
+    sqlStatement = "SELECT * FROM gm WHERE trim = 'V-SERIES BLACKWING' ORDER BY SUBSTRING(vin, -6) LIMIT 100"    
     viewTable = execute_read_query(conn, sqlStatement)
     return jsonify(viewTable)
 # ========================= View Pages =========================

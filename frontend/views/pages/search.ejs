@@ -3,6 +3,7 @@
 
 <head>
     <%- include('../partials/head'); %>
+    <script src="../partials/rpo.js"></script>
 </head>
 
 <body>
@@ -10,96 +11,134 @@
 
     <div class="container">
         <div class="row">
-          <% if (vin_data.length > 0) { %>
-            <h1><%= vin_data[0].modelYear %> <%= vin_data[0].model %> <%= vin_data[0].trim %></h1>
-            <a href="https://cws.gm.com/vs-cws/vehshop/v2/vehicle/windowsticker?vin=<%= vin_data[0].vin %>" target="_blank">
-                <i class="bi bi-file-earmark-text"><%= vin_data[0].vin %></i>
-            </a>
+          <% if (vin_data && vin_data.length > 0) { %>
+            <h1><%= vin_data[0].modelYear || 'N/A' %> <%= vin_data[0].model || 'N/A' %> <%= vin_data[0].trim || 'N/A' %></h1>
             <table class="table table-hover border border shadow" id="vinTable">
               <tbody>
-                  <% locals.vin_data.forEach(function(data) { %>
+                  <% vin_data.forEach(function(data) { %>
                   <tr>
-                      <td><strong>ORDER NUMBER:</strong></td>
-                      <td><%= data.ordernum %></td>
+                    <td><strong>VIN:</strong></td>
+                    <td>
+                      <a href="https://cws.gm.com/vs-cws/vehshop/v2/vehicle/windowsticker?vin=<%= data.vin || 'N/A' %>" target="_blank">
+                        <%= data.vin || 'N/A' %>
+                      </a>
+                    </td>
                   </tr>
                   <tr>
-                      <td><strong>YEAR:</strong></td>
-                      <td><%= data.modelYear %></td>
+                    <td><strong>ORDER NUMBER:</strong></td>
+                    <td><%= data.ordernum || 'N/A' %></td>
+                  </tr>
+                  <tr>
+                    <td><strong>CREATION DATE:</strong></td>
+                    <td>
+                      <%= data.allJson ? new Date(JSON.parse(data.allJson).creation_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A' %>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>YEAR:</strong></td>
+                    <td><%= data.modelYear || 'N/A' %></td>
                   </tr>
                   <tr>
                     <td><strong>MODEL:</strong></td>
-                    <td><%= data.model %></td>
+                    <td><%= data.model || 'N/A' %></td>
                   </tr>
                   <tr>
-                      <td><strong>TRIM:</strong></td>
-                      <td><%= data.trim %></td>
+                    <td><strong>TRIM:</strong></td>
+                    <td><%= data.trim || 'N/A' %></td>
                   </tr>
                   <tr>
-                      <td><strong>BODY:</strong></td>
-                      <td><%= data.body %></td>
+                    <td><strong>BODY:</strong></td>
+                    <td><%= data.body || 'N/A' %></td>
                   </tr>
                   <tr>
-                      <td><strong>ENGINE:</strong></td>
-                      <td><%= data.vehicleEngine %></td>
+                    <td><strong>ENGINE:</strong></td>
+                    <td><%= data.vehicleEngine || 'N/A' %></td>
                   </tr>
                   <tr>
-                      <td><strong>TRANSMISSION:</strong></td>
-                      <td><%= data.transmission %></td>
+                    <td><strong>TRANSMISSION:</strong></td>
+                    <td><%= data.transmission || 'N/A' %></td>
                   </tr>
                   <tr>
-                      <td><strong>DRIVETRAIN:</strong></td>
-                      <td><%= data.drivetrain %></td>
+                    <td><strong>DRIVETRAIN:</strong></td>
+                    <td><%= data.drivetrain || 'N/A' %></td>
                   </tr>
                   <tr>
-                      <td><strong>COLOR:</strong></td>
-                      <td><%= data.exterior_color %></td>
+                    <td><strong>COLOR:</strong></td>
+                    <td><%= data.exterior_color || 'N/A' %></td>
                   </tr>
                   <tr>
-                      <td><strong>MSRP:</strong></td>
-                      <td><%= data.msrp %></td>
+                    <td><strong>MSRP:</strong></td>
+                    <td><%= data.msrp || 'N/A' %></td>
                   </tr>
                   <tr>
-                      <td><strong>DEALER:</strong></td>
-                      <td><%= data.dealer %></td>
+                    <td><strong>DEALER:</strong></td>
+                    <td><%= data.dealer || 'N/A' %></td>
                   </tr>
                   <tr>
-                      <td><strong>LOCATION:</strong></td>
-                      <td><%= data.location %></td>
+                    <td><strong>LOCATION:</strong></td>
+                    <td><%= data.location || 'N/A' %></td>
+                  </tr>
+                  <tr>
+                    <td><strong>COUNTRY:</strong></td>
+                    <td style="display: flex; align-items: center; justify-content: center;">
+                      <% if (data.location) { %>
+                        <% const state = data.location.split(',')[1]?.trim().split(' ')[0]; %>
+                        <% if (state && ["AB", "BC", "MB", "NF", "NT", "ON", "PE", "PQ", "SK"].includes(state)) { %>
+                          <img src="../img/canada_flag.png" alt="Canada" width="30" style="padding-right: 5px;">Canada
+                        <% } else { %>
+                          <img src="../img/usa_flag.png" alt="USA" width="30" style="padding-right: 5px;">United States
+                        <% } %>
+                      <% } else { %>
+                        <img src="../img/mexico_flag.png" alt="Mexico" width="30" style="padding-right: 5px;">Mexico
+                      <% } %>
+                    </td>
                   </tr>
                   <% }) %>
               </tbody>
             </table>
             <table class="table table-hover border border shadow" id="rpoTable">
               <thead>
-                  <tr>
-                      <th scope="col">RPO Code</th>
-                      <th scope="col">Description</th>
-                  </tr>
+                <tr>
+                  <th scope="col" style="white-space: nowrap;">RPO Code</th>
+                  <th scope="col">Description</th>
+                </tr>
               </thead>
               <tbody>
-                  <% locals.vin_data.forEach(function(data) { %>
-                      <% if (data.allJson.Options) { %>
-                          <% data.allJson.Options.split(' ').forEach(function(rpo) { %>
-                              <tr>
-                                  <td><%= rpo %></td>
-                                  <td><%= rpoDescriptions[rpo] || "Description not found" %></td>
-                              </tr>
-                          <% }) %>
-                      <% } else { %>
-                          <tr>
-                              <td colspan="2">No RPOS available</td>
-                          </tr>
+                <% vin_data.forEach(function(data) { %>
+                  <% if (data.allJson) { %>
+                    <% 
+                      const rpos = (JSON.parse(data.allJson)).Options;
+                    %>
+                    <% rpos.forEach(function(rpo) { %>
+                      <% if (rpo) { %>
+                        <tr>
+                          <td><%= rpo %></td>
+                          <td class="rpo-description" data-code="<%= rpo || 'N/A' %>" style="text-align: left;"></td>
+                        </tr>
                       <% } %>
-                  <% }) %>
+                    <% }); %>
+                  <% } else { %>
+                    <tr>
+                      <td colspan="2">No data available</td>
+                    </tr>
+                  <% } %>
+                <% }) %>
               </tbody>
             </table>
           <% } else { %>
-            <h2>No VIN data found</h2>
+            <h1>No VIN data found</h1>
           <% } %>
         </div>
     </div>
-  </div>
-</div>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+          const descriptionCells = document.querySelectorAll('.rpo-description');
+          descriptionCells.forEach(cell => {
+              const code = cell.getAttribute('data-code');
+              cell.textContent = getRPODescription(code);
+          });
+      });
+    </script>
 </body>
 
 </html>

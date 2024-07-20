@@ -2,41 +2,43 @@
 <div class="sidebar col-md-3 col-xl-2 px-sm-0 px-0" role="navigation">
     <div class="d-flex flex-column align-items-center align-items-sm-start px-3 min-vh-100 justify-content-center">
         <a href="/" class="d-flex mx-auto" style="margin-bottom: 10px;">
-            <img id="rotatingImage" width="190" height="95" class="mx-auto"/>
+            <img id="rotatingImage" width="auto" height="96" class="mx-auto">
         </a>
         <!-- Navigation links begins -->
         <ul class="nav nav-pills btn-toggle-nav col-auto flex-column mb-sm-auto mb-0 align-items-center align-items-sm-start" id="menu" style="display: block; width: 100%;">
             <!-- All -->
             <li class="nav-item">
-                <a href="/rand" class="nav-link align-middle px-2 mb-2 csslink">
-                    <i class="fs-4 bi bi-question-lg"></i> <span class="ms-1 d-none d-sm-inline">Random</span>
+                <a href="/rand" class="nav-link align-middle px-2 mb-2 csslink d-flex align-items-center">
+                    <i class="fs-5 bi bi-question-lg me-2"></i> <span class="ms-1 d-none d-sm-inline">Random</span>
                 </a>
             </li>
             <!-- MSRP -->
             <li class="nav-item">
-                <a href="/msrp" class="nav-link align-middle px-2 mb-2 csslink">
-                    <i class="fs-4 bi bi-currency-dollar"></i> <span class="ms-1 d-none d-sm-inline">Highest MSRPs</span>
+                <a href="/msrp" class="nav-link align-middle px-2 mb-2 csslink d-flex align-items-center">
+                    <i class="fs-5 bi bi-currency-dollar me-2"></i> <span class="ms-1 d-none d-sm-inline">Highest MSRPs</span>
+                </a>
+            </li>
+            <!-- ZL1 CE -->
+            <li class="nav-item">
+                <a href="/panther350" class="nav-link align-middle px-2 mb-2 csslink d-flex align-items-center">
+                    <i class="fs-5 bi bi-currency-dollar me-2"></i> <span class="ms-1 d-none d-sm-inline">Camaro Collector's Edition</span>
+                </a>
+            </li>
+            <!-- G56 -->
+            <li class="nav-item">
+                <a href="/garage56" class="nav-link align-middle px-2 mb-2 csslink d-flex align-items-center">
+                    <img src="../img/nascar_logo.png" alt="NASCAR Logo" class="fs-5 me-2" style="height: 16px; width: auto;"> 
+                    <span class="ms-1 d-none d-sm-inline">Garage56 Edition</span>
+                </a>
+            </li>
+            <!-- Blackwing -->
+            <li class="nav-item">
+                <a href="/blackwing" class="nav-link align-middle px-2 mb-2 csslink d-flex align-items-center">
+                    <img src="../img/blackwing_logo.png" alt="Blackwing Logo" class="fs-5 me-2" style="height: 16px; width: auto;"> 
+                    <span class="ms-1 d-none d-sm-inline">Blackwing</span>
                 </a>
             </li>
         </ul>
-        <div class="filter-section mt-4">
-            <h5>Model</h5>
-            <form id="modelFilter">
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="Camaro" id="Camaro" name="model">
-                    <label class="form-check-label" for="Camaro">Camaro</label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="CT4" id="CT4" name="model">
-                    <label class="form-check-label" for="CT4">CT4</label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="CT5" id="CT5" name="model">
-                    <label class="form-check-label" for="CT5">CT5</label>
-                </div>
-                <button type="submit" class="btn btn-primary mt-2">Apply Filter</button>
-            </form>
-        </div>
     </div>
 </div>
 <div class="content col">
@@ -45,7 +47,7 @@
       <div class="container-fluid">
           <div class="row align-items-center">
               <div class="col">
-                  <a href="/" style="color: #ffffff; text-decoration: none;">
+                  <a href="/" style="color: white; text-decoration: none;">
                       GM 2020-2024 Build Counts
                   </a>
               </div>
@@ -87,13 +89,4 @@
         }
     }
 
-    // Filter form submission handler
-    document.getElementById('modelFilter').addEventListener('submit', function(event) {
-        event.preventDefault();
-        const formData = new FormData(event.target);
-        const selectedModels = formData.getAll('model');
-        const params = new URLSearchParams();
-        selectedModels.forEach(model => params.append('model', model));
-        window.location.href = '/msrp?' + params.toString();
-    });
 </script>

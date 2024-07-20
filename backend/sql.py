@@ -1,6 +1,12 @@
 import mysql.connector
 from mysql.connector import Error
 
+class Creds:
+    conString = '127.0.0.1'
+    userName = 'hussain'
+    password = 'Hussain92'
+    dbName = 'vehicles'
+
 def create_connection(host_name, user_name, user_password, db_name):
     connection = None
     try:

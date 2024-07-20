@@ -9,16 +9,14 @@
     <%- include('../partials/sidebar'); %>
 
       <div class="custom-container">
-        <div class="row">
-          <h1 style="text-align: center; text-decoration: underline;">Random Cars</h1>
-        </div>
+        <h1 style="text-align: center; text-decoration: underline;">Random Cars</h1>
         <div class="row">
           <!-- All Table -->
           <div class="table-responsive">
             <% if (locals.all_data) { %>
-            <table class="table table-sm table-hover border border shadow" id="allTable" style="text-align: center;">
+            <table class="table table-sm table-hover border border shadow" id="allTable">
               <thead>
-                <tr style="--bs-table-bg: #b8b8b8; --bs-table-color: #434343;">
+                <tr>
                   <th scope="col">VIN</th>
                   <th scope="col">Year</th>
                   <th scope="col">Model</th>
@@ -34,7 +32,7 @@
                 </tr>
               </thead>
               <tbody>
-                <% locals.all_data.forEach(function(data) { %>
+                <% locals.all_data.forEach(function(data, index) { %>
                   <tr style="cursor: pointer;" onmousedown="handleMouseDown(event);" onclick="handleRowClick('/search?vin=<%= data.vin %>');">
                     <td scope="row"><%= data.vin %></td>
                     <td scope="row"><%= data.modelYear %></td>

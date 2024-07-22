@@ -21,14 +21,14 @@ def create_connection(host_name, user_name, user_password, db_name):
         print(f"Unsuccessful DB Connection, the error: {e} occured.")
     return connection
 
-def execute_query(connection, query):
-    cursor = connection.cursor()
-    try:
-        cursor.execute(query)
-        connection.commit()
-        print("Query executed successfully.")
-    except Error as e:
-        print(f"The error {e} occured.")
+# def execute_query(connection, query):
+#     cursor = connection.cursor()
+#     try:
+#         cursor.execute(query)
+#         connection.commit()
+#         print("Query executed successfully.")
+#     except Error as e:
+#         print(f"The error {e} occured.")
 
 def execute_read_query(connection, query):
     # dictionary=True (returns info from sql query and puts into dictionary)

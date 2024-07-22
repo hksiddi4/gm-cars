@@ -3,6 +3,7 @@
 
 <head>
     <%- include('../partials/head'); %>
+    <title>Camaro Collector's Edition</title>
 </head>
 
 <body>
@@ -10,7 +11,7 @@
 
       <div class="custom-container">
           <div class="row">
-            <h1 style="text-align: center; text-decoration: underline;">ZL1 Collector's Edition</h1>
+            <h1 class="pagetitle">ZL1 Collector's Edition</h1>
             <!-- ZL1 CE Table -->
             <div class="table-responsive">
               <% if (locals.ce_data) { %>
@@ -82,6 +83,7 @@
       </div>
     </div>
   </div>
+  <%- include('../partials/footer'); %>
   <script>
     let startX;
 

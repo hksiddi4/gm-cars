@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const axios = require('axios');
 
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.json());
 app.use(express.static('views'));
 app.set('view engine', 'ejs');
 
@@ -36,19 +37,80 @@ app.get('/rand', function(req, res) {
     })
 });
 
+app.get('/camaro', function(req, res) {
+    var trims = req.query.trim;
+    let url = `${baseURL}/camaro`;
+
+    if (trims) {
+        trims = Array.isArray(trims) ? trims.join(',') : trims;
+        url += `?trim=${trims}`;
+    }
+
+    axios.get(url)
+        .then((response) => {
+            var trim_data = response.data;
+
+            trim_data.forEach(function(data) {
+                data.msrp = formatCurrency(data.msrp);
+            });
+
+            axios.get(`${baseURL}/trims`)
+                .then((trimResponse) => {
+                    var trims = trimResponse.data;
+
+                    res.render('pages/camaro', {
+                        trim_data: trim_data,
+                        trims: trims,
+                        selectedTrims: req.query.trim || []
+                    });
+                })
+                .catch((trimError) => {
+                    console.error('Error fetching trim data:', trimError);
+                    res.status(500).send('Error fetching trim data');
+                });
+        })
+        .catch((error) => {
+            console.error(`Error fetching data: ${error}`);
+            res.status(500).send('Error fetching data');
+        });
+});
+
 app.get('/msrp', function(req, res) {
-    axios.get(`${baseURL}/msrp`)
-    .then((response)=>{
-        var msrp_data = response.data;
+    var models = req.query.model;
+    let url = `${baseURL}/msrp`;
 
-        msrp_data.forEach(function(data) {
-            data.msrp = formatCurrency(data.msrp);
-        });
+    if (models) {
+        models = Array.isArray(models) ? models.join(',') : models;
+        url += `?model=${models}`;
+    }
 
-        res.render('pages/msrp', {
-            msrp_data: msrp_data
+    axios.get(url)
+        .then((response) => {
+            var msrp_data = response.data;
+
+            msrp_data.forEach(function(data) {
+                data.msrp = formatCurrency(data.msrp);
+            });
+
+            axios.get(`${baseURL}/models`)
+                .then((modelResponse) => {
+                    var models = modelResponse.data;
+
+                    res.render('pages/msrp', {
+                        msrp_data: msrp_data,
+                        models: models,
+                        selectedModels: req.query.model || []
+                    });
+                })
+                .catch((modelError) => {
+                    console.error('Error fetching model data:', modelError);
+                    res.status(500).send('Error fetching model data');
+                });
+        })
+        .catch((error) => {
+            console.error(`Error fetching data: ${error}`);
+            res.status(500).send('Error fetching data');
         });
-    })
 });
 
 app.get('/panther350', function(req, res) {
@@ -114,21 +176,23 @@ app.get('/search', function(req, res) {
     })
 });
 
-app.get('/test', function(req, res) {
-    axios.get(`${baseURL}/test`)
-    .then((response)=>{
-        var vin_data = response.data;
+app.post('/api/test', async (req, res) => {
+    const options = req.body.Options;
 
-        vin_data.forEach(function(data) {
-            data.msrp = formatCurrency(data.msrp);
+    try {
+        const response = await fetch(`${baseURL}/api/test`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ Options: options })
         });
 
-        res.render('pages/test', {
-            req: req,
-            vin_data: vin_data,
-            rpoDescriptions: rpoDescriptions
-        });
-    })
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to forward request to Python service' });
+    }
 });
 
 const port = 8080;

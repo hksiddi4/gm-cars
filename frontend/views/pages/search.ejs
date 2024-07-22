@@ -4,6 +4,38 @@
 <head>
     <%- include('../partials/head'); %>
     <script src="../partials/rpo.js"></script>
+    <% 
+      function checkRPO(data) {
+        let has1LE = false; 
+        let hasCE = false;
+        let hasG56 = false;
+        if (data.allJson) {
+          const rpos = JSON.parse(data.allJson).Options;
+          if (rpos) {
+            has1LE = rpos.includes('A1Y') || rpos.includes('A1X') || rpos.includes('A1Z');
+            hasCE = rpos.includes('Z4B');
+            hasG56 = rpos.includes('X56');
+          }
+        }
+        return { has1LE, hasCE, hasG56 };
+      }
+
+      let allHas = { has1LE: false, hasCE: false, hasG56: false };
+      vin_data.forEach(data => {
+        const result = checkRPO(data);
+        allHas.has1LE = allHas.has1LE || result.has1LE;
+        allHas.hasCE = allHas.hasCE || result.hasCE;
+        allHas.hasG56 = allHas.hasG56 || result.hasG56;
+      });
+    %>
+    <title>
+      <%= vin_data[0].modelYear || 'N/A' %> 
+      <%= vin_data[0].model || 'N/A' %> 
+      <%= vin_data[0].trim || 'N/A' %> 
+      <%= allHas.has1LE ? '1LE' : '' %>
+      <%= allHas.hasCE ? 'CE' : '' %>
+      <%= allHas.hasG56 ? 'G56' : '' %>
+    </title>
 </head>
 
 <body>
@@ -12,11 +44,37 @@
     <div class="container">
         <div class="row">
           <% if (vin_data && vin_data.length > 0) { %>
-            <h1><%= vin_data[0].modelYear || 'N/A' %> <%= vin_data[0].model || 'N/A' %> <%= vin_data[0].trim || 'N/A' %></h1>
+            <h1 style="padding-top: 20px;">
+              <%= vin_data[0].modelYear || 'N/A' %>
+              <%= vin_data[0].model || 'N/A' %>
+              <%= vin_data[0].trim || 'N/A' %>
+              <% 
+                let has1LE = false; 
+                let hasCE = false;
+                let hasG56 = false;
+                vin_data.forEach(data => {
+                  if (data.allJson) {
+                    const rpos = JSON.parse(data.allJson).Options;
+                    if (rpos && (rpos.includes('A1Y') || rpos.includes('A1X') || rpos.includes('A1Z'))) {
+                      has1LE = true;
+                    }
+                    if (rpos && rpos.includes('Z4B')) {
+                      hasCE = true;
+                    }
+                    if (rpos && rpos.includes('X56')) {
+                      hasG56 = true;
+                    }
+                  }
+                });
+              %>
+              <%= has1LE ? '1LE' : '' %>
+              <%= hasCE ? 'Collectors Edition' : '' %>
+              <%= hasG56 ? 'Garage 56 Special Edition' : '' %>
+            </h1>
             <table class="table table-hover border border shadow" id="vinTable">
               <tbody>
                   <% vin_data.forEach(function(data) { %>
-                  <tr>
+                  <tr data-alljson='<%= JSON.stringify(data.allJson) %>'>
                     <td><strong>VIN:</strong></td>
                     <td>
                       <a href="https://cws.gm.com/vs-cws/vehshop/v2/vehicle/windowsticker?vin=<%= data.vin || 'N/A' %>" target="_blank">
@@ -96,6 +154,17 @@
                   <% }) %>
               </tbody>
             </table>
+            <div class="rarity-container">
+              <% vin_data.forEach(function(data) { %>
+                <% if (data.allJson) { %>
+                  <button id="see-rarity" class="btn btn-primary rarity-btn" data-alljson='<%= JSON.stringify(data.allJson) %>'>See Rarity</button>
+                <% } %>
+              <% }); %>
+              <div class="response-container">
+                <div id="response" class="response"></div>
+                <a id="snark" style="color: rgb(40, 40, 40);"></a>
+              </div>
+            </div>
             <table class="table table-hover border border shadow" id="rpoTable">
               <thead>
                 <tr>
@@ -125,17 +194,44 @@
                 <% }) %>
               </tbody>
             </table>
+            <h5 style="color: white;">
+              Decoded by <a href="https://decoderpo.com/" style="color: white; text-decoration: underline;">https://decoderpo.com/</a>
+            </h5>            
           <% } else { %>
             <h1>No VIN data found</h1>
           <% } %>
         </div>
     </div>
+    <%- include('../partials/footer'); %>
     <script>
       document.addEventListener('DOMContentLoaded', () => {
           const descriptionCells = document.querySelectorAll('.rpo-description');
           descriptionCells.forEach(cell => {
               const code = cell.getAttribute('data-code');
               cell.textContent = getRPODescription(code);
+          });
+          
+          const button = document.getElementById('see-rarity');
+          button.addEventListener('click', () => {
+              const allJson = button.getAttribute('data-alljson');
+              const dataObject = JSON.parse(allJson);
+
+              fetch('/api/test', {
+                  method: 'POST',
+                  headers: {
+                      'Content-Type': 'application/json',
+                  },
+                  body: dataObject,
+              })
+              .then(response => response.json())
+              .then(data => {
+                  console.log('Success:', data);
+                  document.getElementById('response').textContent = `1 of ${data[0].Count}`;
+                  document.getElementById('snark').textContent = "- on the fourth Tuesday, after company lunch with a crescent moon when Joey went home early...";
+              })
+              .catch((error) => {
+                  console.error('Error:', error);
+              });
           });
       });
     </script>

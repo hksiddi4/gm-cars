@@ -3,6 +3,7 @@
 
 <head>
     <%- include('../partials/head'); %>
+    <title>Blackwing Cars</title>
 </head>
 
 <body>
@@ -10,7 +11,7 @@
 
       <div class="custom-container">
           <div class="row">
-            <h1 style="text-align: center; text-decoration: underline;">Blackwing</h1>
+            <h1 class="pagetitle">Blackwing</h1>
             <!-- Blackwing Table -->
             <div class="table-responsive">
               <% if (locals.bw_data) { %>
@@ -71,6 +72,7 @@
       </div>
     </div>
   </div>
+  <%- include('../partials/footer'); %>
   <script>
     let startX;
 

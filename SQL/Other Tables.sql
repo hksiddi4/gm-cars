@@ -1,5 +1,9 @@
+SELECT * FROM rpo;
+
 SELECT * FROM gm
-WHERE vin = '1G1FK1R63N0133210';
+WHERE vin = '1G1FH1R78N0102770';
+
+SELECT * FROM gm WHERE model IN ('Camaro','CT4') ORDER BY msrp DESC;
 
 CREATE TABLE IF NOT EXISTS rpo (
 	rpo varchar(3),
@@ -41,3 +45,7 @@ WHERE vin = '1G6DG5RKXN0119036';
 SELECT * FROM gm WHERE exterior_color = 'PANTHER BLACK MATTE';
 
 SELECT * FROM gm WHERE model = 'CAMARO' AND exterior_color = 'PANTHER BLACK MATTE' ORDER BY SUBSTRING(vin, -6);
+
+SELECT * FROM gm WHERE model = 'CT4' AND trim = 'V-SERIES BLACKWING';
+
+

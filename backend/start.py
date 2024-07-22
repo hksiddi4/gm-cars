@@ -8,10 +8,13 @@
 import sql
 import flask
 from flask import request, jsonify
-from sql import create_connection, execute_query, execute_read_query, Creds
+from flask_cors import CORS
+from sql import create_connection, execute_read_query, Creds
+import json
 
 app = flask.Flask(__name__)
 app.config["DEBUG"] = True
+CORS(app)
 
 # Create connection to MySQL database
 myCreds = sql.Creds()
@@ -31,6 +34,22 @@ def search_inv():
     sqlStatement = f"SELECT * FROM gm WHERE VIN = '{vin}'"
     viewTable = execute_read_query(conn, sqlStatement)
     return jsonify(viewTable)
+    
+@app.route('/api/test', methods=['POST'])
+def unique():
+    data = request.json
+    options = data.get('Options')
+
+    if options is not None:
+        formatted_options = json.dumps(options)
+        try:
+            sqlStatement = f"SELECT COUNT(*) AS Count FROM gm WHERE JSON_UNQUOTE(JSON_EXTRACT(allJson, '$.Options')) = '{formatted_options}'"
+            response = execute_read_query(conn, sqlStatement)
+            return response
+        except ValueError:
+            return jsonify({'error': 'Invalid value'}), 400
+    else:
+        return jsonify({'error': 'No value provided'}), 400
 
 @app.route('/msrp', methods=['GET'])
 def sort_price():
@@ -40,23 +59,55 @@ def sort_price():
     sqlStatement = "SELECT * FROM gm"
     
     if models:
-        models_str = "', '".join(models)
-        sqlStatement += f" WHERE model IN ('{models_str}')"
+        models = [model.strip() for model in models.split(',')]
+        models = "', '".join(models)
+        sqlStatement += f" WHERE model IN ('{models}')"
     
     sqlStatement += " ORDER BY msrp DESC LIMIT 100"
     
     viewTable = execute_read_query(conn, sqlStatement)
     return jsonify(viewTable)
 
+@app.route('/camaro', methods=['GET'])
+def camaro():
+    trims = request.args.get('trim')
+    
+    # Build the SQL query
+    sqlStatement = "SELECT * FROM gm WHERE model ='CAMARO'"
+    
+    if trims:
+        trims = [trim.strip() for trim in trims.split(',')]
+        trims = "', '".join(trims)
+        sqlStatement += f" AND trim IN ('{trims}')"
+    
+    sqlStatement += " ORDER BY msrp DESC LIMIT 100"
+    
+    viewTable = execute_read_query(conn, sqlStatement)
+    return jsonify(viewTable)
+
+@app.route('/models', methods=['GET'])
+def get_models():
+    sqlStatement = "SELECT DISTINCT model FROM gm ORDER BY model"
+    models = execute_read_query(conn, sqlStatement)
+    model_list = [model['model'] for model in models]
+    return jsonify(model_list)
+
+@app.route('/trims', methods=['GET'])
+def get_trims():
+    sqlStatement = "SELECT DISTINCT trim FROM gm WHERE model = 'CAMARO' ORDER BY trim"
+    trims = execute_read_query(conn, sqlStatement)
+    trim_list = [trim['trim'] for trim in trims]
+    return jsonify(trim_list)
+
 @app.route('/panther350', methods=['GET'])
 def panther():
-    sqlStatement = "SELECT * FROM gm WHERE model = 'CAMARO' AND exterior_color = 'PANTHER BLACK MATTE' ORDER BY SUBSTRING(vin, -6)"    
+    sqlStatement = "SELECT * FROM gm WHERE trim = 'ZL1' AND exterior_color = 'PANTHER BLACK MATTE' ORDER BY SUBSTRING(vin, -6)"
     viewTable = execute_read_query(conn, sqlStatement)
     return jsonify(viewTable)
 
 @app.route('/garage56', methods=['GET'])
 def garage():
-    sqlStatement = "SELECT * FROM gm WHERE model = 'CAMARO' AND JSON_CONTAINS(allJson->'$.Options', '[\"X56\"]') ORDER BY SUBSTRING(vin, -6)"    
+    sqlStatement = "SELECT * FROM gm WHERE trim = 'ZL1' AND exterior_color = 'RIPTIDE BLUE METALLIC' AND JSON_CONTAINS(allJson->'$.Options', '[\"X56\"]') ORDER BY SUBSTRING(vin, -6)"    
     viewTable = execute_read_query(conn, sqlStatement)
     return jsonify(viewTable)
 
@@ -65,34 +116,7 @@ def allblackwing():
     sqlStatement = "SELECT * FROM gm WHERE trim = 'V-SERIES BLACKWING' ORDER BY SUBSTRING(vin, -6) LIMIT 100"    
     viewTable = execute_read_query(conn, sqlStatement)
     return jsonify(viewTable)
+
 # ========================= View Pages =========================
-
-# ============================ Reports ===========================
-# Total $ value from both tables
-@app.route('/report/total', methods=['GET'])
-def totalPrice():
-    # Select calculated total from both locations
-    sqlStatement = f"SELECT 'galleria' as tableName, SUM(quantity * price) AS totalValue FROM {galleria} UNION ALL SELECT 'allland' as tableName, SUM(quantity * price) AS total_value FROM {allland}"
-    viewTable = execute_read_query(conn, sqlStatement)
-    return jsonify(viewTable)
-
-# List values from both tables based on filter
-@app.route('/report/category', methods=['GET'])
-def categoryReport():
-    category = request.args.get("category")
-    # Select calculated total from both locations
-    sqlStatement = f"SELECT 'Galleria' as tableName, item, category, quantity, price FROM {galleria} WHERE category = '{category}' UNION ALL SELECT 'allland' as tableName, item, category, quantity, price FROM {allland} WHERE category = '{category}'"
-    viewTable = execute_read_query(conn, sqlStatement)
-    return jsonify(viewTable)
-
-# Low stock report
-@app.route('/report/low', methods=['GET'])
-def lowStock():
-    # Select all stock from both inventory tables under 20
-    sqlStatement = f"SELECT 'galleria' as tableName, item, category, quantity, price FROM {galleria} WHERE quantity < 20 UNION ALL SELECT 'allland' as tableName, item, category, quantity, price FROM {allland} WHERE quantity < 20 ORDER BY quantity ASC"
-    viewTable = execute_read_query(conn, sqlStatement)
-    return jsonify(viewTable)
-
-# ============================ Reports ===========================
 
 app.run()

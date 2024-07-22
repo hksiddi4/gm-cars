@@ -3,6 +3,7 @@
 
 <head>
     <%- include('../partials/head'); %>
+    <title>Garage56 Edition</title>
 </head>
 
 <body>
@@ -10,7 +11,7 @@
 
       <div class="custom-container">
           <div class="row">
-            <h1 style="text-align: center; text-decoration: underline;">Garage 56 Edition</h1>
+            <h1 class="pagetitle">Garage 56 Edition</h1>
             <!-- ZL1 CE Table -->
             <div class="table-responsive">
               <% if (locals.g56_data) { %>
@@ -68,6 +69,7 @@
       </div>
     </div>
   </div>
+  <%- include('../partials/footer'); %>
   <script>
     let startX;
 

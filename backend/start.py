@@ -54,19 +54,31 @@ def unique():
 @app.route('/msrp', methods=['GET'])
 def sort_price():
     models = request.args.get('model')
+    page = int(request.args.get('page', 1))
+    limit = int(request.args.get('limit', 100))
+    offset = (page - 1) * limit
     
-    # Build the SQL query
-    sqlStatement = "SELECT * FROM gm"
+    sqlStatement = "SELECT COUNT(*) AS total FROM gm"
     
     if models:
         models = [model.strip() for model in models.split(',')]
         models = "', '".join(models)
         sqlStatement += f" WHERE model IN ('{models}')"
     
-    sqlStatement += " ORDER BY msrp DESC LIMIT 100"
+    viewTable = execute_read_query(conn, sqlStatement)
+    total_items = viewTable[0]['total']
+    
+    sqlStatement = "SELECT * FROM gm"
+    
+    if models:
+        sqlStatement += f" WHERE model IN ('{models}')"
+    
+    sqlStatement += f" ORDER BY msrp DESC LIMIT {limit} OFFSET {offset}"
     
     viewTable = execute_read_query(conn, sqlStatement)
-    return jsonify(viewTable)
+    
+    return jsonify({'data': viewTable, 'total': total_items})
+
 
 @app.route('/camaro', methods=['GET'])
 def camaro():

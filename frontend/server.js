@@ -77,41 +77,55 @@ app.get('/camaro', function(req, res) {
 
 app.get('/msrp', function(req, res) {
     var models = req.query.model;
-    let url = `${baseURL}/msrp`;
+    var page = parseInt(req.query.page) || 1;
+    var limit = parseInt(req.query.limit) || 100;
+
+    limit = Math.min(limit, 250);
+
+    let url = `${baseURL}/msrp?page=${page}&limit=${limit}`;
 
     if (models) {
         models = Array.isArray(models) ? models.join(',') : models;
-        url += `?model=${models}`;
+        url += `&model=${models}`;
     }
 
     axios.get(url)
-        .then((response) => {
-            var msrp_data = response.data;
+    .then((response) => {
+        var msrp_data = Array.isArray(response.data.data) ? response.data.data : [];
+        var totalItems = response.data.total;
+        var totalPages = Math.ceil(totalItems / limit);
 
-            msrp_data.forEach(function(data) {
-                data.msrp = formatCurrency(data.msrp);
-            });
-
-            axios.get(`${baseURL}/models`)
-                .then((modelResponse) => {
-                    var models = modelResponse.data;
-
-                    res.render('pages/msrp', {
-                        msrp_data: msrp_data,
-                        models: models,
-                        selectedModels: req.query.model || []
-                    });
-                })
-                .catch((modelError) => {
-                    console.error('Error fetching model data:', modelError);
-                    res.status(500).send('Error fetching model data');
-                });
-        })
-        .catch((error) => {
-            console.error(`Error fetching data: ${error}`);
-            res.status(500).send('Error fetching data');
+        msrp_data.forEach(function(data) {
+            data.msrp = formatCurrency(data.msrp);
         });
+
+        axios.get(`${baseURL}/models`)
+            .then((modelResponse) => {
+                var models = modelResponse.data;
+                var selectedModels = req.query.model;
+                selectedModels = selectedModels ? (Array.isArray(selectedModels) ? selectedModels : [selectedModels]) : [];
+
+                res.render('pages/msrp', {
+                    msrp_data: msrp_data,
+                    models: models,
+                    selectedModels: selectedModels,
+                    currentPage: page,
+                    totalPages: totalPages,
+                    limit: limit,
+                    totalItems: totalItems
+                });
+            })
+            .catch((modelError) => {
+                console.error('Error fetching model data:', modelError);
+                res.status(500).send('Error fetching model data');
+            });
+    })
+    .catch((error) => {
+        console.error(`Error fetching data: ${error}`);
+        res.status(500).send('Error fetching data');
+    });
 });
+
 
 app.get('/panther350', function(req, res) {
     axios.get(`${baseURL}/panther350`)

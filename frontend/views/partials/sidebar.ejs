@@ -1,5 +1,5 @@
 <div class="row g-0 flex-nowrap">
-<div class="sidebar col-md-3 col-xl-2 px-sm-0 px-0" role="navigation">
+<div class="sidebar col-md-3 col-xl-2 px-sm-0 px-0 navbar navbar-expand-lg navbar-dark">
     <div class="d-flex flex-column align-items-center align-items-sm-start px-3 min-vh-100 justify-content-center">
         <a href="/" class="d-flex mx-auto" style="margin-bottom: 10px;">
             <img id="rotatingImage" width="auto" height="96" class="mx-auto">
@@ -88,17 +88,15 @@
 
     document.getElementById('rotatingImage').src = imageURLs[randomIndex]
 
-    // Get the current URL path
     var path = window.location.pathname;
+    var navLinks = document.querySelectorAll('.nav-link');
 
-    // Get all navigation links
-    var navLinks = document.querySelectorAll('.csslink');
-
-    // Loop through the links and add the csslinkactive class to the active link
-    for (var i = 0; i < navLinks.length; i++) {
-        if (navLinks[i].getAttribute('href') === path) {
-            navLinks[i].classList.add('csslinkactive');
+    navLinks.forEach(function(link) {
+        if (link.getAttribute('href') === path) {
+            link.classList.add('active');
+        } else {
+            link.classList.remove('active');
         }
-    }
+    });
 
 </script>

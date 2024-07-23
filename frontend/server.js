@@ -37,46 +37,10 @@ app.get('/rand', function(req, res) {
     })
 });
 
-app.get('/camaro', function(req, res) {
-    var trims = req.query.trim;
-    let url = `${baseURL}/camaro`;
-
-    if (trims) {
-        trims = Array.isArray(trims) ? trims.join(',') : trims;
-        url += `?trim=${trims}`;
-    }
-
-    axios.get(url)
-        .then((response) => {
-            var trim_data = response.data;
-
-            trim_data.forEach(function(data) {
-                data.msrp = formatCurrency(data.msrp);
-            });
-
-            axios.get(`${baseURL}/trims`)
-                .then((trimResponse) => {
-                    var trims = trimResponse.data;
-
-                    res.render('pages/camaro', {
-                        trim_data: trim_data,
-                        trims: trims,
-                        selectedTrims: req.query.trim || []
-                    });
-                })
-                .catch((trimError) => {
-                    console.error('Error fetching trim data:', trimError);
-                    res.status(500).send('Error fetching trim data');
-                });
-        })
-        .catch((error) => {
-            console.error(`Error fetching data: ${error}`);
-            res.status(500).send('Error fetching data');
-        });
-});
-
 app.get('/msrp', function(req, res) {
     var models = req.query.model;
+    var rpo = req.query.rpo;
+    var color = req.query.color;
     var page = parseInt(req.query.page) || 1;
     var limit = parseInt(req.query.limit) || 100;
 
@@ -89,43 +53,63 @@ app.get('/msrp', function(req, res) {
         url += `&model=${models}`;
     }
 
+    if (rpo) {
+        url += `&rpo=${rpo}`;
+    }
+
+    if (color) {
+        url += `&color=${color}`;
+    }
+
     axios.get(url)
-    .then((response) => {
-        var msrp_data = Array.isArray(response.data.data) ? response.data.data : [];
-        var totalItems = response.data.total;
-        var totalPages = Math.ceil(totalItems / limit);
+        .then((response) => {
+            var msrp_data = Array.isArray(response.data.data) ? response.data.data : [];
+            var totalItems = response.data.total;
+            var totalPages = Math.ceil(totalItems / limit);
 
-        msrp_data.forEach(function(data) {
-            data.msrp = formatCurrency(data.msrp);
-        });
-
-        axios.get(`${baseURL}/models`)
-            .then((modelResponse) => {
-                var models = modelResponse.data;
-                var selectedModels = req.query.model;
-                selectedModels = selectedModels ? (Array.isArray(selectedModels) ? selectedModels : [selectedModels]) : [];
-
-                res.render('pages/msrp', {
-                    msrp_data: msrp_data,
-                    models: models,
-                    selectedModels: selectedModels,
-                    currentPage: page,
-                    totalPages: totalPages,
-                    limit: limit,
-                    totalItems: totalItems
-                });
-            })
-            .catch((modelError) => {
-                console.error('Error fetching model data:', modelError);
-                res.status(500).send('Error fetching model data');
+            msrp_data.forEach(function(data) {
+                data.msrp = formatCurrency(data.msrp);
             });
-    })
-    .catch((error) => {
-        console.error(`Error fetching data: ${error}`);
-        res.status(500).send('Error fetching data');
-    });
-});
 
+            axios.get(`${baseURL}/api/models`)
+                .then((modelResponse) => {
+                    var models = modelResponse.data;
+                    var selectedModels = req.query.model;
+                    selectedModels = selectedModels ? (Array.isArray(selectedModels) ? selectedModels : [selectedModels]) : [];
+
+                    axios.get(`${baseURL}/api/colors`)
+                        .then((colorResponse) => {
+                            var colors = colorResponse.data;
+                            var selectedColor = req.query.color;
+
+                            res.render('pages/msrp', {
+                                msrp_data: msrp_data,
+                                models: models,
+                                colors: colors,
+                                selectedModels: selectedModels,
+                                currentPage: page,
+                                totalPages: totalPages,
+                                limit: limit,
+                                totalItems: totalItems,
+                                selectedRPO: rpo,
+                                selectedColor: selectedColor
+                            });
+                        })
+                        .catch((colorError) => {
+                            console.error('Error fetching color data:', colorError);
+                            res.status(500).send('Error fetching color data');
+                        });
+                })
+                .catch((modelError) => {
+                    console.error('Error fetching model data:', modelError);
+                    res.status(500).send('Error fetching model data');
+                });
+        })
+        .catch((error) => {
+            console.error(`Error fetching data: ${error}`);
+            res.status(500).send('Error fetching data');
+        });
+});
 
 app.get('/panther350', function(req, res) {
     axios.get(`${baseURL}/panther350`)

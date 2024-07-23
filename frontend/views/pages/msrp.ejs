@@ -33,28 +33,57 @@
                     <button type="submit" class="btn btn-primary mt-2">Apply Filters</button>
                 </form>
             </div>
-        <div class="stats">
-            <!-- Dropdown and Total -->
-            <div class="col-md-2">
-                <div class="row">
-                    <div class="total-container" style="display: flex;">
-                        <p style="color: rgb(103, 103, 103);">Retrieved <%= totalItems %> vehicles</p>
-                    </div>
-                </div>
-            </div>
-            <div>
-                <div class="row">
-                    <div class="dropdown-container" style="margin-bottom: 15px;">
-                        <select id="limitSelect" class="form-select">
-                            <option value="100" <% if (limit === 100) { %>selected<% } %>>100</option>
-                            <option value="150" <% if (limit === 150) { %>selected<% } %>>150</option>
-                            <option value="200" <% if (limit === 200) { %>selected<% } %>>200</option>
-                            <option value="250" <% if (limit === 250) { %>selected<% } %>>250</option>
+            <div class="row">
+                <div class="col-md-2">
+                    <div class="dropdown-container">
+                        <select id="rpoSelect" class="form-select">
+                            <option value="">Select Package/Option</option>
+                            <option value="Z4B" <% if (selectedRPO === 'Z4B') { %>selected<% } %>>Collector's Edition</option>
+                            <option value="X56" <% if (selectedRPO === 'X56') { %>selected<% } %>>Garage 56 Special Edition</option>
+                            <option value="A1Z" <% if (selectedRPO === 'A1Z') { %>selected<% } %>>ZL1 1LE</option>
+                            <option value="A1Y" <% if (selectedRPO === 'A1Y') { %>selected<% } %>>SS 1LE</option>
+                            <option value="A1X" <% if (selectedRPO === 'A1X') { %>selected<% } %>>LT 1LE</option>
+                            <option value="LF4" <% if (selectedRPO === 'LF4') { %>selected<% } %>>CT4-V Blackwing</option>
+                            <option value="1SV" <% if (selectedRPO === '1SV') { %>selected<% } %>>CT5-V Blackwing</option>
+                            <option value="OAR" <% if (selectedRPO === 'OAR') { %>selected<% } %>>Pre-Production Vehicle</option>
                         </select>
                     </div>
                 </div>
             </div>
-        </div>
+            <div class="row">
+                <div class="col-md-2">
+                    <div class="dropdown-container">
+                        <select id="colorSelect" class="form-select">
+                            <option value="">Select Color</option>
+                            <% colors.forEach(function(color) { %>
+                                <option value="<%= color %>" <% if (selectedColor === color) { %>selected<% } %>><%= color %></option>
+                            <% }) %>
+                        </select>
+                    </div>
+                </div>
+            </div>            
+            <div class="stats">
+                <!-- Dropdown and Total -->
+                <div class="col-md-2">
+                    <div class="row">
+                        <div class="total-container" style="display: flex;">
+                            <p style="color: rgb(103, 103, 103);">Retrieved <%= totalItems %> vehicles</p>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="row">
+                        <div class="dropdown-container" style="margin-bottom: 15px;">
+                            <select id="limitSelect" class="form-select">
+                                <option value="100" <% if (limit === 100) { %>selected<% } %>>100</option>
+                                <option value="150" <% if (limit === 150) { %>selected<% } %>>150</option>
+                                <option value="200" <% if (limit === 200) { %>selected<% } %>>200</option>
+                                <option value="250" <% if (limit === 250) { %>selected<% } %>>250</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
             
             <!-- Top MSRP Table -->
             <div class="table-responsive">
@@ -78,8 +107,22 @@
                     </thead>
                     <tbody>
                         <% locals.msrp_data.forEach(function(data) { %>
+                            <% 
+                              function checkRPO(data) {
+                                let hasOAR = false;
+                                if (data.allJson) {
+                                  const rpos = JSON.parse(data.allJson).Options;
+                                  if (rpos) {
+                                    hasOAR = rpos.includes('OAR');
+                                  }
+                                }
+                                return { hasOAR };
+                              }
+
+                              const result = checkRPO(data);
+                            %>
                             <tr style="cursor: pointer;" onmousedown="handleMouseDown(event);" data-url="/search?vin=<%= data.vin %>">
-                                <td scope="row"><%= data.vin %></td>
+                                <td scope="row" style="text-align: left;" class="<%= result.hasOAR ? 'highlight' : '' %>"><%= data.vin %></td>
                                 <td scope="row"><%= data.modelYear %></td>
                                 <td scope="row"><%= data.model %></td>
                                 <td scope="row"><%= data.body %></td>
@@ -107,7 +150,7 @@
                                         <img src="../img/mexico_flag.png" alt="Mexico" width="20">
                                     <% } %>
                                 </td>
-                                <td scope="row"><%= data.dealer || 'N/A' %></td>
+                                <td scope="row" style="text-align: left;"><%= data.dealer || 'N/A' %></td>
                             </tr>
                         <% }) %>
                     </tbody>
@@ -119,15 +162,15 @@
                             <!-- First Page -->
                             <% if (currentPage > 1) { %>
                                 <li class="page-item">
-                                    <a class="page-link" href="?page=1&limit=<%= limit %>&model=<%= selectedModels.join(',') %>">First</a>
+                                    <a class="page-link" href="?page=1&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&color=<%= selectedColor %>">First</a>
                                 </li>
                             <% } %>
 
                             <!-- Previous Page -->
                             <% if (currentPage > 1) { %>
                                 <li class="page-item">
-                                    <a class="page-link" href="?page=<%= currentPage - 1 %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>">Previous</a>
-                                </li>
+                                    <a class="page-link" href="?page=<%= currentPage - 1 %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&color=<%= selectedColor %>">Previous</a>
+        </li>
                             <% } %>
 
                             <!-- Page Numbers -->
@@ -146,21 +189,21 @@
                             %>
                             <% for (let i = startPage; i <= endPage; i++) { %>
                                 <li class="page-item <%= i === currentPage ? 'active' : '' %>">
-                                    <a class="page-link" href="?page=<%= i %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>"><%= i %></a>
+                                    <a class="page-link" href="?page=<%= i %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&color=<%= selectedColor %>"><%= i %></a>
                                 </li>
                             <% } %>
-
+                        
                             <!-- Next Page -->
                             <% if (currentPage < totalPages) { %>
                                 <li class="page-item">
-                                    <a class="page-link" href="?page=<%= currentPage + 1 %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>">Next</a>
+                                    <a class="page-link" href="?page=<%= currentPage + 1 %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&color=<%= selectedColor %>">Next</a>
                                 </li>
                             <% } %>
-
+                        
                             <!-- Last Page -->
                             <% if (currentPage < totalPages) { %>
                                 <li class="page-item">
-                                    <a class="page-link" href="?page=<%= totalPages %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>">Last</a>
+                                    <a class="page-link" href="?page=<%= totalPages %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&color=<%= selectedColor %>">Last</a>
                                 </li>
                             <% } %>
                         </ul>
@@ -186,20 +229,26 @@
             window.location.href = url;
         }
 
-        function handleContextMenu(event, url) {
-            event.preventDefault(); // Prevent the default context menu
-            window.location.href = url;
-        }
-
         document.addEventListener('DOMContentLoaded', function() {
+            const rpoSelect = document.getElementById('rpoSelect');
+            const colorSelect = document.getElementById('colorSelect');
             const filterForm = document.getElementById('filterForm');
             const limitSelect = document.getElementById('limitSelect');
 
-            limitSelect.addEventListener('change', function(event) {
-                const newLimit = event.target.value;
-                const queryParams = new URLSearchParams(window.location.search);
-                queryParams.set('limit', newLimit);
-                window.location.search = queryParams.toString();
+            rpoSelect.addEventListener('change', function(event) {
+                const selectedRPO = event.target.value;
+                const url = new URL(window.location.href);
+                url.searchParams.set('rpo', selectedRPO);
+                url.searchParams.set('page', 1);
+                window.location.href = url.toString();
+            });
+
+            colorSelect.addEventListener('change', function(event) {
+                const selectedColor = event.target.value;
+                const url = new URL(window.location.href);
+                url.searchParams.set('color', selectedColor);
+                url.searchParams.set('page', 1);
+                window.location.href = url.toString();
             });
 
             filterForm.addEventListener('submit', function(event) {
@@ -207,12 +256,14 @@
                 
                 const checkboxes = filterForm.querySelectorAll('input[type="checkbox"]');
                 const selectedOptions = Array.from(checkboxes)
-                                             .filter(checkbox => checkbox.checked)
-                                             .map(checkbox => checkbox.value);
+                                            .filter(checkbox => checkbox.checked)
+                                            .map(checkbox => checkbox.value);
 
                 const queryString = selectedOptions.map(option => `model=${option}`).join('&');
+                const selectedRPO = rpoSelect.value;
+                const selectedColor = colorSelect.value;
                 const limit = limitSelect.value;
-                const url = `/msrp?${queryString}`;
+                const url = `/msrp?page=1&${queryString}&rpo=${selectedRPO}&color=${selectedColor}&limit=${limit}`;
                 window.location.href = url;
             });
 

@@ -57,7 +57,6 @@ INTO TABLE gm COLUMNS TERMINATED BY '\t';
 -- How to access options from allJson without allRpos column
 SELECT * FROM gm
 WHERE JSON_CONTAINS(allJson->'$.Options', '["A1Y"]')
-AND JSON_CONTAINS(allJson->'$.Options', '["GJ0"]')
 ORDER BY msrp DESC;
 
 -- Select distinct values

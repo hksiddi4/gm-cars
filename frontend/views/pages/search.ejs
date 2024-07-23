@@ -181,7 +181,7 @@
                     <% rpos.forEach(function(rpo) { %>
                       <% if (rpo) { %>
                         <tr>
-                          <td><%= rpo %></td>
+                          <td class="<%= rpo.includes('OAR') ? 'highlight' : '' %>"><%= rpo %></td>
                           <td class="rpo-description" data-code="<%= rpo || 'N/A' %>" style="text-align: left;"></td>
                         </tr>
                       <% } %>

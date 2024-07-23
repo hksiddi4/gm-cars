@@ -54,57 +54,51 @@ def unique():
 @app.route('/msrp', methods=['GET'])
 def sort_price():
     models = request.args.get('model')
+    rpo = request.args.get('rpo')
+    color = request.args.get('color')
     page = int(request.args.get('page', 1))
     limit = int(request.args.get('limit', 100))
     offset = (page - 1) * limit
-    
-    sqlStatement = "SELECT COUNT(*) AS total FROM gm"
-    
+
+    conditions = []
+
     if models:
         models = [model.strip() for model in models.split(',')]
         models = "', '".join(models)
-        sqlStatement += f" WHERE model IN ('{models}')"
-    
-    viewTable = execute_read_query(conn, sqlStatement)
-    total_items = viewTable[0]['total']
-    
-    sqlStatement = "SELECT * FROM gm"
-    
-    if models:
-        sqlStatement += f" WHERE model IN ('{models}')"
-    
-    sqlStatement += f" ORDER BY msrp DESC LIMIT {limit} OFFSET {offset}"
-    
-    viewTable = execute_read_query(conn, sqlStatement)
-    
+        conditions.append(f"model IN ('{models}')")
+
+    if rpo:
+        conditions.append(f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')")
+
+    if color:
+        conditions.append(f"exterior_color = '{color}'")
+
+    where_clause = " WHERE " + " AND ".join(conditions) if conditions else ""
+
+    count_query = f"SELECT COUNT(*) AS total FROM gm{where_clause}"
+    total_items_result = execute_read_query(conn, count_query)
+    total_items = total_items_result[0]['total']
+
+    select_query = f"SELECT * FROM gm{where_clause} ORDER BY msrp DESC LIMIT {limit} OFFSET {offset}"
+    viewTable = execute_read_query(conn, select_query)
+
     return jsonify({'data': viewTable, 'total': total_items})
 
+@app.route('/api/colors', methods=['GET'])
+def get_colorss():
+    sqlStatement = "SELECT DISTINCT exterior_color FROM gm ORDER BY exterior_color"
+    colors = execute_read_query(conn, sqlStatement)
+    color_list = [color['exterior_color'] for color in colors]
+    return jsonify(color_list)
 
-@app.route('/camaro', methods=['GET'])
-def camaro():
-    trims = request.args.get('trim')
-    
-    # Build the SQL query
-    sqlStatement = "SELECT * FROM gm WHERE model ='CAMARO'"
-    
-    if trims:
-        trims = [trim.strip() for trim in trims.split(',')]
-        trims = "', '".join(trims)
-        sqlStatement += f" AND trim IN ('{trims}')"
-    
-    sqlStatement += " ORDER BY msrp DESC LIMIT 100"
-    
-    viewTable = execute_read_query(conn, sqlStatement)
-    return jsonify(viewTable)
-
-@app.route('/models', methods=['GET'])
+@app.route('/api/models', methods=['GET'])
 def get_models():
     sqlStatement = "SELECT DISTINCT model FROM gm ORDER BY model"
     models = execute_read_query(conn, sqlStatement)
     model_list = [model['model'] for model in models]
     return jsonify(model_list)
 
-@app.route('/trims', methods=['GET'])
+@app.route('/api/trims', methods=['GET'])
 def get_trims():
     sqlStatement = "SELECT DISTINCT trim FROM gm WHERE model = 'CAMARO' ORDER BY trim"
     trims = execute_read_query(conn, sqlStatement)

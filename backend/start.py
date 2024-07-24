@@ -34,8 +34,8 @@ def search_inv():
     sqlStatement = f"SELECT * FROM gm WHERE VIN = '{vin}'"
     viewTable = execute_read_query(conn, sqlStatement)
     return jsonify(viewTable)
-    
-@app.route('/api/test', methods=['POST'])
+
+@app.route('/api/rarity', methods=['POST'])
 def unique():
     data = request.json
     options = data.get('Options')
@@ -56,6 +56,8 @@ def sort_price():
     models = request.args.get('model')
     rpo = request.args.get('rpo')
     color = request.args.get('color')
+    country = request.args.get('country')
+    order = request.args.get('order')
     page = int(request.args.get('page', 1))
     limit = int(request.args.get('limit', 100))
     offset = (page - 1) * limit
@@ -67,11 +69,40 @@ def sort_price():
         models = "', '".join(models)
         conditions.append(f"model IN ('{models}')")
 
-    if rpo:
+    if rpo == "Z4B":
+        conditions.append("exterior_color IN ('PANTHER BLACK MATTE', 'PANTHER BLACK METALLIC')")
+    elif rpo == "X56":
+        conditions.append("trim = 'ZL1'")
+        conditions.append("exterior_color = 'RIPTIDE BLUE METALLIC'")
+        conditions.append(f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')")
+    elif rpo == "A1Z":
+        conditions.append("trim = 'ZL1'")
+        conditions.append(f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')")
+    elif rpo == "A1Y":
+        conditions.append("trim in ('1SS', '2SS')")
+        conditions.append(f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')")
+    elif rpo == "A1X":
+        conditions.append("trim in ('1LT', '2LT', '3LT')")
+        conditions.append(f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')")
+    elif rpo == "LF4":
+        conditions.append("model = 'CT4'")
+        conditions.append("trim = 'V-SERIES BLACKWING'")
+    elif rpo == "1SV":
+        conditions.append("model = 'CT5'")
+        conditions.append("trim = 'V-SERIES BLACKWING'")
+    elif rpo:
         conditions.append(f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')")
 
     if color:
         conditions.append(f"exterior_color = '{color}'")
+
+    if country == "USA":
+        conditions.append("NOT JSON_CONTAINS(allJson->'$.maker', '\"GMCANADA\"')")
+        conditions.append("NOT JSON_CONTAINS(allJson->'$.maker', '\"N/A\"')")
+    elif country == "CAN":
+        conditions.append("JSON_CONTAINS(allJson->'$.maker', '\"GMCANADA\"')")
+    elif country:
+        conditions.append("JSON_CONTAINS(allJson->'$.maker', '\"N/A\"')")
 
     where_clause = " WHERE " + " AND ".join(conditions) if conditions else ""
 
@@ -79,13 +110,16 @@ def sort_price():
     total_items_result = execute_read_query(conn, count_query)
     total_items = total_items_result[0]['total']
 
-    select_query = f"SELECT * FROM gm{where_clause} ORDER BY msrp DESC LIMIT {limit} OFFSET {offset}"
+    if order == "ASC":
+        select_query = f"SELECT * FROM gm{where_clause} ORDER BY msrp LIMIT {limit} OFFSET {offset}"
+    else:
+        select_query = f"SELECT * FROM gm{where_clause} ORDER BY msrp DESC LIMIT {limit} OFFSET {offset}"
     viewTable = execute_read_query(conn, select_query)
 
     return jsonify({'data': viewTable, 'total': total_items})
 
 @app.route('/api/colors', methods=['GET'])
-def get_colorss():
+def get_colors():
     sqlStatement = "SELECT DISTINCT exterior_color FROM gm ORDER BY exterior_color"
     colors = execute_read_query(conn, sqlStatement)
     color_list = [color['exterior_color'] for color in colors]

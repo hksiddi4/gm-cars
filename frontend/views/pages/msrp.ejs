@@ -50,24 +50,12 @@
                     </div>
                 </div>
             </div>
-            <div class="row">
-                <div class="col-md-2">
-                    <div class="dropdown-container">
-                        <select id="colorSelect" class="form-select">
-                            <option value="">Select Color</option>
-                            <% colors.forEach(function(color) { %>
-                                <option value="<%= color %>" <% if (selectedColor === color) { %>selected<% } %>><%= color %></option>
-                            <% }) %>
-                        </select>
-                    </div>
-                </div>
-            </div>            
             <div class="stats">
                 <!-- Dropdown and Total -->
                 <div class="col-md-2">
                     <div class="row">
                         <div class="total-container" style="display: flex;">
-                            <p style="color: rgb(103, 103, 103);">Retrieved <%= totalItems %> vehicles</p>
+                            <p style="color: rgb(103, 103, 103);">Retrieved <%= totalItems.toLocaleString() %> vehicles</p>
                         </div>
                     </div>
                 </div>
@@ -99,9 +87,30 @@
                             <th scope="col">Engine</th>
                             <th scope="col">Transmission</th>
                             <th scope="col">Drivetrain</th>
-                            <th scope="col">Exterior Color</th>
-                            <th scope="col">MSRP</th>
-                            <th scope="col">Country</th>
+                            <th scope="col">
+                                <div class="dropdown-container">
+                                    <select id="colorSelect" class="form-select small-dropdown">
+                                        <option value="">Exterior Color</option>
+                                        <% colors.forEach(function(color) { %>
+                                            <option value="<%= color %>" <% if (selectedColor === color) { %>selected<% } %>><%= color %></option>
+                                        <% }) %>
+                                    </select>
+                                </div>
+                            </th>
+                            <th scope="col" id="msrpHeader" onclick="toggleSortOrder()" style="cursor: pointer;">
+                                MSRP
+                                <i class="fas fa-sort-down" id="msrpIcon"></i>
+                            </th>
+                            <th scope="col">
+                                <div class="dropdown-container">
+                                    <select id="countrySelect" class="form-select small-dropdown">
+                                        <option value="">Country</option>
+                                        <option value="USA" <% if (selectedCountry === 'USA') { %>selected<% } %>>USA</option>
+                                        <option value="CAN" <% if (selectedCountry === 'CAN') { %>selected<% } %>>Canada</option>
+                                        <option value="MEX" <% if (selectedCountry === 'MEX') { %>selected<% } %>>Mexico</option>
+                                    </select>
+                                </div>
+                            </th>
                             <th scope="col">Dealer</th>
                         </tr>
                     </thead>
@@ -130,7 +139,10 @@
                                 <td scope="row"><%= data.vehicleEngine %></td>
                                 <td scope="row"><%= data.transmission %></td>
                                 <td scope="row"><%= data.drivetrain %></td>
-                                <td scope="row"><%= data.exterior_color %></td>
+                                <td scope="row" style="text-align: left; display: flex; align-items: center;">
+                                    <img id="test" src="../img/extColors/<%= colorMap[data.exterior_color] || '../extColors/default' %>.webp" width="20" style="margin-right: 8px;">
+                                    <%= data.exterior_color %>
+                                </td>
                                 <td scope="row" style="text-align: right;"><%= data.msrp %></td>
                                 <td scope="row">
                                     <% 
@@ -162,14 +174,14 @@
                             <!-- First Page -->
                             <% if (currentPage > 1) { %>
                                 <li class="page-item">
-                                    <a class="page-link" href="?page=1&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&color=<%= selectedColor %>">First</a>
+                                    <a class="page-link" href="?page=1&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>">First</a>
                                 </li>
                             <% } %>
 
                             <!-- Previous Page -->
                             <% if (currentPage > 1) { %>
                                 <li class="page-item">
-                                    <a class="page-link" href="?page=<%= currentPage - 1 %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&color=<%= selectedColor %>">Previous</a>
+                                    <a class="page-link" href="?page=<%= currentPage - 1 %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>">Previous</a>
         </li>
                             <% } %>
 
@@ -189,21 +201,21 @@
                             %>
                             <% for (let i = startPage; i <= endPage; i++) { %>
                                 <li class="page-item <%= i === currentPage ? 'active' : '' %>">
-                                    <a class="page-link" href="?page=<%= i %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&color=<%= selectedColor %>"><%= i %></a>
+                                    <a class="page-link" href="?page=<%= i %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>"><%= i %></a>
                                 </li>
                             <% } %>
                         
                             <!-- Next Page -->
                             <% if (currentPage < totalPages) { %>
                                 <li class="page-item">
-                                    <a class="page-link" href="?page=<%= currentPage + 1 %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&color=<%= selectedColor %>">Next</a>
+                                    <a class="page-link" href="?page=<%= currentPage + 1 %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>">Next</a>
                                 </li>
                             <% } %>
                         
                             <!-- Last Page -->
                             <% if (currentPage < totalPages) { %>
                                 <li class="page-item">
-                                    <a class="page-link" href="?page=<%= totalPages %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&color=<%= selectedColor %>">Last</a>
+                                    <a class="page-link" href="?page=<%= totalPages %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>">Last</a>
                                 </li>
                             <% } %>
                         </ul>
@@ -216,6 +228,16 @@
     <%- include('../partials/footer'); %>
     <script>
         let startX;
+        let selectedOrder = "DESC";
+
+        function toggleSortOrder() {
+            selectedOrder = selectedOrder === "DESC" ? "ASC" : "DESC";
+            document.getElementById('msrpIcon').className = selectedOrder === "DESC" ? 'fas fa-sort-down' : 'fas fa-sort-up';
+
+            const params = new URLSearchParams(window.location.search);
+            params.set('order', selectedOrder);
+            window.location.search = params.toString();
+        }
 
         function handleMouseDown(event) {
             startX = event.clientX;
@@ -232,8 +254,13 @@
         document.addEventListener('DOMContentLoaded', function() {
             const rpoSelect = document.getElementById('rpoSelect');
             const colorSelect = document.getElementById('colorSelect');
+            const countrySelect = document.getElementById('countrySelect');
+            const orderSelect = document.getElementById('orderSelect');
             const filterForm = document.getElementById('filterForm');
             const limitSelect = document.getElementById('limitSelect');
+            const currentOrder = new URLSearchParams(window.location.search).get('order') || "DESC";
+            selectedOrder = currentOrder;
+            document.getElementById('msrpIcon').className = selectedOrder === "DESC" ? 'fas fa-sort-down' : 'fas fa-sort-up';
 
             rpoSelect.addEventListener('change', function(event) {
                 const selectedRPO = event.target.value;
@@ -251,6 +278,22 @@
                 window.location.href = url.toString();
             });
 
+            countrySelect.addEventListener('change', function(event) {
+                const selectedCountry = event.target.value;
+                const url = new URL(window.location.href);
+                url.searchParams.set('country', selectedCountry);
+                url.searchParams.set('page', 1);
+                window.location.href = url.toString();
+            });
+
+            limitSelect.addEventListener('change', function() {
+                const limit = limitSelect.value;
+                const url = new URL(window.location.href);
+                url.searchParams.set('limit', limit);
+                url.searchParams.set('page', 1);
+                window.location.href = url.toString();
+            });
+
             filterForm.addEventListener('submit', function(event) {
                 event.preventDefault();
                 
@@ -259,19 +302,15 @@
                                             .filter(checkbox => checkbox.checked)
                                             .map(checkbox => checkbox.value);
 
+                console.log(selectedOptions);
+
                 const queryString = selectedOptions.map(option => `model=${option}`).join('&');
                 const selectedRPO = rpoSelect.value;
                 const selectedColor = colorSelect.value;
+                const selectedCountry = countrySelect.value;
                 const limit = limitSelect.value;
-                const url = `/msrp?page=1&${queryString}&rpo=${selectedRPO}&color=${selectedColor}&limit=${limit}`;
+                const url = `/msrp?page=1&${queryString}&rpo=${selectedRPO}&color=${selectedColor}&country=${selectedCountry}&limit=${limit}`;
                 window.location.href = url;
-            });
-
-            limitSelect.addEventListener('change', function() {
-                const limit = limitSelect.value;
-                const url = new URL(window.location.href);
-                url.searchParams.set('limit', limit);
-                window.location.href = url.toString();
             });
 
             document.querySelectorAll('#allTable tbody tr').forEach(row => {

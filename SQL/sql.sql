@@ -56,7 +56,7 @@ INTO TABLE gm COLUMNS TERMINATED BY '\t';
 
 -- How to access options from allJson without allRpos column
 SELECT * FROM gm
-WHERE JSON_CONTAINS(allJson->'$.Options', '["A1Y"]')
+WHERE JSON_CONTAINS(allJson->'$.Options', '["A1Z"]')
 ORDER BY msrp DESC;
 
 -- Select distinct values
@@ -88,7 +88,7 @@ WHERE location LIKE '%, % %' AND
       )
 ORDER BY msrp DESC;
 
-SELECT * FROM gm WHERE NOT JSON_CONTAINS(allJson->'$.maker', '"GMCANADA"') ORDER BY msrp DESC;
+SELECT * FROM gm WHERE JSON_CONTAINS(allJson->'$.maker', '"GMCANADA"');
 
 SELECT allJson->'$.maker' AS maker, 
        modelYear,
@@ -106,7 +106,11 @@ ORDER by Count DESC;
 
 SELECT COUNT(*) AS Count
 FROM gm
-WHERE JSON_UNQUOTE(JSON_EXTRACT(allJson, '$.Options')) = '';
+WHERE JSON_UNQUOTE(JSON_EXTRACT(allJson, '$.Options')) = '1SV';
+
+SELECT COUNT(*) AS Count
+FROM gm
+WHERE trim = 'V-SERIES BLACKWING' AND model = 'CT5';
 
 SELECT * FROM gm WHERE trim = '1LZ';
 

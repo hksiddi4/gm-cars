@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
 const axios = require('axios');
+const colorMap = require('./views/partials/colors.js')
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
@@ -41,6 +42,8 @@ app.get('/msrp', function(req, res) {
     var models = req.query.model;
     var rpo = req.query.rpo;
     var color = req.query.color;
+    var country = req.query.country;
+    var order = req.query.order;
     var page = parseInt(req.query.page) || 1;
     var limit = parseInt(req.query.limit) || 100;
 
@@ -59,6 +62,14 @@ app.get('/msrp', function(req, res) {
 
     if (color) {
         url += `&color=${color}`;
+    }
+
+    if (country) {
+        url += `&country=${country}`;
+    }
+
+    if (order) {
+        url += `&order=${order}`;
     }
 
     axios.get(url)
@@ -86,13 +97,16 @@ app.get('/msrp', function(req, res) {
                                 msrp_data: msrp_data,
                                 models: models,
                                 colors: colors,
+                                colorMap: colorMap,
+                                selectedCountry: country,
                                 selectedModels: selectedModels,
                                 currentPage: page,
                                 totalPages: totalPages,
                                 limit: limit,
                                 totalItems: totalItems,
                                 selectedRPO: rpo,
-                                selectedColor: selectedColor
+                                selectedColor: selectedColor,
+                                selectedOrder: order
                             });
                         })
                         .catch((colorError) => {
@@ -174,11 +188,11 @@ app.get('/search', function(req, res) {
     })
 });
 
-app.post('/api/test', async (req, res) => {
+app.post('/api/rarity', async (req, res) => {
     const options = req.body.Options;
 
     try {
-        const response = await fetch(`${baseURL}/api/test`, {
+        const response = await fetch(`${baseURL}/api/rarity`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

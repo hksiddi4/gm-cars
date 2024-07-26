@@ -58,8 +58,8 @@ mmc = {
     "1AJ67": "1SS",
     "1AK37": "2SS",
     "1AK67": "2SS",
-    "1AL37": "ZL1",
-    "1AL67": "ZL1",
+    "1AL37": "1SE",
+    "1AL67": "1SE",
     "6DB69": "1SB", // CT4 LUXURY
     "6DB79": "1SB", // CT5 LUXURY
     "6DC69": "1SD", // CT4 PREMIUM LUXURY

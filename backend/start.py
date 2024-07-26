@@ -1,10 +1,3 @@
-# Before first run do:
-# pip install mysql.connector
-# pip install npm
-# npm install flask
-# Run by:
-# python start.py
-
 import sql
 import flask
 from flask import request, jsonify
@@ -22,12 +15,6 @@ myCreds = sql.Creds()
 conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
 
 # ========================= View Pages =========================
-# Random 25 view
-@app.route('/rand', methods=['GET'])
-def all_inv():
-    sqlStatement = f"SELECT * FROM gm ORDER BY RAND() LIMIT 25"
-    viewTable = execute_read_query(conn, sqlStatement)
-    return jsonify(viewTable)
 
 @app.route('/search', methods=['GET'])
 def search_inv():
@@ -47,14 +34,7 @@ def generate_url():
     mmcDict = data["mmc"]
     colorMap = data["colorMap"]
     options = [option for option in allJson["Options"] if option]
-    if allJson["maker"] == "N/A":
-        ghost_img = "../img/ghost-chevrolet-car-alt.png"
-        return jsonify({"generatedImages": ghost_img})
-    elif allJson["maker"] in ["CHEVY", "GMCANADA", "CADILLAC"]:
-        base_url = "https://cgi.chevrolet.com/mmgprod-us/dynres/prove/image.gen?i="
-    else:
-        ghost_img = "../img/ghost-chevrolet-car-alt.png"
-        return jsonify({"generatedImages": ghost_img})
+    base_url = "https://cgi.chevrolet.com/mmgprod-us/dynres/prove/image.gen?i="
 
     trim = mmcDict.get(mmc_code)
     rpos = "_".join(options)
@@ -70,7 +50,7 @@ def generate_url():
 
     urls_attempted = []
     view = 1
-    while True:
+    while view <= 9:
         end_url = f"_Fgmds2.png&v=deg{view:02d}&std=true&country=US&send404=true&background=ffffff"
         built_url = f"{base_url}{model_year}/{mmc_code}/{mmc_code}__{trim}/{color}_{rpos}{end_url}"
 
@@ -81,6 +61,10 @@ def generate_url():
             break
 
         urls_attempted.append(built_url)
+    
+    if view > 9:
+        ghost_img = "../img/ghost-chevrolet-car-alt.png"
+        return jsonify({"generatedImages": ghost_img})
 
     return jsonify({"generatedImages": urls_attempted})
 
@@ -167,6 +151,10 @@ def sort_price():
 
     return jsonify({'data': viewTable, 'total': total_items})
 
+# ========================= View Pages =========================
+
+# =========================    APIs    =========================
+
 @app.route('/api/colors', methods=['GET'])
 def get_colors():
     sqlStatement = "SELECT DISTINCT exterior_color FROM gm ORDER BY exterior_color"
@@ -188,24 +176,6 @@ def get_trims():
     trim_list = [trim['trim'] for trim in trims]
     return jsonify(trim_list)
 
-@app.route('/panther350', methods=['GET'])
-def panther():
-    sqlStatement = "SELECT * FROM gm WHERE trim = 'ZL1' AND exterior_color = 'PANTHER BLACK MATTE' ORDER BY SUBSTRING(vin, -6)"
-    viewTable = execute_read_query(conn, sqlStatement)
-    return jsonify(viewTable)
-
-@app.route('/garage56', methods=['GET'])
-def garage():
-    sqlStatement = "SELECT * FROM gm WHERE trim = 'ZL1' AND exterior_color = 'RIPTIDE BLUE METALLIC' AND JSON_CONTAINS(allJson->'$.Options', '[\"X56\"]') ORDER BY SUBSTRING(vin, -6)"    
-    viewTable = execute_read_query(conn, sqlStatement)
-    return jsonify(viewTable)
-
-@app.route('/blackwing', methods=['GET'])
-def allblackwing():
-    sqlStatement = "SELECT * FROM gm WHERE trim = 'V-SERIES BLACKWING' ORDER BY SUBSTRING(vin, -6) LIMIT 100"    
-    viewTable = execute_read_query(conn, sqlStatement)
-    return jsonify(viewTable)
-
-# ========================= View Pages =========================
+# =========================    APIs    =========================
 
 app.run()

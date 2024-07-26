@@ -140,7 +140,7 @@
                                 <td scope="row"><%= data.transmission %></td>
                                 <td scope="row"><%= data.drivetrain %></td>
                                 <td scope="row" style="text-align: left; display: flex; align-items: center;">
-                                    <img id="test" src="../img/extColors/<%= colorMap[data.exterior_color] || '../extColors/default' %>.webp" width="20" style="margin-right: 8px;">
+                                    <img id="sample" src="../img/extColors/<%= colorMap[data.exterior_color] || '../extColors/default' %>.webp" width="20" style="margin-right: 8px;">
                                     <%= data.exterior_color %>
                                 </td>
                                 <td scope="row" style="text-align: right;"><%= data.msrp %></td>
@@ -301,8 +301,6 @@
                 const selectedOptions = Array.from(checkboxes)
                                             .filter(checkbox => checkbox.checked)
                                             .map(checkbox => checkbox.value);
-
-                console.log(selectedOptions);
 
                 const queryString = selectedOptions.map(option => `model=${option}`).join('&');
                 const selectedRPO = rpoSelect.value;

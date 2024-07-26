@@ -10,6 +10,7 @@ import flask
 from flask import request, jsonify
 from flask_cors import CORS
 from sql import create_connection, execute_read_query, Creds
+import requests
 import json
 
 app = flask.Flask(__name__)
@@ -34,6 +35,54 @@ def search_inv():
     sqlStatement = f"SELECT * FROM gm WHERE VIN = '{vin}'"
     viewTable = execute_read_query(conn, sqlStatement)
     return jsonify(viewTable)
+
+@app.route('/api/genurl', methods=['POST'])
+def generate_url():
+    data = request.json["data"]
+    allJson_str = data["allJson"]
+    allJson = json.loads(allJson_str)
+
+    model_year = allJson["model_year"].strip()
+    mmc_code = allJson["mmc_code"].strip()
+    mmcDict = data["mmc"]
+    colorMap = data["colorMap"]
+    options = [option for option in allJson["Options"] if option]
+    if allJson["maker"] == "N/A":
+        ghost_img = "../img/ghost-chevrolet-car-alt.png"
+        return jsonify({"generatedImages": ghost_img})
+    elif allJson["maker"] in ["CHEVY", "GMCANADA", "CADILLAC"]:
+        base_url = "https://cgi.chevrolet.com/mmgprod-us/dynres/prove/image.gen?i="
+    else:
+        ghost_img = "../img/ghost-chevrolet-car-alt.png"
+        return jsonify({"generatedImages": ghost_img})
+
+    trim = mmcDict.get(mmc_code)
+    rpos = "_".join(options)
+    
+    color = None
+    for option in options:
+        for key, rpo in colorMap.items():
+            if rpo == option:
+                color = rpo
+                break
+        if color:
+            break
+
+    urls_attempted = []
+    view = 1
+    while True:
+        end_url = f"_Fgmds2.png&v=deg{view:02d}&std=true&country=US&send404=true&background=ffffff"
+        built_url = f"{base_url}{model_year}/{mmc_code}/{mmc_code}__{trim}/{color}_{rpos}{end_url}"
+
+        response = requests.head(built_url)
+        view += 1
+
+        if response.status_code == 404:
+            break
+
+        urls_attempted.append(built_url)
+
+    return jsonify({"generatedImages": urls_attempted})
 
 @app.route('/api/rarity', methods=['POST'])
 def unique():

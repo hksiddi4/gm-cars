@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
 const axios = require('axios');
-const colorMap = require('./views/partials/colors.js')
+const { colorMap, mmc } = require('./views/partials/modules.js')
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
@@ -183,7 +183,9 @@ app.get('/search', function(req, res) {
 
         res.render('pages/search', {
             req: req,
-            vin_data: vin_data
+            vin_data: vin_data,
+            colorMap: colorMap,
+            mmc: mmc
         });
     })
 });
@@ -204,6 +206,19 @@ app.post('/api/rarity', async (req, res) => {
         res.json(data);
     } catch (error) {
         res.status(500).json({ error: 'Failed to forward request to Python service' });
+    }
+});
+
+app.post('/api/genurl', async (req, res) => {
+    const data = req.body;
+
+    try {
+        const response = await axios.post(`${baseURL}/api/genurl`, {data});
+        const generatedUrl = response.data;
+        res.json({ url: generatedUrl });
+    } catch (error) {
+        console.error('Error generating URL:', error);
+        res.status(500).json({ error: 'Failed to generate URL' });
     }
 });
 

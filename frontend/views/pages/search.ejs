@@ -154,6 +154,15 @@
                   <% }) %>
               </tbody>
             </table>
+            <!-- Photo Carousel -->
+            <div id="carousel-container" style="position: relative; min-height: 740px; width: 100%; margin: auto; overflow: hidden;">
+              <div id="loading-animation" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                <div class="spinner"></div>
+              </div>
+              <img id="carousel-image" src="" style="width: 100%;"/>
+              <button id="prev" style="position: absolute; top: 50%; left: 0; background-color: rgba(0, 0, 0, 0.5); color: white; border: none; padding: 10px; cursor: pointer; z-index: 100;">&#10094;</button>
+              <button id="next" style="position: absolute; top: 50%; right: 0; background-color: rgba(0, 0, 0, 0.5); color: white; border: none; padding: 10px; cursor: pointer; z-index: 100;">&#10095;</button>
+            </div>
             <div class="rarity-container">
               <% vin_data.forEach(function(data) { %>
                 <% if (data.allJson) { %>
@@ -205,34 +214,84 @@
     <%- include('../partials/footer'); %>
     <script>
       document.addEventListener('DOMContentLoaded', () => {
-          const descriptionCells = document.querySelectorAll('.rpo-description');
-          descriptionCells.forEach(cell => {
-              const code = cell.getAttribute('data-code');
-              cell.textContent = getRPODescription(code);
-          });
-          
-          const button = document.getElementById('see-rarity');
-          button.addEventListener('click', () => {
-              const allJson = button.getAttribute('data-alljson');
-              const dataObject = JSON.parse(allJson);
+        const descriptionCells = document.querySelectorAll('.rpo-description');
+        descriptionCells.forEach(cell => {
+            const code = cell.getAttribute('data-code');
+            cell.textContent = getRPODescription(code);
+        });
 
-              fetch('/api/rarity', {
-                  method: 'POST',
-                  headers: {
-                      'Content-Type': 'application/json',
-                  },
-                  body: dataObject,
-              })
-              .then(response => response.json())
-              .then(data => {
-                  console.log('Success:', data);
-                  document.getElementById('response').textContent = `1 of ${data[0].Count}`;
-                  document.getElementById('snark').textContent = "- on the fourth Tuesday, after company lunch with a crescent moon when Joey went home early...";
-              })
-              .catch((error) => {
-                  console.error('Error:', error);
-              });
+        const mmc = <%- JSON.stringify(mmc) %>;
+        const colorMap = <%- JSON.stringify(colorMap) %>;
+        const allJson = <%- JSON.stringify(vin_data[0].allJson) %>;
+
+        const generatedImage = document.getElementById('generated-image');
+        const loadingAnimation = document.getElementById('loading-animation');
+        loadingAnimation.style.direction = 'block';
+        const data = { mmc, colorMap, allJson };
+
+        fetch('/api/genurl', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+        })
+        .then(response => response.json())
+        .then(data => {
+          const carouselImage = document.getElementById('carousel-image');
+          const images = data.url.generatedImages;
+
+          if (images === "../img/ghost-chevrolet-car-alt.png") {
+            carouselImage.src = images;
+            loadingAnimation.style.display = 'none';
+          } else {
+            let currentIndex = 0;
+
+            function showImage(index) {
+              carouselImage.src = images[index];
+              carouselImage.alt = `Image ${index + 1}`;
+              loadingAnimation.style.display = 'none';
+            }
+
+            showImage(currentIndex);
+
+            document.getElementById('prev').addEventListener('click', () => {
+              currentIndex = (currentIndex === 0) ? images.length - 1 : currentIndex - 1;
+              showImage(currentIndex);
+            });
+
+            document.getElementById('next').addEventListener('click', () => {
+              currentIndex = (currentIndex === images.length - 1) ? 0 : currentIndex + 1;
+              showImage(currentIndex);
+            });
+          }
+        })
+        .catch(error => {
+        console.error('Error loading generated photo:', error);
+        });
+
+        
+        const button = document.getElementById('see-rarity');
+        button.addEventListener('click', () => {
+          const allJson = button.getAttribute('data-alljson');
+          const dataObject = JSON.parse(allJson);
+
+          fetch('/api/rarity', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+              },
+              body: dataObject,
+          })
+          .then(response => response.json())
+          .then(data => {
+              document.getElementById('response').textContent = `1 of ${data[0].Count}`;
+              document.getElementById('snark').textContent = "- on the fourth Tuesday, after company lunch with a crescent moon when Joey went home early...";
+          })
+          .catch((error) => {
+              console.error('Error:', error);
           });
+        });
       });
     </script>
 </body>

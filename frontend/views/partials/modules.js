@@ -44,4 +44,35 @@ const colorMap = {
     "WILD CHERRY TINTCOAT": "GSK"
 };
 
-module.exports = colorMap;
+mmc = {
+    "1AG37": "1LT",
+    "1AG37": "1LS",
+    "1AG67": "1LT",
+    "1AH37": "2LT",
+    "1AH37": "3LT",
+    "1AH67": "2LT",
+    "1AH67": "3LT",
+    "1AJ37": "LT1",
+    "1AJ37": "1SS",
+    "1AJ67": "LT1",
+    "1AJ67": "1SS",
+    "1AK37": "2SS",
+    "1AK67": "2SS",
+    "1AL37": "ZL1",
+    "1AL67": "ZL1",
+    "6DB69": "1SB", // CT4 LUXURY
+    "6DB79": "1SB", // CT5 LUXURY
+    "6DC69": "1SD", // CT4 PREMIUM LUXURY
+    "6DC79": "1SD", // CT5 PREMIUM LUXURY
+    "6DD69": "1SE", // CT4 SPORT
+    "6DD79": "1SE", // CT5 SPORT
+    "6DE69": "1SF", // CT4 V-SERIES
+    "6DE79": "1SF", // CT5 V-SERIES
+    "6DF69": "1SP", // CT4 V-SERIES BLACKWING
+    "6DF79": "1SV" // CT5 V-SERIES BLACKWING
+};
+
+module.exports = {
+    colorMap,
+    mmc
+}

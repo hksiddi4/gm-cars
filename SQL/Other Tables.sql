@@ -48,9 +48,21 @@ SELECT * FROM gm WHERE model = 'CAMARO' AND exterior_color = 'PANTHER BLACK MATT
 
 SELECT * FROM gm WHERE model = 'CT4' AND trim = 'V-SERIES BLACKWING';
 
-SELECT JSON_EXTRACT(allJson, '$.mmc_code') AS Options, JSON_EXTRACT(allJson, '$.mmc_code'), COUNT(*) as Count
+SELECT JSON_EXTRACT(allJson, '$.mmc_code') AS Options, COUNT(*) as Count
 FROM gm
 GROUP BY JSON_EXTRACT(allJson, '$.mmc_code')
 ORDER BY Count DESC;
 
-SELECT * FROM gm WHERE vin = "1G1F91R68R0100043";
+SELECT
+    JSON_EXTRACT(allJson, '$.mmc_code') AS Options,
+    trim AS Trim,
+    COUNT(*) AS Count
+FROM gm
+GROUP BY JSON_EXTRACT(allJson, '$.mmc_code'), trim
+ORDER BY Count DESC;
+
+SELECT * FROM gm WHERE vin = "1G6D35R67R0810951";
+
+SELECT * FROM gm WHERE modelYear = "2024" AND trim = "V-Series blackwing" AND SUBSTRING(vin, -6)>810920 AND SUBSTRING(vin, -6)<820920;
+
+select * from gm where vin = '1G6D35R60R0810953';

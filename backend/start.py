@@ -84,7 +84,7 @@ def unique():
     else:
         return jsonify({'error': 'No value provided'}), 400
 
-@app.route('/msrp', methods=['GET'])
+@app.route('/vehicles', methods=['GET'])
 def sort_price():
     models = request.args.get('model')
     rpo = request.args.get('rpo')

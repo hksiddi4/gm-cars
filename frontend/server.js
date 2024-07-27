@@ -22,7 +22,7 @@ app.get('/', function(req, res) {
     res.render('pages/index', { req: req });
 });
 
-app.get('/msrp', function(req, res) {
+app.get('/vehicles', function(req, res) {
     var models = req.query.model;
     var rpo = req.query.rpo;
     var color = req.query.color;
@@ -33,7 +33,7 @@ app.get('/msrp', function(req, res) {
 
     limit = Math.min(limit, 250);
 
-    let url = `${baseURL}/msrp?page=${page}&limit=${limit}`;
+    let url = `${baseURL}/vehicles?page=${page}&limit=${limit}`;
 
     if (models) {
         models = Array.isArray(models) ? models.join(',') : models;
@@ -58,11 +58,11 @@ app.get('/msrp', function(req, res) {
 
     axios.get(url)
         .then((response) => {
-            var msrp_data = Array.isArray(response.data.data) ? response.data.data : [];
+            var vehicle_data = Array.isArray(response.data.data) ? response.data.data : [];
             var totalItems = response.data.total;
             var totalPages = Math.ceil(totalItems / limit);
 
-            msrp_data.forEach(function(data) {
+            vehicle_data.forEach(function(data) {
                 data.msrp = formatCurrency(data.msrp);
             });
 
@@ -77,8 +77,8 @@ app.get('/msrp', function(req, res) {
                             var colors = colorResponse.data;
                             var selectedColor = req.query.color;
 
-                            res.render('pages/msrp', {
-                                msrp_data: msrp_data,
+                            res.render('pages/vehicles', {
+                                vehicle_data: vehicle_data,
                                 models: models,
                                 colors: colors,
                                 colorMap: colorMap,
@@ -115,16 +115,20 @@ app.get('/search', function(req, res) {
     .then((response)=>{
         var vin_data = response.data;
 
-        vin_data.forEach(function(data) {
-            data.msrp = formatCurrency(data.msrp);
-        });
-
-        res.render('pages/search', {
-            req: req,
-            vin_data: vin_data,
-            colorMap: colorMap,
-            mmc: mmc
-        });
+        if (vin_data.length === 0) {
+            res.status(404).render('pages/404', { req: req });
+        } else {
+            vin_data.forEach(function(data) {
+                data.msrp = formatCurrency(data.msrp);
+            });
+    
+            res.render('pages/search', {
+                req: req,
+                vin_data: vin_data,
+                colorMap: colorMap,
+                mmc: mmc
+            });
+        }
     })
 });
 

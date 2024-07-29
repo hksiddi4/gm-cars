@@ -22,7 +22,13 @@ app.get('/', function(req, res) {
     res.render('pages/index', { req: req });
 });
 
+app.get('/index1', function(req, res) {
+    res.render('pages/index1', { req: req });
+});
+
 app.get('/vehicles', function(req, res) {
+    var year = req.query.year;
+    var trans = req.query.trans;
     var models = req.query.model;
     var rpo = req.query.rpo;
     var color = req.query.color;
@@ -34,6 +40,14 @@ app.get('/vehicles', function(req, res) {
     limit = Math.min(limit, 250);
 
     let url = `${baseURL}/vehicles?page=${page}&limit=${limit}`;
+
+    if (year) {
+        url += `&year=${year}`;
+    }
+
+    if (trans) {
+        url += `&trans=${trans}`;
+    }
 
     if (models) {
         models = Array.isArray(models) ? models.join(',') : models;
@@ -77,20 +91,44 @@ app.get('/vehicles', function(req, res) {
                             var colors = colorResponse.data;
                             var selectedColor = req.query.color;
 
-                            res.render('pages/vehicles', {
-                                vehicle_data: vehicle_data,
-                                models: models,
-                                colors: colors,
-                                colorMap: colorMap,
-                                selectedCountry: country,
-                                selectedModels: selectedModels,
-                                currentPage: page,
-                                totalPages: totalPages,
-                                limit: limit,
-                                totalItems: totalItems,
-                                selectedRPO: rpo,
-                                selectedColor: selectedColor,
-                                selectedOrder: order
+                            axios.get(`${baseURL}/api/years`)
+                            .then((yearResponse) => {
+                                var years = yearResponse.data;
+                                var selectedYear = req.query.year;
+
+                                axios.get(`${baseURL}/api/trans`)
+                                .then((transResponse) => {
+                                    var trans = transResponse.data;
+                                    var selectedTrans = req.query.trans;
+
+                                    res.render('pages/vehicles', {
+                                        vehicle_data: vehicle_data,
+                                        years: years,
+                                        trans: trans,
+                                        models: models,
+                                        colors: colors,
+                                        colorMap: colorMap,
+                                        selectedCountry: country,
+                                        selectedModels: selectedModels,
+                                        currentPage: page,
+                                        totalPages: totalPages,
+                                        limit: limit,
+                                        totalItems: totalItems,
+                                        selectedRPO: rpo,
+                                        selectedColor: selectedColor,
+                                        selectedYear: selectedYear,
+                                        selectedTrans: selectedTrans,
+                                        selectedOrder: order
+                                    });
+                                })
+                                .catch((transError) => {
+                                    console.error('Error fetching transmission data:', transError);
+                                    res.status(500).send('Error fetching transmission data');
+                                });
+                            })
+                            .catch((yearError) => {
+                                console.error('Error fetching year data:', yearError);
+                                res.status(500).send('Error fetching year data');
                             });
                         })
                         .catch((colorError) => {

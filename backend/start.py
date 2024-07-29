@@ -53,19 +53,16 @@ def generate_url():
     while view <= 9:
         end_url = f"_Fgmds2.png&v=deg{view:02d}&std=true&country=US&send404=true&background=ffffff"
         built_url = f"{base_url}{model_year}/{mmc_code}/{mmc_code}__{trim}/{color}_{rpos}{end_url}"
-
         response = requests.head(built_url)
         view += 1
 
         if response.status_code == 404:
             break
-
         urls_attempted.append(built_url)
     
     if view > 9:
         ghost_img = "../img/ghost-chevrolet-car-alt.png"
         return jsonify({"generatedImages": ghost_img})
-
     return jsonify({"generatedImages": urls_attempted})
 
 @app.route('/api/rarity', methods=['POST'])
@@ -86,6 +83,8 @@ def unique():
 
 @app.route('/vehicles', methods=['GET'])
 def sort_price():
+    year = request.args.get('year')
+    trans = request.args.get('trans')
     models = request.args.get('model')
     rpo = request.args.get('rpo')
     color = request.args.get('color')
@@ -96,6 +95,12 @@ def sort_price():
     offset = (page - 1) * limit
 
     conditions = []
+
+    if year:
+        conditions.append(f"modelYear = '{year}'")
+    
+    if trans:
+        conditions.append(f"transmission = '{trans}'")
 
     if models:
         models = [model.strip() for model in models.split(',')]
@@ -154,6 +159,20 @@ def sort_price():
 # ========================= View Pages =========================
 
 # =========================    APIs    =========================
+
+@app.route('/api/years', methods=['GET'])
+def get_years():
+    sqlStatement = "SELECT DISTINCT modelYear FROM gm ORDER BY modelYear"
+    years = execute_read_query(conn, sqlStatement)
+    year_list = [year['modelYear'] for year in years]
+    return jsonify(year_list)
+
+@app.route('/api/trans', methods=['GET'])
+def get_trans():
+    sqlStatement = "SELECT DISTINCT transmission FROM gm ORDER BY transmission"
+    trans = execute_read_query(conn, sqlStatement)
+    trans_list = [transmission['transmission'] for transmission in trans]
+    return jsonify(trans_list)
 
 @app.route('/api/colors', methods=['GET'])
 def get_colors():

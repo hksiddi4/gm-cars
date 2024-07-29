@@ -1,20 +1,7 @@
-SELECT * FROM rpo;
-
 SELECT * FROM gm
 WHERE vin = '1G1FH1R78N0102770';
 
 SELECT * FROM gm WHERE model IN ('Camaro','CT4') ORDER BY msrp DESC;
-
-CREATE TABLE IF NOT EXISTS rpo (
-	rpo varchar(3),
-    feature varchar(255)
-);
-
-SELECT * FROM rpo
-WHERE feature ='Base Equipment Package'
-ORDER BY rpo;
-
-INSERT INTO rpo VALUES ('1SS', 'Base Equipment Package');
 
 SELECT * FROM gm ORDER BY RAND() LIMIT 25;
 
@@ -54,15 +41,17 @@ GROUP BY JSON_EXTRACT(allJson, '$.mmc_code')
 ORDER BY Count DESC;
 
 SELECT
-    JSON_EXTRACT(allJson, '$.mmc_code') AS Options,
+    JSON_EXTRACT(allJson, '$.sell_source') AS sell,
     trim AS Trim,
     COUNT(*) AS Count
 FROM gm
-GROUP BY JSON_EXTRACT(allJson, '$.mmc_code'), trim
+GROUP BY JSON_EXTRACT(allJson, '$.sell_source'), trim
 ORDER BY Count DESC;
+
+SELECT JSON_EXTRACT(allJson, '$.sell_source') AS sellsource, dealer FROM gm 
+WHERE JSON_EXTRACT(allJson, '$.sell_source') = "14"
+GROUP BY sellsource;
 
 SELECT * FROM gm WHERE vin = "1G6D35R67R0810951";
 
 SELECT * FROM gm WHERE modelYear = "2024" AND trim = "V-Series blackwing" AND SUBSTRING(vin, -6)>810920 AND SUBSTRING(vin, -6)<820920;
-
-select * from gm where vin = '1G6D35R60R0810953';

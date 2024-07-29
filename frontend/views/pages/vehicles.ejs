@@ -1,314 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <link rel="icon" href="../img/camaro_favicon.png">
-
-    <!-- CSS (load bootstrap from a CDN) -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- For JavaScript tab functionality -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
-
-    <!-- Google font -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet">
-
-
-
-    <style>
-        html, body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            overflow-x: hidden;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #2e2e2e;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .wrapper {
-            display: flex;
-            flex-direction: column;
-            flex-grow: 1;
-            min-height: 100vh;
-            overflow-y: auto;
-        }
-
-        .spinner {
-            border: 4px solid rgb(255, 255, 255);
-            border-left: 4px solid #0008ff;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .stats {
-            display: flex;
-            justify-content: right;
-        }
-
-        .pagination-wrapper {
-            display: flex;
-            justify-content: center;
-            margin-top: 20px;
-        }
-
-        .content {
-            flex-grow: 1;
-            margin-left: 250px;
-            overflow-y: auto;
-        }
-
-        .small-dropdown {
-            width: auto;
-        }
-
-        .footer {
-            text-align: right;
-            margin-top: auto;
-            padding: 10px 0;
-        }
-
-        .rarity-container {
-            display: flex;
-            margin-bottom: 15px;
-        }
-
-        .rarity-btn {
-            display: flex;
-            flex-direction: column;
-            white-space: nowrap;
-        }
-
-        .response-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-        }
-
-        .response {
-            text-align: center;
-            color: white;
-            font-weight: bold;
-            font-size: x-large;
-        }
-
-        h1, h2, h4 {
-            color: white;
-        }
-
-        .table tbody > tr > td {
-            vertical-align: middle;
-            text-align: center;
-        }
-
-        .table thead th {
-            background-color: #2e2e2e;
-            color: rgb(255, 255, 255);
-            border-bottom: 2px solid #000;
-        }
-
-        .table td, .table th {
-            border: 1px solid #dee2e6;
-        }
-
-        .table tbody tr:nth-of-type(even) {
-            background-color: black !important;
-        }
-
-        .custom-container {
-            width: 95%;
-            margin: 0 auto;
-        }
-
-        .highlight {
-            background-color: #ff7f7f !important;
-        }
-
-        .nav-pills .nav-link:hover { 
-            background-color: rgba(74, 74, 74, 0.324);
-            display: block;
-            width: 100%;
-        }
-        
-        .buttoncss {
-            color:white;
-            background-color: #2436653b;
-        }
-
-        .buttoncss:hover {
-            color:white;
-            background-color: rgba(12, 12, 82, 0.256);
-        }
-
-        .csstable {
-            border: 2px solid #243665;
-        }
-        
-        .navbar {
-            width: 250px;
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 100%;
-            background-color: #272727;
-        }
-
-        .countlink {
-            color: white;
-            width:200px;
-            background-color: #243665;
-            border-radius: 5px;
-            text-align: center;
-        }
-
-        .countlink:hover {
-            color: white;
-            background-color: rgb(12, 12, 82);
-        }
-
-        .countlink {
-            transition: all 0.5s ease;
-        }
-
-        .togglecss {
-            border: 2px solid #243665;
-        }
-        .togglecss:checked {
-            border: 2px solid #243665;
-            background-color: #8e8bd8;
-        }
-
-        .spinnercss {
-            color: #243665;
-        }
-
-        .nav-link {
-            color: white;
-        }
-
-        .nav-link.active {
-            background: #404040 !important;
-        }
-
-        .nav-link:hover {
-            color:#8bb3d8
-        }
-
-        .form-check-label {
-            color: white;
-        }
-
-        .pagetitle {
-            text-align: center;
-            text-decoration: underline;
-            padding-top: 20px;
-            color: white;
-        }
-        @media (max-width: 1000px) {
-            .navbar {
-                width: 20%;
-                height: auto;
-                position: relative;
-            }
-            .content {
-                margin-left: 0;
-            }
-            
-        }
-        @media (min-width: 1000px) {
-            .content {
-                margin-left: 250px;
-            }
-        }
-    </style>
+    <%- include('../partials/head'); %>    
     <title>Vehicles</title>
 </head>
 <body>
-    <div class="row g-0 flex-nowrap">
-        <div class="navbar col-md-3 col-xl-2 px-sm-0 px-0 navbar navbar-expand-lg navbar-dark">
-            <div class="d-flex flex-column align-items-center align-items-sm-start px-3 min-vh-100 justify-content-center">
-                <a href="/" class="d-flex mx-auto" style="margin-bottom: 10px;">
-                    <img id="rotatingImage" width="auto" height="96" class="mx-auto">
-                </a>
-                <!-- Navigation links begins -->
-                <ul class="nav nav-pills btn-toggle-nav col-auto flex-column mb-sm-auto mb-0 align-items-center align-items-sm-start" id="menu" style="display: block; width: 100%;">
-                    <!-- Vehicles -->
-                    <li class="nav-item">
-                        <a href="/vehicles" class="nav-link align-middle px-2 mb-2 csslink d-flex align-items-center">
-                            <i class="fs-5 bi bi-car-front-fill me-2"></i> <span class="ms-1 d-none d-sm-inline">Vehicles</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-        <div class="content col">
-            <!-- Page header -->
-            <header class="p-4" style="background-color: #000000;">
-              <div class="container-fluid">
-                  <div class="row align-items-center">
-                      <div class="col">
-                          <h1 class="header-title">
-                              <a href="/" style="color: white; text-decoration: none;">
-                                  GM 2020-2024 Build Counts
-                              </a>
-                          </h1>
-                      </div>
-                      <div class="col-auto">
-                        <form id="searchVIN" action="/search" method="GET" class="d-flex">
-                          <input type="text" id="searchInput" name="vin" class="form-control" placeholder="Search VIN...">
-                          <button type="submit" class="btn btn-secondary ms-2">Search</button>
-                        </form>
-                      </div>
-                  </div>
-              </div>
-            </header>
-        
-        <script>
-            var imageURLs = [
-                '../img/camaro_sidebar_1.png',
-                '../img/camaro_sidebar_2.png',
-                '../img/camaro_sidebar_3.png',
-                '../img/camaro_sidebar_4.png',
-                '../img/camaro_sidebar_5.png',
-                '../img/camaro_sidebar_6.png',
-                '../img/camaro_sidebar_7.png',
-            ]
-        
-            var randomIndex = Math.floor(Math.random() * imageURLs.length)
-        
-            document.getElementById('rotatingImage').src = imageURLs[randomIndex]
-        
-            var path = window.location.pathname;
-            var navLinks = document.querySelectorAll('.nav-link');
-        
-            navLinks.forEach(function(link) {
-                if (link.getAttribute('href') === path) {
-                    link.classList.add('active');
-                } else {
-                    link.classList.remove('active');
-                }
-            });
-        
-        </script>        
-
+    <%- include('../partials/sidebar'); %>
     <div class="custom-container">
         <div class="row">
             <h1 class="pagetitle">Vehicles</h1>
@@ -382,12 +79,30 @@
                     <thead>
                         <tr>
                             <th scope="col">VIN</th>
-                            <th scope="col">Year</th>
+                            <th scope="col">
+                                <div class="dropdown-container">
+                                    <select id="yearSelect" class="form-select small-dropdown">
+                                        <option value="">Year</option>
+                                        <% years.forEach(function(year) { %>
+                                            <option value="<%= year %>" <% if (selectedYear === year) { %>selected<% } %>><%= year %></option>
+                                        <% }) %>
+                                    </select>
+                                </div>
+                            </th>
                             <th scope="col">Model</th>
                             <th scope="col">Body</th>
                             <th scope="col">Trim</th>
                             <th scope="col">Engine</th>
-                            <th scope="col">Transmission</th>
+                            <th scope="col">
+                                <div class="dropdown-container">
+                                    <select id="transSelect" class="form-select small-dropdown">
+                                        <option value="">Trans.</option>
+                                        <% trans.forEach(function(trans) { %>
+                                            <option value="<%= trans %>" <% if (selectedTrans === trans) { %>selected<% } %>><%= trans %></option>
+                                        <% }) %>
+                                    </select>
+                                </div>
+                            </th>
                             <th scope="col">Drivetrain</th>
                             <th scope="col">
                                 <div class="dropdown-container">
@@ -476,13 +191,13 @@
                             <!-- First Page -->
                             <% if (currentPage > 1) { %>
                                 <li class="page-item">
-                                    <a class="page-link" href="?page=1&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>">First</a>
+                                    <a class="page-link" href="?page=1&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>">First</a>
                                 </li>
                             <% } %>
                             <!-- Previous Page -->
                             <% if (currentPage > 1) { %>
                                 <li class="page-item">
-                                    <a class="page-link" href="?page=<%= currentPage - 1 %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>">Previous</a>
+                                    <a class="page-link" href="?page=<%= currentPage - 1 %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>">Previous</a>
                                 </li>
                             <% } %>
                             <!-- Page Numbers -->
@@ -501,19 +216,19 @@
                             %>
                             <% for (let i = startPage; i <= endPage; i++) { %>
                                 <li class="page-item <%= i === currentPage ? 'active' : '' %>">
-                                    <a class="page-link" href="?page=<%= i %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>"><%= i %></a>
+                                    <a class="page-link" href="?page=<%= i %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>"><%= i %></a>
                                 </li>
                             <% } %>
                             <!-- Next Page -->
                             <% if (currentPage < totalPages) { %>
                                 <li class="page-item">
-                                    <a class="page-link" href="?page=<%= currentPage + 1 %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>">Next</a>
+                                    <a class="page-link" href="?page=<%= currentPage + 1 %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>">Next</a>
                                 </li>
                             <% } %>
                             <!-- Last Page -->
                             <% if (currentPage < totalPages) { %>
                                 <li class="page-item">
-                                    <a class="page-link" href="?page=<%= totalPages %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>">Last</a>
+                                    <a class="page-link" href="?page=<%= totalPages %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>">Last</a>
                                 </li>
                             <% } %>
                         </ul>
@@ -523,13 +238,7 @@
             </div>
         </div>
     </div>
-    <!-- Page footer -->
-    <footer class="footer mt-auto">
-        <div class="container-fluid">
-            <a style="color: white; text-decoration: none;">@Bumbleboy92 2024</a>
-        </div>
-    </footer>
-
+    <%- include('../partials/footer'); %>
     <script>
         let startX;
         let selectedOrder = "DESC";
@@ -556,6 +265,8 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             const rpoSelect = document.getElementById('rpoSelect');
+            const yearSelect = document.getElementById('yearSelect');
+            const transSelect = document.getElementById('transSelect');
             const colorSelect = document.getElementById('colorSelect');
             const countrySelect = document.getElementById('countrySelect');
             const orderSelect = document.getElementById('orderSelect');
@@ -569,6 +280,22 @@
                 const selectedRPO = event.target.value;
                 const url = new URL(window.location.href);
                 url.searchParams.set('rpo', selectedRPO);
+                url.searchParams.set('page', 1);
+                window.location.href = url.toString();
+            });
+
+            yearSelect.addEventListener('change', function(event) {
+                const selectedYear = event.target.value;
+                const url = new URL(window.location.href);
+                url.searchParams.set('year', selectedYear);
+                url.searchParams.set('page', 1);
+                window.location.href = url.toString();
+            });
+
+            transSelect.addEventListener('change', function(event) {
+                const selectedTrans = event.target.value;
+                const url = new URL(window.location.href);
+                url.searchParams.set('trans', selectedTrans);
                 url.searchParams.set('page', 1);
                 window.location.href = url.toString();
             });
@@ -607,10 +334,12 @@
 
                 const queryString = selectedOptions.map(option => `model=${option}`).join('&');
                 const selectedRPO = rpoSelect.value;
+                const selectedYear = yearSelect.value;
+                const selectedTrans = transSelect.value;
                 const selectedColor = colorSelect.value;
                 const selectedCountry = countrySelect.value;
                 const limit = limitSelect.value;
-                const url = `/vehicles?page=1&${queryString}&rpo=${selectedRPO}&color=${selectedColor}&country=${selectedCountry}&limit=${limit}`;
+                const url = `/vehicles?page=1&${queryString}&rpo=${selectedRPO}&trans=${selectedTrans}&year=${selectedYear}&color=${selectedColor}&country=${selectedCountry}&limit=${limit}`;
                 window.location.href = url;
             });
 

@@ -1,37 +1,21 @@
-CREATE DATABASE CAMARO;
-USE CAMARO;
+CREATE DATABASE vehicles;
+USE vehicles;
 
-CREATE TABLE IF NOT EXISTS STATS (
-	SEQUENCE INT,
-    VIN VARCHAR(17),
-    YEAR YEAR,
-    TRIM VARCHAR(3),
-    BODY VARCHAR(16),
-    TRANS VARCHAR(16),
-    COLOR VARCHAR(64),
-    MSRP DECIMAL(8,2),
-    DEALER VARCHAR(64),
-    CITY VARCHAR(32),
-    STATE VARCHAR(2),
-    ORDERNUM VARCHAR(6),
-    RPOS VARCHAR(600)
+CREATE TABLE IF NOT EXISTS gm (
+	vin varchar(17),
+    modelYear int,
+    model varchar(75),
+    body varchar(20),
+    trim varchar(25),
+    vehicleEngine varchar(75),
+    transmission varchar(7),
+    drivetrain varchar(3),
+    exterior_color varchar(75),
+    msrp int,
+    dealer varchar(75),
+    location varchar(75),
+    ordernum varchar(6),
+    allJson json
 );
 
-CREATE TABLE IF NOT EXISTS CEZL1 (
-	VIN VARCHAR(17),
-    MARKUP INT,
-    NUM INT,
-    OWNER VARCHAR(64)
-);
-
-SHOW PROCESSLIST;
-KILL 23;
-
-DROP TABLE STATS;
-DROP TABLE CEZL1;
-
-SELECT * FROM STATS LIMIT 50;
-
-SELECT STATS.*, CEZL1.MARKUP, CEZL1.NUM, CEZL1.OWNER
-FROM STATS
-JOIN CEZL1 ON STATS.VIN = CEZL1.VIN;
+SELECT * FROM gm LIMIT 50;

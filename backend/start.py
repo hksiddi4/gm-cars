@@ -84,6 +84,7 @@ def unique():
 @app.route('/vehicles', methods=['GET'])
 def sort_price():
     year = request.args.get('year')
+    engine = request.args.get('engine')
     trans = request.args.get('trans')
     models = request.args.get('model')
     rpo = request.args.get('rpo')
@@ -98,6 +99,9 @@ def sort_price():
 
     if year:
         conditions.append(f"modelYear = '{year}'")
+    
+    if engine:
+        conditions.append(f"vehicleEngine = '{engine}'")
     
     if trans:
         conditions.append(f"transmission = '{trans}'")
@@ -166,6 +170,13 @@ def get_years():
     years = execute_read_query(conn, sqlStatement)
     year_list = [year['modelYear'] for year in years]
     return jsonify(year_list)
+
+@app.route('/api/engine', methods=['GET'])
+def get_engine():
+    sqlStatement = "SELECT DISTINCT vehicleEngine FROM gm ORDER BY vehicleEngine"
+    engines = execute_read_query(conn, sqlStatement)
+    engine_list = [engine['vehicleEngine'] for engine in engines]
+    return jsonify(engine_list)
 
 @app.route('/api/trans', methods=['GET'])
 def get_trans():

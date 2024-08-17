@@ -23,6 +23,7 @@ app.get('/', function(req, res) {
 });
 
 app.get('/vehicles', function(req, res) {
+    const startTime = Date.now();
     var year = req.query.year;
     var trans = req.query.trans;
     var models = req.query.model;
@@ -70,6 +71,7 @@ app.get('/vehicles', function(req, res) {
         .then((response) => {
             var vehicle_data = Array.isArray(response.data.data) ? response.data.data : [];
             var totalItems = response.data.total;
+            var elapsedTime = response.data.etime;
             var totalPages = Math.ceil(totalItems / limit);
 
             vehicle_data.forEach(function(data) {
@@ -96,6 +98,7 @@ app.get('/vehicles', function(req, res) {
                                 .then((transResponse) => {
                                     var trans = transResponse.data;
                                     var selectedTrans = req.query.trans;
+                                    const elapsedTime = ((Date.now() - startTime) / 1000).toFixed(2);
 
                                     res.render('pages/vehicles', {
                                         vehicle_data: vehicle_data,
@@ -110,6 +113,7 @@ app.get('/vehicles', function(req, res) {
                                         totalPages: totalPages,
                                         limit: limit,
                                         totalItems: totalItems,
+                                        elapsedTime: elapsedTime,
                                         selectedRPO: rpo,
                                         selectedColor: selectedColor,
                                         selectedYear: selectedYear,

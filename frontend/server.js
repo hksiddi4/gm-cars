@@ -22,10 +22,6 @@ app.get('/', function(req, res) {
     res.render('pages/index', { req: req });
 });
 
-app.get('/index1', function(req, res) {
-    res.render('pages/index1', { req: req });
-});
-
 app.get('/vehicles', function(req, res) {
     var year = req.query.year;
     var trans = req.query.trans;
@@ -200,6 +196,10 @@ app.post('/api/genurl', async (req, res) => {
         console.error('Error generating URL:', error);
         res.status(500).json({ error: 'Failed to generate URL' });
     }
+});
+
+app.use(function(req, res) {
+    res.status(404).render('pages/404', { req: req });
 });
 
 const port = 8080;

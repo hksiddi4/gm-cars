@@ -5,27 +5,74 @@
     <%- include('../partials/head'); %>
     <script src="../partials/rpo.js"></script>
     <% 
+      const intColorDict = {
+        "E2B":  "JET BLACK WITH SIGNET ACCENTS LEATHER W/ MINI-PERFORATED CUSTOM QUILTED INSERTS AND SUEDED FRONT SEATBACKS",
+        "E2D":  "JET BLACK WITH ADRENALINE RED ACCENTS LEATHER W/ MINI-PERFORATED CUSTOM QUILTED INSERTS AND SUEDED FRONT SEATBACKS",
+        "E2G":  "JET BLACK WITH SKY COOL GRAY ACCENTS LEATHER W/ MINI-PERFORATED CUSTOM QUILTED INSERTS AND SUEDED FRONT SEATBACKS",
+        "H01":  "KALAHARI LEATHER",
+        "H0L":  "SANGRIA WITH JET BLACK ACCENTS LEATHER W/ MINI-PERFORATED INSERTS",
+        "H0M":  "CINNAMON WITH JET BLACK ACCENTS LEATHER W/ MINI-PERFORATED INSERTS",
+        "H0W":  "JET BLACK LEATHER W/ RED ACCENTS",
+        "H0W":  "JET BLACK LEATHER WITH RED ACCENTS",
+        "H0Y":  "JET BLACK LEATHER",
+        "H13":  "CERAMIC WHITE LEATHER",
+        "H16":  "ADRENALINE RED LEATHER",
+        "H17":  "MEDIUM ASH GRAY LEATHER",
+        "H1T":  "JET BLACK CLOTH",
+        "H1Y":  "JET BLACK WITH JET BLACK ACCENTS LEATHER W/ MINI-PERFORATED INSERTS",
+        "H2G":  "JET BLACK WITH JET BLACK ACCENTS INTELUXE",
+        "H2X":  "JET BLACK WITH JET BLACK ACCENTS LEATHER W/ MINI-PERFORATED INSERTS",
+        "H72":  "MEDIUM ASH GRAY CLOTH",
+        "HAV":  "MAPLE SUGAR WITH JET BLACK ACCENTS LEATHER W/ MINI-PERFORATED INSERTS",
+        "HBE":  "JET BLACK WITH JET BLACK ACCENTS LEATHER/PERFORMANCE CLOTH/SUEDED MICROFIBER/INELUXE AND SUEDED FRONT SEATBACKS",
+        "HBF":  "NATURAL TAN WITH JET BLACK ACCENTS LEATHER W/ MINI-PERFORATED CUSTOM QUILTED INSERTS AND SUEDED FRONT SEATBACKS",
+        "HEA":  "JET BLACK WITH JET BLACK ACCENTS LEATHER W/ SUEDED FRONT SEATBACKS",
+        "HEB":  "SKY COOL GRAY WITH JET BLACK ACCENTS LEATHER W/ SUEDED FRONT SEATBACKS",
+        "HGM":  "JET BLACK WITH JET BLACK ACCENTS LEATHER W/ MINI-PERFORATED INSERTS",
+        "HIK":  "SAHARA BEIGE WITH JET BLACK ACCENTS LEATHER W/ MINI-PERFORATED INSERTS",
+        "HIT":  "SAHARA BEIGE WITH JET BLACK ACCENTS INTELUXE",
+        "HJC":  "NATURAL TAN WITH JET BLACK ACCENTS FULL SEMI-ANILINE LEATHER W/ MINI-PERFORATED INSERTS, CUSTOM QUILTING AND CARBON FIBER FRONT SEATBACKS",
+        "HJD":  "SKY COOL GRAY WITH JET BLACK ACCENTS FULL SEMI-ANILINE LEATHER W/ MINI-PERFORATED INSERTS, CUSTOM QUILTING AND CARBON FIBER FRONT SEATBACKS",
+        "HMC":  "WHISPER BEIGE WITH JET BLACK ACCENTS INTELUXE",
+        "HMR":  "JET BLACK WITH JET BLACK ACCENTS FULL SEMI-ANILINE LEATHER W/ MINI-PERFORATED INSERTS, CUSTOM QUILTING AND CARBON FIBER FRONT SEATBACKS",
+        "HNC":  "WHISPER BEIGE WITH JET BLACK ACCENTS LEATHER W/ MINI-PERFORATED INSERTS",
+        "HND":  "WHISPER BEIGE WITH JET BLACK ACCENTS LEATHER W/ MINI-PERFORATED INSERTS",
+        "HXR":  "JET BLACK W/ JET BLACK ACCENTS",
+        "HXR":  "JET BLACK WITH JET BLACK ACCENTS INTELUXE",
+        "HZK":  "SEDONA SAUVAGE WITH JET BLACK ACCENTS SEMI-ANILINE FULL LEATHER W/ CHEVRON PERFORATED INSERTS",
+        "HZQ":  "JET BLACK WITH JET BLACK ACCENTS INTELUXE"
+      }
+
       function checkRPO(data) {
         let has1LE = false; 
         let hasCE = false;
         let hasG56 = false;
+        let interiorColor = 'N/A';
+
         if (data.allJson) {
           const rpos = JSON.parse(data.allJson).Options;
           if (rpos) {
             has1LE = rpos.includes('A1Y') || rpos.includes('A1X') || rpos.includes('A1Z');
             hasCE = rpos.includes('Z4B');
             hasG56 = rpos.includes('X56');
+
+            rpos.forEach(rpo => {
+              if (intColorDict[rpo]) {
+                interiorColor = intColorDict[rpo];
+              }
+            });
           }
         }
-        return { has1LE, hasCE, hasG56 };
+        return { has1LE, hasCE, hasG56, interiorColor };
       }
 
-      let allHas = { has1LE: false, hasCE: false, hasG56: false };
+      let allHas = { has1LE: false, hasCE: false, hasG56: false, interiorColor: 'N/A' };
       vin_data.forEach(data => {
         const result = checkRPO(data);
         allHas.has1LE = allHas.has1LE || result.has1LE;
         allHas.hasCE = allHas.hasCE || result.hasCE;
         allHas.hasG56 = allHas.hasG56 || result.hasG56;
+        if (result.interiorColor !== 'N/A') allHas.interiorColor = result.interiorColor;
       });
     %>
     <title>
@@ -121,8 +168,12 @@
                     <td><%= data.drivetrain || 'N/A' %></td>
                   </tr>
                   <tr>
-                    <td><strong>COLOR:</strong></td>
+                    <td><strong>EXTERIOR COLOR:</strong></td>
                     <td><%= data.exterior_color || 'N/A' %></td>
+                  </tr>
+                  <tr>
+                    <td><strong>INTERIOR COLOR:</strong></td>
+                    <td><%= data.allJson ? checkRPO(data).interiorColor : 'N/A' %></td>            
                   </tr>
                   <tr>
                     <td><strong>MSRP:</strong></td>

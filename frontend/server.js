@@ -25,6 +25,7 @@ app.get('/', function(req, res) {
 app.get('/vehicles', function(req, res) {
     const startTime = Date.now();
     var year = req.query.year;
+    var trim = req.query.trim;
     var engine = req.query.engine;
     var trans = req.query.trans;
     var models = req.query.model;
@@ -41,6 +42,10 @@ app.get('/vehicles', function(req, res) {
 
     if (year) {
         url += `&year=${year}`;
+    }
+
+    if (trim) {
+        url += `&trim=${trim}`;
     }
 
     if (engine) {
@@ -104,38 +109,50 @@ app.get('/vehicles', function(req, res) {
                                     var engine = engineResponse.data;
                                     var selectedEngine = req.query.engine;
 
-                                    axios.get(`${baseURL}/api/trans`)
-                                    .then((transResponse) => {
-                                        var trans = transResponse.data;
-                                        var selectedTrans = req.query.trans;
-                                        const elapsedTime = ((Date.now() - startTime) / 1000).toFixed(2);
+                                    axios.get(`${baseURL}/api/trims`)
+                                    .then((trimResponse) => {
+                                        var trim = trimResponse.data;
+                                        var selectedTrim = req.query.trim;
 
-                                        res.render('pages/vehicles', {
-                                            vehicle_data: vehicle_data,
-                                            years: years,
-                                            engine: engine,
-                                            trans: trans,
-                                            models: models,
-                                            colors: colors,
-                                            colorMap: colorMap,
-                                            selectedCountry: country,
-                                            selectedModels: selectedModels,
-                                            currentPage: page,
-                                            totalPages: totalPages,
-                                            limit: limit,
-                                            totalItems: totalItems,
-                                            elapsedTime: elapsedTime,
-                                            selectedRPO: rpo,
-                                            selectedColor: selectedColor,
-                                            selectedYear: selectedYear,
-                                            selectedEngine: selectedEngine,
-                                            selectedTrans: selectedTrans,
-                                            selectedOrder: order
+                                        axios.get(`${baseURL}/api/trans`)
+                                        .then((transResponse) => {
+                                            var trans = transResponse.data;
+                                            var selectedTrans = req.query.trans;
+                                            const elapsedTime = ((Date.now() - startTime) / 1000).toFixed(2);
+
+                                            res.render('pages/vehicles', {
+                                                vehicle_data: vehicle_data,
+                                                years: years,
+                                                engine: engine,
+                                                trim: trim,
+                                                trans: trans,
+                                                models: models,
+                                                colors: colors,
+                                                colorMap: colorMap,
+                                                selectedCountry: country,
+                                                selectedModels: selectedModels,
+                                                currentPage: page,
+                                                totalPages: totalPages,
+                                                limit: limit,
+                                                totalItems: totalItems,
+                                                elapsedTime: elapsedTime,
+                                                selectedRPO: rpo,
+                                                selectedColor: selectedColor,
+                                                selectedYear: selectedYear,
+                                                selectedTrim: selectedTrim,
+                                                selectedEngine: selectedEngine,
+                                                selectedTrans: selectedTrans,
+                                                selectedOrder: order
+                                            });
+                                        })
+                                        .catch((transError) => {
+                                            console.error('Error fetching transmission data:', transError);
+                                            res.status(500).send('Error fetching transmission data');
                                         });
                                     })
-                                    .catch((transError) => {
-                                        console.error('Error fetching transmission data:', transError);
-                                        res.status(500).send('Error fetching transmission data');
+                                    .catch((trimError) => {
+                                        console.error('Error fetching trim data:', trimError);
+                                        res.status(500).send('Error fetching trim data');
                                     });
                                 })
                                 .catch((engineError) => {

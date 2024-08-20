@@ -92,7 +92,16 @@
                             </th>
                             <th scope="col">Model</th>
                             <th scope="col">Body</th>
-                            <th scope="col">Trim</th>
+                            <th scope="col">
+                                <div class="dropdown-container">
+                                    <select id="trimSelect" class="form-select small-dropdown">
+                                        <option value="">Trim</option>
+                                        <% trim.forEach(function(trim) { %>
+                                            <option value="<%= trim %>" <% if (selectedTrim === trim) { %>selected<% } %>><%= trim %></option>
+                                        <% }) %>
+                                    </select>
+                                </div>
+                            </th>
                             <th scope="col">
                                 <div class="dropdown-container">
                                     <select id="engineSelect" class="form-select small-dropdown">
@@ -102,6 +111,7 @@
                                         <% }) %>
                                     </select>
                                 </div>
+                            </th>
                             <th scope="col">
                                 <div class="dropdown-container">
                                     <select id="transSelect" class="form-select small-dropdown">
@@ -165,7 +175,7 @@
                                 <td scope="row"><%= data.vehicleEngine %></td>
                                 <td scope="row"><%= data.transmission %></td>
                                 <td scope="row"><%= data.drivetrain %></td>
-                                <td scope="row" style="text-align: left; display: flex; align-items: center;">
+                                <td scope="row" style="text-align: left; align-items: center;">
                                     <img id="sample" src="../img/extColors/<%= colorMap[data.exterior_color] || '../extColors/default' %>.png" width="20" height="20" style="margin-right: 8px; border-radius: 50%;">
                                     <%= data.exterior_color %>
                                 </td>
@@ -200,13 +210,13 @@
                             <!-- First Page -->
                             <% if (currentPage > 1) { %>
                                 <li class="page-item">
-                                    <a class="page-link" href="?page=1&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&engine=<% selectedEngine %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>">First</a>
+                                    <a class="page-link" href="?page=1&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&trim=<% selectedTrim %>&engine=<% selectedEngine %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>">First</a>
                                 </li>
                             <% } %>
                             <!-- Previous Page -->
                             <% if (currentPage > 1) { %>
                                 <li class="page-item">
-                                    <a class="page-link" href="?page=<%= currentPage - 1 %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&engine=<% selectedEngine %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>">Previous</a>
+                                    <a class="page-link" href="?page=<%= currentPage - 1 %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&trim=<% selectedTrim %>&engine=<% selectedEngine %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>">Previous</a>
                                 </li>
                             <% } %>
                             <!-- Page Numbers -->
@@ -225,19 +235,19 @@
                             %>
                             <% for (let i = startPage; i <= endPage; i++) { %>
                                 <li class="page-item <%= i === currentPage ? 'active' : '' %>">
-                                    <a class="page-link" href="?page=<%= i %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&engine=<% selectedEngine %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>"><%= i %></a>
+                                    <a class="page-link" href="?page=<%= i %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&trim=<% selectedTrim %>&engine=<% selectedEngine %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>"><%= i %></a>
                                 </li>
                             <% } %>
                             <!-- Next Page -->
                             <% if (currentPage < totalPages) { %>
                                 <li class="page-item">
-                                    <a class="page-link" href="?page=<%= currentPage + 1 %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&engine=<% selectedEngine %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>">Next</a>
+                                    <a class="page-link" href="?page=<%= currentPage + 1 %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&trim=<% selectedTrim %>&engine=<% selectedEngine %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>">Next</a>
                                 </li>
                             <% } %>
                             <!-- Last Page -->
                             <% if (currentPage < totalPages) { %>
                                 <li class="page-item">
-                                    <a class="page-link" href="?page=<%= totalPages %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&engine=<% selectedEngine %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>">Last</a>
+                                    <a class="page-link" href="?page=<%= totalPages %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&trim=<% selectedTrim %>&engine=<% selectedEngine %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>">Last</a>
                                 </li>
                             <% } %>
                         </ul>
@@ -276,6 +286,7 @@
             const clearFilters = document.getElementById('clearFilters');
             const rpoSelect = document.getElementById('rpoSelect');
             const yearSelect = document.getElementById('yearSelect');
+            const trimSelect = document.getElementById('trimSelect');
             const engineSelect = document.getElementById('engineSelect');
             const transSelect = document.getElementById('transSelect');
             const colorSelect = document.getElementById('colorSelect');
@@ -303,6 +314,14 @@
                 const selectedYear = event.target.value;
                 const url = new URL(window.location.href);
                 url.searchParams.set('year', selectedYear);
+                url.searchParams.set('page', 1);
+                window.location.href = url.toString();
+            });
+
+            trimSelect.addEventListener('change', function(event) {
+                const selectedTrim = event.target.value;
+                const url = new URL(window.location.href);
+                url.searchParams.set('trim', selectedTrim);
                 url.searchParams.set('page', 1);
                 window.location.href = url.toString();
             });
@@ -358,12 +377,13 @@
                 const queryString = selectedOptions.map(option => `model=${option}`).join('&');
                 const selectedRPO = rpoSelect.value;
                 const selectedYear = yearSelect.value;
+                const selectedTrim = trimSelect.value;
                 const selectedEngine = engineSelect.value;
                 const selectedTrans = transSelect.value;
                 const selectedColor = colorSelect.value;
                 const selectedCountry = countrySelect.value;
                 const limit = limitSelect.value;
-                const url = `/vehicles?page=1&${queryString}&rpo=${selectedRPO}&engine=${selectedEngine}&trans=${selectedTrans}&year=${selectedYear}&color=${selectedColor}&country=${selectedCountry}&limit=${limit}`;
+                const url = `/vehicles?page=1&${queryString}&rpo=${selectedRPO}&trim=${selectedTrim}&engine=${selectedEngine}&trans=${selectedTrans}&year=${selectedYear}&color=${selectedColor}&country=${selectedCountry}&limit=${limit}`;
                 window.location.href = url;
             });
 

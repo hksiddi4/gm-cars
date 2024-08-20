@@ -84,6 +84,7 @@ def unique():
 @app.route('/vehicles', methods=['GET'])
 def sort_price():
     year = request.args.get('year')
+    trim = request.args.get('trim')
     engine = request.args.get('engine')
     trans = request.args.get('trans')
     models = request.args.get('model')
@@ -99,6 +100,9 @@ def sort_price():
 
     if year:
         conditions.append(f"modelYear = '{year}'")
+    
+    if trim:
+        conditions.append(f"trim = '{trim}'")
     
     if engine:
         conditions.append(f"vehicleEngine = '{engine}'")
@@ -165,11 +169,25 @@ def sort_price():
 # =========================    APIs    =========================
 
 @app.route('/api/years', methods=['GET'])
+def get_trim():
+    sqlStatement = "SELECT DISTINCT modelYear FROM gm ORDER BY modelYear"
+    years = execute_read_query(conn, sqlStatement)
+    year_list = [year['modelYear'] for year in years]
+    return jsonify(year_list)
+
+@app.route('/api/years', methods=['GET'])
 def get_years():
     sqlStatement = "SELECT DISTINCT modelYear FROM gm ORDER BY modelYear"
     years = execute_read_query(conn, sqlStatement)
     year_list = [year['modelYear'] for year in years]
     return jsonify(year_list)
+
+@app.route('/api/trims', methods=['GET'])
+def get_trims():
+    sqlStatement = "SELECT DISTINCT trim FROM gm ORDER BY trim"
+    trims = execute_read_query(conn, sqlStatement)
+    trim_list = [trim['trim'] for trim in trims]
+    return jsonify(trim_list)
 
 @app.route('/api/engine', methods=['GET'])
 def get_engine():
@@ -198,13 +216,6 @@ def get_models():
     models = execute_read_query(conn, sqlStatement)
     model_list = [model['model'] for model in models]
     return jsonify(model_list)
-
-@app.route('/api/trims', methods=['GET'])
-def get_trims():
-    sqlStatement = "SELECT DISTINCT trim FROM gm WHERE model = 'CAMARO' ORDER BY trim"
-    trims = execute_read_query(conn, sqlStatement)
-    trim_list = [trim['trim'] for trim in trims]
-    return jsonify(trim_list)
 
 # =========================    APIs    =========================
 

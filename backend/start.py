@@ -33,34 +33,49 @@ def generate_url():
     mmc_code = allJson["mmc_code"].strip()
     mmcDict = data["mmc"]
     colorMap = data["colorMap"]
+    intColor = data["intColor"]
     options = [option for option in allJson["Options"] if option]
-    base_url = "https://cgi.chevrolet.com/mmgprod-us/dynres/prove/image.gen?i="
+    baseURL = "https://cgi.chevrolet.com/mmgprod-us/dynres/prove/image.gen?i="
+    baseURL_int = "https://cgi.chevrolet.com/mmgprod-us/dynres/prove/imageinterior.gen?i="
 
     trim = mmcDict.get(mmc_code)
     rpos = "_".join(options)
     
     color = None
+    colorInt = None
     for option in options:
-        for key, rpo in colorMap.items():
-            if rpo == option:
-                color = rpo
-                break
-        if color:
+        if color is None:
+            for key, rpo in colorMap.items():
+                if rpo == option:
+                    color = rpo
+                    break
+        if colorInt is None:
+            for key, rpo in intColor.items():
+                if rpo == option:
+                    colorInt = rpo
+                    break
+        if color and colorInt:
             break
 
     urls_attempted = []
-    view = 1
-    while view <= 9:
-        end_url = f"_Fgmds2.png&v=deg{view:02d}&std=true&country=US&send404=true&background=ffffff"
-        built_url = f"{base_url}{model_year}/{mmc_code}/{mmc_code}__{trim}/{color}_{rpos}{end_url}"
-        response = requests.head(built_url)
-        view += 1
-
-        if response.status_code == 404:
-            break
-        urls_attempted.append(built_url)
+    url_data = [
+        (baseURL, color, 1, 9),
+        (baseURL_int, colorInt, 1, 4)
+    ]
     
-    if view > 9:
+    for base_url, color_value, view, view_limit in url_data:
+        while view <= view_limit:
+            # gmds11 = 2500x1407 | gmds10 = 1920x1080 | gmds5 = 320x178 | gmds4 = 640x360 | gmds3 = 205x115 | gmds2 = 960x540 | gmds1 = 480x270
+            end_url = f"gmds10.png&v=deg{view:02d}&std=true&country=US&send404=true&transparentBackgroundPng=true"
+            built_url = f"{base_url}{model_year}/{mmc_code}/{mmc_code}__{trim}/{color_value}_{rpos}{end_url}"
+            response = requests.head(built_url)
+            view += 1
+            print(built_url)
+            if response.status_code == 404:
+                break
+            urls_attempted.append(built_url)
+    
+    if not urls_attempted:
         ghost_img = "../img/ghost-chevrolet-car-alt.png"
         return jsonify({"generatedImages": ghost_img})
     return jsonify({"generatedImages": urls_attempted})

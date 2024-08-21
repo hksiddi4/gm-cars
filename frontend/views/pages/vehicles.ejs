@@ -7,10 +7,7 @@
 <body>
     <%- include('../partials/sidebar'); %>
     <div class="custom-container">
-        <div class="row">
-            <h1 class="pagetitle">Vehicles</h1>
-        </div>
-        <div class="row">
+        <div class="row" style="padding-top: 20px;">
             <!-- Filters -->
             <div class="col-md-12 mb-3">
                 <h4>Filter</h4>
@@ -38,13 +35,20 @@
                     <div class="dropdown-container">
                         <select id="rpoSelect" class="form-select">
                             <option value="">Select Package/Option</option>
-                            <option value="Z4B" <% if (selectedRPO === 'Z4B') { %>selected<% } %>>Collector's Edition</option>
-                            <option value="X56" <% if (selectedRPO === 'X56') { %>selected<% } %>>Garage 56 Special Edition</option>
+                            <option value="Z4B" <% if (selectedRPO === 'Z4B') { %>selected<% } %>>Camaro Collector's Edition</option>
+                            <option value="X56" <% if (selectedRPO === 'X56') { %>selected<% } %>>Camaro Garage 56 Special Edition</option>
                             <option value="A1Z" <% if (selectedRPO === 'A1Z') { %>selected<% } %>>ZL1 1LE</option>
                             <option value="A1Y" <% if (selectedRPO === 'A1Y') { %>selected<% } %>>SS 1LE</option>
                             <option value="A1X" <% if (selectedRPO === 'A1X') { %>selected<% } %>>LT 1LE</option>
                             <option value="LF4" <% if (selectedRPO === 'LF4') { %>selected<% } %>>CT4-V Blackwing</option>
+                            <option value="ZLE" <% if (selectedRPO === 'ZLE') { %>selected<% } %>>CT4-V Blackwing Watkins Glen IMSA Edition</option>
+                            <option value="ZLD" <% if (selectedRPO === 'ZLD') { %>selected<% } %>>CT4-V Blackwing Sebring IMSA Edition</option>
+                            <option value="ZLG" <% if (selectedRPO === 'ZLG') { %>selected<% } %>>CT4-V Blackwing Road Atlanta IMSA Edition</option>
+                            <option value="ZLK" <% if (selectedRPO === 'ZLK') { %>selected<% } %>>CT4-V Blackwing Arrival Edition</option>
+                            <option value="ZLJ" <% if (selectedRPO === 'ZLJ') { %>selected<% } %>>CT4-V Blackwing Impact Edition</option>
+                            <option value="SXL" <% if (selectedRPO === 'SXL') { %>selected<% } %>>CT4-V Blackwing Elevation Edition</option>
                             <option value="1SV" <% if (selectedRPO === '1SV') { %>selected<% } %>>CT5-V Blackwing</option>
+                            <option value="ABQ" <% if (selectedRPO === 'ABQ') { %>selected<% } %>>CT5-V Blackwing 120th Anniversary Edition</option>
                             <option value="OAR" <% if (selectedRPO === 'OAR') { %>selected<% } %>>Pre-Production Vehicle</option>
                         </select>
                     </div>
@@ -85,7 +89,7 @@
                                     <select id="yearSelect" class="form-select small-dropdown">
                                         <option value="">Year</option>
                                         <% years.forEach(function(year) { %>
-                                            <option value="<%= year %>" <% if (selectedYear === year) { %>selected<% } %>><%= year %></option>
+                                            <option value="<%= year %>" <% if (selectedYear === year.toString()) { %>selected<% } %>><%= year %></option>
                                         <% }) %>
                                     </select>
                                 </div>

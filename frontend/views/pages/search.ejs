@@ -274,12 +274,13 @@
 
         const mmc = <%- JSON.stringify(mmc) %>;
         const colorMap = <%- JSON.stringify(colorMap) %>;
+        const intColor = <%- JSON.stringify(intColor) %>;
         const allJson = <%- JSON.stringify(vin_data[0].allJson) %>;
 
         const generatedImage = document.getElementById('generated-image');
         const loadingAnimation = document.getElementById('loading-animation');
         loadingAnimation.style.direction = 'block';
-        const data = { mmc, colorMap, allJson };
+        const data = { mmc, colorMap, intColor, allJson };
 
         fetch('/api/genurl', {
           method: 'POST',

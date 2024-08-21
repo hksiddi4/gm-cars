@@ -9,19 +9,22 @@
     <div class="wrapper">
         <div class="content">
             <div class="container-fluid">
-                <div class="flex-column">
-                    <h2>Yearly Count</h2>
-                    <h4>test</h4>
-                </div>
-                <div class="row">
-                    <h2>Trim Count</h2>
-                </div>
-                <div class="flex-column">
-                    <h2>Model Count</h2>
-                </div>
-                <div class="flex-column">
-                    <h2>Yearly Count</h2>
-                </div>
+                <h2 style="padding-top: 20px;">Introduction</h2>
+                <p>Visit the Vehicles page from the sidebar and click on a vehicle row to access further information of that vehicle.</p>
+                <img src="../img/index/vehicleTable.png" style="width: 75%;">
+                <p style="padding-top: 15px;">Allow some time (<1 minute) for the photos to generate</p>
+                <img src="../img/index/individualVehicle.png" style="width: 75%;">
+                <p style="padding-top: 15px;" style="width: 75%;">
+                    Below the photos will be the Window Sticker if available - North American vehicles only<br>
+                    GM 'hides' JSON data at the very top of each sticker which includes all of the data used to supply information throughout this site.<br>
+                    You can see this by clicking inside the window sticker document and pressing the keys CTRL+A (Select All), CTRL+C (Copy) and open a notepad to paste CTRL+V (Paste).<br>
+                    The JSON is at the very bottom of the document when pasted following these steps.
+                </p>
+                <img src="../img/index/window-sticker-info.png" style="width: 75%;">
+                <p style="padding-top: 15px;">Click the See Rarity button to calculate the number of cars built with the exact same RPO codes</p>
+                <img src="../img/index/rarity.png" style="width: 75%;">
+                <p style="padding-top: 15px;">The bottom table lists all associated RPO codes and their descriptions</p>
+                <img src="../img/index/rpo-info.png" style="width: 75%;">
             </div>
         </div>
     <%- include('../partials/footer'); %>

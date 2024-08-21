@@ -12,7 +12,6 @@
         "H01":  "KALAHARI LEATHER",
         "H0L":  "SANGRIA WITH JET BLACK ACCENTS LEATHER W/ MINI-PERFORATED INSERTS",
         "H0M":  "CINNAMON WITH JET BLACK ACCENTS LEATHER W/ MINI-PERFORATED INSERTS",
-        "H0W":  "JET BLACK LEATHER W/ RED ACCENTS",
         "H0W":  "JET BLACK LEATHER WITH RED ACCENTS",
         "H0Y":  "JET BLACK LEATHER",
         "H13":  "CERAMIC WHITE LEATHER",
@@ -123,18 +122,14 @@
                   <% vin_data.forEach(function(data) { %>
                   <tr data-alljson='<%= JSON.stringify(data.allJson) %>'>
                     <td><strong>VIN:</strong></td>
-                    <td>
-                      <a href="https://cws.gm.com/vs-cws/vehshop/v2/vehicle/windowsticker?vin=<%= data.vin || 'N/A' %>" target="_blank">
-                        <%= data.vin || 'N/A' %>
-                      </a>
-                    </td>
+                    <td><%= data.vin || 'N/A' %></td>
                   </tr>
                   <tr>
                     <td><strong>ORDER NUMBER:</strong></td>
                     <td><%= data.ordernum || 'N/A' %></td>
                   </tr>
                   <tr>
-                    <td><strong>CREATION DATE:</strong></td>
+                    <td><strong>STICKER CREATION DATE:</strong></td>
                     <td>
                       <%= data.allJson ? new Date(JSON.parse(data.allJson).creation_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A' %>
                     </td>
@@ -193,12 +188,12 @@
                       <% if (data.location) { %>
                         <% const state = data.location.split(',')[1]?.trim().split(' ')[0]; %>
                         <% if (state && ["AB", "BC", "MB", "NF", "NT", "ON", "PE", "PQ", "SK"].includes(state)) { %>
-                          <img src="../img/canada_flag.png" alt="Canada" width="30" style="padding-right: 5px;">Canada
+                          <img src="../img/flags/canada_flag.png" alt="Canada" width="30" style="padding-right: 5px;">CANADA
                         <% } else { %>
-                          <img src="../img/usa_flag.png" alt="USA" width="30" style="padding-right: 5px;">United States
+                          <img src="../img/flags/usa_flag.png" alt="USA" width="30" style="padding-right: 5px;">UNITED STATES
                         <% } %>
                       <% } else { %>
-                        <img src="../img/mexico_flag.png" alt="Mexico" width="30" style="padding-right: 5px;">Mexico
+                        <img src="../img/flags/mexico_flag.png" alt="Mexico" width="30" style="padding-right: 5px;">MEXICO
                       <% } %>
                     </td>
                   </tr>
@@ -211,9 +206,13 @@
                 <div class="spinner" style="align-items: center;"></div>
                 <h4>Generating Photos...</h4>
               </div>
-              <img id="carousel-image" src="" style="width: 100%;"/>
+              <img id="carousel-image" src="" style="width: 100%;">
               <button id="prev" style="position: absolute; top: 50%; left: 0; background-color: rgba(0, 0, 0, 0.5); color: white; border: none; padding: 10px; cursor: pointer; z-index: 100;">&#10094;</button>
               <button id="next" style="position: absolute; top: 50%; right: 0; background-color: rgba(0, 0, 0, 0.5); color: white; border: none; padding: 10px; cursor: pointer; z-index: 100;">&#10095;</button>
+            </div>
+            <!-- Window Sticker -->
+            <div id="sticker-container">
+              <iframe id="window-sticker" src="https://cws.gm.com/vs-cws/vehshop/v2/vehicle/windowsticker?vin=<%= vin_data[0].vin || 'N/A' %>" style="min-height: 886px; width: 100%;"></iframe>
             </div>
             <div class="rarity-container">
               <% vin_data.forEach(function(data) { %>

@@ -129,27 +129,25 @@ def sort_price():
         models = "', '".join(models)
         conditions.append(f"model IN ('{models}')")
 
-    if rpo == "Z4B":
-        conditions.append("exterior_color IN ('PANTHER BLACK MATTE', 'PANTHER BLACK METALLIC')")
-    elif rpo == "X56":
-        conditions.append("trim = 'ZL1'")
-        conditions.append("exterior_color = 'RIPTIDE BLUE METALLIC'")
-        conditions.append(f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')")
-    elif rpo == "A1Z":
-        conditions.append("trim = 'ZL1'")
-        conditions.append(f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')")
-    elif rpo == "A1Y":
-        conditions.append("trim in ('1SS', '2SS')")
-        conditions.append(f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')")
-    elif rpo == "A1X":
-        conditions.append("trim in ('1LT', '2LT', '3LT')")
-        conditions.append(f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')")
-    elif rpo == "LF4":
-        conditions.append("model = 'CT4'")
-        conditions.append("trim = 'V-SERIES BLACKWING'")
-    elif rpo == "1SV":
-        conditions.append("model = 'CT5'")
-        conditions.append("trim = 'V-SERIES BLACKWING'")
+    rpo_conditions = {
+        "Z4B": ["modelYear = '2024'", "model = 'CAMARO'", "exterior_color IN ('PANTHER BLACK MATTE', 'PANTHER BLACK METALLIC')"],
+        "X56": ["modelYear = '2024'", "model = 'CAMARO'", "body = 'COUPE'", "trim = 'ZL1'", "transmission = 'M6'", "exterior_color = 'RIPTIDE BLUE METALLIC'", "msrp = '89185'", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
+        "A1Z": ["trim = 'ZL1'", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
+        "A1Y": ["trim in ('1SS', '2SS')", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
+        "A1X": ["trim in ('1LT', '2LT', '3LT')", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
+        "LF4": ["model = 'CT4'", "trim = 'V-SERIES BLACKWING'"],
+        "ZLE": ["modelYear = '2023'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "exterior_color = 'ELECTRIC BLUE'", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
+        "ZLD": ["modelYear = '2023'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "exterior_color = 'MAVERICK NOIR FROST'", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
+        "ZLG": ["modelYear = '2023'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "exterior_color = 'RIFT METALLIC'", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
+        "ZLK": ["modelYear = '2024'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "exterior_color = 'MERCURY SILVER METALLIC'", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
+        "ZLJ": ["modelYear = '2024'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "exterior_color = 'BLACK RAVEN'", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
+        "ZLR": ["modelYear = '2024'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "exterior_color = 'VELOCITY RED'", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
+        "1SV": ["model = 'CT5'", "trim = 'V-SERIES BLACKWING'"],
+        "ABQ": ["modelYear = '2023'", "model = 'CT5'", "trim = 'V-SERIES BLACKWING'", "msrp > '118000'", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"]
+    }
+
+    if rpo in rpo_conditions:
+        conditions.extend(rpo_conditions[rpo])
     elif rpo:
         conditions.append(f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')")
 
@@ -166,15 +164,13 @@ def sort_price():
 
     where_clause = " WHERE " + " AND ".join(conditions) if conditions else ""
 
-    count_query = f"SELECT COUNT(*) AS total FROM gm{where_clause}"
-    total_items_result = execute_read_query(conn, count_query)
-    total_items = total_items_result[0]['total']
-
-    if order == "ASC":
-        select_query = f"SELECT * FROM gm{where_clause} ORDER BY msrp LIMIT {limit} OFFSET {offset}"
+    if rpo in ["Z4B", "X56"] and order not in ["ASC", "DESC"]:
+        order_clause = "ORDER BY SUBSTRING(vin, -6)"
     else:
-        select_query = f"SELECT * FROM gm{where_clause} ORDER BY msrp DESC LIMIT {limit} OFFSET {offset}"
-    viewTable = execute_read_query(conn, select_query)
+        order_clause = f"ORDER BY msrp {'ASC' if order == 'ASC' else 'DESC'}"
+
+    viewTable = execute_read_query(conn, f"SELECT * FROM gm{where_clause} {order_clause} LIMIT {limit} OFFSET {offset}")
+    total_items = execute_read_query(conn, f"SELECT COUNT(*) AS total FROM gm{where_clause}")[0]['total']
 
     return jsonify({'data': viewTable, 'total': total_items})
 

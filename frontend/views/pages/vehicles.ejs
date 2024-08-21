@@ -46,7 +46,7 @@
                             <option value="ZLG" <% if (selectedRPO === 'ZLG') { %>selected<% } %>>CT4-V Blackwing Road Atlanta IMSA Edition</option>
                             <option value="ZLK" <% if (selectedRPO === 'ZLK') { %>selected<% } %>>CT4-V Blackwing Arrival Edition</option>
                             <option value="ZLJ" <% if (selectedRPO === 'ZLJ') { %>selected<% } %>>CT4-V Blackwing Impact Edition</option>
-                            <option value="SXL" <% if (selectedRPO === 'SXL') { %>selected<% } %>>CT4-V Blackwing Elevation Edition</option>
+                            <option value="ZLR" <% if (selectedRPO === 'ZLR') { %>selected<% } %>>CT4-V Blackwing Elevation Edition</option>
                             <option value="1SV" <% if (selectedRPO === '1SV') { %>selected<% } %>>CT5-V Blackwing</option>
                             <option value="ABQ" <% if (selectedRPO === 'ABQ') { %>selected<% } %>>CT5-V Blackwing 120th Anniversary Edition</option>
                             <option value="OAR" <% if (selectedRPO === 'OAR') { %>selected<% } %>>Pre-Production Vehicle</option>
@@ -55,7 +55,7 @@
                 </div>
             </div>
             <div class="stats">
-                <!-- Dropdown and Total -->
+                <!-- Limit and Total -->
                 <div class="col-md-2">
                     <div class="row">
                         <div class="total-container" style="display: flex;">
@@ -191,15 +191,15 @@
                                         if (locationParts.length > 1) {
                                             const state = locationParts[1].trim().split(' ')[0];
                                             if (["AB", "BC", "MB", "NB", "NF", "NS", "NT", "ON", "PE", "PQ", "SK"].includes(state)) { %>
-                                                <img src="../img/canada_flag.png" alt="Canada" width="20">
+                                                <img src="../img/flags/canada_flag.png" alt="Canada" width="20">
                                             <% } else { %>
-                                                <img src="../img/usa_flag.png" alt="USA" width="20">
+                                                <img src="../img/flags/usa_flag.png" alt="USA" width="20">
                                             <% }
                                         } else { %>
-                                            <img src="../img/mexico_flag.png" alt="Mexico" width="20">
+                                            <img src="../img/flags/mexico_flag.png" alt="Mexico" width="20">
                                         <% }
                                     } else { %>
-                                        <img src="../img/mexico_flag.png" alt="Mexico" width="20">
+                                        <img src="../img/flags/mexico_flag.png" alt="Mexico" width="20">
                                     <% } %>
                                 </td>
                                 <td scope="row" style="text-align: left;"><%= data.dealer || 'N/A' %></td>

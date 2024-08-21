@@ -70,7 +70,6 @@ def generate_url():
             built_url = f"{base_url}{model_year}/{mmc_code}/{mmc_code}__{trim}/{color_value}_{rpos}{end_url}"
             response = requests.head(built_url)
             view += 1
-            print(built_url)
             if response.status_code == 404:
                 break
             urls_attempted.append(built_url)

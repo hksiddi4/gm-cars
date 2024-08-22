@@ -39,141 +39,62 @@ app.get('/vehicles', function(req, res) {
     limit = Math.min(limit, 250);
 
     let url = `${baseURL}/vehicles?page=${page}&limit=${limit}`;
-
-    if (year) {
-        url += `&year=${year}`;
-    }
-
-    if (trim) {
-        url += `&trim=${trim}`;
-    }
-
-    if (engine) {
-        url += `&engine=${engine}`;
-    }
-
-    if (trans) {
-        url += `&trans=${trans}`;
-    }
-
-    if (models) {
-        models = Array.isArray(models) ? models.join(',') : models;
-        url += `&model=${models}`;
-    }
-
-    if (rpo) {
-        url += `&rpo=${rpo}`;
-    }
-
-    if (color) {
-        url += `&color=${color}`;
-    }
-
-    if (country) {
-        url += `&country=${country}`;
-    }
-
-    if (order) {
-        url += `&order=${order}`;
-    }
+    if (year) url += `&year=${year}`;
+    if (trim) url += `&trim=${trim}`;
+    if (engine) url += `&engine=${engine}`;
+    if (trans) url += `&trans=${trans}`;
+    if (models) url += `&model=${Array.isArray(models) ? models.join(',') : models}`;
+    if (rpo) url += `&rpo=${rpo}`;
+    if (color) url += `&color=${color}`;
+    if (country) url += `&country=${country}`;
+    if (order) url += `&order=${order}`;
 
     axios.get(url)
         .then((response) => {
             var vehicle_data = Array.isArray(response.data.data) ? response.data.data : [];
-            var totalItems = response.data.total;
-            var elapsedTime = response.data.etime;
-            var totalPages = Math.ceil(totalItems / limit);
-
             vehicle_data.forEach(function(data) {
                 data.msrp = formatCurrency(data.msrp);
             });
+            var totalItems = response.data.total;
+            var totalPages = Math.ceil(totalItems / limit);
+            var years = response.data.year
+            var selectedYear = req.query.year;
+            var trim = response.data.trim;
+            var selectedTrim = req.query.trim;
+            var engine = response.data.engine;
+            var selectedEngine = req.query.engine;
+            var trans = response.data.trans;
+            var selectedTrans = req.query.trans;
+            var colors = response.data.color;
+            var selectedColor = req.query.color;
+            var models = response.data.model;
+            var selectedModels = selectedModels ? (Array.isArray(selectedModels) ? selectedModels : [selectedModels]) : [];
+            const elapsedTime = ((Date.now() - startTime) / 1000).toFixed(2);
 
-            axios.get(`${baseURL}/api/models`)
-                .then((modelResponse) => {
-                    var models = modelResponse.data;
-                    var selectedModels = req.query.model;
-                    selectedModels = selectedModels ? (Array.isArray(selectedModels) ? selectedModels : [selectedModels]) : [];
-
-                    axios.get(`${baseURL}/api/colors`)
-                        .then((colorResponse) => {
-                            var colors = colorResponse.data;
-                            var selectedColor = req.query.color;
-
-                            axios.get(`${baseURL}/api/years`)
-                            .then((yearResponse) => {
-                                var years = yearResponse.data;
-                                var selectedYear = req.query.year;
-
-                                axios.get(`${baseURL}/api/engine`)
-                                .then((engineResponse) => {
-                                    var engine = engineResponse.data;
-                                    var selectedEngine = req.query.engine;
-
-                                    axios.get(`${baseURL}/api/trims`)
-                                    .then((trimResponse) => {
-                                        var trim = trimResponse.data;
-                                        var selectedTrim = req.query.trim;
-
-                                        axios.get(`${baseURL}/api/trans`)
-                                        .then((transResponse) => {
-                                            var trans = transResponse.data;
-                                            var selectedTrans = req.query.trans;
-                                            const elapsedTime = ((Date.now() - startTime) / 1000).toFixed(2);
-
-                                            res.render('pages/vehicles', {
-                                                vehicle_data: vehicle_data,
-                                                years: years,
-                                                engine: engine,
-                                                trim: trim,
-                                                trans: trans,
-                                                models: models,
-                                                colors: colors,
-                                                colorMap: colorMap,
-                                                selectedCountry: country,
-                                                selectedModels: selectedModels,
-                                                currentPage: page,
-                                                totalPages: totalPages,
-                                                limit: limit,
-                                                totalItems: totalItems,
-                                                elapsedTime: elapsedTime,
-                                                selectedRPO: rpo,
-                                                selectedColor: selectedColor,
-                                                selectedYear: selectedYear,
-                                                selectedTrim: selectedTrim,
-                                                selectedEngine: selectedEngine,
-                                                selectedTrans: selectedTrans,
-                                                selectedOrder: order
-                                            });
-                                        })
-                                        .catch((transError) => {
-                                            console.error('Error fetching transmission data:', transError);
-                                            res.status(500).send('Error fetching transmission data');
-                                        });
-                                    })
-                                    .catch((trimError) => {
-                                        console.error('Error fetching trim data:', trimError);
-                                        res.status(500).send('Error fetching trim data');
-                                    });
-                                })
-                                .catch((engineError) => {
-                                    console.error('Error fetching engine data:', engineError);
-                                    res.status(500).send('Error fetching engine data');
-                                });
-                            })
-                            .catch((yearError) => {
-                                console.error('Error fetching year data:', yearError);
-                                res.status(500).send('Error fetching year data');
-                            });
-                        })
-                        .catch((colorError) => {
-                            console.error('Error fetching color data:', colorError);
-                            res.status(500).send('Error fetching color data');
-                        });
-                })
-                .catch((modelError) => {
-                    console.error('Error fetching model data:', modelError);
-                    res.status(500).send('Error fetching model data');
-                });
+            res.render('pages/vehicles', {
+                vehicle_data: vehicle_data,
+                years: years,
+                engine: engine,
+                trim: trim,
+                trans: trans,
+                models: models,
+                colors: colors,
+                colorMap: colorMap,
+                selectedCountry: country,
+                selectedModels: selectedModels,
+                currentPage: page,
+                totalPages: totalPages,
+                limit: limit,
+                totalItems: totalItems,
+                elapsedTime: elapsedTime,
+                selectedRPO: rpo,
+                selectedColor: selectedColor,
+                selectedYear: selectedYear,
+                selectedTrim: selectedTrim,
+                selectedEngine: selectedEngine,
+                selectedTrans: selectedTrans,
+                selectedOrder: order
+            });
         })
         .catch((error) => {
             console.error(`Error fetching data: ${error}`);

@@ -113,23 +113,37 @@ def sort_price():
     offset = (page - 1) * limit
 
     conditions = []
-
     if year:
         conditions.append(f"modelYear = '{year}'")
+    sqlStatement = f"SELECT DISTINCT modelYear FROM gm ORDER BY modelYear"
+    years = execute_read_query(conn, sqlStatement)
+    year_list = [year['modelYear'] for year in years]
     
     if trim:
         conditions.append(f"trim = '{trim}'")
+    sqlStatement = "SELECT DISTINCT trim FROM gm ORDER BY trim"
+    trims = execute_read_query(conn, sqlStatement)
+    trim_list = [trim['trim'] for trim in trims]
     
     if engine:
         conditions.append(f"vehicleEngine = '{engine}'")
+    sqlStatement = "SELECT DISTINCT vehicleEngine FROM gm ORDER BY vehicleEngine"
+    engines = execute_read_query(conn, sqlStatement)
+    engine_list = [engine['vehicleEngine'] for engine in engines]
     
     if trans:
         conditions.append(f"transmission = '{trans}'")
+    sqlStatement = "SELECT DISTINCT transmission FROM gm ORDER BY transmission"
+    trans = execute_read_query(conn, sqlStatement)
+    trans_list = [transmission['transmission'] for transmission in trans]
 
     if models:
         models = [model.strip() for model in models.split(',')]
         models = "', '".join(models)
         conditions.append(f"model IN ('{models}')")
+    sqlStatement = "SELECT DISTINCT model FROM gm ORDER BY model"
+    models = execute_read_query(conn, sqlStatement)
+    model_list = [model['model'] for model in models]
 
     rpo_conditions = {
         "Z4B": ["modelYear = '2024'", "model = 'CAMARO'", "exterior_color IN ('PANTHER BLACK MATTE', 'PANTHER BLACK METALLIC')"],
@@ -157,6 +171,9 @@ def sort_price():
 
     if color:
         conditions.append(f"exterior_color = '{color}'")
+    sqlStatement = "SELECT DISTINCT exterior_color FROM gm ORDER BY exterior_color"
+    colors = execute_read_query(conn, sqlStatement)
+    color_list = [color['exterior_color'] for color in colors]
 
     if country == "USA":
         conditions.append("NOT JSON_CONTAINS(allJson->'$.maker', '\"GMCANADA\"')")
@@ -176,61 +193,8 @@ def sort_price():
     viewTable = execute_read_query(conn, f"SELECT * FROM gm{where_clause} {order_clause} LIMIT {limit} OFFSET {offset}")
     total_items = execute_read_query(conn, f"SELECT COUNT(*) AS total FROM gm{where_clause}")[0]['total']
 
-    return jsonify({'data': viewTable, 'total': total_items})
+    return jsonify({'data': viewTable, 'total': total_items, 'year': year_list, 'trim': trim_list, 'engine': engine_list, 'trans': trans_list, 'color': color_list, 'model': model_list})
 
 # ========================= View Pages =========================
-
-# =========================    APIs    =========================
-
-@app.route('/api/years', methods=['GET'])
-def get_trim():
-    sqlStatement = "SELECT DISTINCT modelYear FROM gm ORDER BY modelYear"
-    years = execute_read_query(conn, sqlStatement)
-    year_list = [year['modelYear'] for year in years]
-    return jsonify(year_list)
-
-@app.route('/api/years', methods=['GET'])
-def get_years():
-    sqlStatement = "SELECT DISTINCT modelYear FROM gm ORDER BY modelYear"
-    years = execute_read_query(conn, sqlStatement)
-    year_list = [year['modelYear'] for year in years]
-    return jsonify(year_list)
-
-@app.route('/api/trims', methods=['GET'])
-def get_trims():
-    sqlStatement = "SELECT DISTINCT trim FROM gm ORDER BY trim"
-    trims = execute_read_query(conn, sqlStatement)
-    trim_list = [trim['trim'] for trim in trims]
-    return jsonify(trim_list)
-
-@app.route('/api/engine', methods=['GET'])
-def get_engine():
-    sqlStatement = "SELECT DISTINCT vehicleEngine FROM gm ORDER BY vehicleEngine"
-    engines = execute_read_query(conn, sqlStatement)
-    engine_list = [engine['vehicleEngine'] for engine in engines]
-    return jsonify(engine_list)
-
-@app.route('/api/trans', methods=['GET'])
-def get_trans():
-    sqlStatement = "SELECT DISTINCT transmission FROM gm ORDER BY transmission"
-    trans = execute_read_query(conn, sqlStatement)
-    trans_list = [transmission['transmission'] for transmission in trans]
-    return jsonify(trans_list)
-
-@app.route('/api/colors', methods=['GET'])
-def get_colors():
-    sqlStatement = "SELECT DISTINCT exterior_color FROM gm ORDER BY exterior_color"
-    colors = execute_read_query(conn, sqlStatement)
-    color_list = [color['exterior_color'] for color in colors]
-    return jsonify(color_list)
-
-@app.route('/api/models', methods=['GET'])
-def get_models():
-    sqlStatement = "SELECT DISTINCT model FROM gm ORDER BY model"
-    models = execute_read_query(conn, sqlStatement)
-    model_list = [model['model'] for model in models]
-    return jsonify(model_list)
-
-# =========================    APIs    =========================
 
 app.run()

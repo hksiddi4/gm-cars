@@ -26,11 +26,10 @@ def search_inv():
 @app.route('/api/genurl', methods=['POST'])
 def generate_url():
     data = request.json["data"]
-    allJson_str = data["allJson"]
-    allJson = json.loads(allJson_str)
+    allJson = json.loads(data["allJson"])
 
-    model_year = allJson["model_year"].strip()
-    mmc_code = allJson["mmc_code"].strip()
+    model_year = allJson["model_year"]
+    mmc_code = allJson["mmc_code"]
     mmcDict = data["mmc"]
     colorMap = data["colorMap"]
     intColor = data["intColor"]
@@ -38,7 +37,10 @@ def generate_url():
     baseURL = "https://cgi.chevrolet.com/mmgprod-us/dynres/prove/image.gen?i="
     baseURL_int = "https://cgi.chevrolet.com/mmgprod-us/dynres/prove/imageinterior.gen?i="
 
-    trim = mmcDict.get(mmc_code)
+    if mmc_code in ["1YC07", "1YC67"]:
+        trim = next((opt for opt in options if opt in ["1LT", "2LT", "3LT"]), mmcDict.get(mmc_code))
+    else:
+        trim = mmcDict.get(mmc_code)
     rpos = "_".join(options)
     
     color = None
@@ -135,6 +137,8 @@ def sort_price():
         "A1Z": ["trim = 'ZL1'", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
         "A1Y": ["trim in ('1SS', '2SS')", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
         "A1X": ["trim in ('1LT', '2LT', '3LT')", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
+        "Z51": ["model = 'CORVETTE'", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
+        "ZCR": ["model = 'CORVETTE'", "modelYear = '2022'", "trim = '3LT'", "(exterior_color = 'HYPERSONIC GRAY' OR exterior_color = 'ACCELERATE YELLOW')", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
         "LF4": ["model = 'CT4'", "trim = 'V-SERIES BLACKWING'"],
         "ZLE": ["modelYear = '2023'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "exterior_color = 'ELECTRIC BLUE'", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
         "ZLD": ["modelYear = '2023'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "exterior_color = 'MAVERICK NOIR FROST'", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],

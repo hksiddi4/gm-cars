@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
 const axios = require('axios');
-const { colorMap, intColor, mmc } = require('./views/partials/modules.js')
+const { colorMap, intColor, seatCode, mmc } = require('./views/partials/modules.js')
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
@@ -199,6 +199,7 @@ app.get('/search', function(req, res) {
                 vin_data: vin_data,
                 colorMap: colorMap,
                 intColor: intColor,
+                seatCode: seatCode,
                 mmc: mmc
             });
         }

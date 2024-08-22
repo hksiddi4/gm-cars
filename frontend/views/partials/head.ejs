@@ -1,21 +1,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <link rel="icon" href="../img/camaro_favicon.png">
 
-<!-- CSS (load bootstrap from a CDN) -->
+<!-- CSS -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-<!-- For JavaScript tab functionality -->
+<!-- JavaScript -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
-
-<!-- Google font -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-
 
 <style>
     html, body {
@@ -36,12 +28,22 @@
         display: flex;
         flex-direction: column;
         flex-grow: 1;
-        min-height: 90vh;
         overflow-y: auto;
     }
 
+    img {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    #rotatingImage {
+        margin: 0;
+        padding: 0;
+        width: auto;
+        height: 100px;
+    }
+
     .spinner {
-        border: 4px solid rgb(255, 255, 255);
+        border: 4px solid #fff;
         border-left: 4px solid #0008ff;
         border-radius: 50%;
         width: 40px;
@@ -56,7 +58,7 @@
 
     .stats {
         display: flex;
-        justify-content: right;
+        justify-content: flex-end;
     }
 
     .pagination-wrapper {
@@ -67,19 +69,13 @@
 
     .content {
         flex-grow: 1;
-        margin-left: 250px;
-    }
-
-    .small-dropdown {
-        width: auto;
     }
 
     .footer {
         width: 100%;
         text-align: center;
-        padding-top: 20px;
-        padding-bottom: 5px;
-        color: rgb(133, 133, 133);
+        padding: 20px 0 5px;
+        color: #858585;
         margin-top: auto;
     }
 
@@ -112,86 +108,25 @@
         color: white;
     }
 
-    .table tbody > tr > td {
-        vertical-align: middle;
-        text-align: center;
-    }
-
     .table thead th {
         background-color: #2e2e2e;
-        color: rgb(255, 255, 255);
+        color: #fff;
         border-bottom: 2px solid #000;
     }
 
     .table td, .table th {
         border: 1px solid #dee2e6;
+        vertical-align: middle;
+        text-align: center;
     }
 
     .custom-container {
         width: 95%;
-        margin: 0 auto;
+        margin: auto;
     }
 
     .highlight {
         background-color: #ff7f7f !important;
-    }
-
-    .nav-pills .nav-link:hover { 
-        background-color: rgba(74, 74, 74, 0.324);
-        display: block;
-        width: 100%;
-    }
-    
-    .buttoncss {
-        color:white;
-        background-color: #2436653b;
-    }
-
-    .buttoncss:hover {
-        color:white;
-        background-color: rgba(12, 12, 82, 0.256);
-    }
-
-    .csstable {
-        border: 2px solid #243665;
-    }
-    
-    .sidebar {
-        width: 250px;
-        position: fixed;
-        top: 0;
-        left: 0;
-        height: 100%;
-        background-color: #272727;
-    }
-
-    .countlink {
-        color: white;
-        width:200px;
-        background-color: #243665;
-        border-radius: 5px;
-        text-align: center;
-    }
-
-    .countlink:hover {
-        color: white;
-        background-color: rgb(12, 12, 82);
-    }
-
-    .countlink {
-        transition: all 0.5s ease;
-    }
-
-    .togglecss {
-        border: 2px solid #243665;
-    }
-    .togglecss:checked {
-        border: 2px solid #243665;
-        background-color: #8e8bd8;
-    }
-
-    .spinnercss {
-        color: #243665;
     }
 
     .nav-link {
@@ -203,7 +138,7 @@
     }
 
     .nav-link:hover {
-        color:#8bb3d8
+        color: #8bb3d8
     }
 
     .form-check-label {

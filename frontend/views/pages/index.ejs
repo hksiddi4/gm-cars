@@ -5,26 +5,26 @@
     <title>GM Build Counts</title>
 </head>
 <body>
-    <%- include('../partials/sidebar'); %>
-    <div class="wrapper">
+    <%- include('../partials/header'); %>
+    <div class="custom-container">
         <div class="content">
             <div class="container-fluid">
-                <h2 style="padding-top: 20px;">Introduction</h2>
-                <p>Visit the Vehicles page from the sidebar and click on a vehicle row to access further information of that vehicle.</p>
-                <img src="../img/index/vehicleTable.png" style="width: 75%;">
-                <p style="padding-top: 15px;">Allow some time (<1 minute) for the photos to generate</p>
-                <img src="../img/index/individualVehicle.png" style="width: 75%;">
-                <p style="padding-top: 15px;" style="width: 75%;">
+                <h2 class="pt-4">Introduction</h2>
+                <p>Visit the Vehicles page from the header and click on a vehicle row to access further information of that vehicle.</p>
+                <img src="../img/index/vehicleTable.png" class="img-fluid mb-3" alt="Vehicle Table">
+                <p class="pt-3">Allow some time (<1 minute) for the photos to generate</p>
+                <img src="../img/index/individualVehicle.png" class="img-fluid mb-3" alt="Individual Vehicle">
+                <p class="pt-3">
                     Below the photos will be the Window Sticker if available - North American vehicles only<br>
                     GM 'hides' JSON data at the very top of each sticker which includes all of the data used to supply information throughout this site.<br>
                     You can see this by clicking inside the window sticker document and pressing the keys CTRL+A (Select All), CTRL+C (Copy) and open a notepad to paste CTRL+V (Paste).<br>
                     The JSON is at the very bottom of the document when pasted following these steps.
                 </p>
-                <img src="../img/index/window-sticker-info.png" style="width: 75%;">
-                <p style="padding-top: 15px;">Click the See Rarity button to calculate the number of cars built with the exact same RPO codes</p>
-                <img src="../img/index/rarity.png" style="width: 75%;">
-                <p style="padding-top: 15px;">The bottom table lists all associated RPO codes and their descriptions</p>
-                <img src="../img/index/rpo-info.png" style="width: 75%;">
+                <img src="../img/index/window-sticker-info.png" class="img-fluid mb-3" alt="Window Sticker">
+                <p class="pt-3">Click the See Rarity button to calculate the number of cars built with the exact same RPO codes</p>
+                <img src="../img/index/rarity.png" class="img-fluid mb-3" alt="Rarity Button">
+                <p class="pt-3">The bottom table lists all associated RPO codes and their descriptions</p>
+                <img src="../img/index/rpo-info.png" class="img-fluid mb-3" alt="RPO Info">
             </div>
         </div>
     <%- include('../partials/footer'); %>

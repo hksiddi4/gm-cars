@@ -1,22 +1,22 @@
-<header class="p-4" style="background-color: #000000;">
+<header style="background-color: #000000; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3)">
     <div class="container-fluid">
         <div class="row align-items-center">
             <a href="/" class="col-auto">
                 <img id="rotatingImage" class="mx-auto">
             </a>
-            <h1 class="header-title col">
+            <div class="header-title col">
                 <a href="/" style="color: white; text-decoration: none;">
-                    GM 2020+ Build Counts
+                    <h1>GM 2020+ Build Counts</h1>
                 </a>
-            </h1>
-            <ul class="nav nav-pills col-auto">
-                <li class="nav-item">
-                    <a href="/vehicles" class="nav-link align-middle px-2 mb-2 csslink d-flex align-items-center">
-                        <i class="fs-5 bi bi-car-front-fill me-2"></i>
-                        <span class="ms-1 d-none d-sm-inline">Vehicles</span>
-                    </a>
-                </li>
-            </ul>
+                <ul class="nav nav-pills col-auto">
+                    <li class="nav-item">
+                        <a href="/vehicles" class="nav-link align-middle px-2 mb-2 csslink d-flex align-items-center">
+                            <i class="fs-5 bi bi-car-front-fill me-2"></i>
+                            <span class="ms-1 d-none d-sm-inline">Vehicles</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
             <form id="searchVIN" action="/search" method="GET" class="d-flex col-auto">
                 <input type="text" id="searchInput" name="vin" class="form-control" placeholder="Search VIN...">
                 <button type="submit" class="btn btn-secondary ms-2">Search</button>
@@ -34,6 +34,10 @@
         '../img/header/camaro_header_5.png',
         '../img/header/camaro_header_6.png',
         '../img/header/camaro_header_7.png',
+        '../img/header/ct4_header_1.png',
+        '../img/header/ct4_header_1.png',
+        '../img/header/ct5_header_1.png',
+        '../img/header/ct5_header_1.png',
     ];
 
     var randomIndex = Math.floor(Math.random() * imageURLs.length);

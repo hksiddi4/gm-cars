@@ -2,7 +2,7 @@ import sql
 import flask
 from flask import request, jsonify
 from flask_cors import CORS
-from sql import create_connection, execute_read_query, Creds
+from sql import create_connection, execute_read_query, close_connection, Creds
 import requests
 import json
 
@@ -12,7 +12,6 @@ CORS(app)
 
 # Create connection to MySQL database
 myCreds = sql.Creds()
-conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
 
 # ========================= View Pages =========================
 
@@ -20,7 +19,9 @@ conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, 
 def search_inv():
     vin = request.args.get('vin')
     sqlStatement = f"SELECT * FROM gm WHERE VIN = '{vin}'"
+    conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
     viewTable = execute_read_query(conn, sqlStatement)
+    close_connection(conn)
     return jsonify(viewTable)
 
 @app.route('/api/genurl', methods=['POST'])
@@ -92,7 +93,9 @@ def unique():
         formatted_options = json.dumps(options)
         try:
             sqlStatement = f"SELECT COUNT(*) AS Count FROM gm WHERE JSON_UNQUOTE(JSON_EXTRACT(allJson, '$.Options')) = '{formatted_options}'"
+            conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
             response = execute_read_query(conn, sqlStatement)
+            close_connection(conn)
             return response
         except ValueError:
             return jsonify({'error': 'Invalid value'}), 400
@@ -173,6 +176,7 @@ def sort_price():
         results = execute_read_query(conn, sqlStatement)
         return [result[column] for result in results]
 
+    conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
     year_list = get_distinct_values('modelYear')
     body_list = get_distinct_values('body')
     trim_list = get_distinct_values('trim')
@@ -180,14 +184,17 @@ def sort_price():
     trans_list = get_distinct_values('transmission')
     model_list = get_distinct_values('model')
     color_list = get_distinct_values('exterior_color')
+    close_connection(conn)
 
     if rpo in ["Z4B", "X56"] and order not in ["ASC", "DESC"]:
         order_clause = "ORDER BY SUBSTRING(vin, -6)"
     else:
         order_clause = f"ORDER BY msrp {'ASC' if order == 'ASC' else 'DESC'}"
 
+    conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
     viewTable = execute_read_query(conn, f"SELECT * FROM gm{where_clause} {order_clause} LIMIT {limit} OFFSET {offset}")
     total_items = execute_read_query(conn, f"SELECT COUNT(*) AS total FROM gm{where_clause}")[0]['total']
+    close_connection(conn)
 
     return jsonify({
         'data': viewTable,

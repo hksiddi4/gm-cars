@@ -195,13 +195,13 @@
                 if (hasZLK) features.push('Arrival Edition');
                 if (hasZLJ) features.push('Impact Edition');
                 if (hasZLR) features.push('Elevation Edition');
-                if (hasABQ) features.push('120th Anniversary Edtion');
+                if (hasABQ) features.push('120th Anniversary Edition');
                 if (hasOAR) features.push('Pre-Production Vehicle');
               %>
               <% if (features.length > 0) { %>
                 <div>
                   <% features.forEach(feature => { %>
-                    <h4><%= feature %></h4>
+                    <h4><em><%= feature %></em></h4>
                   <% }) %>
                 </div>
               <% } %>            

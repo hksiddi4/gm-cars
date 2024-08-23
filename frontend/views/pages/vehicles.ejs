@@ -99,7 +99,16 @@
                                 </div>
                             </th>
                             <th scope="col">Model</th>
-                            <th scope="col">Body</th>
+                            <th scope="col">
+                                <div class="dropdown-container">
+                                    <select id="bodySelect" class="form-select small-dropdown">
+                                        <option value="">Body</option>
+                                        <% bodys.forEach(function(body) { %>
+                                            <option value="<%= body %>" <% if (selectedBody === body.toString()) { %>selected<% } %>><%= body %></option>
+                                        <% }) %>
+                                    </select>
+                                </div>
+                            </th>
                             <th scope="col">
                                 <div class="dropdown-container">
                                     <select id="trimSelect" class="form-select small-dropdown">
@@ -220,13 +229,13 @@
                             <!-- First Page -->
                             <% if (currentPage > 1) { %>
                                 <li class="page-item">
-                                    <a class="page-link" href="?page=1&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&trim=<% selectedTrim %>&engine=<% selectedEngine %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>">First</a>
+                                    <a class="page-link" href="?page=1&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&trim=<% selectedTrim %>&engine=<% selectedEngine %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&body=<%= selectedBody %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>">First</a>
                                 </li>
                             <% } %>
                             <!-- Previous Page -->
                             <% if (currentPage > 1) { %>
                                 <li class="page-item">
-                                    <a class="page-link" href="?page=<%= currentPage - 1 %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&trim=<% selectedTrim %>&engine=<% selectedEngine %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>">Previous</a>
+                                    <a class="page-link" href="?page=<%= currentPage - 1 %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&trim=<% selectedTrim %>&engine=<% selectedEngine %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&body=<%= selectedBody %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>">Previous</a>
                                 </li>
                             <% } %>
                             <!-- Page Numbers -->
@@ -245,19 +254,19 @@
                             %>
                             <% for (let i = startPage; i <= endPage; i++) { %>
                                 <li class="page-item <%= i === currentPage ? 'active' : '' %>">
-                                    <a class="page-link" href="?page=<%= i %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&trim=<% selectedTrim %>&engine=<% selectedEngine %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>"><%= i %></a>
+                                    <a class="page-link" href="?page=<%= i %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&trim=<% selectedTrim %>&engine=<% selectedEngine %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&body=<%= selectedBody %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>"><%= i %></a>
                                 </li>
                             <% } %>
                             <!-- Next Page -->
                             <% if (currentPage < totalPages) { %>
                                 <li class="page-item">
-                                    <a class="page-link" href="?page=<%= currentPage + 1 %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&trim=<% selectedTrim %>&engine=<% selectedEngine %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>">Next</a>
+                                    <a class="page-link" href="?page=<%= currentPage + 1 %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&trim=<% selectedTrim %>&engine=<% selectedEngine %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&body=<%= selectedBody %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>">Next</a>
                                 </li>
                             <% } %>
                             <!-- Last Page -->
                             <% if (currentPage < totalPages) { %>
                                 <li class="page-item">
-                                    <a class="page-link" href="?page=<%= totalPages %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&trim=<% selectedTrim %>&engine=<% selectedEngine %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>">Last</a>
+                                    <a class="page-link" href="?page=<%= totalPages %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&trim=<% selectedTrim %>&engine=<% selectedEngine %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&body=<%= selectedBody %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>">Last</a>
                                 </li>
                             <% } %>
                         </ul>
@@ -296,6 +305,7 @@
             const clearFilters = document.getElementById('clearFilters');
             const rpoSelect = document.getElementById('rpoSelect');
             const yearSelect = document.getElementById('yearSelect');
+            const bodySelect = document.getElementById('bodySelect');
             const trimSelect = document.getElementById('trimSelect');
             const engineSelect = document.getElementById('engineSelect');
             const transSelect = document.getElementById('transSelect');
@@ -324,6 +334,14 @@
                 const selectedYear = event.target.value;
                 const url = new URL(window.location.href);
                 url.searchParams.set('year', selectedYear);
+                url.searchParams.set('page', 1);
+                window.location.href = url.toString();
+            });
+
+            bodySelect.addEventListener('change', function(event) {
+                const selectedBody = event.target.value;
+                const url = new URL(window.location.href);
+                url.searchParams.set('body', selectedBody);
                 url.searchParams.set('page', 1);
                 window.location.href = url.toString();
             });
@@ -388,13 +406,14 @@
 
                 const selectedRPO = rpoSelect.value ? `rpo=${encodeURIComponent(rpoSelect.value)}` : '';
                 const selectedYear = yearSelect.value ? `year=${encodeURIComponent(yearSelect.value)}` : '';
+                const selectedBody = bodySelect.value ? `body=${encodeURIComponent(bodySelect.value)}` : '';
                 const selectedTrim = trimSelect.value ? `trim=${encodeURIComponent(trimSelect.value)}` : '';
                 const selectedEngine = engineSelect.value ? `engine=${encodeURIComponent(engineSelect.value)}` : '';
                 const selectedTrans = transSelect.value ? `trans=${encodeURIComponent(transSelect.value)}` : '';
                 const selectedColor = colorSelect.value ? `color=${encodeURIComponent(colorSelect.value)}` : '';
                 const selectedCountry = countrySelect.value ? `country=${encodeURIComponent(countrySelect.value)}` : '';
                 const limit = limitSelect.value ? `limit=${encodeURIComponent(limitSelect.value)}` : '';
-                const queryStrings = [modelQueryString, selectedRPO, selectedYear, selectedTrim, selectedEngine, selectedTrans, selectedColor, selectedCountry, limit]
+                const queryStrings = [modelQueryString, selectedRPO, selectedYear, selectedBody, selectedEngine, selectedTrans, selectedColor, selectedCountry, limit]
                                         .filter(Boolean)
                                         .join('&');
                 const url = `/vehicles?page=1&${queryStrings}`;

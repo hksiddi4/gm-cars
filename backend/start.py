@@ -40,6 +40,8 @@ def generate_url():
 
     if mmc_code in ["1YC07", "1YC67"]:
         trim = next((opt for opt in options if opt in ["1LT", "2LT", "3LT"]), mmcDict.get(mmc_code))
+    elif mmc_code in ["1YH07", "1YH67"]:
+        trim = next((opt for opt in options if opt in ["1LZ", "2LZ", "3LZ"]), mmcDict.get(mmc_code))
     else:
         trim = mmcDict.get(mmc_code)
     
@@ -70,6 +72,7 @@ def generate_url():
             # gmds11 = 2500x1407 | gmds10 = 1920x1080 | gmds5 = 320x178 | gmds4 = 640x360 | gmds3 = 205x115 | gmds2 = 960x540 | gmds1 = 480x270
             end_url = f"gmds10.png&v=deg{view:02d}&std=true&country=US&send404=true&transparentBackgroundPng=true"
             built_url = f"{base_url}{model_year}/{mmc_code}/{mmc_code}__{trim}/{color_value}_{rpos}{end_url}"
+            print(built_url)
             response = requests.head(built_url)
             view += 1
             if response.status_code == 404:
@@ -100,6 +103,7 @@ def unique():
 @app.route('/vehicles', methods=['GET'])
 def sort_price():
     year = request.args.get('year')
+    body = request.args.get('body')
     trim = request.args.get('trim')
     engine = request.args.get('engine')
     trans = request.args.get('trans')
@@ -115,6 +119,8 @@ def sort_price():
     conditions = []
     if year:
         conditions.append(f"modelYear = '{year}'")
+    if body:
+        conditions.append(f"body = '{body}'")
     if trim:
         conditions.append(f"trim = '{trim}'")
     if engine:
@@ -169,6 +175,7 @@ def sort_price():
         return [result[column] for result in results]
 
     year_list = get_distinct_values('modelYear')
+    body_list = get_distinct_values('body')
     trim_list = get_distinct_values('trim')
     engine_list = get_distinct_values('vehicleEngine')
     trans_list = get_distinct_values('transmission')
@@ -187,6 +194,7 @@ def sort_price():
         'data': viewTable,
         'total': total_items,
         'year': year_list,
+        'body': body_list,
         'trim': trim_list,
         'engine': engine_list,
         'trans': trans_list,

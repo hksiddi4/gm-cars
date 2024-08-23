@@ -25,6 +25,7 @@ app.get('/', function(req, res) {
 app.get('/vehicles', function(req, res) {
     const startTime = Date.now();
     var year = req.query.year;
+    var body = req.query.body;
     var trim = req.query.trim;
     var engine = req.query.engine;
     var trans = req.query.trans;
@@ -40,6 +41,7 @@ app.get('/vehicles', function(req, res) {
 
     let url = `${baseURL}/vehicles?page=${page}&limit=${limit}`;
     if (year) url += `&year=${year}`;
+    if (body) url += `&body=${body}`;
     if (trim) url += `&trim=${trim}`;
     if (engine) url += `&engine=${engine}`;
     if (trans) url += `&trans=${trans}`;
@@ -59,6 +61,8 @@ app.get('/vehicles', function(req, res) {
             var totalPages = Math.ceil(totalItems / limit);
             var years = response.data.year
             var selectedYear = req.query.year;
+            var bodys = response.data.body
+            var selectedBody = req.query.body;
             var trim = response.data.trim;
             var selectedTrim = req.query.trim;
             var engine = response.data.engine;
@@ -74,6 +78,7 @@ app.get('/vehicles', function(req, res) {
             res.render('pages/vehicles', {
                 vehicle_data: vehicle_data,
                 years: years,
+                bodys: bodys,
                 engine: engine,
                 trim: trim,
                 trans: trans,
@@ -90,6 +95,7 @@ app.get('/vehicles', function(req, res) {
                 selectedRPO: rpo,
                 selectedColor: selectedColor,
                 selectedYear: selectedYear,
+                selectedBody: selectedBody,
                 selectedTrim: selectedTrim,
                 selectedEngine: selectedEngine,
                 selectedTrans: selectedTrans,

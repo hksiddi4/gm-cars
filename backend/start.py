@@ -34,6 +34,7 @@ def generate_url():
     colorMap = data["colorMap"]
     intColor = data["intColor"]
     options = [option for option in allJson["Options"] if option]
+    rpos = "_".join(options)
     baseURL = "https://cgi.chevrolet.com/mmgprod-us/dynres/prove/image.gen?i="
     baseURL_int = "https://cgi.chevrolet.com/mmgprod-us/dynres/prove/imageinterior.gen?i="
 
@@ -41,7 +42,6 @@ def generate_url():
         trim = next((opt for opt in options if opt in ["1LT", "2LT", "3LT"]), mmcDict.get(mmc_code))
     else:
         trim = mmcDict.get(mmc_code)
-    rpos = "_".join(options)
     
     color = None
     colorInt = None
@@ -53,8 +53,8 @@ def generate_url():
                     break
         if colorInt is None:
             for key, rpo in intColor.items():
-                if rpo == option:
-                    colorInt = rpo
+                if key == option:
+                    colorInt = key
                     break
         if color and colorInt:
             break

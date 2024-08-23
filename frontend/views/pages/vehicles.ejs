@@ -379,17 +379,21 @@
                 const selectedOptions = Array.from(checkboxes)
                                             .filter(checkbox => checkbox.checked)
                                             .map(checkbox => checkbox.value);
+    
+                const modelQueryString = selectedOptions.length ? selectedOptions.map(option => `model=${encodeURIComponent(option)}`).join('&') : '';
 
-                const queryString = selectedOptions.map(option => `model=${option}`).join('&');
-                const selectedRPO = rpoSelect.value;
-                const selectedYear = yearSelect.value;
-                const selectedTrim = trimSelect.value;
-                const selectedEngine = engineSelect.value;
-                const selectedTrans = transSelect.value;
-                const selectedColor = colorSelect.value;
-                const selectedCountry = countrySelect.value;
-                const limit = limitSelect.value;
-                const url = `/vehicles?page=1&${queryString}&rpo=${selectedRPO}&trim=${selectedTrim}&engine=${selectedEngine}&trans=${selectedTrans}&year=${selectedYear}&color=${selectedColor}&country=${selectedCountry}&limit=${limit}`;
+                const selectedRPO = rpoSelect.value ? `rpo=${encodeURIComponent(rpoSelect.value)}` : '';
+                const selectedYear = yearSelect.value ? `year=${encodeURIComponent(yearSelect.value)}` : '';
+                const selectedTrim = trimSelect.value ? `trim=${encodeURIComponent(trimSelect.value)}` : '';
+                const selectedEngine = engineSelect.value ? `engine=${encodeURIComponent(engineSelect.value)}` : '';
+                const selectedTrans = transSelect.value ? `trans=${encodeURIComponent(transSelect.value)}` : '';
+                const selectedColor = colorSelect.value ? `color=${encodeURIComponent(colorSelect.value)}` : '';
+                const selectedCountry = countrySelect.value ? `country=${encodeURIComponent(countrySelect.value)}` : '';
+                const limit = limitSelect.value ? `limit=${encodeURIComponent(limitSelect.value)}` : '';
+                const queryStrings = [modelQueryString, selectedRPO, selectedYear, selectedTrim, selectedEngine, selectedTrans, selectedColor, selectedCountry, limit]
+                                        .filter(Boolean)
+                                        .join('&');
+                const url = `/vehicles?page=1&${queryStrings}`;
                 window.location.href = url;
             });
 

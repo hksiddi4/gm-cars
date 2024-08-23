@@ -36,9 +36,7 @@ GROUP BY trim;
 
 SELECT * FROM gm WHERE model = 'CORVETTE' AND modelYear = '2022' AND trim = '3LT' AND (exterior_color = 'HYPERSONIC GRAY' OR exterior_color = 'ACCELERATE YELLOW') AND JSON_CONTAINS(allJson->'$.Options', '["ZCR"]');
 
-UPDATE gm
-SET trim = '3LT'
-WHERE model = 'CORVETTE' AND JSON_CONTAINS(allJson->'$.Options', '["3LT"]');
+SELECT * FROM gm WHERE model = 'CORVETTE STINGRAY';
 
 SELECT * FROM gm
 WHERE vin = '1G1YC3D42N5122306';

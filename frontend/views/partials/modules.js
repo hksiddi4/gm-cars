@@ -137,9 +137,6 @@ const mmc = {
   "1AK67": "2SS",
   "1AL37": "1SE",
   "1AL67": "1SE",
-  // Corvette
-  "1YC07": "", // Coupe
-  "1YC67": "", // Conv
   // Cadillac
   "6DB69": "1SB", // CT4 LUXURY
   "6DB79": "1SB", // CT5 LUXURY

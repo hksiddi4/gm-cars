@@ -42,6 +42,8 @@
                             <option value="A1X" <% if (selectedRPO === 'A1X') { %>selected<% } %>>LT 1LE</option>
                             <option value="Z51" <% if (selectedRPO === 'Z51') { %>selected<% } %>>Z51 Performance Package</option>
                             <option value="ZCR" <% if (selectedRPO === 'ZCR') { %>selected<% } %>>IMSA GTLM Championship C8.R Edition</option>
+                            <option value="Y70" <% if (selectedRPO === 'Y70') { %>selected<% } %>>Corvette Stingray 70th Anniversary Edition</option>
+                            <option value="Z07" <% if (selectedRPO === 'Z07') { %>selected<% } %>>Z07 Performance Package</option>
                             <option value="LF4" <% if (selectedRPO === 'LF4') { %>selected<% } %>>CT4-V Blackwing</option>
                             <option value="ZLE" <% if (selectedRPO === 'ZLE') { %>selected<% } %>>CT4-V Blackwing Watkins Glen IMSA Edition</option>
                             <option value="ZLD" <% if (selectedRPO === 'ZLD') { %>selected<% } %>>CT4-V Blackwing Sebring IMSA Edition</option>
@@ -149,7 +151,9 @@
                                         <option value="">Country</option>
                                         <option value="USA" <% if (selectedCountry === 'USA') { %>selected<% } %>>USA</option>
                                         <option value="CAN" <% if (selectedCountry === 'CAN') { %>selected<% } %>>Canada</option>
-                                        <option value="MEX" <% if (selectedCountry === 'MEX') { %>selected<% } %>>Mexico</option>
+                                        <% if (models.includes("CAMARO")) { %>
+                                            <option value="MEX" <% if (selectedCountry === 'MEX') { %>selected<% } %>>Mexico</option>
+                                        <% } %>
                                     </select>
                                 </div>
                             </th>

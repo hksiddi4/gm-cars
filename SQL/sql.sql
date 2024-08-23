@@ -19,6 +19,15 @@ CREATE TABLE IF NOT EXISTS gm (
     allJson json
 );
 
+CREATE INDEX idx_modelYear ON gm(modelYear);
+CREATE INDEX idx_trim ON gm(trim);
+CREATE INDEX idx_vehicleEngine ON gm(vehicleEngine);
+CREATE INDEX idx_transmission ON gm(transmission);
+CREATE INDEX idx_model ON gm(model);
+CREATE INDEX idx_exterior_color ON gm(exterior_color);
+
+SHOW INDEX FROM gm;
+
 SHOW PROCESSLIST;
 
 SELECT * FROM gm

@@ -34,6 +34,8 @@ SELECT trim, model, COUNT(*) as Count FROM gm
 WHERE model = 'CORVETTE' AND modelYear = '2020'
 GROUP BY trim;
 
+SELECT * FROM gm WHERE model = 'CORVETTE' AND modelYear = '2022' AND trim = '3LT' AND (exterior_color = 'HYPERSONIC GRAY' OR exterior_color = 'ACCELERATE YELLOW') AND JSON_CONTAINS(allJson->'$.Options', '["ZCR"]');
+
 UPDATE gm
 SET trim = '3LT'
 WHERE model = 'CORVETTE' AND JSON_CONTAINS(allJson->'$.Options', '["3LT"]');

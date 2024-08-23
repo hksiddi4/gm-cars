@@ -279,6 +279,7 @@
         const allJson = <%- JSON.stringify(vin_data[0].allJson) %>;
 
         const generatedImage = document.getElementById('generated-image');
+        const carouselImage = document.getElementById('carousel-image');
         const loadingAnimation = document.getElementById('loading-animation');
         loadingAnimation.style.direction = 'block';
         const data = { mmc, colorMap, intColor, allJson };
@@ -292,7 +293,6 @@
         })
         .then(response => response.json())
         .then(data => {
-          const carouselImage = document.getElementById('carousel-image');
           const images = data.url.generatedImages;
 
           if (images === "../img/ghost-chevrolet-car-alt.png") {
@@ -302,9 +302,13 @@
             let currentIndex = 0;
 
             function showImage(index) {
-              carouselImage.src = images[index];
-              carouselImage.alt = `Image ${index + 1}`;
-              loadingAnimation.style.display = 'none';
+              carouselImage.style.opacity = 0;
+              setTimeout(() => {
+                carouselImage.src = images[index];
+                carouselImage.alt = `Image ${index + 1}`;
+                carouselImage.style.opacity = 1;
+                loadingAnimation.style.display = 'none';
+              }, 200);
             }
 
             showImage(currentIndex);

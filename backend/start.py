@@ -115,42 +115,32 @@ def sort_price():
     conditions = []
     if year:
         conditions.append(f"modelYear = '{year}'")
-    sqlStatement = f"SELECT DISTINCT modelYear FROM gm ORDER BY modelYear"
-    years = execute_read_query(conn, sqlStatement)
-    year_list = [year['modelYear'] for year in years]
-    
     if trim:
         conditions.append(f"trim = '{trim}'")
-    sqlStatement = "SELECT DISTINCT trim FROM gm ORDER BY trim"
-    trims = execute_read_query(conn, sqlStatement)
-    trim_list = [trim['trim'] for trim in trims]
-    
     if engine:
         conditions.append(f"vehicleEngine = '{engine}'")
-    sqlStatement = "SELECT DISTINCT vehicleEngine FROM gm ORDER BY vehicleEngine"
-    engines = execute_read_query(conn, sqlStatement)
-    engine_list = [engine['vehicleEngine'] for engine in engines]
-    
     if trans:
         conditions.append(f"transmission = '{trans}'")
-    sqlStatement = "SELECT DISTINCT transmission FROM gm ORDER BY transmission"
-    trans = execute_read_query(conn, sqlStatement)
-    trans_list = [transmission['transmission'] for transmission in trans]
-
     if models:
         models = [model.strip() for model in models.split(',')]
         models = "', '".join(models)
         conditions.append(f"model IN ('{models}')")
-    sqlStatement = "SELECT DISTINCT model FROM gm ORDER BY model"
-    models = execute_read_query(conn, sqlStatement)
-    model_list = [model['model'] for model in models]
+    if color:
+        conditions.append(f"exterior_color = '{color}'")
+    if country == "USA":
+        conditions.append("NOT JSON_CONTAINS(allJson->'$.maker', '\"GMCANADA\"')")
+        conditions.append("NOT JSON_CONTAINS(allJson->'$.maker', '\"N/A\"')")
+    elif country == "CAN":
+        conditions.append("JSON_CONTAINS(allJson->'$.maker', '\"GMCANADA\"')")
+    elif country:
+        conditions.append("JSON_CONTAINS(allJson->'$.maker', '\"N/A\"')")
 
     rpo_conditions = {
         "Z4B": ["modelYear = '2024'", "model = 'CAMARO'", "exterior_color IN ('PANTHER BLACK MATTE', 'PANTHER BLACK METALLIC')"],
         "X56": ["modelYear = '2024'", "model = 'CAMARO'", "body = 'COUPE'", "trim = 'ZL1'", "transmission = 'M6'", "exterior_color = 'RIPTIDE BLUE METALLIC'", "msrp = '89185'", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
-        "A1Z": ["trim = 'ZL1'", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
-        "A1Y": ["trim in ('1SS', '2SS')", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
-        "A1X": ["trim in ('1LT', '2LT', '3LT')", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
+        "A1Z": ["model = 'CAMARO'", "body = 'COUPE'", "trim = 'ZL1'", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
+        "A1Y": ["model = 'CAMARO'", "body = 'COUPE'", "trim in ('1SS', '2SS')", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
+        "A1X": ["modelYear in ('2020', '2021')", "model = 'CAMARO'", "body = 'COUPE'", "trim in ('1LT', '2LT', '3LT')", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
         "Z51": ["model = 'CORVETTE'", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
         "ZCR": ["model = 'CORVETTE'", "modelYear = '2022'", "trim = '3LT'", "(exterior_color = 'HYPERSONIC GRAY' OR exterior_color = 'ACCELERATE YELLOW')", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
         "LF4": ["model = 'CT4'", "trim = 'V-SERIES BLACKWING'"],
@@ -169,21 +159,19 @@ def sort_price():
     elif rpo:
         conditions.append(f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')")
 
-    if color:
-        conditions.append(f"exterior_color = '{color}'")
-    sqlStatement = "SELECT DISTINCT exterior_color FROM gm ORDER BY exterior_color"
-    colors = execute_read_query(conn, sqlStatement)
-    color_list = [color['exterior_color'] for color in colors]
-
-    if country == "USA":
-        conditions.append("NOT JSON_CONTAINS(allJson->'$.maker', '\"GMCANADA\"')")
-        conditions.append("NOT JSON_CONTAINS(allJson->'$.maker', '\"N/A\"')")
-    elif country == "CAN":
-        conditions.append("JSON_CONTAINS(allJson->'$.maker', '\"GMCANADA\"')")
-    elif country:
-        conditions.append("JSON_CONTAINS(allJson->'$.maker', '\"N/A\"')")
-
     where_clause = " WHERE " + " AND ".join(conditions) if conditions else ""
+
+    def get_distinct_values(column):
+        sqlStatement = f"SELECT DISTINCT {column} FROM gm{where_clause} ORDER BY {column}"
+        results = execute_read_query(conn, sqlStatement)
+        return [result[column] for result in results]
+
+    year_list = get_distinct_values('modelYear')
+    trim_list = get_distinct_values('trim')
+    engine_list = get_distinct_values('vehicleEngine')
+    trans_list = get_distinct_values('transmission')
+    model_list = get_distinct_values('model')
+    color_list = get_distinct_values('exterior_color')
 
     if rpo in ["Z4B", "X56"] and order not in ["ASC", "DESC"]:
         order_clause = "ORDER BY SUBSTRING(vin, -6)"
@@ -193,7 +181,16 @@ def sort_price():
     viewTable = execute_read_query(conn, f"SELECT * FROM gm{where_clause} {order_clause} LIMIT {limit} OFFSET {offset}")
     total_items = execute_read_query(conn, f"SELECT COUNT(*) AS total FROM gm{where_clause}")[0]['total']
 
-    return jsonify({'data': viewTable, 'total': total_items, 'year': year_list, 'trim': trim_list, 'engine': engine_list, 'trans': trans_list, 'color': color_list, 'model': model_list})
+    return jsonify({
+        'data': viewTable,
+        'total': total_items,
+        'year': year_list,
+        'trim': trim_list,
+        'engine': engine_list,
+        'trans': trans_list,
+        'color': color_list,
+        'model': model_list
+    })
 
 # ========================= View Pages =========================
 

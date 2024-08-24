@@ -37,9 +37,9 @@
                             <option value="">Select Package/Option</option>
                             <option value="Z4B" <% if (selectedRPO === 'Z4B') { %>selected<% } %>>Camaro Collector's Edition</option>
                             <option value="X56" <% if (selectedRPO === 'X56') { %>selected<% } %>>Camaro Garage 56 Special Edition</option>
-                            <option value="A1Z" <% if (selectedRPO === 'A1Z') { %>selected<% } %>>ZL1 1LE</option>
-                            <option value="A1Y" <% if (selectedRPO === 'A1Y') { %>selected<% } %>>SS 1LE</option>
-                            <option value="A1X" <% if (selectedRPO === 'A1X') { %>selected<% } %>>LT 1LE</option>
+                            <option value="A1Z" <% if (selectedRPO === 'A1Z') { %>selected<% } %>>ZL1 1LE Extreme Track Performance Package</option>
+                            <option value="A1Y" <% if (selectedRPO === 'A1Y') { %>selected<% } %>>SS 1LE Track Performance Package</option>
+                            <option value="A1X" <% if (selectedRPO === 'A1X') { %>selected<% } %>>LT 1LE Track Performance Package</option>
                             <option value="Z51" <% if (selectedRPO === 'Z51') { %>selected<% } %>>Z51 Performance Package</option>
                             <option value="ZCR" <% if (selectedRPO === 'ZCR') { %>selected<% } %>>IMSA GTLM Championship C8.R Edition</option>
                             <option value="Y70" <% if (selectedRPO === 'Y70') { %>selected<% } %>>Corvette Stingray 70th Anniversary Edition</option>
@@ -85,7 +85,10 @@
                 <table class="table table-sm table-hover border border shadow" id="allTable">
                     <thead>
                         <tr>
-                            <th scope="col">VIN</th>
+                            <th scope="col" id="vinHeader" onclick="toggleVINOrder()" style="cursor: pointer;">
+                                VIN
+                                <i class="fas fa-sort-down" id="vinIcon" style="display: none;"></i>
+                            </th>
                             <th scope="col">
                                 <div class="dropdown-container">
                                     <select id="yearSelect" class="form-select small-dropdown">
@@ -148,9 +151,9 @@
                                     </select>
                                 </div>
                             </th>
-                            <th scope="col" id="msrpHeader" onclick="toggleSortOrder()" style="cursor: pointer;">
+                            <th scope="col" id="msrpHeader" onclick="toggleMSRPOrder()" style="cursor: pointer;">
                                 MSRP
-                                <i class="fas fa-sort-down" id="msrpIcon"></i>
+                                <i class="fas fa-sort-down" id="msrpIcon" style="display: none;"></i>
                             </th>
                             <th scope="col">
                                 <div class="dropdown-container">
@@ -277,11 +280,18 @@
     <%- include('../partials/footer'); %>
     <script>
         let startX;
-        let selectedOrder = "DESC";
 
-        function toggleSortOrder() {
+        function toggleMSRPOrder() {
             selectedOrder = selectedOrder === "DESC" ? "ASC" : "DESC";
             document.getElementById('msrpIcon').className = selectedOrder === "DESC" ? 'fas fa-sort-down' : 'fas fa-sort-up';
+            const params = new URLSearchParams(window.location.search);
+            params.set('order', selectedOrder);
+            window.location.search = params.toString();
+        }
+
+        function toggleVINOrder() {
+            selectedOrder = selectedOrder === "vinASC" ? "vinDESC" : "vinASC";
+            document.getElementById('vinIcon').className = selectedOrder === "vinASC" ? 'fas fa-sort-up' : 'fas fa-sort-down';
             const params = new URLSearchParams(window.location.search);
             params.set('order', selectedOrder);
             window.location.search = params.toString();
@@ -299,6 +309,18 @@
             window.location.href = url;
         }
 
+        function updateIcons(selectedOrder) {
+            const vinIcon = document.getElementById('vinIcon');
+            const msrpIcon = document.getElementById('msrpIcon');
+
+            function setIcon(iconElement, iconType, condition) {
+                iconElement.className = condition ? `fas fa-sort-${iconType}` : '';
+                iconElement.style.display = condition ? 'inline' : 'none';
+            }
+            setIcon(msrpIcon, selectedOrder === 'ASC' ? 'up' : 'down', selectedOrder === 'ASC' || selectedOrder === 'DESC');
+            setIcon(vinIcon, selectedOrder === 'vinASC' ? 'up' : 'down', selectedOrder === 'vinASC' || selectedOrder === 'vinDESC');
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             const clearFilters = document.getElementById('clearFilters');
             const rpoSelect = document.getElementById('rpoSelect');
@@ -312,9 +334,9 @@
             const orderSelect = document.getElementById('orderSelect');
             const filterForm = document.getElementById('filterForm');
             const limitSelect = document.getElementById('limitSelect');
-            const currentOrder = new URLSearchParams(window.location.search).get('order') || "DESC";
+            const currentOrder = new URLSearchParams(window.location.search).get('order');
             selectedOrder = currentOrder;
-            document.getElementById('msrpIcon').className = selectedOrder === "DESC" ? 'fas fa-sort-down' : 'fas fa-sort-up';
+            updateIcons(selectedOrder);
 
             clearFilters.addEventListener('click', function() {
                 window.location.href = '/vehicles';

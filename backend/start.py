@@ -175,7 +175,6 @@ def sort_price():
         SELECT DISTINCT modelYear, body, trim, vehicleEngine, transmission, model, exterior_color
         FROM gm{where_clause}
         """
-
         conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
         results = execute_read_query(conn, sqlStatement)
         close_connection(conn)
@@ -184,8 +183,11 @@ def sort_price():
             for col in columns:
                 if result[col] is not None:
                     distinct_values[col].add(result[col])
-        return {col: sorted(list(distinct_values[col])) for col in columns}
-
+        sorted_values = {
+            'modelYear': sorted(list(distinct_values['modelYear']), reverse=True),
+            **{col: sorted(list(distinct_values[col])) for col in columns if col != 'modelYear'}
+        }
+        return sorted_values
     distinct_values = get_all_distinct_values()
 
     year_list = distinct_values['modelYear']
@@ -198,8 +200,11 @@ def sort_price():
 
     if rpo in ["Z4B", "X56"] and order not in ["ASC", "DESC"]:
         order_clause = "ORDER BY SUBSTRING(vin, -6)"
-    else:
+    elif order in ["ASC", "DESC"]:
         order_clause = f"ORDER BY msrp {'ASC' if order == 'ASC' else 'DESC'}"
+    elif order in ["vinASC", "vinDESC"]:
+        order_clause = f"ORDER BY SUBSTRING(vin, -6) {'DESC' if order == 'vinDESC' else 'ASC'}, modelYear ASC"
+    else: order_clause = ""
 
     conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
     viewTable = execute_read_query(conn, f"SELECT * FROM gm{where_clause} {order_clause} LIMIT {limit} OFFSET {offset}")

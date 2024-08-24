@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS gm (
 );
 
 CREATE INDEX idx_modelYear ON gm(modelYear);
+CREATE INDEX idx_body ON gm(body);
 CREATE INDEX idx_trim ON gm(trim);
 CREATE INDEX idx_vehicleEngine ON gm(vehicleEngine);
 CREATE INDEX idx_transmission ON gm(transmission);
@@ -27,6 +28,10 @@ CREATE INDEX idx_model ON gm(model);
 CREATE INDEX idx_exterior_color ON gm(exterior_color);
 
 SHOW INDEX FROM gm;
+DROP INDEX idx_exterior_color ON gm;
+
+ANALYZE TABLE gm;
+OPTIMIZE TABLE gm;
 
 SHOW PROCESSLIST;
 

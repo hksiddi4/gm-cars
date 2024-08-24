@@ -150,17 +150,15 @@ def sort_price():
         "A1Y": ["model = 'CAMARO'", "body = 'COUPE'", "trim in ('1SS', '2SS')", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
         "A1X": ["modelYear in ('2020', '2021')", "model = 'CAMARO'", "body = 'COUPE'", "trim in ('1LT', '2LT', '3LT')", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
         "Z51": ["model = 'CORVETTE STINGRAY'", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
-        "ZCR": ["model = 'CORVETTE STINGRAY'", "modelYear = '2022'", "trim = '3LT'", "(exterior_color = 'HYPERSONIC GRAY' OR exterior_color = 'ACCELERATE YELLOW')", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
-        "Y70": ["model in ('CORVETTE STINGRAY', 'CORVETTE Z06')", "modelYear = '2023'", "trim in ('3LT', '3LZ')", "(exterior_color = 'WHITE PEARL' OR exterior_color = 'CARBON FLASH')", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
+        "ZCR": ["model = 'CORVETTE STINGRAY'", "modelYear = '2022'", "trim = '3LT'", "(exterior_color = 'HYPERSONIC GRAY METALLIC' OR exterior_color = 'ACCELERATE YELLOW METALLIC')", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
+        "Y70": ["model in ('CORVETTE STINGRAY', 'CORVETTE Z06')", "modelYear = '2023'", "trim in ('3LT', '3LZ')", "(exterior_color = 'WHITE PEARL METALLIC TRICOAT' OR exterior_color = 'CARBON FLASH METALLIC')", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
         "Z07": ["model = 'CORVETTE Z06'", "modelYear = '2023'", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
-        "LF4": ["model = 'CT4'", "trim = 'V-SERIES BLACKWING'"],
         "ZLE": ["modelYear = '2023'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "exterior_color = 'ELECTRIC BLUE'", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
         "ZLD": ["modelYear = '2023'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "exterior_color = 'MAVERICK NOIR FROST'", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
         "ZLG": ["modelYear = '2023'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "exterior_color = 'RIFT METALLIC'", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
         "ZLK": ["modelYear = '2024'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "exterior_color = 'MERCURY SILVER METALLIC'", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
         "ZLJ": ["modelYear = '2024'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "exterior_color = 'BLACK RAVEN'", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
         "ZLR": ["modelYear = '2024'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "exterior_color = 'VELOCITY RED'", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
-        "1SV": ["model = 'CT5'", "trim = 'V-SERIES BLACKWING'"],
         "ABQ": ["modelYear = '2023'", "model = 'CT5'", "trim = 'V-SERIES BLACKWING'", "msrp > '118000'", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"]
     }
 
@@ -171,20 +169,32 @@ def sort_price():
 
     where_clause = " WHERE " + " AND ".join(conditions) if conditions else ""
 
-    def get_distinct_values(column):
-        sqlStatement = f"SELECT DISTINCT {column} FROM gm{where_clause} ORDER BY {column}"
-        results = execute_read_query(conn, sqlStatement)
-        return [result[column] for result in results]
+    def get_all_distinct_values():
+        columns = ['modelYear', 'body', 'trim', 'vehicleEngine', 'transmission', 'model', 'exterior_color']
+        sqlStatement = f"""
+        SELECT DISTINCT modelYear, body, trim, vehicleEngine, transmission, model, exterior_color
+        FROM gm{where_clause}
+        """
 
-    conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
-    year_list = get_distinct_values('modelYear')
-    body_list = get_distinct_values('body')
-    trim_list = get_distinct_values('trim')
-    engine_list = get_distinct_values('vehicleEngine')
-    trans_list = get_distinct_values('transmission')
-    model_list = get_distinct_values('model')
-    color_list = get_distinct_values('exterior_color')
-    close_connection(conn)
+        conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
+        results = execute_read_query(conn, sqlStatement)
+        close_connection(conn)
+        distinct_values = {col: set() for col in columns}
+        for result in results:
+            for col in columns:
+                if result[col] is not None:
+                    distinct_values[col].add(result[col])
+        return {col: sorted(list(distinct_values[col])) for col in columns}
+
+    distinct_values = get_all_distinct_values()
+
+    year_list = distinct_values['modelYear']
+    body_list = distinct_values['body']
+    trim_list = distinct_values['trim']
+    engine_list = distinct_values['vehicleEngine']
+    trans_list = distinct_values['transmission']
+    model_list = distinct_values['model']
+    color_list = distinct_values['exterior_color']
 
     if rpo in ["Z4B", "X56"] and order not in ["ASC", "DESC"]:
         order_clause = "ORDER BY SUBSTRING(vin, -6)"

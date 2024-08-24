@@ -21,14 +21,13 @@ exterior_color = 'PANTHER BLACK METALLIC' AND
 trim = 'ZL1';
 
 UPDATE gm
-SET trim = 'STINGRAY'
-WHERE trim = 'CABRIOLET';
+SET exterior_color = 'ZEUS BRONZE METALLIC'
+WHERE exterior_color = 'ZEUS BRONZE';
 
 SELECT * FROM gm
-WHERE model = 'CORVETTE STINGRAY'
-  # AND JSON_CONTAINS(allJson->'$.Options', '"VK3"')
-  AND JSON_CONTAINS(allJson->'$.maker', '"GMCANADA"')
-  AND location LIKE '%PQ%';
+WHERE JSON_CONTAINS(allJson->'$.Options', '"ZCR"');
+  #AND JSON_CONTAINS(allJson->'$.maker', '"GMCANADA"')
+  #AND location LIKE '%PQ%';
 
 SELECT trim, model, COUNT(*) as Count FROM gm
 WHERE model = 'CORVETTE' AND modelYear = '2020'

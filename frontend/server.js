@@ -15,7 +15,7 @@ function formatCurrency(number) {
     if (number === null) {
         return 'N/A';
     }
-    return '$' + number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
 app.get('/', function(req, res) {

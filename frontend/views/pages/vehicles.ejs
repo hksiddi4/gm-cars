@@ -27,7 +27,7 @@
                         </div>
                     <% }) %>
                     <button type="submit" class="btn btn-primary mt-2">Apply Filters</button>
-                    <button type="button" id="clearFilters" class="btn btn-secondary mt-2">Clear Filters</button>
+                    <button type="button" id="clearFilters" class="btn btn-secondary mt-2">Clear All</button>
                 </form>
             </div>
             <div class="row">
@@ -58,16 +58,16 @@
             </div>
             <div class="stats">
                 <!-- Limit and Total -->
-                <div class="col-md-2">
+                <div class="col-md-2" style="padding: 10px 0;">
                     <div class="row">
-                        <div class="total-container" style="display: flex;">
+                        <div style="display: flex;">
                             <p style="color: rgb(103, 103, 103);">Retrieved <%= totalItems.toLocaleString() %> vehicles in <%= elapsedTime.toLocaleString() %> seconds</p>
                         </div>
                     </div>
                 </div>
                 <div>
                     <div class="row">
-                        <div class="dropdown-container" style="margin-bottom: 15px;">
+                        <div class="dropdown-container" style="vertical-align: bottom;">
                             <select id="limitSelect" class="form-select">
                                 <option value="100" <% if (limit === 100) { %>selected<% } %>>100</option>
                                 <option value="150" <% if (limit === 150) { %>selected<% } %>>150</option>
@@ -82,7 +82,7 @@
             <!-- Vehicles Table -->
             <div class="table-responsive">
                 <% if (locals.vehicle_data) { %>
-                <table class="table table-sm table-hover border border shadow" id="allTable">
+                <table class="table-veh table-hover border border shadow" id="allTable">
                     <thead>
                         <tr>
                             <th scope="col" id="vinHeader" class="sortable" onclick="toggleVINOrder()" style="cursor: pointer;">
@@ -199,7 +199,10 @@
                                     <img id="sample" src="../img/extColors/<%= colorMap[data.exterior_color] || '../extColors/default' %>.png" width="20" height="20" style="margin-right: 8px; border-radius: 50%;">
                                     <%= data.exterior_color %>
                                 </td>
-                                <td scope="row" style="text-align: right;"><%= data.msrp %></td>
+                                <td scope="row">
+                                    <span style="float: left;">$</span>
+                                    <span style="float: right;"><%= data.msrp %></span>
+                                </td>
                                 <td scope="row">
                                     <% 
                                     if (data.location) {

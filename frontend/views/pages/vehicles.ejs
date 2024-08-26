@@ -204,9 +204,9 @@
                                     <img id="sample" src="../img/extColors/<%= colorMap[data.exterior_color] || '../extColors/default' %>.png" width="20" height="20" style="margin-right: 8px; border-radius: 50%;">
                                     <%= data.exterior_color %>
                                 </td>
-                                <td scope="row">
-                                    <span style="float: left;">$</span>
-                                    <span style="float: right;"><%= data.msrp %></span>
+                                <td scope="row" class="accounting-format">
+                                    <span>$</span>
+                                    <span><%= data.msrp %></span>
                                 </td>
                                 <td scope="row">
                                     <% 

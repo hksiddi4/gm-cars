@@ -10,25 +10,30 @@
         <div class="row" style="padding-top: 20px;">
             <!-- Filters -->
             <div class="col-md-12 mb-3">
-                <h4>Filter</h4>
-                <form id="filterForm">
-                    <% models.forEach(function(model) { %>
-                        <div class="form-check">
-                            <input 
-                                class="form-check-input" 
-                                type="checkbox" 
-                                id="model_<%= model %>" 
-                                value="<%= model %>"
-                                <%= selectedModels.includes(model) ? 'checked' : '' %>
-                            >
-                            <label class="form-check-label" for="model_<%= model %>">
-                                <%= model %>
-                            </label>
-                        </div>
-                    <% }) %>
-                    <button type="submit" class="btn btn-primary mt-2">Apply Filters</button>
-                    <button type="button" id="clearFilters" class="btn btn-secondary mt-2">Clear All</button>
-                </form>
+                <div id="filterToggle" class="d-inline-flex align-items-center">
+                    <h4 class="mb-0">Filter</h4>
+                    <i class="fas fa-sort-down" id="filterIcon" style="color: white;"></i>
+                </div>
+                <div id="filterContent" class="collapse">
+                    <form id="filterForm">
+                        <% models.forEach(function(model) { %>
+                            <div class="form-check">
+                                <input 
+                                    class="form-check-input" 
+                                    type="checkbox" 
+                                    id="model_<%= model %>" 
+                                    value="<%= model %>"
+                                    <%= selectedModels.includes(model) ? 'checked' : '' %>
+                                >
+                                <label class="form-check-label" for="model_<%= model %>">
+                                    <%= model %>
+                                </label>
+                            </div>
+                        <% }) %>
+                        <button type="submit" class="btn btn-primary mt-2">Apply Filters</button>
+                        <button type="button" id="clearFilters" class="btn btn-secondary mt-2">Clear All</button>
+                    </form>
+                </div>
             </div>
             <div class="row">
                 <div class="col-md-2">
@@ -325,6 +330,9 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
+            const filterToggle = document.getElementById('filterToggle');
+            const filterContent = document.getElementById('filterContent');
+            const filterIcon = document.getElementById('filterIcon');
             const clearFilters = document.getElementById('clearFilters');
             const rpoSelect = document.getElementById('rpoSelect');
             const yearSelect = document.getElementById('yearSelect');
@@ -340,6 +348,16 @@
             const currentOrder = new URLSearchParams(window.location.search).get('order');
             selectedOrder = currentOrder;
             updateIcons(selectedOrder);
+
+            filterToggle.addEventListener('click', function() {
+                if (filterContent.classList.contains('show')) {
+                    filterContent.classList.remove('show');
+                    filterIcon.classList.remove('rotate');
+                } else {
+                    filterContent.classList.add('show');
+                    filterIcon.classList.add('rotate');
+                }
+            });
 
             clearFilters.addEventListener('click', function() {
                 window.location.href = '/vehicles';

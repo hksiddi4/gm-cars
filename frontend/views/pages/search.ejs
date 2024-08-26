@@ -5,80 +5,98 @@
     <%- include('../partials/head'); %>
     <script src="../partials/rpo.js"></script>
     <%
-      function checkRPO(data) {
-        let has1LE = false; 
-        let hasCE = false;
-        let hasG56 = false;
-        let hasZ51 = false;
-        let hasZCR = false;
-        let hasY70 = false;
-        let hasZ07 = false;
-        let hasZLE = false;
-        let hasZLD = false;
-        let hasZLG = false;
-        let hasZLK = false;
-        let hasZLJ = false;
-        let hasZLR = false;
-        let hasABQ = false;
-        let hasOAR = false;
-        let interiorColor = 'N/A';
-        let seat = 'N/A';
-    
-        if (data.allJson) {
-          const rpos = JSON.parse(data.allJson).Options;
-          if (rpos) {
-            has1LE = rpos.includes('A1Y') || rpos.includes('A1X') || rpos.includes('A1Z');
-            hasCE = rpos.includes('Z4B');
-            hasG56 = rpos.includes('X56');
-            hasZ51 = rpos.includes('Z51');
-            hasZCR = rpos.includes('ZCR');
-            hasY70 = rpos.includes('Y70');
-            hasZ07 = rpos.includes('Z07');
-            hasZLE = rpos.includes('ZLE');
-            hasZLD = rpos.includes('ZLD');
-            hasZLG = rpos.includes('ZLG');
-            hasZLK = rpos.includes('ZLK');
-            hasZLJ = rpos.includes('ZLJ');
-            hasZLR = rpos.includes('ZLR');
-            hasABQ = rpos.includes('ABQ');
-            hasOAR = rpos.includes('OAR');
-
-            for (const rpo of rpos) {
-              if (intColor[rpo]) {
-                interiorColor = intColor[rpo];
-              }
-              if (seatCode[rpo]) {
-                seat = seatCode[rpo];
-              }
+    function checkRPO(data) {
+      const rpoFlags = {
+        has1LE: ['A1Y', 'A1X', 'A1Z'],
+        hasCE: ['Z4B'],
+        hasG56: ['X56'],
+        hasZ51: ['Z51'],
+        hasZCR: ['ZCR'],
+        hasY70: ['Y70'],
+        hasZ07: ['Z07'],
+        hasZLE: ['ZLE'],
+        hasZLD: ['ZLD'],
+        hasZLG: ['ZLG'],
+        hasZLK: ['ZLK'],
+        hasZLJ: ['ZLJ'],
+        hasZLR: ['ZLR'],
+        hasABQ: ['ABQ'],
+        hasOAR: ['OAR'],
+      };
+  
+      let flags = {
+        has1LE: false, 
+        hasCE: false, 
+        hasG56: false, 
+        hasZ51: false, 
+        hasZCR: false, 
+        hasY70: false, 
+        hasZ07: false, 
+        hasZLE: false, 
+        hasZLD: false, 
+        hasZLG: false, 
+        hasZLK: false, 
+        hasZLJ: false, 
+        hasZLR: false, 
+        hasABQ: false, 
+        hasOAR: false,
+        interiorColor: 'N/A',
+        seat: 'N/A',
+      };
+  
+      if (data.allJson) {
+        const rpos = JSON.parse(data.allJson).Options;
+        if (rpos) {
+          for (const [flag, codes] of Object.entries(rpoFlags)) {
+            if (codes.some(code => rpos.includes(code))) {
+              flags[flag] = true;
+            }
+          }
+  
+          for (const rpo of rpos) {
+            if (intColor[rpo]) {
+              flags.interiorColor = intColor[rpo];
+            }
+            if (seatCode[rpo]) {
+              flags.seat = seatCode[rpo];
             }
           }
         }
-    
-        return { has1LE, hasCE, hasG56, hasZ51, hasZCR, hasY70, hasZ07, hasZLE, hasZLD, hasZLG, hasZLK, hasZLJ, hasZLR, hasABQ, hasOAR, interiorColor, seat };
       }
-    
-      let allHas = { has1LE: false, hasCE: false, hasG56: false, hasZ51: false, hasZCR: false, hasY70: false, hasZ07: false, hasZLE: false, hasZLD: false, hasZLG: false, hasZLK: false, hasZLJ: false, hasZLR: false, hasABQ: false, hasOAR: false, interiorColor: 'N/A', seat: 'N/A' };
-    
-      vin_data.forEach(data => {
-        const result = checkRPO(data);
-        allHas.has1LE = allHas.has1LE || result.has1LE;
-        allHas.hasCE = allHas.hasCE || result.hasCE;
-        allHas.hasG56 = allHas.hasG56 || result.hasG56;
-        allHas.hasZ51 = allHas.hasZ51 || result.hasZ51;
-        allHas.hasZCR = allHas.hasZCR || result.hasZCR;
-        allHas.hasY70 = allHas.hasY70 || result.hasY70;
-        allHas.hasZ07 = allHas.hasZ07 || result.hasZ07;
-        allHas.hasZLE = allHas.hasZLE || result.hasZLE;
-        allHas.hasZLD = allHas.hasZLD || result.hasZLD;
-        allHas.hasZLG = allHas.hasZLG || result.hasZLG;
-        allHas.hasZLK = allHas.hasZLK || result.hasZLK;
-        allHas.hasZLJ = allHas.hasZLJ || result.hasZLJ;
-        allHas.hasZLR = allHas.hasZLR || result.hasZLR;
-        allHas.hasABQ = allHas.hasABQ || result.hasABQ;
-        allHas.hasOAR = allHas.hasOAR || result.hasOAR;
-        if (result.interiorColor !== 'N/A') allHas.interiorColor = result.interiorColor;
-        if (result.seat !== 'N/A') allHas.seat = result.seat;
-      });
+  
+      return flags;
+    }
+  
+    let allHas = {
+      has1LE: false, 
+      hasCE: false, 
+      hasG56: false, 
+      hasZ51: false, 
+      hasZCR: false, 
+      hasY70: false, 
+      hasZ07: false, 
+      hasZLE: false, 
+      hasZLD: false, 
+      hasZLG: false, 
+      hasZLK: false, 
+      hasZLJ: false, 
+      hasZLR: false, 
+      hasABQ: false, 
+      hasOAR: false,
+      interiorColor: 'N/A',
+      seat: 'N/A',
+    };
+  
+    vin_data.forEach(data => {
+      const result = checkRPO(data);
+      for (const key in allHas) {
+        if (key !== 'interiorColor' && key !== 'seat') {
+          allHas[key] = allHas[key] || result[key];
+        }
+      }
+      if (result.interiorColor !== 'N/A') allHas.interiorColor = result.interiorColor;
+      if (result.seat !== 'N/A') allHas.seat = result.seat;
+    });
     %>  
     <title>
       <%= (vin_data[0].modelYear ? "'" + vin_data[0].modelYear.toString().slice(-2) : 'N/A') %>
@@ -108,7 +126,7 @@
     <div class="container">
         <div class="row">
           <% if (vin_data && vin_data.length > 0) { %>
-            <h1 style="padding-top: 20px;">
+            <h1 style="padding-top: 20px; display: flex; align-items: center; width: 100%;">
               <%= vin_data[0].modelYear || 'N/A' %>
               <%= vin_data[0].model || 'N/A' %>
               <%= vin_data[0].trim || 'N/A' %>
@@ -205,87 +223,87 @@
                   <% }) %>
                 </div>
               <% } %>            
-            <table class="table table-hover border border shadow" id="vinTable">
+            <table class="table-veh table-hover border border shadow" id="vinTable">
               <tbody>
                   <% vin_data.forEach(function(data) { %>
                   <tr data-alljson='<%= JSON.stringify(data.allJson) %>'>
-                    <td><strong>VIN:</strong></td>
+                    <td class="label-column"><strong>VIN:</strong></td>
                     <td><%= data.vin || 'N/A' %></td>
                   </tr>
                   <tr>
-                    <td><strong>ORDER NUMBER:</strong></td>
+                    <td class="label-column"><strong>ORDER NUMBER:</strong></td>
                     <td><%= data.ordernum || 'N/A' %></td>
                   </tr>
                   <tr>
-                    <td><strong>STICKER CREATION DATE:</strong></td>
+                    <td class="label-column"><strong>STICKER CREATION DATE:</strong></td>
                     <td>
                       <%= data.allJson ? new Date(JSON.parse(data.allJson).creation_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A' %>
                     </td>
                   </tr>
                   <tr>
-                    <td><strong>YEAR:</strong></td>
+                    <td class="label-column"><strong>YEAR:</strong></td>
                     <td><%= data.modelYear || 'N/A' %></td>
                   </tr>
                   <tr>
-                    <td><strong>MODEL:</strong></td>
+                    <td class="label-column"><strong>MODEL:</strong></td>
                     <td><%= data.model || 'N/A' %></td>
                   </tr>
                   <tr>
-                    <td><strong>TRIM:</strong></td>
+                    <td class="label-column"><strong>TRIM:</strong></td>
                     <td><%= data.trim || 'N/A' %></td>
                   </tr>
                   <tr>
-                    <td><strong>BODY:</strong></td>
+                    <td class="label-column"><strong>BODY:</strong></td>
                     <td><%= data.body || 'N/A' %></td>
                   </tr>
                   <tr>
-                    <td><strong>ENGINE:</strong></td>
+                    <td class="label-column"><strong>ENGINE:</strong></td>
                     <td><%= data.vehicleEngine || 'N/A' %></td>
                   </tr>
                   <tr>
-                    <td><strong>TRANSMISSION:</strong></td>
+                    <td class="label-column"><strong>TRANSMISSION:</strong></td>
                     <td><%= data.transmission || 'N/A' %></td>
                   </tr>
                   <tr>
-                    <td><strong>DRIVETRAIN:</strong></td>
+                    <td class="label-column"><strong>DRIVETRAIN:</strong></td>
                     <td><%= data.drivetrain || 'N/A' %></td>
                   </tr>
                   <tr>
-                    <td><strong>EXTERIOR COLOR:</strong></td>
+                    <td class="label-column"><strong>EXTERIOR COLOR:</strong></td>
                     <td><%= data.exterior_color || 'N/A' %></td>
                   </tr>
                   <tr>
-                    <td><strong>INTERIOR COLOR:</strong></td>
+                    <td class="label-column"><strong>INTERIOR COLOR:</strong></td>
                     <td><%= data.allJson ? checkRPO(data).interiorColor : 'N/A' %></td>
                   </tr>
                   <tr>
-                    <td><strong>SEAT:</strong></td>
+                    <td class="label-column"><strong>SEAT:</strong></td>
                     <td><%= data.allJson ? checkRPO(data).seat : 'N/A' %></td>
                   </tr>
                   <tr>
-                    <td><strong>MSRP:</strong></td>
-                    <td><%= data.msrp || 'N/A' %></td>
+                    <td class="label-column"><strong>MSRP:</strong></td>
+                    <td>$<%= data.msrp || 'N/A' %></td>
                   </tr>
                   <tr>
-                    <td><strong>DEALER:</strong></td>
+                    <td class="label-column"><strong>DEALER:</strong></td>
                     <td><%= data.dealer || 'N/A' %></td>
                   </tr>
                   <tr>
-                    <td><strong>LOCATION:</strong></td>
+                    <td class="label-column"><strong>LOCATION:</strong></td>
                     <td><%= data.location || 'N/A' %></td>
                   </tr>
                   <tr>
-                    <td><strong>COUNTRY:</strong></td>
-                    <td style="display: flex; align-items: center; justify-content: center;">
+                    <td class="label-column"><strong>COUNTRY:</strong></td>
+                    <td>
                       <% if (data.location) { %>
                         <% const state = data.location.split(',')[1]?.trim().split(' ')[0]; %>
                         <% if (state && ["AB", "BC", "MB", "NF", "NT", "ON", "PE", "PQ", "SK"].includes(state)) { %>
-                          <img src="../img/flags/canada_flag.png" alt="Canada" width="30" style="padding-right: 5px;">CANADA
+                          <img src="../img/flags/canada_flag.png" alt="Canada" width="30" style="margin-right: 5px;">CANADA
                         <% } else { %>
-                          <img src="../img/flags/usa_flag.png" alt="USA" width="30" style="padding-right: 5px;">UNITED STATES
+                          <img src="../img/flags/usa_flag.png" alt="USA" width="30" style="margin-right: 5px;">UNITED STATES
                         <% } %>
                       <% } else { %>
-                        <img src="../img/flags/mexico_flag.png" alt="Mexico" width="30" style="padding-right: 5px;">MEXICO
+                        <img src="../img/flags/mexico_flag.png" alt="Mexico" width="30" style="margin-right: 5px;">MEXICO
                       <% } %>
                     </td>
                   </tr>
@@ -317,7 +335,7 @@
                 <a id="snark" style="color: rgb(40, 40, 40);"></a>
               </div>
             </div>
-            <table class="table table-hover border border shadow" id="rpoTable">
+            <table class="table-veh table-hover border border shadow" id="rpoTable">
               <thead>
                 <tr>
                   <th scope="col" style="white-space: nowrap;">RPO Code</th>

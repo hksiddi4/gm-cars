@@ -111,6 +111,7 @@ def sort_price():
     trans = request.args.get('trans')
     models = request.args.get('model')
     rpo = request.args.get('rpo')
+    # noRpo = request.args.get('noRpo')
     color = request.args.get('color')
     country = request.args.get('country')
     order = request.args.get('order')
@@ -166,6 +167,9 @@ def sort_price():
         conditions.extend(rpo_conditions[rpo])
     elif rpo:
         conditions.append(f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')")
+
+    # if noRpo:
+    #     conditions.append(f"NOT JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')")
 
     where_clause = " WHERE " + " AND ".join(conditions) if conditions else ""
 

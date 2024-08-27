@@ -1,57 +1,60 @@
-<header style="background-color: #000000; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3)">
-    <div class="container-fluid">
-        <div class="row align-items-center">
-            <a href="/" class="col-auto">
-                <img id="rotatingImage" class="mx-auto">
-            </a>
-            <div class="header-title col">
-                <a href="/" style="color: white; text-decoration: none;">
-                    <h1>GM 2020+ Build Counts</h1>
-                </a>
-                <ul class="nav nav-pills col-auto">
-                    <li class="nav-item">
-                        <a href="/vehicles" class="nav-link align-middle px-2 mb-2 csslink d-flex align-items-center">
-                            <i class="fs-5 bi bi-car-front-fill me-2"></i>
-                            <span class="ms-1 d-none d-sm-inline">Vehicles</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-            <form id="searchVIN" action="/search" method="GET" class="d-flex col-auto">
-                <input type="text" id="searchInput" name="vin" class="form-control" placeholder="Search VIN...">
-                <button type="submit" class="btn btn-secondary ms-2">Search</button>
-            </form>
+<header style="padding: 10px 0; background-color: transparent;">
+    <div class="header-background"></div>
+    <div class="container-fluid" style="height: 100%;">
+        <div class="d-flex align-items-center" style="height: 100%;">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar" aria-controls="sidebar" aria-expanded="false" aria-label="Toggle navigation" style="border: none; background: transparent; color: white;">
+                ☰
+            </button>
+            <h1 class="text-white mb-1" style="padding-left: 1rem; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);">GM 2020+ Build Counts</h1>
+        </div>
+        <div class="collapse" id="sidebar" style="background-color: #333; color: white; padding: 10px;">
+            <ul class="nav flex-column mt-2">
+                <li class="nav-item">
+                    <a href="/vehicles" class="nav-link text-white">
+                        <i class="fs-5 bi bi-car-front-fill me-2"></i>
+                        Vehicles
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <form id="searchVIN" action="/search" method="GET" class="d-flex mt-3">
+                        <input type="text" id="searchInput" name="vin" class="form-control" placeholder="Search VIN...">
+                        <button type="submit" class="btn btn-secondary ms-2">Search</button>
+                    </form>
+                </li>
+            </ul>
         </div>
     </div>
 </header>
 
 <script>
-    var imageURLs = [
-        '../img/header/camaro_header_1.png',
-        '../img/header/camaro_header_2.png',
-        '../img/header/camaro_header_3.png',
-        '../img/header/camaro_header_4.png',
-        '../img/header/camaro_header_5.png',
-        '../img/header/camaro_header_6.png',
-        '../img/header/camaro_header_7.png',
-        '../img/header/ct4_header_1.png',
-        '../img/header/ct4_header_1.png',
-        '../img/header/ct5_header_1.png',
-        '../img/header/ct5_header_1.png',
-    ];
+    document.addEventListener("DOMContentLoaded", function() {
+        var imageURLs = [
+            '../img/header/camaro_header_1.png',
+            '../img/header/camaro_header_2.png',
+            '../img/header/camaro_header_3.png',
+            '../img/header/camaro_header_4.png',
+            '../img/header/camaro_header_5.png',
+            '../img/header/camaro_header_6.png',
+            '../img/header/camaro_header_7.png',
+            '../img/header/ct4_header_1.png',
+            '../img/header/ct4_header_2.png',
+            '../img/header/ct5_header_1.png',
+            '../img/header/ct5_header_2.png',
+        ];
 
-    var randomIndex = Math.floor(Math.random() * imageURLs.length);
+        var randomIndex = Math.floor(Math.random() * imageURLs.length);
 
-    document.getElementById('rotatingImage').src = imageURLs[randomIndex];
+        document.querySelector('.header-background').style.backgroundImage = 'url(' + imageURLs[randomIndex] + ')';
 
-    var path = window.location.pathname;
-    var navLinks = document.querySelectorAll('.nav-link');
+        var path = window.location.pathname;
+        var navLinks = document.querySelectorAll('.nav-link');
 
-    navLinks.forEach(function(link) {
-        if (link.getAttribute('href') === path) {
-            link.classList.add('active');
-        } else {
-            link.classList.remove('active');
-        }
+        navLinks.forEach(function(link) {
+            if (link.getAttribute('href') === path) {
+                link.classList.add('active');
+            } else {
+                link.classList.remove('active');
+            }
+        });
     });
 </script>

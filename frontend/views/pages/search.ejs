@@ -386,7 +386,6 @@
         const intColor = <%- JSON.stringify(intColor) %>;
         const allJson = <%- JSON.stringify(vin_data[0].allJson) %>;
 
-        const generatedImage = document.getElementById('generated-image');
         const carouselImage = document.getElementById('carousel-image');
         const loadingAnimation = document.getElementById('loading-animation');
         loadingAnimation.style.direction = 'block';
@@ -408,15 +407,22 @@
             loadingAnimation.style.display = 'none';
           } else {
             let currentIndex = 0;
+            let initialLoad = true;
 
             function showImage(index) {
-              carouselImage.style.opacity = 0;
-              setTimeout(() => {
-                carouselImage.src = images[index];
-                carouselImage.alt = `Image ${index + 1}`;
-                carouselImage.style.opacity = 1;
-                loadingAnimation.style.display = 'none';
-              }, 200);
+                if (initialLoad) {
+                    carouselImage.src = images[index];
+                    carouselImage.alt = `Image ${index + 1}`;
+                    loadingAnimation.style.display = 'none';
+                    initialLoad = false;
+                } else {
+                    carouselImage.style.opacity = 0;
+                    setTimeout(() => {
+                        carouselImage.src = images[index];
+                        carouselImage.alt = `Image ${index + 1}`;
+                        carouselImage.style.opacity = 1;
+                    }, 200);
+                }
             }
 
             showImage(currentIndex);

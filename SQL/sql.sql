@@ -3,7 +3,7 @@ USE vehicles;
 
 DROP TABLE gm;
 CREATE TABLE IF NOT EXISTS gm (
-	vin varchar(17),
+	vin varchar(17) PRIMARY KEY,
     modelYear int,
     model varchar(75),
     body varchar(20),

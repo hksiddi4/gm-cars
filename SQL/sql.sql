@@ -1,3 +1,4 @@
+DROP DATABASE vehicles;
 CREATE DATABASE vehicles;
 USE vehicles;
 
@@ -18,6 +19,10 @@ CREATE TABLE IF NOT EXISTS gm (
     ordernum varchar(6),
     allJson json
 );
+
+RENAME TABLE gm to delgm;
+
+ALTER TABLE gm ADD CONSTRAINT pk_vin PRIMARY KEY (vin);
 
 CREATE INDEX idx_modelYear ON gm(modelYear);
 CREATE INDEX idx_body ON gm(body);

@@ -10,10 +10,9 @@ app = flask.Flask(__name__)
 app.config["DEBUG"] = True
 CORS(app)
 
-# Create connection to MySQL database
 myCreds = sql.Creds()
 
-# ========================= View Pages =========================
+#========================= View Pages #=========================
 
 @app.route('/search', methods=['GET'])
 def search_inv():
@@ -111,7 +110,6 @@ def sort_price():
     trans = request.args.get('trans')
     models = request.args.get('model')
     rpo = request.args.get('rpo')
-    # noRpo = request.args.get('noRpo')
     color = request.args.get('color')
     country = request.args.get('country')
     order = request.args.get('order')
@@ -119,66 +117,58 @@ def sort_price():
     limit = int(request.args.get('limit', 100))
     offset = (page - 1) * limit
 
+    join_clause = "JOIN Engines e ON v.engine_id = e.engine_id JOIN Transmissions t ON v.transmission_id = t.transmission_id JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id JOIN Colors c ON v.color_id = c.color_id JOIN Orders o ON v.order_id = o.order_id JOIN Dealers dl ON v.dealer_id = dl.dealer_id"
+    
     conditions = []
     if year:
         conditions.append(f"modelYear = '{year}'")
+    if models:
+        models = [model.strip() for model in models.split(',')]
+        models = "', '".join(models)
+        conditions.append(f"model IN ('{models}')")
     if body:
         conditions.append(f"body = '{body}'")
     if trim:
         conditions.append(f"trim = '{trim}'")
     if engine:
-        conditions.append(f"vehicleEngine = '{engine}'")
+        conditions.append(f"engine_type = '{engine}'")
     if trans:
-        conditions.append(f"transmission = '{trans}'")
-    if models:
-        models = [model.strip() for model in models.split(',')]
-        models = "', '".join(models)
-        conditions.append(f"model IN ('{models}')")
+        conditions.append(f"transmission_type = '{trans}'")
     if color:
-        conditions.append(f"exterior_color = '{color}'")
-    if country == "USA":
-        conditions.append("NOT JSON_CONTAINS(allJson->'$.maker', '\"GMCANADA\"')")
-        conditions.append("NOT JSON_CONTAINS(allJson->'$.maker', '\"N/A\"')")
-    elif country == "CAN":
-        conditions.append("JSON_CONTAINS(allJson->'$.maker', '\"GMCANADA\"')")
-    elif country:
-        conditions.append("JSON_CONTAINS(allJson->'$.maker', '\"N/A\"')")
+        conditions.append(f"color_name = '{color}'")
+    if country:
+        conditions.append(f"country = '{country}'")
+    if rpo:
+        join_clause += " JOIN Options opt ON v.vehicle_id = opt.vehicle_id"
+        rpo_conditions = {
+            "Z4B": ["v.modelYear = '2024'", "v.model = 'CAMARO'", "c.color_name IN ('PANTHER BLACK MATTE', 'PANTHER BLACK METALLIC')", f"opt.option_code = '{rpo}'"],
+            "X56": ["modelYear = '2024'", "model = 'CAMARO'", "body = 'COUPE'", "trim = 'ZL1'", "transmission_type = 'M6'", "color_name = 'RIPTIDE BLUE METALLIC'", "msrp = '89185'", f"opt.option_code = '{rpo}'"],
+            "A1Z": ["model = 'CAMARO'", "body = 'COUPE'", "trim = 'ZL1'", f"opt.option_code = '{rpo}'"],
+            "A1Y": ["model = 'CAMARO'", "body = 'COUPE'", "trim in ('1SS', '2SS')", f"opt.option_code = '{rpo}'"],
+            "A1X": ["modelYear in ('2020', '2021')", "model = 'CAMARO'", "body = 'COUPE'", "trim in ('1LT', '2LT', '3LT')", f"opt.option_code = '{rpo}'"],
+            "Z51": ["model = 'CORVETTE STINGRAY'", f"opt.option_code = '{rpo}'"],
+            "ZCR": ["model = 'CORVETTE STINGRAY'", "modelYear = '2022'", "trim = '3LT'", "(color_name = 'HYPERSONIC GRAY METALLIC' OR color_name = 'ACCELERATE YELLOW METALLIC')", f"opt.option_code = '{rpo}'"],
+            "Y70": ["model in ('CORVETTE STINGRAY', 'CORVETTE Z06')", "modelYear = '2023'", "trim in ('3LT', '3LZ')", "(color_name = 'WHITE PEARL METALLIC TRICOAT' OR color_name = 'CARBON FLASH METALLIC')", f"opt.option_code = '{rpo}'"],
+            "Z07": ["model = 'CORVETTE Z06'", "modelYear = '2023'", f"opt.option_code = '{rpo}'"],
+            "ZLE": ["modelYear = '2023'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "color_name = 'ELECTRIC BLUE'", f"opt.option_code = '{rpo}'"],
+            "ZLD": ["modelYear = '2023'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "color_name = 'MAVERICK NOIR FROST'", f"opt.option_code = '{rpo}'"],
+            "ZLG": ["modelYear = '2023'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "color_name = 'RIFT METALLIC'", f"opt.option_code = '{rpo}'"],
+            "ZLK": ["modelYear = '2024'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "color_name = 'MERCURY SILVER METALLIC'", f"opt.option_code = '{rpo}'"],
+            "ZLJ": ["modelYear = '2024'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "color_name = 'BLACK RAVEN'", f"opt.option_code = '{rpo}'"],
+            "ZLR": ["modelYear = '2024'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "color_name = 'VELOCITY RED'", f"opt.option_code = '{rpo}'"],
+            "ABQ": ["modelYear = '2023'", "model = 'CT5'", "trim = 'V-SERIES BLACKWING'", "msrp > '118000'", f"opt.option_code = '{rpo}'"]
+        }
 
-    rpo_conditions = {
-        "Z4B": ["modelYear = '2024'", "model = 'CAMARO'", "exterior_color IN ('PANTHER BLACK MATTE', 'PANTHER BLACK METALLIC')"],
-        "X56": ["modelYear = '2024'", "model = 'CAMARO'", "body = 'COUPE'", "trim = 'ZL1'", "transmission = 'M6'", "exterior_color = 'RIPTIDE BLUE METALLIC'", "msrp = '89185'", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
-        "A1Z": ["model = 'CAMARO'", "body = 'COUPE'", "trim = 'ZL1'", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
-        "A1Y": ["model = 'CAMARO'", "body = 'COUPE'", "trim in ('1SS', '2SS')", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
-        "A1X": ["modelYear in ('2020', '2021')", "model = 'CAMARO'", "body = 'COUPE'", "trim in ('1LT', '2LT', '3LT')", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
-        "Z51": ["model = 'CORVETTE STINGRAY'", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
-        "ZCR": ["model = 'CORVETTE STINGRAY'", "modelYear = '2022'", "trim = '3LT'", "(exterior_color = 'HYPERSONIC GRAY METALLIC' OR exterior_color = 'ACCELERATE YELLOW METALLIC')", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
-        "Y70": ["model in ('CORVETTE STINGRAY', 'CORVETTE Z06')", "modelYear = '2023'", "trim in ('3LT', '3LZ')", "(exterior_color = 'WHITE PEARL METALLIC TRICOAT' OR exterior_color = 'CARBON FLASH METALLIC')", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
-        "Z07": ["model = 'CORVETTE Z06'", "modelYear = '2023'", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
-        "ZLE": ["modelYear = '2023'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "exterior_color = 'ELECTRIC BLUE'", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
-        "ZLD": ["modelYear = '2023'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "exterior_color = 'MAVERICK NOIR FROST'", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
-        "ZLG": ["modelYear = '2023'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "exterior_color = 'RIFT METALLIC'", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
-        "ZLK": ["modelYear = '2024'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "exterior_color = 'MERCURY SILVER METALLIC'", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
-        "ZLJ": ["modelYear = '2024'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "exterior_color = 'BLACK RAVEN'", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
-        "ZLR": ["modelYear = '2024'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "exterior_color = 'VELOCITY RED'", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"],
-        "ABQ": ["modelYear = '2023'", "model = 'CT5'", "trim = 'V-SERIES BLACKWING'", "msrp > '118000'", f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')"]
-    }
-
-    if rpo in rpo_conditions:
-        conditions.extend(rpo_conditions[rpo])
-    elif rpo:
-        conditions.append(f"JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')")
-
-    # if noRpo:
-    #     conditions.append(f"NOT JSON_CONTAINS(allJson->'$.Options', '\"{rpo}\"')")
+        if rpo in rpo_conditions:
+            conditions.extend(rpo_conditions[rpo])
+        elif rpo:
+            conditions.append(f"opt.option_code = '{rpo}'")
 
     where_clause = " WHERE " + " AND ".join(conditions) if conditions else ""
 
     def get_all_distinct_values():
-        columns = ['modelYear', 'body', 'trim', 'vehicleEngine', 'transmission', 'model', 'exterior_color']
-        sqlStatement = f"""
-        SELECT DISTINCT modelYear, body, trim, vehicleEngine, transmission, model, exterior_color
-        FROM gm{where_clause}
-        """
+        columns = ['modelYear', 'body', 'trim', 'engine_type', 'transmission_type', 'model', 'color_name', 'country']
+        sqlStatement = f"SELECT DISTINCT v.modelYear, v.model, v.body, v.trim, e.engine_type, t.transmission_type, c.color_name, o.country FROM vehicles v {join_clause}{where_clause}"
         conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
         results = execute_read_query(conn, sqlStatement)
         close_connection(conn)
@@ -197,36 +187,40 @@ def sort_price():
     year_list = distinct_values['modelYear']
     body_list = distinct_values['body']
     trim_list = distinct_values['trim']
-    engine_list = distinct_values['vehicleEngine']
-    trans_list = distinct_values['transmission']
+    engine_list = distinct_values['engine_type']
+    trans_list = distinct_values['transmission_type']
     model_list = distinct_values['model']
-    color_list = distinct_values['exterior_color']
+    color_list = distinct_values['color_name']
+    country_list = distinct_values['country']
 
     if rpo in ["Z4B", "X56"] and order not in ["ASC", "DESC"]:
-        order_clause = "ORDER BY SUBSTRING(vin, -6)"
+        order_clause = "ORDER BY SUBSTRING(vin, -6) "
     elif order in ["ASC", "DESC"]:
-        order_clause = f"ORDER BY msrp {'ASC' if order == 'ASC' else 'DESC'}"
+        order_clause = f"ORDER BY msrp {'ASC' if order == 'ASC' else 'DESC'} "
     elif order in ["vinASC", "vinDESC"]:
-        order_clause = f"ORDER BY SUBSTRING(vin, -6) {'DESC' if order == 'vinDESC' else 'ASC'}, modelYear ASC"
+        order_clause = f"ORDER BY SUBSTRING(vin, -6) {'DESC' if order == 'vinDESC' else 'ASC'}, modelYear ASC "
     else: order_clause = ""
 
     conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
-    viewTable = execute_read_query(conn, f"SELECT * FROM gm{where_clause} {order_clause} LIMIT {limit} OFFSET {offset}")
-    total_items = execute_read_query(conn, f"SELECT COUNT(*) AS total FROM gm{where_clause}")[0]['total']
+    select = f"SELECT v.vin, v.modelYear, v.model, v.body, v.trim, e.engine_type, t.transmission_type, d.drivetrain_type, c.color_name, v.msrp, o.country, dl.dealer_name FROM Vehicles v {join_clause}"
+    test = f"{select}{where_clause} {order_clause}LIMIT {limit} OFFSET {offset}"
+    viewTable = execute_read_query(conn, f"{select}{where_clause} {order_clause} LIMIT {limit} OFFSET {offset}")
+    total_items = execute_read_query(conn, f"SELECT COUNT(*) AS total FROM Vehicles v {join_clause}{where_clause}")[0]['total']
     close_connection(conn)
 
     return jsonify({
         'data': viewTable,
         'total': total_items,
         'year': year_list,
+        'model': model_list,
         'body': body_list,
         'trim': trim_list,
         'engine': engine_list,
         'trans': trans_list,
         'color': color_list,
-        'model': model_list
+        'country': country_list
     })
 
-# ========================= View Pages =========================
+#========================= View Pages #=========================
 
 app.run()

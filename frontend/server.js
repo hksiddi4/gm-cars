@@ -35,9 +35,7 @@ app.get('/vehicles', function(req, res) {
     var country = req.query.country;
     var order = req.query.order;
     var page = parseInt(req.query.page) || 1;
-    var limit = parseInt(req.query.limit) || 100;
-
-    limit = Math.min(limit, 250);
+    var limit = Math.min(parseInt(req.query.limit) || 100, 250);
 
     let url = `${baseURL}/vehicles?page=${page}&limit=${limit}`;
     if (year) url += `&year=${year}`;
@@ -71,6 +69,8 @@ app.get('/vehicles', function(req, res) {
             var selectedTrans = req.query.trans;
             var colors = response.data.color;
             var selectedColor = req.query.color;
+            var country = response.data.country;
+            var selectedCountry = req.query.country;
             var models = response.data.model;
             var selectedModels = selectedModels ? (Array.isArray(selectedModels) ? selectedModels : [selectedModels]) : [];
             const elapsedTime = ((Date.now() - startTime) / 1000).toFixed(2);
@@ -84,9 +84,8 @@ app.get('/vehicles', function(req, res) {
                 trans: trans,
                 models: models,
                 colors: colors,
+                country: country,
                 colorMap: colorMap,
-                selectedCountry: country,
-                selectedModels: selectedModels,
                 currentPage: page,
                 totalPages: totalPages,
                 limit: limit,
@@ -99,6 +98,8 @@ app.get('/vehicles', function(req, res) {
                 selectedTrim: selectedTrim,
                 selectedEngine: selectedEngine,
                 selectedTrans: selectedTrans,
+                selectedCountry: selectedCountry,
+                selectedModels: selectedModels,
                 selectedOrder: order
             });
         })

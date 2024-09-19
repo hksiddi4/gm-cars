@@ -12,7 +12,18 @@ GROUP BY JSON_EXTRACT(allJson, '$.Options')
 HAVING COUNT(*) > 1
 ORDER BY Count DESC;
 
-SELECT * FROM gm WHERE model = 'CAMARO' AND exterior_color = 'PANTHER BLACK MATTE' ORDER BY SUBSTRING(vin, -6);
+SELECT modelYear, COUNT(*) AS Count FROM gm WHERE model = 'CORVETTE STINGRAY' GROUP BY modelYear;
+
+SELECT vin, COUNT(*) c FROM gm GROUP BY vin HAVING c > 1;
+
+SELECT *
+FROM gm t
+JOIN (
+    SELECT vin, COUNT(*)
+    FROM gm
+    GROUP BY vin
+    HAVING COUNT(*) > 1
+) d ON t.vin = d.vin;
 
 UPDATE gm
 SET exterior_color = 'PANTHER BLACK MATTE'

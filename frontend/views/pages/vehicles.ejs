@@ -173,56 +173,33 @@
                     </thead>
                     <tbody>
                         <% locals.vehicle_data.forEach(function(data) { %>
-                            <% 
-                              function checkRPO(data) {
-                                let hasOAR = false;
-                                if (data.allJson) {
-                                  const rpos = JSON.parse(data.allJson).Options;
-                                  if (rpos) {
-                                    hasOAR = rpos.includes('OAR');
-                                  }
-                                }
-                                return { hasOAR };
-                              }
-
-                              const result = checkRPO(data);
-                            %>
                             <tr style="cursor: pointer;" onmousedown="handleMouseDown(event);" data-url="/search?vin=<%= data.vin %>">
-                                <td scope="row" style="text-align: left;" class="<%= result.hasOAR ? 'highlight' : '' %>"><%= data.vin %></td>
+                                <td scope="row" style="text-align: left;"><%= data.vin %></td>
                                 <td scope="row"><%= data.modelYear %></td>
                                 <td scope="row"><%= data.model %></td>
                                 <td scope="row"><%= data.body %></td>
                                 <td scope="row"><%= data.trim %></td>
-                                <td scope="row"><%= data.vehicleEngine %></td>
-                                <td scope="row"><%= data.transmission %></td>
-                                <td scope="row"><%= data.drivetrain %></td>
+                                <td scope="row"><%= data.engine_type %></td>
+                                <td scope="row"><%= data.transmission_type %></td>
+                                <td scope="row"><%= data.drivetrain_type %></td>
                                 <td scope="row" style="text-align: left; align-items: center;">
-                                    <img id="sample" src="../img/extColors/<%= colorMap[data.exterior_color] || '../extColors/default' %>.png" width="20" height="20" style="margin-right: 8px; border-radius: 50%;">
-                                    <%= data.exterior_color %>
+                                    <img id="sample" src="../img/extColors/<%= colorMap[data.color_name] || '../extColors/default' %>.png" width="20" height="20" style="margin-right: 8px; border-radius: 50%;">
+                                    <%= data.color_name %>
                                 </td>
                                 <td scope="row" class="accounting-format">
                                     <span>$</span>
                                     <span><%= data.msrp %></span>
                                 </td>
                                 <td scope="row">
-                                    <% 
-                                    if (data.location) {
-                                        const locationParts = data.location.split(',');
-                                        if (locationParts.length > 1) {
-                                            const state = locationParts[1].trim().split(' ')[0];
-                                            if (["AB", "BC", "MB", "NB", "NF", "NS", "NT", "ON", "PE", "PQ", "SK"].includes(state)) { %>
-                                                <img src="../img/flags/canada_flag.png" alt="Canada" width="20">
-                                            <% } else { %>
-                                                <img src="../img/flags/usa_flag.png" alt="USA" width="20">
-                                            <% }
-                                        } else { %>
-                                            <img src="../img/flags/mexico_flag.png" alt="Mexico" width="20">
-                                        <% }
-                                    } else { %>
+                                    <% if (data.country == "USA") { %>
+                                        <img src="../img/flags/usa_flag.png" alt="USA" width="20">
+                                    <% } else if (data.country == "CANADA") { %>
+                                        <img src="../img/flags/canada_flag.png" alt="Canada" width="20">
+                                    <% } else { %>
                                         <img src="../img/flags/mexico_flag.png" alt="Mexico" width="20">
-                                    <% } %>
+                                    <% } %>                                    
                                 </td>
-                                <td scope="row" style="text-align: left;"><%= data.dealer || 'N/A' %></td>
+                                <td scope="row" style="text-align: left;"><%= data.dealer_name || 'N/A' %></td>
                             </tr>
                         <% }) %>
                     </tbody>
@@ -284,6 +261,14 @@
     <%- include('../partials/footer'); %>
     <script>
         let startX;
+
+        function buildQueryString(params) {
+            const queryStrings = Object.entries(params)
+                .filter(([key, value]) => value)
+                .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+                .join('&');
+            return queryStrings;
+        }
 
         function toggleMSRPOrder() {
             selectedOrder = selectedOrder === "DESC" ? "ASC" : "DESC";
@@ -424,7 +409,7 @@
             });
 
             limitSelect.addEventListener('change', function() {
-                const limit = limitSelect.value;
+                const limit = event.target.value;
                 const url = new URL(window.location.href);
                 url.searchParams.set('limit', limit);
                 url.searchParams.set('page', 1);

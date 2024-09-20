@@ -4,125 +4,15 @@
 <head>
     <%- include('../partials/head'); %>
     <script src="../partials/rpo.js"></script>
-    <%
-    function checkRPO(data) {
-      const rpoFlags = {
-        has1LE: ['A1Y', 'A1X', 'A1Z'],
-        hasCE: ['Z4B'],
-        hasG56: ['X56'],
-        hasZ51: ['Z51'],
-        hasZCR: ['ZCR'],
-        hasY70: ['Y70'],
-        hasZ07: ['Z07'],
-        hasZLE: ['ZLE'],
-        hasZLD: ['ZLD'],
-        hasZLG: ['ZLG'],
-        hasZLK: ['ZLK'],
-        hasZLJ: ['ZLJ'],
-        hasZLR: ['ZLR'],
-        hasABQ: ['ABQ'],
-        hasOAR: ['OAR'],
-      };
-  
-      let flags = {
-        has1LE: false, 
-        hasCE: false, 
-        hasG56: false, 
-        hasZ51: false, 
-        hasZCR: false, 
-        hasY70: false, 
-        hasZ07: false, 
-        hasZLE: false, 
-        hasZLD: false, 
-        hasZLG: false, 
-        hasZLK: false, 
-        hasZLJ: false, 
-        hasZLR: false, 
-        hasABQ: false, 
-        hasOAR: false,
-        interiorColor: 'N/A',
-        seat: 'N/A',
-      };
-  
-      if (data.allJson) {
-        const rpos = JSON.parse(data.allJson).Options;
-        if (rpos) {
-          for (const [flag, codes] of Object.entries(rpoFlags)) {
-            if (codes.some(code => rpos.includes(code))) {
-              flags[flag] = true;
-            }
-          }
-  
-          for (const rpo of rpos) {
-            if (intColor[rpo]) {
-              flags.interiorColor = intColor[rpo];
-            }
-            if (seatCode[rpo]) {
-              flags.seat = seatCode[rpo];
-            }
-          }
-        }
-      }
-  
-      return flags;
-    }
-  
-    let allHas = {
-      has1LE: false, 
-      hasCE: false, 
-      hasG56: false, 
-      hasZ51: false, 
-      hasZCR: false, 
-      hasY70: false, 
-      hasZ07: false, 
-      hasZLE: false, 
-      hasZLD: false, 
-      hasZLG: false, 
-      hasZLK: false, 
-      hasZLJ: false, 
-      hasZLR: false, 
-      hasABQ: false, 
-      hasOAR: false,
-      interiorColor: 'N/A',
-      seat: 'N/A',
-    };
-  
-    vin_data.forEach(data => {
-      const result = checkRPO(data);
-      for (const key in allHas) {
-        if (key !== 'interiorColor' && key !== 'seat') {
-          allHas[key] = allHas[key] || result[key];
-        }
-      }
-      if (result.interiorColor !== 'N/A') allHas.interiorColor = result.interiorColor;
-      if (result.seat !== 'N/A') allHas.seat = result.seat;
-    });
-    %>  
     <title>
       <%= (vin_data[0].modelYear ? "'" + vin_data[0].modelYear.toString().slice(-2) : 'N/A') %>
       <%= vin_data[0].model || 'N/A' %> 
       <%= vin_data[0].trim || 'N/A' %> 
-      <%= allHas.has1LE ? '1LE' : '' %>
-      <%= allHas.hasCE ? 'CE' : '' %>
-      <%= allHas.hasG56 ? 'G56' : '' %>
-      <%= allHas.hasZ51 ? 'Z51' : '' %>
-      <%= allHas.hasZCR ? 'C8.R' : '' %>
-      <%= allHas.hasY70 ? '70th' : '' %>
-      <%= allHas.hasZ07 ? 'Z07' : '' %>
-      <%= allHas.hasZLE ? 'WG IMSA' : '' %>
-      <%= allHas.hasZLD ? 'S IMSA' : '' %>
-      <%= allHas.hasZLG ? 'RA IMSA' : '' %>
-      <%= allHas.hasZLK ? 'Arrival' : '' %>
-      <%= allHas.hasZLJ ? 'Impact' : '' %>
-      <%= allHas.hasZLR ? 'Elevation' : '' %>
-      <%= allHas.hasABQ ? '120th' : '' %>
-      <%= allHas.hasOAR ? 'PREPROD' : '' %>
     </title>
 </head>
 
 <body>
   <%- include('../partials/header'); %>
-
     <div class="container">
         <div class="row">
           <% if (vin_data && vin_data.length > 0) { %>
@@ -133,88 +23,7 @@
             </h1>
               <%
                 let features = [];
-                let has1LE = false; 
-                let hasCE = false;
-                let hasG56 = false;
-                let hasZ51 = false;
-                let hasZCR = false;
-                let hasY70 = false;
-                let hasZ07 = false;
-                let hasZLE = false;
-                let hasZLD = false;
-                let hasZLG = false;
-                let hasZLK = false;
-                let hasZLJ = false;
-                let hasZLR = false;
-                let hasABQ = false;
-                let hasOAR = false;
-            
-                vin_data.forEach(data => {
-                  if (data.allJson) {
-                    const rpos = JSON.parse(data.allJson).Options;
-                    if (rpos && (rpos.includes('A1Y') || rpos.includes('A1X') || rpos.includes('A1Z'))) {
-                      has1LE = true;
-                    }
-                    if (rpos && rpos.includes('Z4B')) {
-                      hasCE = true;
-                    }
-                    if (rpos && rpos.includes('X56')) {
-                      hasG56 = true;
-                    }
-                    if (rpos && rpos.includes('Z51')) {
-                      hasZ51 = true;
-                    }
-                    if (rpos && rpos.includes('ZCR')) {
-                      hasZCR = true;
-                    }
-                    if (rpos && rpos.includes('Y70')) {
-                      hasY70 = true;
-                    }
-                    if (rpos && rpos.includes('Z07')) {
-                      hasZ07 = true;
-                    }
-                    if (rpos && rpos.includes('ZLE')) {
-                      hasZLE = true;
-                    }
-                    if (rpos && rpos.includes('ZLD')) {
-                      hasZLD = true;
-                    }
-                    if (rpos && rpos.includes('ZLG')) {
-                      hasZLG = true;
-                    }
-                    if (rpos && rpos.includes('ZLK')) {
-                      hasZLK = true;
-                    }
-                    if (rpos && rpos.includes('ZLJ')) {
-                      hasZLJ = true;
-                    }
-                    if (rpos && rpos.includes('ZLR')) {
-                      hasZLR = true;
-                    }
-                    if (rpos && rpos.includes('ABQ')) {
-                      hasABQ = true;
-                    }
-                    if (rpos && rpos.includes('OAR')) {
-                      hasOAR = true;
-                    }
-                  }
-                });
-            
-                if (has1LE) features.push('1LE');
-                if (hasCE) features.push('Collectors Edition');
-                if (hasG56) features.push('Garage 56 Special Edition');
-                if (hasZ51) features.push('Z51 Performance Package');
-                if (hasZCR) features.push('IMSA GTLM Championship C8.R Edition');
-                if (hasY70) features.push('70th Anniversary Edition');
-                if (hasZ07) features.push('Z07 Performance Package');
-                if (hasZLE) features.push('Watkins Glen IMSA Edition');
-                if (hasZLD) features.push('Sebring IMSA Edition');
-                if (hasZLG) features.push('Road Atlanta IMSA Edition');
-                if (hasZLK) features.push('Arrival Edition');
-                if (hasZLJ) features.push('Impact Edition');
-                if (hasZLR) features.push('Elevation Edition');
-                if (hasABQ) features.push('120th Anniversary Edition');
-                if (hasOAR) features.push('Pre-Production Vehicle');
+                if (vin_data[0].special_desc) features.push(vin_data[0].special_desc);
               %>
               <% if (features.length > 0) { %>
                 <div>
@@ -222,7 +31,7 @@
                     <h4><em><%= feature %></em></h4>
                   <% }) %>
                 </div>
-              <% } %>            
+              <% } %>
             <table class="table-veh table-hover border border shadow" id="vinTable">
               <tbody>
                   <% vin_data.forEach(function(data) { %>
@@ -232,12 +41,12 @@
                   </tr>
                   <tr>
                     <td class="label-column"><strong>ORDER NUMBER:</strong></td>
-                    <td><%= data.ordernum || 'N/A' %></td>
+                    <td><%= data.order_number || 'N/A' %></td>
                   </tr>
                   <tr>
                     <td class="label-column"><strong>STICKER CREATION DATE:</strong></td>
                     <td>
-                      <%= data.allJson ? new Date(JSON.parse(data.allJson).creation_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A' %>
+                      <%= data.formatted_date || 'N/A' %>
                     </td>
                   </tr>
                   <tr>
@@ -258,19 +67,19 @@
                   </tr>
                   <tr>
                     <td class="label-column"><strong>ENGINE:</strong></td>
-                    <td><%= data.vehicleEngine || 'N/A' %></td>
+                    <td><%= data.engine_type || 'N/A' %></td>
                   </tr>
                   <tr>
                     <td class="label-column"><strong>TRANSMISSION:</strong></td>
-                    <td><%= data.transmission || 'N/A' %></td>
+                    <td><%= data.transmission_type || 'N/A' %></td>
                   </tr>
                   <tr>
                     <td class="label-column"><strong>DRIVETRAIN:</strong></td>
-                    <td><%= data.drivetrain || 'N/A' %></td>
+                    <td><%= data.drivetrain_type || 'N/A' %></td>
                   </tr>
                   <tr>
                     <td class="label-column"><strong>EXTERIOR COLOR:</strong></td>
-                    <td><%= data.exterior_color || 'N/A' %></td>
+                    <td><%= data.color_name || 'N/A' %></td>
                   </tr>
                   <tr>
                     <td class="label-column"><strong>INTERIOR COLOR:</strong></td>
@@ -286,7 +95,7 @@
                   </tr>
                   <tr>
                     <td class="label-column"><strong>DEALER:</strong></td>
-                    <td><%= data.dealer || 'N/A' %></td>
+                    <td><%= data.dealer_name || 'N/A' %></td>
                   </tr>
                   <tr>
                     <td class="label-column"><strong>LOCATION:</strong></td>
@@ -295,15 +104,14 @@
                   <tr>
                     <td class="label-column"><strong>COUNTRY:</strong></td>
                     <td>
-                      <% if (data.location) { %>
-                        <% const state = data.location.split(',')[1]?.trim().split(' ')[0]; %>
-                        <% if (state && ["AB", "BC", "MB", "NF", "NT", "ON", "PE", "PQ", "SK"].includes(state)) { %>
+                      <% if (data.country) { %>
+                        <% if (data.country === 'CANADA') { %>
                           <img src="../img/flags/canada_flag.png" alt="Canada" width="30" style="margin-right: 5px;">CANADA
-                        <% } else { %>
+                        <% } else if (data.country === 'USA') { %>
                           <img src="../img/flags/usa_flag.png" alt="USA" width="30" style="margin-right: 5px;">UNITED STATES
+                        <% } else if (data.country === 'MEXICO') { %>
+                          <img src="../img/flags/mexico_flag.png" alt="Mexico" width="30" style="margin-right: 5px;">Mexico
                         <% } %>
-                      <% } else { %>
-                        <img src="../img/flags/mexico_flag.png" alt="Mexico" width="30" style="margin-right: 5px;">MEXICO
                       <% } %>
                     </td>
                   </tr>

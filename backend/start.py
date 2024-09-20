@@ -17,7 +17,16 @@ myCreds = sql.Creds()
 @app.route('/search', methods=['GET'])
 def search_inv():
     vin = request.args.get('vin')
-    sqlStatement = f"SELECT * FROM gm WHERE VIN = '{vin}'"
+    join_clause = """
+        JOIN Engines e ON v.engine_id = e.engine_id 
+        JOIN Transmissions t ON v.transmission_id = t.transmission_id 
+        JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id 
+        JOIN Colors c ON v.color_id = c.color_id 
+        JOIN Orders o ON v.order_id = o.order_id 
+        JOIN Dealers dl ON v.dealer_id = dl.dealer_id
+        LEFT JOIN SpecialEditions se ON v.vehicle_id = se.vehicle_id
+    """
+    sqlStatement = f"SELECT v.vin, v.modelYear, v.model, v.body, v.trim, e.engine_type, t.transmission_type, d.drivetrain_type, c.color_name, v.msrp, o.country, o.order_number, UPPER(DATE_FORMAT(o.creation_date, '%W, %d %M %Y')) AS formatted_date, dl.dealer_name, COALESCE(se.special_desc, 'No special edition') AS special_desc FROM Vehicles v {join_clause} WHERE v.vin = '{vin}' LIMIT 1"
     conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
     viewTable = execute_read_query(conn, sqlStatement)
     close_connection(conn)
@@ -117,8 +126,15 @@ def sort_price():
     limit = int(request.args.get('limit', 100))
     offset = (page - 1) * limit
 
-    join_clause = "JOIN Engines e ON v.engine_id = e.engine_id JOIN Transmissions t ON v.transmission_id = t.transmission_id JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id JOIN Colors c ON v.color_id = c.color_id JOIN Orders o ON v.order_id = o.order_id JOIN Dealers dl ON v.dealer_id = dl.dealer_id"
-    
+    join_clause = """
+        JOIN Engines e ON v.engine_id = e.engine_id 
+        JOIN Transmissions t ON v.transmission_id = t.transmission_id 
+        JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id 
+        JOIN Colors c ON v.color_id = c.color_id 
+        JOIN Orders o ON v.order_id = o.order_id 
+        JOIN Dealers dl ON v.dealer_id = dl.dealer_id
+        """
+
     conditions = []
     if year:
         conditions.append(f"modelYear = '{year}'")
@@ -203,7 +219,6 @@ def sort_price():
 
     conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
     select = f"SELECT v.vin, v.modelYear, v.model, v.body, v.trim, e.engine_type, t.transmission_type, d.drivetrain_type, c.color_name, v.msrp, o.country, dl.dealer_name FROM Vehicles v {join_clause}"
-    test = f"{select}{where_clause} {order_clause}LIMIT {limit} OFFSET {offset}"
     viewTable = execute_read_query(conn, f"{select}{where_clause} {order_clause} LIMIT {limit} OFFSET {offset}")
     total_items = execute_read_query(conn, f"SELECT COUNT(*) AS total FROM Vehicles v {join_clause}{where_clause}")[0]['total']
     close_connection(conn)

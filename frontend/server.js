@@ -114,6 +114,7 @@ app.get('/search', function(req, res) {
     axios.get(`${baseURL}/search?vin=${vin}`)
     .then((response)=>{
         var vin_data = response.data;
+        console.log(vin_data);
 
         if (vin_data.length === 0) {
             res.status(404).render('pages/404', { req: req });

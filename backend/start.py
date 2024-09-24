@@ -25,24 +25,41 @@ def search_inv():
         JOIN Orders o ON v.order_id = o.order_id 
         JOIN Dealers dl ON v.dealer_id = dl.dealer_id
         LEFT JOIN SpecialEditions se ON v.vehicle_id = se.vehicle_id
+        LEFT JOIN Options opt ON v.vehicle_id = opt.vehicle_id
+        LEFT JOIN MMC_Codes mc on o.mmc_code_id = mc.mmc_code_id
     """
-    sqlStatement = f"SELECT v.vin, v.modelYear, v.model, v.body, v.trim, e.engine_type, t.transmission_type, d.drivetrain_type, c.color_name, v.msrp, o.country, o.order_number, UPPER(DATE_FORMAT(o.creation_date, '%W, %d %M %Y')) AS formatted_date, dl.dealer_name, COALESCE(se.special_desc, 'No special edition') AS special_desc FROM Vehicles v {join_clause} WHERE v.vin = '{vin}' LIMIT 1"
+    sqlStatement = f"""
+        SELECT v.vin, v.modelYear, v.model, v.body, v.trim, e.engine_type, t.transmission_type, 
+               d.drivetrain_type, c.color_name, v.msrp, o.country, o.order_number, mc.mmc_code, 
+               UPPER(DATE_FORMAT(o.creation_date, '%W, %d %M %Y')) AS formatted_date, 
+               dl.dealer_name, dl.location, COALESCE(se.special_desc, 'NA') AS special_desc,
+               GROUP_CONCAT(opt.option_code SEPARATOR ', ') AS rpo_codes 
+        FROM Vehicles v {join_clause} WHERE v.vin = '{vin}' 
+        GROUP BY v.vin, v.modelYear, v.model, v.body, v.trim, e.engine_type, t.transmission_type, 
+                 d.drivetrain_type, c.color_name, v.msrp, o.country, o.order_number, mc.mmc_code, 
+                 formatted_date, dl.dealer_name, dl.location, special_desc 
+        LIMIT 1
+    """
     conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
     viewTable = execute_read_query(conn, sqlStatement)
     close_connection(conn)
+    
+    for row in viewTable:
+        if 'rpo_codes' in row:
+            row['rpo_codes'] = row['rpo_codes'].split(', ')
     return jsonify(viewTable)
 
 @app.route('/api/genurl', methods=['POST'])
 def generate_url():
     data = request.json["data"]
-    allJson = json.loads(data["allJson"])
+    vin_data = data["vin_data"]
 
-    model_year = allJson["model_year"]
-    mmc_code = allJson["mmc_code"]
+    model_year = vin_data[0]["modelYear"]
+    mmc_code = vin_data[0]["mmc_code"]
     mmcDict = data["mmc"]
     colorMap = data["colorMap"]
     intColor = data["intColor"]
-    options = [option for option in allJson["Options"] if option]
+    options = vin_data[0]["rpo_codes"]
     rpos = "_".join(options)
     baseURL = "https://cgi.chevrolet.com/mmgprod-us/dynres/prove/image.gen?i="
     baseURL_int = "https://cgi.chevrolet.com/mmgprod-us/dynres/prove/imageinterior.gen?i="
@@ -132,8 +149,13 @@ def sort_price():
         JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id 
         JOIN Colors c ON v.color_id = c.color_id 
         JOIN Orders o ON v.order_id = o.order_id 
-        JOIN Dealers dl ON v.dealer_id = dl.dealer_id
+        JOIN Dealers dl ON v.dealer_id = dl.dealer_id 
         """
+
+    country_map = {
+        "CAN": "CANADA",
+        "MEX": "MEXICO"
+        }
 
     conditions = []
     if year:
@@ -153,9 +175,9 @@ def sort_price():
     if color:
         conditions.append(f"color_name = '{color}'")
     if country:
-        conditions.append(f"country = '{country}'")
+        conditions.append(f"country = '{country_map.get(country, 'USA')}'")
     if rpo:
-        join_clause += " JOIN Options opt ON v.vehicle_id = opt.vehicle_id"
+        join_clause += "JOIN Options opt ON v.vehicle_id = opt.vehicle_id"
         rpo_conditions = {
             "Z4B": ["v.modelYear = '2024'", "v.model = 'CAMARO'", "c.color_name IN ('PANTHER BLACK MATTE', 'PANTHER BLACK METALLIC')", f"opt.option_code = '{rpo}'"],
             "X56": ["modelYear = '2024'", "model = 'CAMARO'", "body = 'COUPE'", "trim = 'ZL1'", "transmission_type = 'M6'", "color_name = 'RIPTIDE BLUE METALLIC'", "msrp = '89185'", f"opt.option_code = '{rpo}'"],
@@ -180,7 +202,7 @@ def sort_price():
         elif rpo:
             conditions.append(f"opt.option_code = '{rpo}'")
 
-    where_clause = " WHERE " + " AND ".join(conditions) if conditions else ""
+    where_clause = " \nWHERE " + " AND ".join(conditions) if conditions else ""
 
     def get_all_distinct_values():
         columns = ['modelYear', 'body', 'trim', 'engine_type', 'transmission_type', 'model', 'color_name', 'country']
@@ -218,7 +240,7 @@ def sort_price():
     else: order_clause = ""
 
     conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
-    select = f"SELECT v.vin, v.modelYear, v.model, v.body, v.trim, e.engine_type, t.transmission_type, d.drivetrain_type, c.color_name, v.msrp, o.country, dl.dealer_name FROM Vehicles v {join_clause}"
+    select = f"SELECT v.vin, v.modelYear, v.model, v.body, v.trim, e.engine_type, t.transmission_type, d.drivetrain_type, c.color_name, v.msrp, o.country, dl.dealer_name \nFROM Vehicles v {join_clause}"
     viewTable = execute_read_query(conn, f"{select}{where_clause} {order_clause} LIMIT {limit} OFFSET {offset}")
     total_items = execute_read_query(conn, f"SELECT COUNT(*) AS total FROM Vehicles v {join_clause}{where_clause}")[0]['total']
     close_connection(conn)

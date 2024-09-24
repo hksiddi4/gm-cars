@@ -21,21 +21,15 @@
               <%= vin_data[0].model || 'N/A' %>
               <%= vin_data[0].trim || 'N/A' %>
             </h1>
-              <%
-                let features = [];
-                if (vin_data[0].special_desc) features.push(vin_data[0].special_desc);
-              %>
-              <% if (features.length > 0) { %>
-                <div>
-                  <% features.forEach(feature => { %>
-                    <h4><em><%= feature %></em></h4>
-                  <% }) %>
-                </div>
-              <% } %>
+            <% if (vin_data[0].special_desc && vin_data[0].special_desc !== 'NA') { %>
+              <div>
+                <h4><em><%= vin_data[0].special_desc %></em></h4>
+              </div>
+            <% } %>            
             <table class="table-veh table-hover border border shadow" id="vinTable">
               <tbody>
                   <% vin_data.forEach(function(data) { %>
-                  <tr data-alljson='<%= JSON.stringify(data.allJson) %>'>
+                  <tr>
                     <td class="label-column"><strong>VIN:</strong></td>
                     <td><%= data.vin || 'N/A' %></td>
                   </tr>
@@ -81,14 +75,28 @@
                     <td class="label-column"><strong>EXTERIOR COLOR:</strong></td>
                     <td><%= data.color_name || 'N/A' %></td>
                   </tr>
+                  <% if (data.rpo_codes) { %>
+                    <%
+                      let matchedIntColor = 'N/A';
+                      let matchedSeat = 'N/A';
+                      data.rpo_codes.forEach(function(rpo) {
+                        if (intColor[rpo]) {
+                          matchedIntColor = intColor[rpo];
+                        }
+                        if (seatCode[rpo]) {
+                          matchedSeat = seatCode[rpo];
+                        }
+                      });
+                    %>
                   <tr>
                     <td class="label-column"><strong>INTERIOR COLOR:</strong></td>
-                    <td><%= data.allJson ? checkRPO(data).interiorColor : 'N/A' %></td>
+                    <td><%= matchedIntColor.toUpperCase() %></td>
                   </tr>
                   <tr>
                     <td class="label-column"><strong>SEAT:</strong></td>
-                    <td><%= data.allJson ? checkRPO(data).seat : 'N/A' %></td>
+                    <td><%= matchedSeat.toUpperCase() %></td>
                   </tr>
+                  <% } %>
                   <tr>
                     <td class="label-column"><strong>MSRP:</strong></td>
                     <td>$<%= data.msrp || 'N/A' %></td>
@@ -152,15 +160,12 @@
               </thead>
               <tbody>
                 <% vin_data.forEach(function(data) { %>
-                  <% if (data.allJson) { %>
-                    <% 
-                      const rpos = (JSON.parse(data.allJson)).Options;
-                    %>
-                    <% rpos.forEach(function(rpo) { %>
+                  <% if (data.rpo_codes) { %>
+                    <% data.rpo_codes.forEach(function(rpo) { %>
                       <% if (rpo) { %>
                         <tr>
                           <td class="<%= rpo.includes('OAR') ? 'highlight' : '' %>"><%= rpo %></td>
-                          <td class="rpo-description" data-code="<%= rpo || 'N/A' %>" style="text-align: left;"></td>
+                          <td class="rpo-description" data-code="<%= rpo %>" style="text-align: left;"></td>
                         </tr>
                       <% } %>
                     <% }); %>
@@ -183,21 +188,22 @@
     <%- include('../partials/footer'); %>
     <script>
       document.addEventListener('DOMContentLoaded', () => {
-        const descriptionCells = document.querySelectorAll('.rpo-description');
-        descriptionCells.forEach(cell => {
-            const code = cell.getAttribute('data-code');
-            cell.textContent = getRPODescription(code);
+        document.querySelectorAll('.rpo-description').forEach(function(element) {
+          const rpoCode = element.getAttribute('data-code');
+          const description = getRPODescription(rpoCode);
+          element.textContent = description;
         });
-
-        const mmc = <%- JSON.stringify(mmc) %>;
-        const colorMap = <%- JSON.stringify(colorMap) %>;
-        const intColor = <%- JSON.stringify(intColor) %>;
-        const allJson = <%- JSON.stringify(vin_data[0].allJson) %>;
 
         const carouselImage = document.getElementById('carousel-image');
         const loadingAnimation = document.getElementById('loading-animation');
         loadingAnimation.style.direction = 'block';
-        const data = { mmc, colorMap, intColor, allJson };
+        
+        const mmc = <%- JSON.stringify(mmc) %>;
+        const colorMap = <%- JSON.stringify(colorMap) %>;
+        const intColor = <%- JSON.stringify(intColor) %>;
+        const seatCode = <%- JSON.stringify(seatCode) %>;
+        const vin_data = <%- JSON.stringify(vin_data) %>;
+        const data = { mmc, colorMap, intColor, vin_data };
 
         fetch('/api/genurl', {
           method: 'POST',
@@ -217,6 +223,11 @@
             let currentIndex = 0;
             let initialLoad = true;
 
+            function preloadImage(src) {
+              const img = new Image();
+              img.src = src;
+            }
+
             function showImage(index) {
                 if (initialLoad) {
                     carouselImage.src = images[index];
@@ -231,6 +242,9 @@
                         carouselImage.style.opacity = 1;
                     }, 200);
                 }
+
+                const nextIndex = (index + 1) % images.length;
+                preloadImage(images[nextIndex]);
             }
 
             showImage(currentIndex);
@@ -253,8 +267,7 @@
         
         const button = document.getElementById('see-rarity');
         button.addEventListener('click', () => {
-          const allJson = button.getAttribute('data-alljson');
-          const dataObject = JSON.parse(allJson);
+          const dataObject = JSON.parse(vin_data.vin);
 
           fetch('/api/rarity', {
               method: 'POST',

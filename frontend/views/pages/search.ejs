@@ -21,11 +21,21 @@
               <%= vin_data[0].model || 'N/A' %>
               <%= vin_data[0].trim || 'N/A' %>
             </h1>
-            <% if (vin_data[0].special_desc && vin_data[0].special_desc !== 'NA') { %>
+            <% if (vin_data[0].special_descs && vin_data[0].special_descs !== 'NA') { %>
               <div>
-                <h4><em><%= vin_data[0].special_desc %></em></h4>
+                <h4>
+                  <em>
+                    <% 
+                      // Split the special_descs by comma and iterate over each description
+                      const specialDescs = vin_data[0].special_descs.split(', ');
+                      specialDescs.forEach(desc => { 
+                    %>
+                      <div><%= desc %></div>
+                    <% }); %>
+                  </em>
+                </h4>
               </div>
-            <% } %>            
+            <% } %>
             <table class="table-veh table-hover border border shadow" id="vinTable">
               <tbody>
                   <% vin_data.forEach(function(data) { %>
@@ -140,7 +150,7 @@
             <div id="sticker-container">
               <iframe id="window-sticker" src="https://cws.gm.com/vs-cws/vehshop/v2/vehicle/windowsticker?vin=<%= vin_data[0].vin || 'N/A' %>" style="min-height: 886px; width: 100%;"></iframe>
             </div>
-            <div class="rarity-container">
+            <!-- <div class="rarity-container">
               <% vin_data.forEach(function(data) { %>
                 <% if (data.allJson) { %>
                   <button id="see-rarity" class="btn btn-primary rarity-btn" data-alljson='<%= JSON.stringify(data.allJson) %>'>See Rarity</button>
@@ -150,7 +160,7 @@
                 <div id="response" class="response"></div>
                 <div><a id="snark" style="color: rgb(40, 40, 40);"></a></div>
               </div>
-            </div>
+            </div> -->
             <table class="table-veh table-hover border border shadow" id="rpoTable">
               <thead>
                 <tr>
@@ -265,26 +275,26 @@
         });
 
         
-        const button = document.getElementById('see-rarity');
-        button.addEventListener('click', () => {
-          const dataObject = JSON.parse(vin_data.vin);
+        // const button = document.getElementById('see-rarity');
+        // button.addEventListener('click', () => {
+        //   const dataObject = JSON.parse(vin_data.vin);
 
-          fetch('/api/rarity', {
-              method: 'POST',
-              headers: {
-                  'Content-Type': 'application/json',
-              },
-              body: dataObject,
-          })
-          .then(response => response.json())
-          .then(data => {
-              document.getElementById('response').textContent = `1 of ${data[0].Count}`;
-              document.getElementById('snark').textContent = "- on the fourth Tuesday, after company lunch with a crescent moon when Joey went home early...";
-          })
-          .catch((error) => {
-              console.error('Error:', error);
-          });
-        });
+        //   fetch('/api/rarity', {
+        //       method: 'POST',
+        //       headers: {
+        //           'Content-Type': 'application/json',
+        //       },
+        //       body: dataObject,
+        //   })
+        //   .then(response => response.json())
+        //   .then(data => {
+        //       document.getElementById('response').textContent = `1 of ${data[0].Count}`;
+        //       document.getElementById('snark').textContent = "- on the fourth Tuesday, after company lunch with a crescent moon when Joey went home early...";
+        //   })
+        //   .catch((error) => {
+        //       console.error('Error:', error);
+        //   });
+        // });
       });
     </script>
 </body>

@@ -26,18 +26,21 @@ def search_inv():
         JOIN Dealers dl ON v.dealer_id = dl.dealer_id
         LEFT JOIN SpecialEditions se ON v.vehicle_id = se.vehicle_id
         LEFT JOIN Options opt ON v.vehicle_id = opt.vehicle_id
-        LEFT JOIN MMC_Codes mc on o.mmc_code_id = mc.mmc_code_id
+        LEFT JOIN MMC_Codes mc ON o.mmc_code_id = mc.mmc_code_id
     """
     sqlStatement = f"""
         SELECT v.vin, v.modelYear, v.model, v.body, v.trim, e.engine_type, t.transmission_type, 
-               d.drivetrain_type, c.color_name, v.msrp, o.country, o.order_number, mc.mmc_code, 
-               UPPER(DATE_FORMAT(o.creation_date, '%W, %d %M %Y')) AS formatted_date, 
-               dl.dealer_name, dl.location, COALESCE(se.special_desc, 'NA') AS special_desc,
-               GROUP_CONCAT(opt.option_code SEPARATOR ', ') AS rpo_codes 
-        FROM Vehicles v {join_clause} WHERE v.vin = '{vin}' 
+            d.drivetrain_type, c.color_name, v.msrp, o.country, o.order_number, mc.mmc_code, 
+            UPPER(DATE_FORMAT(o.creation_date, '%W, %d %M %Y')) AS formatted_date, 
+            dl.dealer_name, dl.location, 
+            COALESCE(GROUP_CONCAT(DISTINCT se.special_desc SEPARATOR ', '), 'NA') AS special_descs,
+            GROUP_CONCAT(DISTINCT opt.option_code SEPARATOR ', ') AS rpo_codes
+        FROM Vehicles v
+        {join_clause}
+        WHERE v.vin = '{vin}' 
         GROUP BY v.vin, v.modelYear, v.model, v.body, v.trim, e.engine_type, t.transmission_type, 
-                 d.drivetrain_type, c.color_name, v.msrp, o.country, o.order_number, mc.mmc_code, 
-                 formatted_date, dl.dealer_name, dl.location, special_desc 
+                d.drivetrain_type, c.color_name, v.msrp, o.country, o.order_number, mc.mmc_code, 
+                formatted_date, dl.dealer_name, dl.location
         LIMIT 1
     """
     conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
@@ -109,6 +112,7 @@ def generate_url():
         return jsonify({"generatedImages": ghost_img})
     return jsonify({"generatedImages": urls_attempted})
 
+# Working on replacing
 @app.route('/api/rarity', methods=['POST'])
 def unique():
     data = request.json
@@ -150,7 +154,8 @@ def sort_price():
         JOIN Colors c ON v.color_id = c.color_id 
         JOIN Orders o ON v.order_id = o.order_id 
         JOIN Dealers dl ON v.dealer_id = dl.dealer_id 
-        """
+        LEFT JOIN SpecialEditions se ON v.vehicle_id = se.vehicle_id 
+    """
 
     country_map = {
         "CAN": "CANADA",
@@ -240,8 +245,20 @@ def sort_price():
     else: order_clause = ""
 
     conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
-    select = f"SELECT v.vin, v.modelYear, v.model, v.body, v.trim, e.engine_type, t.transmission_type, d.drivetrain_type, c.color_name, v.msrp, o.country, dl.dealer_name \nFROM Vehicles v {join_clause}"
-    viewTable = execute_read_query(conn, f"{select}{where_clause} {order_clause} LIMIT {limit} OFFSET {offset}")
+    select = f"""
+        SELECT v.vin, v.modelYear, v.model, v.body, v.trim, 
+            e.engine_type, t.transmission_type, d.drivetrain_type, 
+            c.color_name, v.msrp, o.country, dl.dealer_name, 
+            GROUP_CONCAT(DISTINCT se.special_desc ORDER BY se.special_desc ASC SEPARATOR ', ') AS special_desc
+        FROM Vehicles v {join_clause}
+        {where_clause}
+        GROUP BY v.vin, v.modelYear, v.model, v.body, v.trim, 
+                e.engine_type, t.transmission_type, d.drivetrain_type, 
+                c.color_name, v.msrp, o.country, dl.dealer_name
+        {order_clause}
+        LIMIT {limit} OFFSET {offset}
+    """
+    viewTable = execute_read_query(conn, select)
     total_items = execute_read_query(conn, f"SELECT COUNT(*) AS total FROM Vehicles v {join_clause}{where_clause}")[0]['total']
     close_connection(conn)
 

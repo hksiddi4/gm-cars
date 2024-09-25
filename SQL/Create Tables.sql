@@ -95,10 +95,25 @@ CREATE TABLE Options (
     option_code VARCHAR(50)
 );
 
+-- Special Editions Table
+CREATE TABLE SpecialEditions (
+	special_id SERIAL PRIMARY KEY,
+    vehicle_id INTEGER REFERENCES Vehicles(vehicle_id),
+    special_desc VARCHAR(255)
+);
+
 -- Indexes for faster querying
 CREATE INDEX idx_vehicle_vin ON Vehicles(vin);
 CREATE INDEX idx_order_creation_date ON Orders(creation_date);
 CREATE INDEX idx_option_vehicle_id ON options(vehicle_id);
+CREATE INDEX idx_option_code ON options(option_code);
+CREATE INDEX idx_vehicle_modelYear ON Vehicles(modelYear);
+CREATE INDEX idx_vehicle_engine_id ON Vehicles(engine_id);
+CREATE INDEX idx_vehicle_transmission_id ON Vehicles(transmission_id);
+CREATE INDEX idx_vehicle_drivetrain_id ON Vehicles(drivetrain_id);
+CREATE INDEX idx_vehicle_color_id ON Vehicles(color_id);
+CREATE INDEX idx_vehicle_order_id ON Vehicles(order_id);
+CREATE INDEX idx_vehicle_dealer_id ON Vehicles(dealer_id);
 
 -- Insert Engine Types
 INSERT INTO Engines (engine_type) 
@@ -274,3 +289,47 @@ CROSS JOIN JSON_TABLE(
 ) AS opt
 JOIN Vehicles v ON v.vin = s.vin;
 select * from options;
+
+INSERT INTO SpecialEditions (vehicle_id, special_desc)
+SELECT vehicle_id, special_desc
+FROM (
+    SELECT v.vehicle_id, 
+           JSON_UNQUOTE(JSON_EXTRACT(s.allJson, '$.Options')) AS options
+    FROM staging_allGM s
+    JOIN Vehicles v ON s.vin = v.vin
+) rpo_match
+CROSS JOIN LATERAL (
+    SELECT '1LE' AS special_desc WHERE options LIKE '%"A1X"%' OR options LIKE '%"A1Y"%' OR options LIKE '%"A1Z"%'
+    UNION ALL
+    SELECT 'Collectors Edition' WHERE options LIKE '%"Z4B"%'
+    UNION ALL
+    SELECT 'Garage 56 Special Edition' WHERE options LIKE '%"X56"%'
+    UNION ALL
+    SELECT 'Z51 Performance Package' WHERE options LIKE '%"Z51"%'
+    UNION ALL
+    SELECT 'IMSA GTLM Championship C8.R Edition' WHERE options LIKE '%"ZCR"%'
+    UNION ALL
+    SELECT '70th Anniversary Edition' WHERE options LIKE '%"Y70"%'
+    UNION ALL
+    SELECT 'Z07 Performance Package' WHERE options LIKE '%"Z07"%'
+    UNION ALL
+    SELECT 'Watkins Glen IMSA Edition' WHERE options LIKE '%"ZLE"%'
+    UNION ALL
+    SELECT 'Sebring IMSA Edition' WHERE options LIKE '%"ZLD"%'
+    UNION ALL
+    SELECT 'Road Atlanta IMSA Edition' WHERE options LIKE '%"ZLG"%'
+    UNION ALL
+    SELECT 'Arrival Edition' WHERE options LIKE '%"ZLK"%'
+    UNION ALL
+    SELECT 'Impact Edition' WHERE options LIKE '%"ZLJ"%'
+    UNION ALL
+    SELECT 'Elevation Edition' WHERE options LIKE '%"ZLR"%'
+    UNION ALL
+    SELECT '120th Anniversary Edition' WHERE options LIKE '%"ABQ"%'
+    UNION ALL
+    SELECT 'Pre-Production Vehicle' WHERE options LIKE '%"OAR"%'
+) special_editions
+WHERE special_desc IS NOT NULL;
+select * from specialeditions;
+
+select * from staging_allGM;

@@ -148,14 +148,13 @@ def sort_price():
     offset = (page - 1) * limit
 
     join_clause = """
-        JOIN Engines e ON v.engine_id = e.engine_id 
-        JOIN Transmissions t ON v.transmission_id = t.transmission_id 
-        JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id 
-        JOIN Colors c ON v.color_id = c.color_id 
-        JOIN Orders o ON v.order_id = o.order_id 
-        JOIN Dealers dl ON v.dealer_id = dl.dealer_id 
-        LEFT JOIN SpecialEditions se ON v.vehicle_id = se.vehicle_id 
-    """
+            JOIN Engines e ON v.engine_id = e.engine_id 
+            JOIN Transmissions t ON v.transmission_id = t.transmission_id 
+            JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id 
+            JOIN Colors c ON v.color_id = c.color_id 
+            JOIN Orders o ON v.order_id = o.order_id 
+            JOIN Dealers dl ON v.dealer_id = dl.dealer_id 
+            LEFT JOIN SpecialEditions se ON v.vehicle_id = se.vehicle_id """
 
     country_map = {
         "CAN": "CANADA",
@@ -182,8 +181,10 @@ def sort_price():
     if country:
         conditions.append(f"country = '{country_map.get(country, 'USA')}'")
     if rpo:
-        join_clause += "JOIN Options opt ON v.vehicle_id = opt.vehicle_id"
+        join_clause += "    JOIN Options opt ON v.vehicle_id = opt.vehicle_id"
         rpo_conditions = {
+            "WBL": ["v.model = 'CAMARO'", "trim NOT IN ('ZL1', '1LS')", "c.color_name IN ('BLACK', 'SUMMIT WHITE', 'SHARKSKIN METALLIC', 'SATIN STEEL GREY METALLIC')", f"opt.option_code = '{rpo}'"],
+            "B2E": ["v.model = 'CAMARO'", "trim IN ('2LT', '2SS', '3LT')", "v.modelYear != '2024'", "c.color_name IN ('BLACK', 'SUMMIT WHITE', 'RAPID BLUE', 'SHARKSKIN METALLIC', 'SATIN STEEL GREY METALLIC', 'SHOCK')", f"opt.option_code = '{rpo}'"],
             "Z4B": ["v.modelYear = '2024'", "v.model = 'CAMARO'", "c.color_name IN ('PANTHER BLACK MATTE', 'PANTHER BLACK METALLIC')", f"opt.option_code = '{rpo}'"],
             "X56": ["modelYear = '2024'", "model = 'CAMARO'", "body = 'COUPE'", "trim = 'ZL1'", "transmission_type = 'M6'", "color_name = 'RIPTIDE BLUE METALLIC'", "msrp = '89185'", f"opt.option_code = '{rpo}'"],
             "A1Z": ["model = 'CAMARO'", "body = 'COUPE'", "trim = 'ZL1'", f"opt.option_code = '{rpo}'"],
@@ -207,7 +208,7 @@ def sort_price():
         elif rpo:
             conditions.append(f"opt.option_code = '{rpo}'")
 
-    where_clause = " \nWHERE " + " AND ".join(conditions) if conditions else ""
+    where_clause = "WHERE " + " AND ".join(conditions) if conditions else ""
 
     def get_all_distinct_values():
         columns = ['modelYear', 'body', 'trim', 'engine_type', 'transmission_type', 'model', 'color_name', 'country']
@@ -237,11 +238,11 @@ def sort_price():
     country_list = distinct_values['country']
 
     if rpo in ["Z4B", "X56"] and order not in ["ASC", "DESC"]:
-        order_clause = "ORDER BY SUBSTRING(vin, -6) "
+        order_clause = "ORDER BY SUBSTRING(vin, -6)"
     elif order in ["ASC", "DESC"]:
-        order_clause = f"ORDER BY msrp {'ASC' if order == 'ASC' else 'DESC'} "
+        order_clause = f"ORDER BY msrp {'ASC' if order == 'ASC' else 'DESC'}"
     elif order in ["vinASC", "vinDESC"]:
-        order_clause = f"ORDER BY SUBSTRING(vin, -6) {'DESC' if order == 'vinDESC' else 'ASC'}, modelYear ASC "
+        order_clause = f"ORDER BY SUBSTRING(vin, -6) {'DESC' if order == 'vinDESC' else 'ASC'}, modelYear ASC"
     else: order_clause = ""
 
     conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
@@ -258,6 +259,7 @@ def sort_price():
         {order_clause}
         LIMIT {limit} OFFSET {offset}
     """
+    print(select)
     viewTable = execute_read_query(conn, select)
     total_items = execute_read_query(conn, f"SELECT COUNT(*) AS total FROM Vehicles v {join_clause}{where_clause}")[0]['total']
     close_connection(conn)

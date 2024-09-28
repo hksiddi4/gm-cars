@@ -114,6 +114,7 @@ CREATE INDEX idx_vehicle_drivetrain_id ON Vehicles(drivetrain_id);
 CREATE INDEX idx_vehicle_color_id ON Vehicles(color_id);
 CREATE INDEX idx_vehicle_order_id ON Vehicles(order_id);
 CREATE INDEX idx_vehicle_dealer_id ON Vehicles(dealer_id);
+CREATE INDEX idx_vehicle_id ON SpecialEditions(vehicle_id);
 
 -- Insert Engine Types
 INSERT INTO Engines (engine_type) 
@@ -331,5 +332,11 @@ CROSS JOIN LATERAL (
 ) special_editions
 WHERE special_desc IS NOT NULL;
 select * from specialeditions;
+
+SELECT se.special_desc
+FROM SpecialEditions se
+JOIN Vehicles v ON se.vehicle_id = v.vehicle_id
+WHERE v.vin = '1G1FJ1R61R0100022';
+
 
 select * from staging_allGM;

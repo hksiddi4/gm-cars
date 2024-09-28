@@ -181,10 +181,10 @@ def sort_price():
     if country:
         conditions.append(f"country = '{country_map.get(country, 'USA')}'")
     if rpo:
-        join_clause += "    JOIN Options opt ON v.vehicle_id = opt.vehicle_id"
+        join_clause += "\n            JOIN Options opt ON v.vehicle_id = opt.vehicle_id"
         rpo_conditions = {
-            "WBL": ["v.model = 'CAMARO'", "trim NOT IN ('ZL1', '1LS')", "c.color_name IN ('BLACK', 'SUMMIT WHITE', 'SHARKSKIN METALLIC', 'SATIN STEEL GREY METALLIC')", f"opt.option_code = '{rpo}'"],
-            "B2E": ["v.model = 'CAMARO'", "trim IN ('2LT', '2SS', '3LT')", "v.modelYear != '2024'", "c.color_name IN ('BLACK', 'SUMMIT WHITE', 'RAPID BLUE', 'SHARKSKIN METALLIC', 'SATIN STEEL GREY METALLIC', 'SHOCK')", f"opt.option_code = '{rpo}'"],
+            # "WBL": ["v.model = 'CAMARO'", "trim NOT IN ('ZL1', '1LS')", "c.color_name IN ('BLACK', 'SUMMIT WHITE', 'SHARKSKIN METALLIC', 'SATIN STEEL GREY METALLIC')", f"opt.option_code = '{rpo}'"],
+            # "B2E": ["v.model = 'CAMARO'", "trim IN ('2LT', '2SS', '3LT')", "v.modelYear != '2024'", "c.color_name IN ('BLACK', 'SUMMIT WHITE', 'RAPID BLUE', 'SHARKSKIN METALLIC', 'SATIN STEEL GREY METALLIC', 'SHOCK')", f"opt.option_code = '{rpo}'"],
             "Z4B": ["v.modelYear = '2024'", "v.model = 'CAMARO'", "c.color_name IN ('PANTHER BLACK MATTE', 'PANTHER BLACK METALLIC')", f"opt.option_code = '{rpo}'"],
             "X56": ["modelYear = '2024'", "model = 'CAMARO'", "body = 'COUPE'", "trim = 'ZL1'", "transmission_type = 'M6'", "color_name = 'RIPTIDE BLUE METALLIC'", "msrp = '89185'", f"opt.option_code = '{rpo}'"],
             "A1Z": ["model = 'CAMARO'", "body = 'COUPE'", "trim = 'ZL1'", f"opt.option_code = '{rpo}'"],
@@ -212,7 +212,7 @@ def sort_price():
 
     def get_all_distinct_values():
         columns = ['modelYear', 'body', 'trim', 'engine_type', 'transmission_type', 'model', 'color_name', 'country']
-        sqlStatement = f"SELECT DISTINCT v.modelYear, v.model, v.body, v.trim, e.engine_type, t.transmission_type, c.color_name, o.country FROM vehicles v {join_clause}{where_clause}"
+        sqlStatement = f"SELECT DISTINCT v.modelYear, v.model, v.body, v.trim, e.engine_type, t.transmission_type, c.color_name, o.country FROM vehicles v {join_clause} \n            {where_clause}"
         conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
         results = execute_read_query(conn, sqlStatement)
         close_connection(conn)
@@ -259,9 +259,8 @@ def sort_price():
         {order_clause}
         LIMIT {limit} OFFSET {offset}
     """
-    print(select)
     viewTable = execute_read_query(conn, select)
-    total_items = execute_read_query(conn, f"SELECT COUNT(*) AS total FROM Vehicles v {join_clause}{where_clause}")[0]['total']
+    total_items = execute_read_query(conn, f"SELECT COUNT(*) AS total FROM Vehicles v {join_clause} {where_clause}")[0]['total']
     close_connection(conn)
 
     return jsonify({

@@ -115,6 +115,7 @@ CREATE INDEX idx_vehicle_color_id ON Vehicles(color_id);
 CREATE INDEX idx_vehicle_order_id ON Vehicles(order_id);
 CREATE INDEX idx_vehicle_dealer_id ON Vehicles(dealer_id);
 CREATE INDEX idx_vehicle_id ON SpecialEditions(vehicle_id);
+CREATE INDEX idx_vehicle_composite ON Vehicles(vin, modelYear, engine_id, transmission_id, drivetrain_id, color_id, order_id, dealer_id);
 
 -- Insert Engine Types
 INSERT INTO Engines (engine_type) 

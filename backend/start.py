@@ -95,7 +95,6 @@ def generate_url():
         (baseURL, color, 1, 9),
         (baseURL_int, colorInt, 1, 4)
     ]
-    
     for base_url, color_value, view, view_limit in url_data:
         while view <= view_limit:
             # gmds11 = 2500x1407 | gmds10 = 1920x1080 | gmds5 = 320x178 | gmds4 = 640x360 | gmds3 = 205x115 | gmds2 = 960x540 | gmds1 = 480x270

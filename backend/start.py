@@ -182,13 +182,14 @@ def sort_price():
     if rpo:
         join_clause += "\n            JOIN Options opt ON v.vehicle_id = opt.vehicle_id"
         rpo_conditions = {
-            # "WBL": ["v.model = 'CAMARO'", "trim NOT IN ('ZL1', '1LS')", "c.color_name IN ('BLACK', 'SUMMIT WHITE', 'SHARKSKIN METALLIC', 'SATIN STEEL GREY METALLIC')", f"opt.option_code = '{rpo}'"],
-            # "B2E": ["v.model = 'CAMARO'", "trim IN ('2LT', '2SS', '3LT')", "v.modelYear != '2024'", "c.color_name IN ('BLACK', 'SUMMIT WHITE', 'RAPID BLUE', 'SHARKSKIN METALLIC', 'SATIN STEEL GREY METALLIC', 'SHOCK')", f"opt.option_code = '{rpo}'"],
-            "Z4B": ["v.modelYear = '2024'", "v.model = 'CAMARO'", "c.color_name IN ('PANTHER BLACK MATTE', 'PANTHER BLACK METALLIC')", f"opt.option_code = '{rpo}'"],
+            "WBL": ["model = 'CAMARO'", "trim NOT IN ('ZL1', '1LS')", "color_name IN ('BLACK', 'SUMMIT WHITE', 'SHARKSKIN METALLIC', 'SATIN STEEL GRAY METALLIC')", f"opt.option_code = '{rpo}'"],
+            "B2E": ["model = 'CAMARO'", "trim IN ('2LT', '2SS', '3LT')", "modelYear != '2024'", "color_name IN ('BLACK', 'SUMMIT WHITE', 'RAPID BLUE', 'SHARKSKIN METALLIC', 'SATIN STEEL GRAY METALLIC', 'SHOCK')", f"opt.option_code = '{rpo}'"],
+            "Z4B": ["modelYear = '2024'", "model = 'CAMARO'", "color_name IN ('PANTHER BLACK MATTE', 'PANTHER BLACK METALLIC')", f"opt.option_code = '{rpo}'"],
             "X56": ["modelYear = '2024'", "model = 'CAMARO'", "body = 'COUPE'", "trim = 'ZL1'", "transmission_type = 'M6'", "color_name = 'RIPTIDE BLUE METALLIC'", "msrp = '89185'", f"opt.option_code = '{rpo}'"],
             "A1Z": ["model = 'CAMARO'", "body = 'COUPE'", "trim = 'ZL1'", f"opt.option_code = '{rpo}'"],
             "A1Y": ["model = 'CAMARO'", "body = 'COUPE'", "trim in ('1SS', '2SS')", f"opt.option_code = '{rpo}'"],
             "A1X": ["modelYear in ('2020', '2021')", "model = 'CAMARO'", "body = 'COUPE'", "trim in ('1LT', '2LT', '3LT')", f"opt.option_code = '{rpo}'"],
+            "PEH": ["modelYear = '2020'", "model = 'CAMARO'", "body = 'COUPE'", "trim in ('2SS', 'ZL1')", "transmission_type = 'A10'", "color_name = 'BLACK'", f"opt.option_code = '{rpo}'"],
             "Z51": ["model = 'CORVETTE STINGRAY'", f"opt.option_code = '{rpo}'"],
             "ZCR": ["model = 'CORVETTE STINGRAY'", "modelYear = '2022'", "trim = '3LT'", "(color_name = 'HYPERSONIC GRAY METALLIC' OR color_name = 'ACCELERATE YELLOW METALLIC')", f"opt.option_code = '{rpo}'"],
             "Y70": ["model in ('CORVETTE STINGRAY', 'CORVETTE Z06')", "modelYear = '2023'", "trim in ('3LT', '3LZ')", "(color_name = 'WHITE PEARL METALLIC TRICOAT' OR color_name = 'CARBON FLASH METALLIC')", f"opt.option_code = '{rpo}'"],
@@ -236,7 +237,7 @@ def sort_price():
     color_list = distinct_values['color_name']
     country_list = distinct_values['country']
 
-    if rpo in ["Z4B", "X56"] and order not in ["ASC", "DESC"]:
+    if rpo in ["Z4B", "X56", "PEH"] and order not in ["ASC", "DESC"]:
         order_clause = "ORDER BY SUBSTRING(vin, -6)"
     elif order in ["ASC", "DESC"]:
         order_clause = f"ORDER BY msrp {'ASC' if order == 'ASC' else 'DESC'}"
@@ -259,7 +260,7 @@ def sort_price():
         LIMIT {limit} OFFSET {offset}
     """
     viewTable = execute_read_query(conn, select)
-    total_items = execute_read_query(conn, f"SELECT COUNT(*) AS total FROM Vehicles v {join_clause} {where_clause}")[0]['total']
+    total_items = execute_read_query(conn, f"SELECT COUNT(DISTINCT v.vehicle_id) AS total FROM Vehicles v {join_clause} {where_clause}")[0]['total']
     close_connection(conn)
 
     return jsonify({

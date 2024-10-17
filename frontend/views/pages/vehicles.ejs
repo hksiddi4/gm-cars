@@ -42,15 +42,16 @@
                             <option value="">Select Package/Option</option>
                             <option value="Z4B" <% if (selectedRPO === 'Z4B') { %>selected<% } %>>Camaro Collector's Edition</option>
                             <option value="X56" <% if (selectedRPO === 'X56') { %>selected<% } %>>Camaro Garage 56 Special Edition</option>
+                            <option value="WBL" <% if (selectedRPO === 'WBL') { %>selected<% } %>>Redline Edition</option>
+                            <option value="B2E" <% if (selectedRPO === 'B2E') { %>selected<% } %>>Shock and Steel Edition</option>
+                            <option value="PEH" <% if (selectedRPO === 'PEH') { %>selected<% } %>>Hertz / Hendrick Motorsports Edition</option>
                             <option value="A1Z" <% if (selectedRPO === 'A1Z') { %>selected<% } %>>ZL1 1LE Extreme Track Performance Package</option>
                             <option value="A1Y" <% if (selectedRPO === 'A1Y') { %>selected<% } %>>SS 1LE Track Performance Package</option>
                             <option value="A1X" <% if (selectedRPO === 'A1X') { %>selected<% } %>>LT 1LE Track Performance Package</option>
-                            <option value="WBL" <% if (selectedRPO === 'WBL') { %>selected<% } %>>Redline Edition</option>
-                            <option value="B2E" <% if (selectedRPO === 'B2E') { %>selected<% } %>>Shock and Steel Edition</option>
-                            <option value="Z51" <% if (selectedRPO === 'Z51') { %>selected<% } %>>Z51 Performance Package</option>
                             <option value="ZCR" <% if (selectedRPO === 'ZCR') { %>selected<% } %>>IMSA GTLM Championship C8.R Edition</option>
                             <option value="Y70" <% if (selectedRPO === 'Y70') { %>selected<% } %>>Corvette Stingray 70th Anniversary Edition</option>
                             <option value="Z07" <% if (selectedRPO === 'Z07') { %>selected<% } %>>Z07 Performance Package</option>
+                            <option value="Z51" <% if (selectedRPO === 'Z51') { %>selected<% } %>>Z51 Performance Package</option>
                             <option value="ZLE" <% if (selectedRPO === 'ZLE') { %>selected<% } %>>CT4-V Blackwing Watkins Glen IMSA Edition</option>
                             <option value="ZLD" <% if (selectedRPO === 'ZLD') { %>selected<% } %>>CT4-V Blackwing Sebring IMSA Edition</option>
                             <option value="ZLG" <% if (selectedRPO === 'ZLG') { %>selected<% } %>>CT4-V Blackwing Road Atlanta IMSA Edition</option>
@@ -210,14 +211,12 @@
                  <div class="pagination-wrapper">
                     <nav aria-label="Page navigation">
                         <ul class="pagination">
-                            <!-- First Page -->
                             <% if (currentPage > 1) { %>
+                                <!-- First Page -->
                                 <li class="page-item">
                                     <a class="page-link" href="?page=1&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&trim=<% selectedTrim %>&engine=<% selectedEngine %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&body=<%= selectedBody %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>">First</a>
                                 </li>
-                            <% } %>
-                            <!-- Previous Page -->
-                            <% if (currentPage > 1) { %>
+                                <!-- Previous Page -->
                                 <li class="page-item">
                                     <a class="page-link" href="?page=<%= currentPage - 1 %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&trim=<% selectedTrim %>&engine=<% selectedEngine %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&body=<%= selectedBody %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>">Previous</a>
                                 </li>
@@ -241,14 +240,12 @@
                                     <a class="page-link" href="?page=<%= i %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&trim=<% selectedTrim %>&engine=<% selectedEngine %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&body=<%= selectedBody %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>"><%= i %></a>
                                 </li>
                             <% } %>
-                            <!-- Next Page -->
                             <% if (currentPage < totalPages) { %>
+                                <!-- Next Page -->
                                 <li class="page-item">
                                     <a class="page-link" href="?page=<%= currentPage + 1 %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&trim=<% selectedTrim %>&engine=<% selectedEngine %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&body=<%= selectedBody %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>">Next</a>
                                 </li>
-                            <% } %>
-                            <!-- Last Page -->
-                            <% if (currentPage < totalPages) { %>
+                                <!-- Last Page -->
                                 <li class="page-item">
                                     <a class="page-link" href="?page=<%= totalPages %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&trim=<% selectedTrim %>&engine=<% selectedEngine %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&body=<%= selectedBody %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>">Last</a>
                                 </li>

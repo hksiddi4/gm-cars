@@ -1,3 +1,4 @@
+start transaction;
 -- staging_allGM
 CREATE TABLE IF NOT EXISTS staging_allGM (
 	vin varchar(17) PRIMARY KEY,
@@ -47,6 +48,7 @@ CREATE TABLE Colors (
 SELECT * FROM colors;
 
 -- Dealers Table with sitedealer_code
+DROP TABLE Dealers;
 CREATE TABLE Dealers (
     dealer_id SERIAL PRIMARY KEY,
     dealer_name VARCHAR(255),
@@ -87,8 +89,10 @@ CREATE TABLE Vehicles (
     dealer_id INTEGER REFERENCES Dealers(dealer_id),
     order_id INTEGER REFERENCES Orders(order_id)
 );
+SELECT * FROM vehicles;
 
 -- Options Table
+DROP TABLE Options;
 CREATE TABLE Options (
     option_id SERIAL PRIMARY KEY,
     vehicle_id INTEGER REFERENCES Vehicles(vehicle_id),
@@ -96,6 +100,7 @@ CREATE TABLE Options (
 );
 
 -- Special Editions Table
+DROP TABLE SpecialEditions;
 CREATE TABLE SpecialEditions (
 	special_id SERIAL PRIMARY KEY,
     vehicle_id INTEGER REFERENCES Vehicles(vehicle_id),
@@ -103,10 +108,31 @@ CREATE TABLE SpecialEditions (
 );
 
 -- Indexes for faster querying
+-- Composite Index for Frequent Filtering and Grouping
+CREATE INDEX idx_vehicle_common
+ON Vehicles(modelYear, model, body, trim, engine_id, transmission_id, drivetrain_id, color_id, msrp, order_id, dealer_id);
+-- Index for VIN (unique and commonly queried)
 CREATE INDEX idx_vehicle_vin ON Vehicles(vin);
+-- Index for SpecialEditions table (left join optimization and GROUP_CONCAT)
+CREATE INDEX idx_special_edition_vehicle
+ON SpecialEditions(vehicle_id, special_desc);
+-- Index for Sorting and Filtering on modelYear, engine_id, and msrp
+CREATE INDEX idx_vehicle_filter_sort
+ON Vehicles(modelYear, engine_id, msrp, model);
+-- Foreign Key Indexes for Faster Joins in the Vehicles table
+CREATE INDEX idx_vehicle_engine_id ON Vehicles(engine_id);
+CREATE INDEX idx_vehicle_transmission_id ON Vehicles(transmission_id);
+CREATE INDEX idx_vehicle_drivetrain_id ON Vehicles(drivetrain_id);
+CREATE INDEX idx_vehicle_color_id ON Vehicles(color_id);
+CREATE INDEX idx_vehicle_order_id ON Vehicles(order_id);
+CREATE INDEX idx_vehicle_dealer_id ON Vehicles(dealer_id);
+-- Orders Table (index on creation_date for faster date-based queries)
 CREATE INDEX idx_order_creation_date ON Orders(creation_date);
-CREATE INDEX idx_option_vehicle_id ON options(vehicle_id);
-CREATE INDEX idx_option_code ON options(option_code);
+-- Options Table (composite index for vehicle_id and option_code)
+CREATE INDEX idx_options_vehicle_code ON Options(vehicle_id, option_code);
+
+
+CREATE INDEX idx_vehicle_vin ON Vehicles(vin);
 CREATE INDEX idx_vehicle_modelYear ON Vehicles(modelYear);
 CREATE INDEX idx_vehicle_engine_id ON Vehicles(engine_id);
 CREATE INDEX idx_vehicle_transmission_id ON Vehicles(transmission_id);
@@ -114,102 +140,30 @@ CREATE INDEX idx_vehicle_drivetrain_id ON Vehicles(drivetrain_id);
 CREATE INDEX idx_vehicle_color_id ON Vehicles(color_id);
 CREATE INDEX idx_vehicle_order_id ON Vehicles(order_id);
 CREATE INDEX idx_vehicle_dealer_id ON Vehicles(dealer_id);
-CREATE INDEX idx_vehicle_id ON SpecialEditions(vehicle_id);
 CREATE INDEX idx_vehicle_composite ON Vehicles(vin, modelYear, engine_id, transmission_id, drivetrain_id, color_id, order_id, dealer_id);
+CREATE INDEX idx_order_creation_date ON Orders(creation_date);
+CREATE INDEX idx_option_vehicle_id ON options(vehicle_id);
+CREATE INDEX idx_option_code ON options(option_code);
+CREATE INDEX idx_vehicle_id ON SpecialEditions(vehicle_id);
 
 -- Insert Engine Types
-INSERT INTO Engines (engine_type) 
-VALUES 
-('6.2L (376 ci) V8 DI'), 
-('6.2L SUPERCHARGED V8'), 
-('3.6L V6, DI, VVT'), 
-('2.0L Turbo, 4-cylinder, SIDI, VVT'), 
-('3.0L TWIN TURBO V6, SIDI'), 
-('2.7L TURBO'), 
-('2.0L TURBO, 4-CYL, SIDI'), 
-('3.6L V6 TWIN TURBO SIDI, DOHC, VVT'), 
-('6.2L V8 DI'), 
-('5.5L V8 DI');
-SELECT * FROM Engines;
+INSERT INTO engines (engine_type)
+SELECT DISTINCT vehicleEngine FROM staging_allGM;
+SELECT * FROM vehicleEngine;
 
 -- Insert Transmission Types
-INSERT INTO transmissions (transmission_type) 
-VALUES 
-('A10'), 
-('M6'), 
-('A8'), 
-('DCT8');
+INSERT INTO transmissions (transmission_type)
+SELECT DISTINCT transmission FROM staging_allGM;
 SELECT * FROM transmissions;
 
 -- Insert Drivetrain Types
-INSERT INTO drivetrains (drivetrain_type) 
-VALUES 
-('RWD'), 
-('AWD');
+INSERT INTO drivetrains (drivetrain_type)
+SELECT DISTINCT drivetrain FROM staging_allGM;
 SELECT * FROM drivetrains;
 
 -- Insert Colors
-INSERT INTO colors (color_name) 
-VALUES 
-('VIVID ORANGE METALLIC'),
-('SUMMIT WHITE'),
-('NITRO YELLOW METALLIC'),
-('PANTHER BLACK MATTE'),
-('RED HOT'),
-('BLACK'),
-('RADIANT RED TINTCOAT'),
-('SHARKSKIN METALLIC'),
-('RIVERSIDE BLUE METALLIC'),
-('PANTHER BLACK METALLIC'),
-('RIPTIDE BLUE METALLIC'),
-('SATIN STEEL GREY METALLIC'),
-('SHOCK'),
-('CRUSH'),
-('SHADOW GRAY METALLIC'),
-('WILD CHERRY TINTCOAT'),
-('GARNET RED TINTCOAT'),
-('RALLY GREEN METALLIC'),
-('RAPID BLUE'),
-('BLACK RAVEN'),
-('CRYSTAL WHITE TRICOAT'),
-('MIDNIGHT STEEL METALLIC'),
-('WAVE METALLIC'),
-('ARGENT SILVER METALLIC'),
-('VELOCITY RED'),
-('CYBER YELLOW METALLIC'),
-('COASTAL BLUE METALLIC'),
-('BLACK DIAMOND TRICOAT'),
-('MIDNIGHT SKY METALLIC'),
-('MERCURY SILVER METALLIC'),
-('RIFT METALLIC'),
-('BLAZE METALLIC'),
-('ELECTRIC BLUE'),
-('MAVERICK NOIR FROST'),
-('INFRARED TINTCOAT'),
-('SATIN STEEL METALLIC'),
-('SHADOW METALLIC'),
-('GARNET METALLIC'),
-('DARK EMERALD FROST'),
-('EVERGREEN METALLIC'),
-('DARK MOON METALLIC'),
-('RED OBSESSION TINTCOAT'),
-('ROYAL SPICE METALLIC'),
-('SEBRING ORANGE'),
-('ELKHART LAKE BLUE METALLIC'),
-('ARCTIC WHITE'),
-('TORCH RED'),
-('CERAMIC MATRIX GRAY METALLIC'),
-('ZEUS BRONZE METALLIC'),
-('ACCELERATE YELLOW METALLIC'),
-('LONG BEACH RED METALLIC'),
-('BLADE SILVER METALLIC'),
-('SILVER FLARE METALLIC'),
-('RED MIST METALLIC TINTCOAT'),
-('HYPERSONIC GRAY METALLIC'),
-('AMPLIFY ORANGE TINTCOAT'),
-('CAFFEINE METALLIC'),
-('WHITE PEARL METALLIC TRICOAT'),
-('CARBON FLASH METALLIC');
+INSERT INTO colors (color_name)
+SELECT DISTINCT exterior_color FROM staging_allGM;
 SELECT * FROM colors;
 
 INSERT INTO Dealers (dealer_name, location, sitedealer_code)
@@ -218,15 +172,27 @@ SELECT DISTINCT
     location, 
     JSON_UNQUOTE(JSON_EXTRACT(allJson, '$.sitedealer_code')) AS sitedealer_code
 FROM staging_allGM;
-SELECT * FROM DEALERS;
+SELECT * FROM DEALERS ORDER BY SITEDEALER_CODE;
+
+SELECT
+    sitedealer_code,
+    COUNT(*) AS occurrences
+FROM Dealers GROUP BY sitedealer_code HAVING occurrences > 1;
+
+SELECT * FROM Dealers WHERE sitedealer_code = '09915';
+
+SELECT v.* 
+FROM Vehicles v
+JOIN Dealers d ON v.dealer_id = d.dealer_id
+WHERE d.sitedealer_code = '16173';
 
 -- Insert MMC Codes
-INSERT INTO MMC_Codes (mmc_code)
+INSERT IGNORE INTO MMC_Codes (mmc_code)
 SELECT DISTINCT JSON_UNQUOTE(JSON_EXTRACT(allJson, '$.mmc_code')) AS mmc_code FROM staging_allGM;
 SELECT * FROM MMC_CODES;
 
 -- Insert orders
-INSERT INTO Orders (order_number, creation_date, mmc_code_id, sell_source, country)
+INSERT IGNORE INTO Orders (order_number, creation_date, mmc_code_id, sell_source, country)
 SELECT 
     ordernum, 
     CASE
@@ -266,8 +232,10 @@ SELECT
     COUNT(*) AS occurrences
 FROM staging_allgm GROUP BY order_number HAVING occurrences > 1;
 
+SELECT COUNT(vin) FROM vehicles;
+
 -- Insert Vehicles
-INSERT INTO Vehicles (vin, modelYear, model, body, trim, engine_id, transmission_id, drivetrain_id, color_id, msrp, dealer_id, order_id)
+INSERT IGNORE INTO Vehicles (vin, modelYear, model, body, trim, engine_id, transmission_id, drivetrain_id, color_id, msrp, dealer_id, order_id)
 SELECT vin, modelYear, model, body, trim,
     (SELECT engine_id FROM Engines WHERE engine_type = vehicleEngine) AS engine_id,
     (SELECT transmission_id FROM Transmissions WHERE transmission_type = transmission) AS transmission_id,
@@ -280,7 +248,8 @@ FROM staging_allGM;
 select * from vehicles;
 
 -- Insert Options with error handling
-INSERT INTO Options (vehicle_id, option_code)
+SET GLOBAL innodb_buffer_pool_size = 10 * 1024 * 1024 * 1024;  -- 10GB in bytes
+INSERT IGNORE INTO Options (vehicle_id, option_code)
 SELECT 
     v.vehicle_id,
     opt.option_value
@@ -292,7 +261,7 @@ CROSS JOIN JSON_TABLE(
 JOIN Vehicles v ON v.vin = s.vin;
 select * from options;
 
-INSERT INTO SpecialEditions (vehicle_id, special_desc)
+INSERT IGNORE INTO SpecialEditions (vehicle_id, special_desc)
 SELECT vehicle_id, special_desc
 FROM (
     SELECT v.vehicle_id, 

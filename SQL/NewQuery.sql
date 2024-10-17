@@ -116,13 +116,22 @@ GROUP BY v.vin, v.modelYear, v.model, v.body, v.trim,
 
 LIMIT 100 OFFSET 0;
 
-
-SELECT DISTINCT v.modelYear, v.model, v.body, v.trim, e.engine_type, t.transmission_type, c.color_name, o.country FROM vehicles v 
+explain
+        SELECT v.vin, v.modelYear, v.model, v.body, v.trim,
+            e.engine_type, t.transmission_type, d.drivetrain_type,
+            c.color_name, v.msrp, o.country, dl.dealer_name,
+            GROUP_CONCAT(DISTINCT se.special_desc ORDER BY se.special_desc ASC SEPARATOR ', ') AS special_desc
+        FROM Vehicles v
             JOIN Engines e ON v.engine_id = e.engine_id
             JOIN Transmissions t ON v.transmission_id = t.transmission_id
             JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id
             JOIN Colors c ON v.color_id = c.color_id
             JOIN Orders o ON v.order_id = o.order_id
             JOIN Dealers dl ON v.dealer_id = dl.dealer_id
-            JOIN Options opt ON v.vehicle_id = opt.vehicle_id
-            WHERE v.modelYear = '2024' AND v.model = 'CAMARO' AND c.color_name IN ('PANTHER BLACK MATTE', 'PANTHER BLACK METALLIC') AND opt.option_code = 'Z4B';
+            LEFT JOIN SpecialEditions se ON v.vehicle_id = se.vehicle_id
+        WHERE trim = 'ZL1'
+        GROUP BY v.vin, v.modelYear, v.model, v.body, v.trim,
+                e.engine_type, t.transmission_type, d.drivetrain_type,
+                c.color_name, v.msrp, o.country, dl.dealer_name
+
+        LIMIT 100 OFFSET 0;

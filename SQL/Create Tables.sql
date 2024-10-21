@@ -22,65 +22,73 @@ SELECT * FROM staging_allGM;
 -- Engines Table
 CREATE TABLE Engines (
     engine_id SERIAL PRIMARY KEY,
-    engine_type VARCHAR(255) UNIQUE
+    engine_type VARCHAR(48) UNIQUE
 );
 SELECT * FROM Engines;
+DROP TABLE engines;
 
 -- Transmissions Table
 CREATE TABLE Transmissions (
     transmission_id SERIAL PRIMARY KEY,
-    transmission_type VARCHAR(255) UNIQUE
+    transmission_type VARCHAR(4) UNIQUE
 );
 SELECT * FROM transmissions;
+DROP TABLE transmissions;
 
 -- Drivetrains Table
 CREATE TABLE Drivetrains (
     drivetrain_id SERIAL PRIMARY KEY,
-    drivetrain_type VARCHAR(255) UNIQUE
+    drivetrain_type VARCHAR(3) UNIQUE
 );
 SELECT * FROM drivetrains;
+DROP TABLE drivetrains;
 
 -- Colors Table
 CREATE TABLE Colors (
     color_id SERIAL PRIMARY KEY,
-    color_name VARCHAR(255) UNIQUE
+    color_name VARCHAR(32) UNIQUE
 );
 SELECT * FROM colors;
+DROP TABLE colors;
 
 -- Dealers Table with sitedealer_code
-DROP TABLE Dealers;
 CREATE TABLE Dealers (
     dealer_id SERIAL PRIMARY KEY,
-    dealer_name VARCHAR(255),
-    location VARCHAR(255),
-    sitedealer_code VARCHAR(50)
+    dealer_name VARCHAR(64),
+    location VARCHAR(64),
+    sitedealer_code VARCHAR(5)
 );
 SELECT * FROM dealers;
+DROP TABLE dealers;
 
 -- MMC Codes Table
 CREATE TABLE MMC_Codes (
     mmc_code_id SERIAL PRIMARY KEY,
-    mmc_code VARCHAR(50) UNIQUE
+    mmc_code VARCHAR(5) UNIQUE
 );
+SELECT * FROM mmc_codes;
+DROP TABLE mmc_codes;
 
 -- Orders Table
 CREATE TABLE Orders (
     order_id SERIAL PRIMARY KEY,
-    order_number VARCHAR(50) UNIQUE,
+    order_number VARCHAR(6) UNIQUE,
     creation_date DATE,
     mmc_code_id INTEGER REFERENCES MMC_Codes(mmc_code_id),
-    sell_source VARCHAR(50),
-    country VARCHAR(50)
+    sell_source VARCHAR(2),
+    country VARCHAR(8)
 );
+SELECT * FROM orders;
+DROP TABLE orders;
 
 -- Vehicles Table
 CREATE TABLE Vehicles (
     vehicle_id SERIAL PRIMARY KEY,
     vin VARCHAR(17) UNIQUE,
     modelYear INTEGER,
-    model VARCHAR(255),
-    body VARCHAR(255),
-    trim VARCHAR(255),
+    model VARCHAR(32),
+    body VARCHAR(16),
+    trim VARCHAR(32),
     engine_id INTEGER REFERENCES Engines(engine_id),
     transmission_id INTEGER REFERENCES Transmissions(transmission_id),
     drivetrain_id INTEGER REFERENCES Drivetrains(drivetrain_id),
@@ -90,27 +98,31 @@ CREATE TABLE Vehicles (
     order_id INTEGER REFERENCES Orders(order_id)
 );
 SELECT * FROM vehicles;
+DROP TABLE vehicles;
 
 -- Options Table
-DROP TABLE Options;
 CREATE TABLE Options (
     option_id SERIAL PRIMARY KEY,
     vehicle_id INTEGER REFERENCES Vehicles(vehicle_id),
-    option_code VARCHAR(50)
+    option_code VARCHAR(3),
+    UNIQUE (vehicle_id, option_code)
 );
+DROP TABLE Options;
 
 -- Special Editions Table
-DROP TABLE SpecialEditions;
 CREATE TABLE SpecialEditions (
 	special_id SERIAL PRIMARY KEY,
     vehicle_id INTEGER REFERENCES Vehicles(vehicle_id),
-    special_desc VARCHAR(255)
+    special_desc VARCHAR(64)
 );
+DROP TABLE specialeditions;
 
 -- Indexes for faster querying
 -- Composite Index for Frequent Filtering and Grouping
-CREATE INDEX idx_vehicle_common
-ON Vehicles(modelYear, model, body, trim, engine_id, transmission_id, drivetrain_id, color_id, msrp, order_id, dealer_id);
+CREATE INDEX idx_vehicle_model_info
+ON Vehicles(modelYear, model, body, trim);
+CREATE INDEX idx_vehicle_performance_info
+ON Vehicles(engine_id, transmission_id, drivetrain_id, color_id, msrp, order_id, dealer_id);
 -- Index for VIN (unique and commonly queried)
 CREATE INDEX idx_vehicle_vin ON Vehicles(vin);
 -- Index for SpecialEditions table (left join optimization and GROUP_CONCAT)
@@ -130,40 +142,37 @@ CREATE INDEX idx_vehicle_dealer_id ON Vehicles(dealer_id);
 CREATE INDEX idx_order_creation_date ON Orders(creation_date);
 -- Options Table (composite index for vehicle_id and option_code)
 CREATE INDEX idx_options_vehicle_code ON Options(vehicle_id, option_code);
+CREATE INDEX idx_vehicle_distinct_fields
+ON Vehicles(modelYear, model, body, `trim`, engine_id, transmission_id, color_id, order_id);
+CREATE INDEX idx_special_editions ON SpecialEditions(vehicle_id, special_desc);
 
 
-CREATE INDEX idx_vehicle_vin ON Vehicles(vin);
 CREATE INDEX idx_vehicle_modelYear ON Vehicles(modelYear);
-CREATE INDEX idx_vehicle_engine_id ON Vehicles(engine_id);
-CREATE INDEX idx_vehicle_transmission_id ON Vehicles(transmission_id);
-CREATE INDEX idx_vehicle_drivetrain_id ON Vehicles(drivetrain_id);
-CREATE INDEX idx_vehicle_color_id ON Vehicles(color_id);
-CREATE INDEX idx_vehicle_order_id ON Vehicles(order_id);
-CREATE INDEX idx_vehicle_dealer_id ON Vehicles(dealer_id);
 CREATE INDEX idx_vehicle_composite ON Vehicles(vin, modelYear, engine_id, transmission_id, drivetrain_id, color_id, order_id, dealer_id);
-CREATE INDEX idx_order_creation_date ON Orders(creation_date);
-CREATE INDEX idx_option_vehicle_id ON options(vehicle_id);
-CREATE INDEX idx_option_code ON options(option_code);
-CREATE INDEX idx_vehicle_id ON SpecialEditions(vehicle_id);
 
 -- Insert Engine Types
 INSERT INTO engines (engine_type)
-SELECT DISTINCT vehicleEngine FROM staging_allGM;
-SELECT * FROM vehicleEngine;
+SELECT DISTINCT vehicleEngine
+FROM staging_allGM
+WHERE vehicleEngine NOT IN (SELECT engine_type FROM engines);
+SELECT * FROM engines;
 
 -- Insert Transmission Types
 INSERT INTO transmissions (transmission_type)
-SELECT DISTINCT transmission FROM staging_allGM;
+SELECT DISTINCT transmission FROM staging_allGM
+WHERE transmission NOT IN (SELECT transmission_type FROM transmissions);
 SELECT * FROM transmissions;
 
 -- Insert Drivetrain Types
 INSERT INTO drivetrains (drivetrain_type)
-SELECT DISTINCT drivetrain FROM staging_allGM;
+SELECT DISTINCT drivetrain FROM staging_allGM
+WHERE drivetrain NOT IN (SELECT drivetrain_type FROM drivetrains);
 SELECT * FROM drivetrains;
 
 -- Insert Colors
 INSERT INTO colors (color_name)
-SELECT DISTINCT exterior_color FROM staging_allGM;
+SELECT DISTINCT exterior_color FROM staging_allGM
+WHERE exterior_color NOT IN (SELECT color_name FROM colors);
 SELECT * FROM colors;
 
 INSERT INTO Dealers (dealer_name, location, sitedealer_code)
@@ -171,7 +180,9 @@ SELECT DISTINCT
     dealer, 
     location, 
     JSON_UNQUOTE(JSON_EXTRACT(allJson, '$.sitedealer_code')) AS sitedealer_code
-FROM staging_allGM;
+FROM staging_allGM
+WHERE (dealer, location, JSON_UNQUOTE(JSON_EXTRACT(allJson, '$.sitedealer_code'))) 
+      NOT IN (SELECT dealer_name, location, sitedealer_code FROM Dealers);
 SELECT * FROM DEALERS ORDER BY SITEDEALER_CODE;
 
 SELECT
@@ -188,7 +199,9 @@ WHERE d.sitedealer_code = '16173';
 
 -- Insert MMC Codes
 INSERT IGNORE INTO MMC_Codes (mmc_code)
-SELECT DISTINCT JSON_UNQUOTE(JSON_EXTRACT(allJson, '$.mmc_code')) AS mmc_code FROM staging_allGM;
+SELECT DISTINCT REPLACE(JSON_UNQUOTE(JSON_EXTRACT(allJson, '$.mmc_code')), ' ', '') AS mmc_code 
+FROM staging_allGM
+WHERE REPLACE(JSON_UNQUOTE(JSON_EXTRACT(allJson, '$.mmc_code')), ' ', '') NOT IN (SELECT mmc_code FROM MMC_Codes);
 SELECT * FROM MMC_CODES;
 
 -- Insert orders
@@ -209,30 +222,30 @@ SELECT
         ELSE 'USA'
     END AS country
 FROM staging_allGM
-WHERE ordernum IS NOT NULL AND ordernum != '';
+WHERE ordernum IS NOT NULL AND ordernum != '' AND ordernum NOT IN (SELECT order_number FROM Orders);
 SELECT * FROM ORDERS;
 
 -- Find/edit duplicates
-UPDATE staging_allgm
-SET
-TRIM = 'LUXURY',
-VEHICLEENGINE = '2.0L TURBO, 4-CYL, SIDI',
-DRIVETRAIN = 'RWD',
-EXTERIOR_COLOR = 'BLACK RAVEN',
-MSRP = '41710',
-DEALER = 'CENTRAL CADILLAC',
-LOCATION = 'JONESBORO, AR 72403-6600',
-ORDERNUM = 'XXKDJ3',
-allJson = '{"maker":"CADILLAC", "model_year":"2021", "mmc_code":"6DB79", "vin":"1G6DW5RK1M0108427", "sitedealer_code":"17270", "sell_source": "12", "order_number": "XXKDJ3", "creation_date":"10/9/2020", "Options":["AEF", "AER", "AHP", "AJC", "AJW", "AKP", "AL0", "AL9", "AM9", "AQ9", "ATH", "AT8", "AT9", "AVN", "AXG", "AXJ", "AYG", "A2X", "A7J", "BTV", "BYO", "B34", "B35", "B56", "CE1", "CJ2", "C3U", "DEG", "DWK", "D31", "D75", "EF7", "EPH", "E22", "E28", "FE2", "FE9", "FJW", "GBA", "HRD", "HS1", "H2G", "IOT", "JJ2", "JL9", "JM8", "J21", "J77", "KA1", "KBC", "KD4", "KI3", "KL9", "KPA", "KRV", "K12", "K34", "K4C", "LAL", "LSY", "MAH", "MCR", "MDE", "MHS", "NB9", "NE8", "NP5", "NTB", "N37", "PCM", "PPW", "QBC", "Q81", "RWL", "RYT", "R6R", "R7E", "R8R", "R9N", "SLM", "S08", "TDM", "TFK", "TTW", "T4L", "T8Z", "UDD", "UEU", "UE1", "UGC", "UGE", "UG1", "UHY", "UIT", "UJN", "UKJ", "UMN", "UQP", "USS", "UVB", "U2K", "U2L", "U80", "VHM", "VH9", "VK3", "VLI", "VRF", "VRG", "VRH", "VRJ", "VRK", "VRL", "VRM", "VRN", "VRR", "VTI", "VT7", "VV4", "V76", "V8D", "WMU", "XL8", "YM8", "Y19", "Y26", "Y5V", "0ST", "1NF", "1SB", "1SZ", "2NF", "2ST", "4AA", "5A7", "5FC", "6X1", "7X1", "719", "8X2", "9L3", "9X2"]}'
-WHERE vin = '1G6DW5RK1M0108427';
-SELECT * FROM staging_allgm WHERE JSON_UNQUOTE(JSON_EXTRACT(allJson, '$.order_number')) = 'ZDMJR6';
+	SELECT
+		JSON_UNQUOTE(JSON_EXTRACT(allJson, '$.order_number')) AS order_number,
+		COUNT(*) AS occurrences
+	FROM staging_allgm GROUP BY order_number HAVING occurrences > 1;
 
-SELECT
-    JSON_UNQUOTE(JSON_EXTRACT(allJson, '$.order_number')) AS order_number,
-    COUNT(*) AS occurrences
-FROM staging_allgm GROUP BY order_number HAVING occurrences > 1;
+	SELECT COUNT(vin) FROM vehicles;
 
-SELECT COUNT(vin) FROM vehicles;
+	UPDATE staging_allgm
+	SET
+	TRIM = 'LUXURY',
+	VEHICLEENGINE = '2.0L TURBO, 4-CYL, SIDI',
+	DRIVETRAIN = 'RWD',
+	EXTERIOR_COLOR = 'BLACK RAVEN',
+	MSRP = '41710',
+	DEALER = 'CENTRAL CADILLAC',
+	LOCATION = 'JONESBORO, AR 72403-6600',
+	ORDERNUM = 'XXKDJ3',
+	allJson = '{"maker":"CADILLAC", "model_year":"2021", "mmc_code":"6DB79", "vin":"1G6DW5RK1M0108427", "sitedealer_code":"17270", "sell_source": "12", "order_number": "XXKDJ3", "creation_date":"10/9/2020", "Options":["AEF", "AER", "AHP", "AJC", "AJW", "AKP", "AL0", "AL9", "AM9", "AQ9", "ATH", "AT8", "AT9", "AVN", "AXG", "AXJ", "AYG", "A2X", "A7J", "BTV", "BYO", "B34", "B35", "B56", "CE1", "CJ2", "C3U", "DEG", "DWK", "D31", "D75", "EF7", "EPH", "E22", "E28", "FE2", "FE9", "FJW", "GBA", "HRD", "HS1", "H2G", "IOT", "JJ2", "JL9", "JM8", "J21", "J77", "KA1", "KBC", "KD4", "KI3", "KL9", "KPA", "KRV", "K12", "K34", "K4C", "LAL", "LSY", "MAH", "MCR", "MDE", "MHS", "NB9", "NE8", "NP5", "NTB", "N37", "PCM", "PPW", "QBC", "Q81", "RWL", "RYT", "R6R", "R7E", "R8R", "R9N", "SLM", "S08", "TDM", "TFK", "TTW", "T4L", "T8Z", "UDD", "UEU", "UE1", "UGC", "UGE", "UG1", "UHY", "UIT", "UJN", "UKJ", "UMN", "UQP", "USS", "UVB", "U2K", "U2L", "U80", "VHM", "VH9", "VK3", "VLI", "VRF", "VRG", "VRH", "VRJ", "VRK", "VRL", "VRM", "VRN", "VRR", "VTI", "VT7", "VV4", "V76", "V8D", "WMU", "XL8", "YM8", "Y19", "Y26", "Y5V", "0ST", "1NF", "1SB", "1SZ", "2NF", "2ST", "4AA", "5A7", "5FC", "6X1", "7X1", "719", "8X2", "9L3", "9X2"]}'
+	WHERE vin = '1G6DW5RK1M0108427';
+	SELECT * FROM staging_allgm WHERE JSON_UNQUOTE(JSON_EXTRACT(allJson, '$.order_number')) = 'ZDMJR6';
 
 -- Insert Vehicles
 INSERT IGNORE INTO Vehicles (vin, modelYear, model, body, trim, engine_id, transmission_id, drivetrain_id, color_id, msrp, dealer_id, order_id)
@@ -244,7 +257,8 @@ SELECT vin, modelYear, model, body, trim,
     msrp,
     (SELECT dealer_id FROM Dealers WHERE dealer_name = dealer AND location = location AND sitedealer_code = JSON_UNQUOTE(JSON_EXTRACT(allJson, '$.sitedealer_code')) LIMIT 1) AS dealer_id,
     (SELECT order_id FROM Orders WHERE order_number = ordernum) AS order_id
-FROM staging_allGM;
+FROM staging_allGM
+WHERE vin NOT IN (SELECT vin FROM vehicles);
 select * from vehicles;
 
 -- Insert Options with error handling
@@ -258,8 +272,9 @@ CROSS JOIN JSON_TABLE(
     JSON_EXTRACT(s.allJson, '$.Options'),
     '$[*]' COLUMNS(option_value VARCHAR(50) PATH '$')
 ) AS opt
-JOIN Vehicles v ON v.vin = s.vin;
-select * from options;
+JOIN Vehicles v ON v.vin = s.vin
+WHERE (v.vehicle_id, opt.option_value) NOT IN (SELECT vehicle_id, option_code FROM Options);
+select * from options where vehicle_id = 1;
 
 INSERT IGNORE INTO SpecialEditions (vehicle_id, special_desc)
 SELECT vehicle_id, special_desc
@@ -299,8 +314,16 @@ CROSS JOIN LATERAL (
     SELECT '120th Anniversary Edition' WHERE options LIKE '%"ABQ"%'
     UNION ALL
     SELECT 'Pre-Production Vehicle' WHERE options LIKE '%"OAR"%'
+    UNION ALL
+    SELECT 'Hertz / Hendrick Motorsports Edition' WHERE options LIKE '%"PEH"%'
 ) special_editions
-WHERE special_desc IS NOT NULL;
+WHERE special_desc IS NOT NULL
+AND NOT EXISTS (
+    SELECT 1 
+    FROM SpecialEditions se 
+    WHERE se.vehicle_id = rpo_match.vehicle_id 
+    AND se.special_desc = special_editions.special_desc
+);
 select * from specialeditions;
 
 SELECT se.special_desc

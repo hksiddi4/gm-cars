@@ -2,9 +2,9 @@ import mysql.connector
 from mysql.connector import Error
 
 class Creds:
-    conString = '127.0.0.1'
-    userName = 'hussain'
-    password = 'Hussain92'
+    conString = 'vehicles.cbu8q6oeinav.us-east-1.rds.amazonaws.com'
+    userName = 'admin'
+    password = 'S!dd1qu1'
     dbName = 'vehicles'
 
 def create_connection(host_name, user_name, user_password, db_name):

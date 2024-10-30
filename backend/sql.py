@@ -1,10 +1,11 @@
 import mysql.connector
 from mysql.connector import Error
 
+# Create new user in mysql wb, don't use root. Will not work otherwise!
 class Creds:
-    conString = 'vehicles.cbu8q6oeinav.us-east-1.rds.amazonaws.com'
-    userName = 'admin'
-    password = 'S!dd1qu1'
+    conString = '127.0.0.1'
+    userName = 'hussain'
+    password = 'Hussain92'
     dbName = 'vehicles'
 
 def create_connection(host_name, user_name, user_password, db_name):

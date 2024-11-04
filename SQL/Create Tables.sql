@@ -1,3 +1,5 @@
+create database vehicles;
+use vehicles;
 start transaction;
 -- staging_allGM
 CREATE TABLE IF NOT EXISTS staging_allGM (

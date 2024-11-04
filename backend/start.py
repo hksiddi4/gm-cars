@@ -213,7 +213,7 @@ def sort_price():
 
     def get_all_distinct_values():
         columns = ['modelYear', 'body', 'trim', 'engine_type', 'transmission_type', 'model', 'color_name', 'country']
-        sqlStatement = f"SELECT DISTINCT v.modelYear, v.model, v.body, v.trim, e.engine_type, t.transmission_type, c.color_name, o.country FROM vehicles v {join_clause} \n            {where_clause}"
+        sqlStatement = f"SELECT DISTINCT v.modelYear, v.model, v.body, v.trim, e.engine_type, t.transmission_type, c.color_name, o.country FROM Vehicles v {join_clause} \n            {where_clause}"
         conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
         results = execute_read_query(conn, sqlStatement)
         close_connection(conn)

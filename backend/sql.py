@@ -3,7 +3,7 @@ from mysql.connector import Error
 
 # Create new user in mysql wb, don't use root. Will not work otherwise!
 class Creds:
-    conString = '127.0.0.1'
+    conString = '192.168.1.126'
     userName = 'hussain'
     password = 'Hussain92'
     dbName = 'vehicles'

@@ -109,7 +109,7 @@
                   <% } %>
                   <tr>
                     <td class="label-column"><strong>MSRP:</strong></td>
-                    <td><%= (!data.msrp) ? 'N/A' : `$${data.msrp}` %></td>
+                    <td><%= (!data.msrp || data.msrp == 0) ? 'N/A' : `$${data.msrp}` %></td>
                   </tr>                  
                   <tr>
                     <td class="label-column"><strong>DEALER:</strong></td>

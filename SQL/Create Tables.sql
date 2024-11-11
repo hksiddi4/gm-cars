@@ -1,5 +1,8 @@
 create database vehicles;
 use vehicles;
+create user 'hussain' identified by 'Hussain92';
+grant all privileges on vehicles.* to 'hussain'@'%';
+
 start transaction;
 -- staging_allGM
 CREATE TABLE IF NOT EXISTS staging_allGM (
@@ -153,29 +156,29 @@ CREATE INDEX idx_vehicle_modelYear ON Vehicles(modelYear);
 CREATE INDEX idx_vehicle_composite ON Vehicles(vin, modelYear, engine_id, transmission_id, drivetrain_id, color_id, order_id, dealer_id);
 
 -- Insert Engine Types
-INSERT INTO engines (engine_type)
+INSERT INTO Engines (engine_type)
 SELECT DISTINCT vehicleEngine
 FROM staging_allGM
-WHERE vehicleEngine NOT IN (SELECT engine_type FROM engines);
-SELECT * FROM engines;
+WHERE vehicleEngine NOT IN (SELECT engine_type FROM Engines);
+SELECT * FROM Engines;
 
 -- Insert Transmission Types
-INSERT INTO transmissions (transmission_type)
-SELECT DISTINCT transmission FROM staging_allGM
-WHERE transmission NOT IN (SELECT transmission_type FROM transmissions);
-SELECT * FROM transmissions;
+INSERT INTO Transmissions (transmission_type)
+SELECT DISTINCT Transmission FROM staging_allGM
+WHERE Transmission NOT IN (SELECT transmission_type FROM Transmissions);
+SELECT * FROM Transmissions;
 
 -- Insert Drivetrain Types
-INSERT INTO drivetrains (drivetrain_type)
-SELECT DISTINCT drivetrain FROM staging_allGM
-WHERE drivetrain NOT IN (SELECT drivetrain_type FROM drivetrains);
-SELECT * FROM drivetrains;
+INSERT INTO Drivetrains (drivetrain_type)
+SELECT DISTINCT Drivetrain FROM staging_allGM
+WHERE drivetrain NOT IN (SELECT drivetrain_type FROM Drivetrains);
+SELECT * FROM Drivetrains;
 
 -- Insert Colors
-INSERT INTO colors (color_name)
+INSERT INTO Colors (color_name)
 SELECT DISTINCT exterior_color FROM staging_allGM
-WHERE exterior_color NOT IN (SELECT color_name FROM colors);
-SELECT * FROM colors;
+WHERE exterior_color NOT IN (SELECT color_name FROM Colors);
+SELECT * FROM Colors;
 
 INSERT INTO Dealers (dealer_name, location, sitedealer_code)
 SELECT DISTINCT 
@@ -185,7 +188,7 @@ SELECT DISTINCT
 FROM staging_allGM
 WHERE (dealer, location, JSON_UNQUOTE(JSON_EXTRACT(allJson, '$.sitedealer_code'))) 
       NOT IN (SELECT dealer_name, location, sitedealer_code FROM Dealers);
-SELECT * FROM DEALERS ORDER BY SITEDEALER_CODE;
+SELECT * FROM Dealers ORDER BY SITEDEALER_CODE;
 
 SELECT
     sitedealer_code,
@@ -260,7 +263,7 @@ SELECT vin, modelYear, model, body, trim,
     (SELECT dealer_id FROM Dealers WHERE dealer_name = dealer AND location = location AND sitedealer_code = JSON_UNQUOTE(JSON_EXTRACT(allJson, '$.sitedealer_code')) LIMIT 1) AS dealer_id,
     (SELECT order_id FROM Orders WHERE order_number = ordernum) AS order_id
 FROM staging_allGM
-WHERE vin NOT IN (SELECT vin FROM vehicles);
+WHERE vin NOT IN (SELECT vin FROM Vehicles);
 select * from vehicles;
 
 -- Insert Options with error handling
@@ -326,12 +329,36 @@ AND NOT EXISTS (
     WHERE se.vehicle_id = rpo_match.vehicle_id 
     AND se.special_desc = special_editions.special_desc
 );
-select * from specialeditions;
+select * from SpecialEditions;
 
-SELECT se.special_desc
+SELECT se.special_desc, v.vin
 FROM SpecialEditions se
 JOIN Vehicles v ON se.vehicle_id = v.vehicle_id
-WHERE v.vin = '1G1FJ1R61R0100022';
+WHERE v.color_id = 1
+  AND se.special_desc LIKE '%Collectors Edition%'
+ORDER BY SUBSTRING(v.vin, -6);
+
+start transaction;
+WITH OrderedEditions AS (
+    SELECT se.vehicle_id, ROW_NUMBER() OVER (ORDER BY SUBSTRING(v.vin, -6)) AS row_num
+    FROM SpecialEditions se
+    JOIN Vehicles v ON se.vehicle_id = v.vehicle_id
+    WHERE v.color_id = 1
+      AND se.special_desc LIKE '%Collectors Edition%'
+)
+UPDATE SpecialEditions se
+JOIN OrderedEditions oe ON se.vehicle_id = oe.vehicle_id
+SET se.special_desc = CONCAT('Collectors Edition #', LPAD(oe.row_num, 3, '0'));
+commit;
+
+SELECT se.special_desc, v.vin
+FROM SpecialEditions se
+JOIN Vehicles v ON se.vehicle_id = v.vehicle_id
+WHERE v.vin = '1G1FJ1R6XR0100021';
+
+UPDATE SpecialEditions se
+JOIN Vehicles v ON se.vehicle_id = v.vehicle_id
+SET se.special_desc = 'Hertz / Hendrick Motorsports Edition #001'
+WHERE v.vin = '1G1FH1R70L0105904';
 
 
-select * from staging_allGM;

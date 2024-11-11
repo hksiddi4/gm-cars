@@ -35,7 +35,7 @@
                     </form>
                 </div>
             </div>
-            <div class="row">
+            <!-- <div class="row">
                 <div class="col-md-2">
                     <div class="dropdown-container">
                         <select id="rpoSelect" class="form-select">
@@ -63,7 +63,7 @@
                         </select>
                     </div>
                 </div>
-            </div>
+            </div> -->
             <div class="stats d-flex">
                 <!-- Limit and Total -->
                 <div class="col-md-3 d-flex align-items-end" style="margin-top: 5px;">
@@ -161,6 +161,33 @@
                             </th>
                             <th scope="col">
                                 <div class="dropdown-container">
+                                    <select id="rpoSelect" class="form-select small-dropdown">
+                                        <option value="">Select Package/Option</option>
+                                        <option value="Z4B" <% if (selectedRPO === 'Z4B') { %>selected<% } %>>Camaro Collector's Edition</option>
+                                        <option value="X56" <% if (selectedRPO === 'X56') { %>selected<% } %>>Camaro Garage 56 Special Edition</option>
+                                        <option value="WBL" <% if (selectedRPO === 'WBL') { %>selected<% } %>>Redline Edition</option>
+                                        <option value="B2E" <% if (selectedRPO === 'B2E') { %>selected<% } %>>Shock and Steel Edition</option>
+                                        <option value="PEH" <% if (selectedRPO === 'PEH') { %>selected<% } %>>Hertz / Hendrick Motorsports Edition</option>
+                                        <option value="A1Z" <% if (selectedRPO === 'A1Z') { %>selected<% } %>>ZL1 1LE Extreme Track Performance Package</option>
+                                        <option value="A1Y" <% if (selectedRPO === 'A1Y') { %>selected<% } %>>SS 1LE Track Performance Package</option>
+                                        <option value="A1X" <% if (selectedRPO === 'A1X') { %>selected<% } %>>LT 1LE Track Performance Package</option>
+                                        <option value="ZCR" <% if (selectedRPO === 'ZCR') { %>selected<% } %>>IMSA GTLM Championship C8.R Edition</option>
+                                        <option value="Y70" <% if (selectedRPO === 'Y70') { %>selected<% } %>>Corvette Stingray 70th Anniversary Edition</option>
+                                        <option value="Z07" <% if (selectedRPO === 'Z07') { %>selected<% } %>>Z07 Performance Package</option>
+                                        <option value="Z51" <% if (selectedRPO === 'Z51') { %>selected<% } %>>Z51 Performance Package</option>
+                                        <option value="ZLE" <% if (selectedRPO === 'ZLE') { %>selected<% } %>>CT4-V Blackwing Watkins Glen IMSA Edition</option>
+                                        <option value="ZLD" <% if (selectedRPO === 'ZLD') { %>selected<% } %>>CT4-V Blackwing Sebring IMSA Edition</option>
+                                        <option value="ZLG" <% if (selectedRPO === 'ZLG') { %>selected<% } %>>CT4-V Blackwing Road Atlanta IMSA Edition</option>
+                                        <option value="ZLK" <% if (selectedRPO === 'ZLK') { %>selected<% } %>>CT4-V Blackwing Arrival Edition</option>
+                                        <option value="ZLJ" <% if (selectedRPO === 'ZLJ') { %>selected<% } %>>CT4-V Blackwing Impact Edition</option>
+                                        <option value="ZLR" <% if (selectedRPO === 'ZLR') { %>selected<% } %>>CT4-V Blackwing Elevation Edition</option>
+                                        <option value="ABQ" <% if (selectedRPO === 'ABQ') { %>selected<% } %>>CT5-V Blackwing 120th Anniversary Edition</option>
+                                        <option value="OAR" <% if (selectedRPO === 'OAR') { %>selected<% } %>>Pre-Production Vehicle</option>
+                                    </select>
+                                </div>
+                            </th>
+                            <th scope="col">
+                                <div class="dropdown-container">
                                     <select id="countrySelect" class="form-select small-dropdown">
                                         <option value="">Country</option>
                                         <option value="USA" <% if (selectedCountry === 'USA') { %>selected<% } %>>USA</option>
@@ -171,7 +198,7 @@
                                     </select>
                                 </div>
                             </th>
-                            <th scope="col">Dealer</th>
+                            <!-- <th scope="col">Dealer</th> -->
                         </tr>
                     </thead>
                     <tbody>
@@ -190,9 +217,15 @@
                                     <%= data.color_name %>
                                 </td>
                                 <td scope="row" class="accounting-format">
-                                    <span>$</span>
-                                    <span><%= data.msrp %></span>
+                                    <% if (data.msrp == 0) { %>
+                                        <span></span>
+                                        <span>N/A</span>
+                                    <% } else { %>
+                                        <span>$</span>
+                                        <span><%= data.msrp %></span>
+                                    <% } %>
                                 </td>
+                                <td scope="row"><%= data.special_desc %></td>
                                 <td scope="row">
                                     <% if (data.country == "USA") { %>
                                         <img src="../img/flags/usa_flag.png" alt="USA" width="20">
@@ -202,7 +235,7 @@
                                         <img src="../img/flags/mexico_flag.png" alt="Mexico" width="20">
                                     <% } %>                                    
                                 </td>
-                                <td scope="row" style="text-align: left;"><%= data.dealer_name || 'N/A' %></td>
+                                <!-- <td scope="row" style="text-align: left;"><%= data.dealer_name || 'N/A' %></td> -->
                             </tr>
                         <% }) %>
                     </tbody>

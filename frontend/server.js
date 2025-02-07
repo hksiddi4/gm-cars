@@ -170,7 +170,7 @@ app.use(function(req, res) {
     res.status(404).render('pages/404', { req: req });
 });
 
-const port = 80;
+const port = 8080;
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });

@@ -13,11 +13,8 @@ services:
     build: ./backend
     ports:
       - "5000:5000"
-    environment:
-      DB_HOST: "192.168.1.126"
-      DB_USER: "hussain"
-      DB_PASS: "Hussain92"
-      DB_NAME: "vehicles"
+    env_file:
+      - stack.env
     networks:
       - app-network
 

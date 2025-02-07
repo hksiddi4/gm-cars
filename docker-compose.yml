@@ -17,19 +17,7 @@ services:
     build: ./backend
     restart: always
     env_file:
-      - .env
-    networks:
-      - app-network
-    depends_on:
-      - mysql
-
-  mysql:
-    image: mysql:latest
-    restart: always
-    environment:
       - stack.env
-    volumes:
-      - mysql_data:/var/lib/mysql
     networks:
       - app-network
 

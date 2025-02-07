@@ -9,7 +9,7 @@ app.use(express.json());
 app.use(express.static('views'));
 app.set('view engine', 'ejs');
 
-const baseURL = 'http://127.0.0.1:5000'
+const baseURL = 'http://backend:5000'
 
 function formatCurrency(number) {
     if (number === null) {

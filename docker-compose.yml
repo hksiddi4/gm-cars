@@ -1,0 +1,26 @@
+version: "3.8"
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    environment:
+      DB_HOST: "192.168.1.126"
+      DB_USER: "hussain"
+      DB_PASS: "Hussain92"
+      DB_NAME: "vehicles"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    external: false

@@ -4,150 +4,132 @@
 <head>
     <%- include('../partials/head'); %>
     <script src="../partials/rpo.js"></script>
-    <% 
-      function checkRPO(data) {
-        let has1LE = false; 
-        let hasCE = false;
-        let hasG56 = false;
-        if (data.allJson) {
-          const rpos = JSON.parse(data.allJson).Options;
-          if (rpos) {
-            has1LE = rpos.includes('A1Y') || rpos.includes('A1X') || rpos.includes('A1Z');
-            hasCE = rpos.includes('Z4B');
-            hasG56 = rpos.includes('X56');
-          }
-        }
-        return { has1LE, hasCE, hasG56 };
-      }
-
-      let allHas = { has1LE: false, hasCE: false, hasG56: false };
-      vin_data.forEach(data => {
-        const result = checkRPO(data);
-        allHas.has1LE = allHas.has1LE || result.has1LE;
-        allHas.hasCE = allHas.hasCE || result.hasCE;
-        allHas.hasG56 = allHas.hasG56 || result.hasG56;
-      });
-    %>
     <title>
-      <%= vin_data[0].modelYear || 'N/A' %> 
+      <%= (vin_data[0].modelYear ? "'" + vin_data[0].modelYear.toString().slice(-2) : 'N/A') %>
       <%= vin_data[0].model || 'N/A' %> 
       <%= vin_data[0].trim || 'N/A' %> 
-      <%= allHas.has1LE ? '1LE' : '' %>
-      <%= allHas.hasCE ? 'CE' : '' %>
-      <%= allHas.hasG56 ? 'G56' : '' %>
     </title>
 </head>
 
 <body>
-  <%- include('../partials/sidebar'); %>
-
+  <%- include('../partials/header'); %>
     <div class="container">
         <div class="row">
           <% if (vin_data && vin_data.length > 0) { %>
-            <h1 style="padding-top: 20px;">
+            <h1 style="padding-top: 20px; display: flex; align-items: center; width: 100%;">
               <%= vin_data[0].modelYear || 'N/A' %>
               <%= vin_data[0].model || 'N/A' %>
               <%= vin_data[0].trim || 'N/A' %>
-              <% 
-                let has1LE = false; 
-                let hasCE = false;
-                let hasG56 = false;
-                vin_data.forEach(data => {
-                  if (data.allJson) {
-                    const rpos = JSON.parse(data.allJson).Options;
-                    if (rpos && (rpos.includes('A1Y') || rpos.includes('A1X') || rpos.includes('A1Z'))) {
-                      has1LE = true;
-                    }
-                    if (rpos && rpos.includes('Z4B')) {
-                      hasCE = true;
-                    }
-                    if (rpos && rpos.includes('X56')) {
-                      hasG56 = true;
-                    }
-                  }
-                });
-              %>
-              <%= has1LE ? '1LE' : '' %>
-              <%= hasCE ? 'Collectors Edition' : '' %>
-              <%= hasG56 ? 'Garage 56 Special Edition' : '' %>
             </h1>
-            <table class="table table-hover border border shadow" id="vinTable">
+            <% if (vin_data[0].special_descs && vin_data[0].special_descs !== 'NA') { %>
+              <div>
+                <h4>
+                  <em>
+                    <% 
+                      // Split the special_descs by comma and iterate over each description
+                      const specialDescs = vin_data[0].special_descs.split(', ');
+                      specialDescs.forEach(desc => { 
+                    %>
+                      <div><%= desc %></div>
+                    <% }); %>
+                  </em>
+                </h4>
+              </div>
+            <% } %>
+            <table class="table-veh table-hover border border shadow" id="vinTable">
               <tbody>
                   <% vin_data.forEach(function(data) { %>
-                  <tr data-alljson='<%= JSON.stringify(data.allJson) %>'>
-                    <td><strong>VIN:</strong></td>
+                  <tr>
+                    <td class="label-column"><strong>VIN:</strong></td>
+                    <td><%= data.vin || 'N/A' %></td>
+                  </tr>
+                  <tr>
+                    <td class="label-column"><strong>ORDER NUMBER:</strong></td>
+                    <td><%= data.order_number || 'N/A' %></td>
+                  </tr>
+                  <tr>
+                    <td class="label-column"><strong>STICKER CREATION DATE:</strong></td>
                     <td>
-                      <a href="https://cws.gm.com/vs-cws/vehshop/v2/vehicle/windowsticker?vin=<%= data.vin || 'N/A' %>" target="_blank">
-                        <%= data.vin || 'N/A' %>
-                      </a>
+                      <%= data.formatted_date || 'N/A' %>
                     </td>
                   </tr>
                   <tr>
-                    <td><strong>ORDER NUMBER:</strong></td>
-                    <td><%= data.ordernum || 'N/A' %></td>
-                  </tr>
-                  <tr>
-                    <td><strong>CREATION DATE:</strong></td>
-                    <td>
-                      <%= data.allJson ? new Date(JSON.parse(data.allJson).creation_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A' %>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td><strong>YEAR:</strong></td>
+                    <td class="label-column"><strong>YEAR:</strong></td>
                     <td><%= data.modelYear || 'N/A' %></td>
                   </tr>
                   <tr>
-                    <td><strong>MODEL:</strong></td>
+                    <td class="label-column"><strong>MODEL:</strong></td>
                     <td><%= data.model || 'N/A' %></td>
                   </tr>
                   <tr>
-                    <td><strong>TRIM:</strong></td>
+                    <td class="label-column"><strong>TRIM:</strong></td>
                     <td><%= data.trim || 'N/A' %></td>
                   </tr>
                   <tr>
-                    <td><strong>BODY:</strong></td>
+                    <td class="label-column"><strong>BODY:</strong></td>
                     <td><%= data.body || 'N/A' %></td>
                   </tr>
                   <tr>
-                    <td><strong>ENGINE:</strong></td>
-                    <td><%= data.vehicleEngine || 'N/A' %></td>
+                    <td class="label-column"><strong>ENGINE:</strong></td>
+                    <td><%= data.engine_type || 'N/A' %></td>
                   </tr>
                   <tr>
-                    <td><strong>TRANSMISSION:</strong></td>
-                    <td><%= data.transmission || 'N/A' %></td>
+                    <td class="label-column"><strong>TRANSMISSION:</strong></td>
+                    <td><%= data.transmission_type || 'N/A' %></td>
                   </tr>
                   <tr>
-                    <td><strong>DRIVETRAIN:</strong></td>
-                    <td><%= data.drivetrain || 'N/A' %></td>
+                    <td class="label-column"><strong>DRIVETRAIN:</strong></td>
+                    <td><%= data.drivetrain_type || 'N/A' %></td>
                   </tr>
                   <tr>
-                    <td><strong>COLOR:</strong></td>
-                    <td><%= data.exterior_color || 'N/A' %></td>
+                    <td class="label-column"><strong>EXTERIOR COLOR:</strong></td>
+                    <td><%= data.color_name || 'N/A' %></td>
+                  </tr>
+                  <% if (data.rpo_codes) { %>
+                    <%
+                      let matchedIntColor = 'N/A';
+                      let matchedSeat = 'N/A';
+                      data.rpo_codes.forEach(function(rpo) {
+                        if (intColor[rpo]) {
+                          matchedIntColor = intColor[rpo];
+                        }
+                        if (seatCode[rpo]) {
+                          matchedSeat = seatCode[rpo];
+                        }
+                      });
+                    %>
+                  <tr>
+                    <td class="label-column"><strong>INTERIOR COLOR:</strong></td>
+                    <td><%= matchedIntColor.toUpperCase() %></td>
                   </tr>
                   <tr>
-                    <td><strong>MSRP:</strong></td>
-                    <td><%= data.msrp || 'N/A' %></td>
+                    <td class="label-column"><strong>SEAT:</strong></td>
+                    <td><%= matchedSeat.toUpperCase() %></td>
+                  </tr>
+                  <% } %>
+                  <tr>
+                    <td class="label-column"><strong>MSRP:</strong></td>
+                    <td><%= (!data.msrp || data.msrp == 0) ? 'N/A' : `$${data.msrp}` %></td>
+                  </tr>                  
+                  <tr>
+                    <td class="label-column"><strong>DEALER:</strong></td>
+                    <td><%= data.dealer_name || 'N/A' %></td>
                   </tr>
                   <tr>
-                    <td><strong>DEALER:</strong></td>
-                    <td><%= data.dealer || 'N/A' %></td>
-                  </tr>
-                  <tr>
-                    <td><strong>LOCATION:</strong></td>
+                    <td class="label-column"><strong>LOCATION:</strong></td>
                     <td><%= data.location || 'N/A' %></td>
                   </tr>
                   <tr>
-                    <td><strong>COUNTRY:</strong></td>
-                    <td style="display: flex; align-items: center; justify-content: center;">
-                      <% if (data.location) { %>
-                        <% const state = data.location.split(',')[1]?.trim().split(' ')[0]; %>
-                        <% if (state && ["AB", "BC", "MB", "NF", "NT", "ON", "PE", "PQ", "SK"].includes(state)) { %>
-                          <img src="../img/canada_flag.png" alt="Canada" width="30" style="padding-right: 5px;">Canada
-                        <% } else { %>
-                          <img src="../img/usa_flag.png" alt="USA" width="30" style="padding-right: 5px;">United States
+                    <td class="label-column"><strong>COUNTRY:</strong></td>
+                    <td>
+                      <% if (data.country) { %>
+                        <% if (data.country === 'CANADA') { %>
+                          <img src="../img/flags/canada_flag.png" alt="Canada" width="30" style="margin-right: 5px;">CANADA
+                        <% } else if (data.country === 'USA') { %>
+                          <img src="../img/flags/usa_flag.png" alt="USA" width="30" style="margin-right: 5px;">UNITED STATES
+                        <% } else if (data.country === 'MEXICO') { %>
+                          <img src="../img/flags/mexico_flag.png" alt="Mexico" width="30" style="margin-right: 5px;">Mexico
                         <% } %>
-                      <% } else { %>
-                        <img src="../img/mexico_flag.png" alt="Mexico" width="30" style="padding-right: 5px;">Mexico
                       <% } %>
                     </td>
                   </tr>
@@ -156,15 +138,19 @@
             </table>
             <!-- Photo Carousel -->
             <div id="carousel-container" style="position: relative; min-height: 740px; width: 100%; margin: auto; overflow: hidden;">
-              <div id="loading-animation" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
-                <div class="spinner" style="align-items: center;"></div>
-                <h4>Generating Photos...</h4>
+              <div id="loading-animation">
+                <div class="spinner" style="position: absolute; top: 48%; left: 50%; transform: translate(-50%, -50%); align-items: center;"></div>
+                <h4 style="position: absolute; top: 58%; left: 51%; transform: translate(-50%, -50%); align-items: center;">Generating Photos...</h4>
               </div>
-              <img id="carousel-image" src="" style="width: 100%;"/>
+              <img id="carousel-image" src="" style="width: 100%;">
               <button id="prev" style="position: absolute; top: 50%; left: 0; background-color: rgba(0, 0, 0, 0.5); color: white; border: none; padding: 10px; cursor: pointer; z-index: 100;">&#10094;</button>
               <button id="next" style="position: absolute; top: 50%; right: 0; background-color: rgba(0, 0, 0, 0.5); color: white; border: none; padding: 10px; cursor: pointer; z-index: 100;">&#10095;</button>
             </div>
-            <div class="rarity-container">
+            <!-- Window Sticker -->
+            <div id="sticker-container">
+              <iframe id="window-sticker" src="https://cws.gm.com/vs-cws/vehshop/v2/vehicle/windowsticker?vin=<%= vin_data[0].vin || 'N/A' %>" style="min-height: 886px; width: 100%;"></iframe>
+            </div>
+            <!-- <div class="rarity-container">
               <% vin_data.forEach(function(data) { %>
                 <% if (data.allJson) { %>
                   <button id="see-rarity" class="btn btn-primary rarity-btn" data-alljson='<%= JSON.stringify(data.allJson) %>'>See Rarity</button>
@@ -172,10 +158,10 @@
               <% }); %>
               <div class="response-container">
                 <div id="response" class="response"></div>
-                <a id="snark" style="color: rgb(40, 40, 40);"></a>
+                <div><a id="snark" style="color: rgb(40, 40, 40);"></a></div>
               </div>
-            </div>
-            <table class="table table-hover border border shadow" id="rpoTable">
+            </div> -->
+            <table class="table-veh table-hover border border shadow" id="rpoTable">
               <thead>
                 <tr>
                   <th scope="col" style="white-space: nowrap;">RPO Code</th>
@@ -184,15 +170,12 @@
               </thead>
               <tbody>
                 <% vin_data.forEach(function(data) { %>
-                  <% if (data.allJson) { %>
-                    <% 
-                      const rpos = (JSON.parse(data.allJson)).Options;
-                    %>
-                    <% rpos.forEach(function(rpo) { %>
+                  <% if (data.rpo_codes) { %>
+                    <% data.rpo_codes.forEach(function(rpo) { %>
                       <% if (rpo) { %>
                         <tr>
                           <td class="<%= rpo.includes('OAR') ? 'highlight' : '' %>"><%= rpo %></td>
-                          <td class="rpo-description" data-code="<%= rpo || 'N/A' %>" style="text-align: left;"></td>
+                          <td class="rpo-description" data-code="<%= rpo %>" style="text-align: left;"></td>
                         </tr>
                       <% } %>
                     <% }); %>
@@ -205,7 +188,7 @@
               </tbody>
             </table>
             <h5 style="color: white;">
-              Decoded by <a href="https://decoderpo.com/" style="color: white; text-decoration: underline;">https://decoderpo.com/</a>
+              RPOs Decoded by <a href="https://decoderpo.com/" style="color: white; text-decoration: underline;">https://decoderpo.com/</a>
             </h5>            
           <% } else { %>
             <h1>No VIN data found</h1>
@@ -215,20 +198,22 @@
     <%- include('../partials/footer'); %>
     <script>
       document.addEventListener('DOMContentLoaded', () => {
-        const descriptionCells = document.querySelectorAll('.rpo-description');
-        descriptionCells.forEach(cell => {
-            const code = cell.getAttribute('data-code');
-            cell.textContent = getRPODescription(code);
+        document.querySelectorAll('.rpo-description').forEach(function(element) {
+          const rpoCode = element.getAttribute('data-code');
+          const description = getRPODescription(rpoCode);
+          element.textContent = description;
         });
 
-        const mmc = <%- JSON.stringify(mmc) %>;
-        const colorMap = <%- JSON.stringify(colorMap) %>;
-        const allJson = <%- JSON.stringify(vin_data[0].allJson) %>;
-
-        const generatedImage = document.getElementById('generated-image');
+        const carouselImage = document.getElementById('carousel-image');
         const loadingAnimation = document.getElementById('loading-animation');
         loadingAnimation.style.direction = 'block';
-        const data = { mmc, colorMap, allJson };
+        
+        const mmc = <%- JSON.stringify(mmc) %>;
+        const colorMap = <%- JSON.stringify(colorMap) %>;
+        const intColor = <%- JSON.stringify(intColor) %>;
+        const seatCode = <%- JSON.stringify(seatCode) %>;
+        const vin_data = <%- JSON.stringify(vin_data) %>;
+        const data = { mmc, colorMap, intColor, vin_data };
 
         fetch('/api/genurl', {
           method: 'POST',
@@ -239,7 +224,6 @@
         })
         .then(response => response.json())
         .then(data => {
-          const carouselImage = document.getElementById('carousel-image');
           const images = data.url.generatedImages;
 
           if (images === "../img/ghost-chevrolet-car-alt.png") {
@@ -247,11 +231,30 @@
             loadingAnimation.style.display = 'none';
           } else {
             let currentIndex = 0;
+            let initialLoad = true;
+
+            function preloadImage(src) {
+              const img = new Image();
+              img.src = src;
+            }
 
             function showImage(index) {
-              carouselImage.src = images[index];
-              carouselImage.alt = `Image ${index + 1}`;
-              loadingAnimation.style.display = 'none';
+                if (initialLoad) {
+                    carouselImage.src = images[index];
+                    carouselImage.alt = `Image ${index + 1}`;
+                    loadingAnimation.style.display = 'none';
+                    initialLoad = false;
+                } else {
+                    carouselImage.style.opacity = 0;
+                    setTimeout(() => {
+                        carouselImage.src = images[index];
+                        carouselImage.alt = `Image ${index + 1}`;
+                        carouselImage.style.opacity = 1;
+                    }, 200);
+                }
+
+                const nextIndex = (index + 1) % images.length;
+                preloadImage(images[nextIndex]);
             }
 
             showImage(currentIndex);
@@ -272,27 +275,26 @@
         });
 
         
-        const button = document.getElementById('see-rarity');
-        button.addEventListener('click', () => {
-          const allJson = button.getAttribute('data-alljson');
-          const dataObject = JSON.parse(allJson);
+        // const button = document.getElementById('see-rarity');
+        // button.addEventListener('click', () => {
+        //   const dataObject = JSON.parse(vin_data.vin);
 
-          fetch('/api/rarity', {
-              method: 'POST',
-              headers: {
-                  'Content-Type': 'application/json',
-              },
-              body: dataObject,
-          })
-          .then(response => response.json())
-          .then(data => {
-              document.getElementById('response').textContent = `1 of ${data[0].Count}`;
-              document.getElementById('snark').textContent = "- on the fourth Tuesday, after company lunch with a crescent moon when Joey went home early...";
-          })
-          .catch((error) => {
-              console.error('Error:', error);
-          });
-        });
+        //   fetch('/api/rarity', {
+        //       method: 'POST',
+        //       headers: {
+        //           'Content-Type': 'application/json',
+        //       },
+        //       body: dataObject,
+        //   })
+        //   .then(response => response.json())
+        //   .then(data => {
+        //       document.getElementById('response').textContent = `1 of ${data[0].Count}`;
+        //       document.getElementById('snark').textContent = "- on the fourth Tuesday, after company lunch with a crescent moon when Joey went home early...";
+        //   })
+        //   .catch((error) => {
+        //       console.error('Error:', error);
+        //   });
+        // });
       });
     </script>
 </body>

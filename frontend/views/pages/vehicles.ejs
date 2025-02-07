@@ -5,69 +5,80 @@
     <title>Vehicles</title>
 </head>
 <body>
-    <%- include('../partials/sidebar'); %>
+    <%- include('../partials/header'); %>
     <div class="custom-container">
-        <div class="row">
-            <h1 class="pagetitle">Vehicles</h1>
-        </div>
-        <div class="row">
+        <div class="row" style="padding-top: 20px;">
             <!-- Filters -->
             <div class="col-md-12 mb-3">
-                <h4>Filter</h4>
-                <form id="filterForm">
-                    <% models.forEach(function(model) { %>
-                        <div class="form-check">
-                            <input 
-                                class="form-check-input" 
-                                type="checkbox" 
-                                id="model_<%= model %>" 
-                                value="<%= model %>"
-                                <%= selectedModels.includes(model) ? 'checked' : '' %>
-                            >
-                            <label class="form-check-label" for="model_<%= model %>">
-                                <%= model %>
-                            </label>
-                        </div>
-                    <% }) %>
-                    <button type="submit" class="btn btn-primary mt-2">Apply Filters</button>
-                </form>
+                <div id="filterToggle" class="d-inline-flex align-items-center">
+                    <h4 class="mb-0">Filter</h4>
+                    <i class="fas fa-sort-down" id="filterIcon" style="color: white;"></i>
+                </div>
+                <div id="filterContent" class="collapse">
+                    <form id="filterForm">
+                        <% models.forEach(function(model) { %>
+                            <div class="form-check">
+                                <input 
+                                    class="form-check-input" 
+                                    type="checkbox" 
+                                    id="model_<%= model %>" 
+                                    value="<%= model %>"
+                                    <%= selectedModels.includes(model) ? 'checked' : '' %>
+                                >
+                                <label class="form-check-label" for="model_<%= model %>">
+                                    <%= model %>
+                                </label>
+                            </div>
+                        <% }) %>
+                        <button type="submit" class="btn btn-primary mt-2">Apply Filters</button>
+                        <button type="button" id="clearFilters" class="btn btn-secondary mt-2">Clear All</button>
+                    </form>
+                </div>
             </div>
-            <div class="row">
+            <!-- <div class="row">
                 <div class="col-md-2">
                     <div class="dropdown-container">
                         <select id="rpoSelect" class="form-select">
                             <option value="">Select Package/Option</option>
-                            <option value="Z4B" <% if (selectedRPO === 'Z4B') { %>selected<% } %>>Collector's Edition</option>
-                            <option value="X56" <% if (selectedRPO === 'X56') { %>selected<% } %>>Garage 56 Special Edition</option>
-                            <option value="A1Z" <% if (selectedRPO === 'A1Z') { %>selected<% } %>>ZL1 1LE</option>
-                            <option value="A1Y" <% if (selectedRPO === 'A1Y') { %>selected<% } %>>SS 1LE</option>
-                            <option value="A1X" <% if (selectedRPO === 'A1X') { %>selected<% } %>>LT 1LE</option>
-                            <option value="LF4" <% if (selectedRPO === 'LF4') { %>selected<% } %>>CT4-V Blackwing</option>
-                            <option value="1SV" <% if (selectedRPO === '1SV') { %>selected<% } %>>CT5-V Blackwing</option>
+                            <option value="Z4B" <% if (selectedRPO === 'Z4B') { %>selected<% } %>>Camaro Collector's Edition</option>
+                            <option value="X56" <% if (selectedRPO === 'X56') { %>selected<% } %>>Camaro Garage 56 Special Edition</option>
+                            <option value="WBL" <% if (selectedRPO === 'WBL') { %>selected<% } %>>Redline Edition</option>
+                            <option value="B2E" <% if (selectedRPO === 'B2E') { %>selected<% } %>>Shock and Steel Edition</option>
+                            <option value="PEH" <% if (selectedRPO === 'PEH') { %>selected<% } %>>Hertz / Hendrick Motorsports Edition</option>
+                            <option value="A1Z" <% if (selectedRPO === 'A1Z') { %>selected<% } %>>ZL1 1LE Extreme Track Performance Package</option>
+                            <option value="A1Y" <% if (selectedRPO === 'A1Y') { %>selected<% } %>>SS 1LE Track Performance Package</option>
+                            <option value="A1X" <% if (selectedRPO === 'A1X') { %>selected<% } %>>LT 1LE Track Performance Package</option>
+                            <option value="ZCR" <% if (selectedRPO === 'ZCR') { %>selected<% } %>>IMSA GTLM Championship C8.R Edition</option>
+                            <option value="Y70" <% if (selectedRPO === 'Y70') { %>selected<% } %>>Corvette Stingray 70th Anniversary Edition</option>
+                            <option value="Z07" <% if (selectedRPO === 'Z07') { %>selected<% } %>>Z07 Performance Package</option>
+                            <option value="Z51" <% if (selectedRPO === 'Z51') { %>selected<% } %>>Z51 Performance Package</option>
+                            <option value="ZLE" <% if (selectedRPO === 'ZLE') { %>selected<% } %>>CT4-V Blackwing Watkins Glen IMSA Edition</option>
+                            <option value="ZLD" <% if (selectedRPO === 'ZLD') { %>selected<% } %>>CT4-V Blackwing Sebring IMSA Edition</option>
+                            <option value="ZLG" <% if (selectedRPO === 'ZLG') { %>selected<% } %>>CT4-V Blackwing Road Atlanta IMSA Edition</option>
+                            <option value="ZLK" <% if (selectedRPO === 'ZLK') { %>selected<% } %>>CT4-V Blackwing Arrival Edition</option>
+                            <option value="ZLJ" <% if (selectedRPO === 'ZLJ') { %>selected<% } %>>CT4-V Blackwing Impact Edition</option>
+                            <option value="ZLR" <% if (selectedRPO === 'ZLR') { %>selected<% } %>>CT4-V Blackwing Elevation Edition</option>
+                            <option value="ABQ" <% if (selectedRPO === 'ABQ') { %>selected<% } %>>CT5-V Blackwing 120th Anniversary Edition</option>
                             <option value="OAR" <% if (selectedRPO === 'OAR') { %>selected<% } %>>Pre-Production Vehicle</option>
                         </select>
                     </div>
                 </div>
-            </div>
-            <div class="stats">
-                <!-- Dropdown and Total -->
-                <div class="col-md-2">
-                    <div class="row">
-                        <div class="total-container" style="display: flex;">
-                            <p style="color: rgb(103, 103, 103);">Retrieved <%= totalItems.toLocaleString() %> vehicles</p>
-                        </div>
-                    </div>
+            </div> -->
+            <div class="stats d-flex">
+                <!-- Limit and Total -->
+                <div class="col-md-3 d-flex align-items-end" style="margin-top: 5px;">
+                    <p style="color: rgb(103, 103, 103);">
+                        Retrieved <%= totalItems.toLocaleString() %> vehicles in <%= elapsedTime.toLocaleString() %> seconds
+                    </p>
                 </div>
-                <div>
-                    <div class="row">
-                        <div class="dropdown-container" style="margin-bottom: 15px;">
-                            <select id="limitSelect" class="form-select">
-                                <option value="100" <% if (limit === 100) { %>selected<% } %>>100</option>
-                                <option value="150" <% if (limit === 150) { %>selected<% } %>>150</option>
-                                <option value="200" <% if (limit === 200) { %>selected<% } %>>200</option>
-                                <option value="250" <% if (limit === 250) { %>selected<% } %>>250</option>
-                            </select>
-                        </div>
+                <div class="d-flex align-items-end ms-auto" style="margin-bottom: 10px;">
+                    <div class="dropdown-container">
+                        <select id="limitSelect" class="form-select">
+                            <option value="100" <% if (limit === 100) { %>selected<% } %>>100</option>
+                            <option value="150" <% if (limit === 150) { %>selected<% } %>>150</option>
+                            <option value="200" <% if (limit === 200) { %>selected<% } %>>200</option>
+                            <option value="250" <% if (limit === 250) { %>selected<% } %>>250</option>
+                        </select>
                     </div>
                 </div>
             </div>
@@ -75,24 +86,54 @@
             <!-- Vehicles Table -->
             <div class="table-responsive">
                 <% if (locals.vehicle_data) { %>
-                <table class="table table-sm table-hover border border shadow" id="allTable">
+                <table class="table-veh table-hover border border shadow" id="allTable">
                     <thead>
                         <tr>
-                            <th scope="col">VIN</th>
+                            <th scope="col" id="vinHeader" class="sortable" onclick="toggleVINOrder()" style="cursor: pointer;">
+                                VIN
+                                <i class="fas fa-sort-down" id="vinIcon" style="display: none;"></i>
+                            </th>
                             <th scope="col">
                                 <div class="dropdown-container">
                                     <select id="yearSelect" class="form-select small-dropdown">
                                         <option value="">Year</option>
                                         <% years.forEach(function(year) { %>
-                                            <option value="<%= year %>" <% if (selectedYear === year) { %>selected<% } %>><%= year %></option>
+                                            <option value="<%= year %>" <% if (selectedYear === year.toString()) { %>selected<% } %>><%= year %></option>
                                         <% }) %>
                                     </select>
                                 </div>
                             </th>
                             <th scope="col">Model</th>
-                            <th scope="col">Body</th>
-                            <th scope="col">Trim</th>
-                            <th scope="col">Engine</th>
+                            <th scope="col">
+                                <div class="dropdown-container">
+                                    <select id="bodySelect" class="form-select small-dropdown">
+                                        <option value="">Body</option>
+                                        <% bodys.forEach(function(body) { %>
+                                            <option value="<%= body %>" <% if (selectedBody === body.toString()) { %>selected<% } %>><%= body %></option>
+                                        <% }) %>
+                                    </select>
+                                </div>
+                            </th>
+                            <th scope="col">
+                                <div class="dropdown-container">
+                                    <select id="trimSelect" class="form-select small-dropdown">
+                                        <option value="">Trim</option>
+                                        <% trim.forEach(function(trim) { %>
+                                            <option value="<%= trim %>" <% if (selectedTrim === trim) { %>selected<% } %>><%= trim %></option>
+                                        <% }) %>
+                                    </select>
+                                </div>
+                            </th>
+                            <th scope="col">
+                                <div class="dropdown-container">
+                                    <select id="engineSelect" class="form-select small-dropdown">
+                                        <option value="">Engine</option>
+                                        <% engine.forEach(function(engine) { %>
+                                            <option value="<%= engine %>" <% if (selectedEngine === engine) { %>selected<% } %>><%= engine %></option>
+                                        <% }) %>
+                                    </select>
+                                </div>
+                            </th>
                             <th scope="col">
                                 <div class="dropdown-container">
                                     <select id="transSelect" class="form-select small-dropdown">
@@ -114,9 +155,36 @@
                                     </select>
                                 </div>
                             </th>
-                            <th scope="col" id="msrpHeader" onclick="toggleSortOrder()" style="cursor: pointer;">
+                            <th scope="col" id="msrpHeader" class="sortable" onclick="toggleMSRPOrder()" style="cursor: pointer;">
                                 MSRP
-                                <i class="fas fa-sort-down" id="msrpIcon"></i>
+                                <i class="fas fa-sort-down" id="msrpIcon" style="display: none;"></i>
+                            </th>
+                            <th scope="col">
+                                <div class="dropdown-container">
+                                    <select id="rpoSelect" class="form-select small-dropdown">
+                                        <option value="">Select Package/Option</option>
+                                        <option value="Z4B" <% if (selectedRPO === 'Z4B') { %>selected<% } %>>Camaro Collector's Edition</option>
+                                        <option value="X56" <% if (selectedRPO === 'X56') { %>selected<% } %>>Camaro Garage 56 Special Edition</option>
+                                        <option value="WBL" <% if (selectedRPO === 'WBL') { %>selected<% } %>>Redline Edition</option>
+                                        <option value="B2E" <% if (selectedRPO === 'B2E') { %>selected<% } %>>Shock and Steel Edition</option>
+                                        <option value="PEH" <% if (selectedRPO === 'PEH') { %>selected<% } %>>Hertz / Hendrick Motorsports Edition</option>
+                                        <option value="A1Z" <% if (selectedRPO === 'A1Z') { %>selected<% } %>>ZL1 1LE Extreme Track Performance Package</option>
+                                        <option value="A1Y" <% if (selectedRPO === 'A1Y') { %>selected<% } %>>SS 1LE Track Performance Package</option>
+                                        <option value="A1X" <% if (selectedRPO === 'A1X') { %>selected<% } %>>LT 1LE Track Performance Package</option>
+                                        <option value="ZCR" <% if (selectedRPO === 'ZCR') { %>selected<% } %>>IMSA GTLM Championship C8.R Edition</option>
+                                        <option value="Y70" <% if (selectedRPO === 'Y70') { %>selected<% } %>>Corvette Stingray 70th Anniversary Edition</option>
+                                        <option value="Z07" <% if (selectedRPO === 'Z07') { %>selected<% } %>>Z07 Performance Package</option>
+                                        <option value="Z51" <% if (selectedRPO === 'Z51') { %>selected<% } %>>Z51 Performance Package</option>
+                                        <option value="ZLE" <% if (selectedRPO === 'ZLE') { %>selected<% } %>>CT4-V Blackwing Watkins Glen IMSA Edition</option>
+                                        <option value="ZLD" <% if (selectedRPO === 'ZLD') { %>selected<% } %>>CT4-V Blackwing Sebring IMSA Edition</option>
+                                        <option value="ZLG" <% if (selectedRPO === 'ZLG') { %>selected<% } %>>CT4-V Blackwing Road Atlanta IMSA Edition</option>
+                                        <option value="ZLK" <% if (selectedRPO === 'ZLK') { %>selected<% } %>>CT4-V Blackwing Arrival Edition</option>
+                                        <option value="ZLJ" <% if (selectedRPO === 'ZLJ') { %>selected<% } %>>CT4-V Blackwing Impact Edition</option>
+                                        <option value="ZLR" <% if (selectedRPO === 'ZLR') { %>selected<% } %>>CT4-V Blackwing Elevation Edition</option>
+                                        <option value="ABQ" <% if (selectedRPO === 'ABQ') { %>selected<% } %>>CT5-V Blackwing 120th Anniversary Edition</option>
+                                        <option value="OAR" <% if (selectedRPO === 'OAR') { %>selected<% } %>>Pre-Production Vehicle</option>
+                                    </select>
+                                </div>
                             </th>
                             <th scope="col">
                                 <div class="dropdown-container">
@@ -124,62 +192,50 @@
                                         <option value="">Country</option>
                                         <option value="USA" <% if (selectedCountry === 'USA') { %>selected<% } %>>USA</option>
                                         <option value="CAN" <% if (selectedCountry === 'CAN') { %>selected<% } %>>Canada</option>
-                                        <option value="MEX" <% if (selectedCountry === 'MEX') { %>selected<% } %>>Mexico</option>
+                                        <% if (models.includes("CAMARO")) { %>
+                                            <option value="MEX" <% if (selectedCountry === 'MEX') { %>selected<% } %>>Mexico</option>
+                                        <% } %>
                                     </select>
                                 </div>
                             </th>
-                            <th scope="col">Dealer</th>
+                            <!-- <th scope="col">Dealer</th> -->
                         </tr>
                     </thead>
                     <tbody>
                         <% locals.vehicle_data.forEach(function(data) { %>
-                            <% 
-                              function checkRPO(data) {
-                                let hasOAR = false;
-                                if (data.allJson) {
-                                  const rpos = JSON.parse(data.allJson).Options;
-                                  if (rpos) {
-                                    hasOAR = rpos.includes('OAR');
-                                  }
-                                }
-                                return { hasOAR };
-                              }
-
-                              const result = checkRPO(data);
-                            %>
                             <tr style="cursor: pointer;" onmousedown="handleMouseDown(event);" data-url="/search?vin=<%= data.vin %>">
-                                <td scope="row" style="text-align: left;" class="<%= result.hasOAR ? 'highlight' : '' %>"><%= data.vin %></td>
+                                <td scope="row" style="text-align: left;" class="<%= data.special_desc && data.special_desc.includes('Pre-Production Vehicle') ? 'highlight' : '' %>"><%= data.vin %></td>
                                 <td scope="row"><%= data.modelYear %></td>
                                 <td scope="row"><%= data.model %></td>
                                 <td scope="row"><%= data.body %></td>
                                 <td scope="row"><%= data.trim %></td>
-                                <td scope="row"><%= data.vehicleEngine %></td>
-                                <td scope="row"><%= data.transmission %></td>
-                                <td scope="row"><%= data.drivetrain %></td>
-                                <td scope="row" style="text-align: left; display: flex; align-items: center;">
-                                    <img id="sample" src="../img/extColors/<%= colorMap[data.exterior_color] || '../extColors/default' %>.webp" width="20" style="margin-right: 8px;">
-                                    <%= data.exterior_color %>
+                                <td scope="row"><%= data.engine_type %></td>
+                                <td scope="row"><%= data.transmission_type %></td>
+                                <td scope="row"><%= data.drivetrain_type %></td>
+                                <td scope="row" style="text-align: left; align-items: center;">
+                                    <img id="sample" src="../img/extColors/<%= colorMap[data.color_name] || '../extColors/default' %>.png" width="20" height="20" style="margin-right: 8px; border-radius: 50%;">
+                                    <%= data.color_name %>
                                 </td>
-                                <td scope="row" style="text-align: right;"><%= data.msrp %></td>
-                                <td scope="row">
-                                    <% 
-                                    if (data.location) {
-                                        const locationParts = data.location.split(',');
-                                        if (locationParts.length > 1) {
-                                            const state = locationParts[1].trim().split(' ')[0];
-                                            if (["AB", "BC", "MB", "NB", "NF", "NS", "NT", "ON", "PE", "PQ", "SK"].includes(state)) { %>
-                                                <img src="../img/canada_flag.png" alt="Canada" width="20">
-                                            <% } else { %>
-                                                <img src="../img/usa_flag.png" alt="USA" width="20">
-                                            <% }
-                                        } else { %>
-                                            <img src="../img/mexico_flag.png" alt="Mexico" width="20">
-                                        <% }
-                                    } else { %>
-                                        <img src="../img/mexico_flag.png" alt="Mexico" width="20">
+                                <td scope="row" class="accounting-format">
+                                    <% if (data.msrp == 0) { %>
+                                        <span></span>
+                                        <span>N/A</span>
+                                    <% } else { %>
+                                        <span>$</span>
+                                        <span><%= data.msrp %></span>
                                     <% } %>
                                 </td>
-                                <td scope="row" style="text-align: left;"><%= data.dealer || 'N/A' %></td>
+                                <td scope="row"><%= data.special_desc %></td>
+                                <td scope="row">
+                                    <% if (data.country == "USA") { %>
+                                        <img src="../img/flags/usa_flag.png" alt="USA" width="20">
+                                    <% } else if (data.country == "CANADA") { %>
+                                        <img src="../img/flags/canada_flag.png" alt="Canada" width="20">
+                                    <% } else { %>
+                                        <img src="../img/flags/mexico_flag.png" alt="Mexico" width="20">
+                                    <% } %>                                    
+                                </td>
+                                <!-- <td scope="row" style="text-align: left;"><%= data.dealer_name || 'N/A' %></td> -->
                             </tr>
                         <% }) %>
                     </tbody>
@@ -188,16 +244,14 @@
                  <div class="pagination-wrapper">
                     <nav aria-label="Page navigation">
                         <ul class="pagination">
-                            <!-- First Page -->
                             <% if (currentPage > 1) { %>
+                                <!-- First Page -->
                                 <li class="page-item">
-                                    <a class="page-link" href="?page=1&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>">First</a>
+                                    <a class="page-link" href="?page=1&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&trim=<% selectedTrim %>&engine=<% selectedEngine %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&body=<%= selectedBody %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>">First</a>
                                 </li>
-                            <% } %>
-                            <!-- Previous Page -->
-                            <% if (currentPage > 1) { %>
+                                <!-- Previous Page -->
                                 <li class="page-item">
-                                    <a class="page-link" href="?page=<%= currentPage - 1 %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>">Previous</a>
+                                    <a class="page-link" href="?page=<%= currentPage - 1 %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&trim=<% selectedTrim %>&engine=<% selectedEngine %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&body=<%= selectedBody %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>">Previous</a>
                                 </li>
                             <% } %>
                             <!-- Page Numbers -->
@@ -216,19 +270,17 @@
                             %>
                             <% for (let i = startPage; i <= endPage; i++) { %>
                                 <li class="page-item <%= i === currentPage ? 'active' : '' %>">
-                                    <a class="page-link" href="?page=<%= i %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>"><%= i %></a>
+                                    <a class="page-link" href="?page=<%= i %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&trim=<% selectedTrim %>&engine=<% selectedEngine %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&body=<%= selectedBody %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>"><%= i %></a>
                                 </li>
                             <% } %>
-                            <!-- Next Page -->
                             <% if (currentPage < totalPages) { %>
+                                <!-- Next Page -->
                                 <li class="page-item">
-                                    <a class="page-link" href="?page=<%= currentPage + 1 %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>">Next</a>
+                                    <a class="page-link" href="?page=<%= currentPage + 1 %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&trim=<% selectedTrim %>&engine=<% selectedEngine %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&body=<%= selectedBody %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>">Next</a>
                                 </li>
-                            <% } %>
-                            <!-- Last Page -->
-                            <% if (currentPage < totalPages) { %>
+                                <!-- Last Page -->
                                 <li class="page-item">
-                                    <a class="page-link" href="?page=<%= totalPages %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>">Last</a>
+                                    <a class="page-link" href="?page=<%= totalPages %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&trim=<% selectedTrim %>&engine=<% selectedEngine %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&body=<%= selectedBody %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>">Last</a>
                                 </li>
                             <% } %>
                         </ul>
@@ -241,11 +293,26 @@
     <%- include('../partials/footer'); %>
     <script>
         let startX;
-        let selectedOrder = "DESC";
 
-        function toggleSortOrder() {
+        function buildQueryString(params) {
+            const queryStrings = Object.entries(params)
+                .filter(([key, value]) => value)
+                .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+                .join('&');
+            return queryStrings;
+        }
+
+        function toggleMSRPOrder() {
             selectedOrder = selectedOrder === "DESC" ? "ASC" : "DESC";
             document.getElementById('msrpIcon').className = selectedOrder === "DESC" ? 'fas fa-sort-down' : 'fas fa-sort-up';
+            const params = new URLSearchParams(window.location.search);
+            params.set('order', selectedOrder);
+            window.location.search = params.toString();
+        }
+
+        function toggleVINOrder() {
+            selectedOrder = selectedOrder === "vinASC" ? "vinDESC" : "vinASC";
+            document.getElementById('vinIcon').className = selectedOrder === "vinASC" ? 'fas fa-sort-up' : 'fas fa-sort-down';
             const params = new URLSearchParams(window.location.search);
             params.set('order', selectedOrder);
             window.location.search = params.toString();
@@ -263,18 +330,51 @@
             window.location.href = url;
         }
 
+        function updateIcons(selectedOrder) {
+            const vinIcon = document.getElementById('vinIcon');
+            const msrpIcon = document.getElementById('msrpIcon');
+
+            function setIcon(iconElement, iconType, condition) {
+                iconElement.className = condition ? `fas fa-sort-${iconType}` : '';
+                iconElement.style.display = condition ? 'inline' : 'none';
+            }
+            setIcon(msrpIcon, selectedOrder === 'ASC' ? 'up' : 'down', selectedOrder === 'ASC' || selectedOrder === 'DESC');
+            setIcon(vinIcon, selectedOrder === 'vinASC' ? 'up' : 'down', selectedOrder === 'vinASC' || selectedOrder === 'vinDESC');
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
+            const filterToggle = document.getElementById('filterToggle');
+            const filterContent = document.getElementById('filterContent');
+            const filterIcon = document.getElementById('filterIcon');
+            const clearFilters = document.getElementById('clearFilters');
             const rpoSelect = document.getElementById('rpoSelect');
             const yearSelect = document.getElementById('yearSelect');
+            const bodySelect = document.getElementById('bodySelect');
+            const trimSelect = document.getElementById('trimSelect');
+            const engineSelect = document.getElementById('engineSelect');
             const transSelect = document.getElementById('transSelect');
             const colorSelect = document.getElementById('colorSelect');
             const countrySelect = document.getElementById('countrySelect');
             const orderSelect = document.getElementById('orderSelect');
             const filterForm = document.getElementById('filterForm');
             const limitSelect = document.getElementById('limitSelect');
-            const currentOrder = new URLSearchParams(window.location.search).get('order') || "DESC";
+            const currentOrder = new URLSearchParams(window.location.search).get('order');
             selectedOrder = currentOrder;
-            document.getElementById('msrpIcon').className = selectedOrder === "DESC" ? 'fas fa-sort-down' : 'fas fa-sort-up';
+            updateIcons(selectedOrder);
+
+            filterToggle.addEventListener('click', function() {
+                if (filterContent.classList.contains('show')) {
+                    filterContent.classList.remove('show');
+                    filterIcon.classList.remove('rotate');
+                } else {
+                    filterContent.classList.add('show');
+                    filterIcon.classList.add('rotate');
+                }
+            });
+
+            clearFilters.addEventListener('click', function() {
+                window.location.href = '/vehicles';
+            });
 
             rpoSelect.addEventListener('change', function(event) {
                 const selectedRPO = event.target.value;
@@ -288,6 +388,30 @@
                 const selectedYear = event.target.value;
                 const url = new URL(window.location.href);
                 url.searchParams.set('year', selectedYear);
+                url.searchParams.set('page', 1);
+                window.location.href = url.toString();
+            });
+
+            bodySelect.addEventListener('change', function(event) {
+                const selectedBody = event.target.value;
+                const url = new URL(window.location.href);
+                url.searchParams.set('body', selectedBody);
+                url.searchParams.set('page', 1);
+                window.location.href = url.toString();
+            });
+
+            trimSelect.addEventListener('change', function(event) {
+                const selectedTrim = event.target.value;
+                const url = new URL(window.location.href);
+                url.searchParams.set('trim', selectedTrim);
+                url.searchParams.set('page', 1);
+                window.location.href = url.toString();
+            });
+
+            engineSelect.addEventListener('change', function(event) {
+                const selectedEngine = event.target.value;
+                const url = new URL(window.location.href);
+                url.searchParams.set('engine', selectedEngine);
                 url.searchParams.set('page', 1);
                 window.location.href = url.toString();
             });
@@ -317,7 +441,7 @@
             });
 
             limitSelect.addEventListener('change', function() {
-                const limit = limitSelect.value;
+                const limit = event.target.value;
                 const url = new URL(window.location.href);
                 url.searchParams.set('limit', limit);
                 url.searchParams.set('page', 1);
@@ -331,15 +455,22 @@
                 const selectedOptions = Array.from(checkboxes)
                                             .filter(checkbox => checkbox.checked)
                                             .map(checkbox => checkbox.value);
+    
+                const modelQueryString = selectedOptions.length ? selectedOptions.map(option => `model=${encodeURIComponent(option)}`).join('&') : '';
 
-                const queryString = selectedOptions.map(option => `model=${option}`).join('&');
-                const selectedRPO = rpoSelect.value;
-                const selectedYear = yearSelect.value;
-                const selectedTrans = transSelect.value;
-                const selectedColor = colorSelect.value;
-                const selectedCountry = countrySelect.value;
-                const limit = limitSelect.value;
-                const url = `/vehicles?page=1&${queryString}&rpo=${selectedRPO}&trans=${selectedTrans}&year=${selectedYear}&color=${selectedColor}&country=${selectedCountry}&limit=${limit}`;
+                const selectedRPO = rpoSelect.value ? `rpo=${encodeURIComponent(rpoSelect.value)}` : '';
+                const selectedYear = yearSelect.value ? `year=${encodeURIComponent(yearSelect.value)}` : '';
+                const selectedBody = bodySelect.value ? `body=${encodeURIComponent(bodySelect.value)}` : '';
+                const selectedTrim = trimSelect.value ? `trim=${encodeURIComponent(trimSelect.value)}` : '';
+                const selectedEngine = engineSelect.value ? `engine=${encodeURIComponent(engineSelect.value)}` : '';
+                const selectedTrans = transSelect.value ? `trans=${encodeURIComponent(transSelect.value)}` : '';
+                const selectedColor = colorSelect.value ? `color=${encodeURIComponent(colorSelect.value)}` : '';
+                const selectedCountry = countrySelect.value ? `country=${encodeURIComponent(countrySelect.value)}` : '';
+                const limit = limitSelect.value ? `limit=${encodeURIComponent(limitSelect.value)}` : '';
+                const queryStrings = [modelQueryString, selectedRPO, selectedYear, selectedBody, selectedEngine, selectedTrans, selectedColor, selectedCountry, limit]
+                                        .filter(Boolean)
+                                        .join('&');
+                const url = `/vehicles?page=1&${queryStrings}`;
                 window.location.href = url;
             });
 

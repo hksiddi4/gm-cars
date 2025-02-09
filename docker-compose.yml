@@ -6,6 +6,7 @@ services:
       - "3000:3000"
     depends_on:
       - backend
+    restart: always
     networks:
       - app-network
 
@@ -14,10 +15,11 @@ services:
     ports:
       - "5000:5000"
     env_file:
-      - stack.env
+      - .env
+    restart: always
     networks:
       - app-network
 
 networks:
   app-network:
-    external: false
+    driver: bridge

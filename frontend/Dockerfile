@@ -1,7 +1,13 @@
-FROM node:14
+# Build Stage
+FROM node:18 AS builder
 WORKDIR /app
 COPY package*.json ./
-RUN npm install -g nodemon && npm install
+RUN npm install
 COPY . .
-EXPOSE 3000
-CMD ["nodemon", "server.js"]
+RUN npm run build
+
+# Serve Stage
+FROM nginx:alpine
+COPY --from=builder /app/build /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]

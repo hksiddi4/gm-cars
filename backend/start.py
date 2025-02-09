@@ -7,7 +7,7 @@ import requests
 import json
 
 app = flask.Flask(__name__)
-app.config["DEBUG"] = True
+app.config["DEBUG"] = False
 CORS(app)
 
 myCreds = sql.Creds()

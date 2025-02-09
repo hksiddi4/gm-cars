@@ -8,4 +8,4 @@ RUN apt-get update && apt-get install -y --no-install-recommends libpq-dev \
 
 COPY . .
 EXPOSE 5000
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "start:app"]
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "start:app", "--preload"]

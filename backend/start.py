@@ -3,8 +3,6 @@ import flask
 from flask import request, jsonify
 from flask_cors import CORS
 from sql import create_connection, execute_read_query, close_connection, Creds
-import requests
-import json
 
 app = flask.Flask(__name__)
 app.config["DEBUG"] = True

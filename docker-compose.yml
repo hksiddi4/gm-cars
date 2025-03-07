@@ -3,12 +3,13 @@ services:
   frontend:
     build: ./frontend
     ports:
-      - "3000:3000"
+      - "80:80"
     depends_on:
       - backend
     restart: always
     networks:
       - app-network
+      - frontend-macvlan
 
   backend:
     build: ./backend
@@ -23,3 +24,13 @@ services:
 networks:
   app-network:
     driver: bridge
+  frontend-macvlan:
+    driver: macvlan
+    external: true
+    driver_opts:
+      parent: ens6f1
+    ipam:
+      config:
+        - subnet: 192.168.1.0/24
+          gateway: 192.168.1.254
+          ip_range: 192.168.1.253/24

@@ -170,7 +170,7 @@ app.use(function(req, res) {
     res.status(404).render('pages/404', { req: req });
 });
 
-const port = 3000;
+const port = 80;
 app.listen(port, "0.0.0.0",() => {
     console.log(`Frontend is running on port ${port}`);
 });

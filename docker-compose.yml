@@ -8,8 +8,9 @@ services:
       - backend
     restart: always
     networks:
+      frontend-macvlan:
+        ipv4_address: 192.168.1.129
       - app-network
-      - frontend-macvlan
 
   backend:
     build: ./backend
@@ -26,3 +27,10 @@ networks:
     driver: bridge
   frontend-macvlan:
     external: true
+    driver: macvlan
+    driver_opts:
+      parent: ens6f1
+    ipam:
+      config:
+        - subnet: 192.168.1.0/24
+          gateway: 192.168.1.254

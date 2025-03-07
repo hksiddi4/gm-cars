@@ -25,11 +25,5 @@ networks:
   app-network:
     driver: bridge
   frontend-macvlan:
-    driver: macvlan
-    driver_opts:
-      parent: ens6f1
-    ipam:
-      config:
-        - subnet: 192.168.1.0/24
-          gateway: 192.168.1.254
-          ip_range: 192.168.1.200/29
+    external: true
+    ipv4_address: 192.168.1.127

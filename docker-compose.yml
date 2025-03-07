@@ -9,7 +9,6 @@ services:
     restart: always
     networks:
       - app-network
-      - frontend-macvlan
 
   backend:
     build: ./backend
@@ -24,5 +23,3 @@ services:
 networks:
   app-network:
     driver: bridge
-  frontend-macvlan:
-    external: true

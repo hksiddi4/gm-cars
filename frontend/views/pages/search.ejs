@@ -148,8 +148,12 @@
               <button id="next" style="position: absolute; top: 50%; right: 0; background-color: rgba(0, 0, 0, 0.5); color: white; border: none; padding: 10px; cursor: pointer; z-index: 100;">&#10095;</button>
             </div>
             <!-- Window Sticker -->
-            <div id="sticker-container">
-              <iframe id="window-sticker" src="https://cws.gm.com/vs-cws/vehshop/v2/vehicle/windowsticker?vin=<%= vin_data[0].vin || 'N/A' %>" style="min-height: 886px; width: 100%;"></iframe>
+            <div id="sticker-container" style="text-align: center; padding: 20px;">
+              <% if (vin_data[0].country === 'MEXICO') { %>
+                <h2>No window sticker available</h2>
+              <% } else { %>
+                <iframe id="window-sticker" src="https://cws.gm.com/vs-cws/vehshop/v2/vehicle/windowsticker?vin=<%= vin_data[0].vin || 'N/A' %>" style="min-height: 886px; width: 100%;"></iframe>
+              <% } %>
             </div>
             <!-- <div class="rarity-container">
               <% vin_data.forEach(function(data) { %>

@@ -5,7 +5,7 @@ from flask_cors import CORS
 from sql import create_connection, execute_read_query, close_connection, Creds
 
 app = flask.Flask(__name__)
-app.config["DEBUG"] = True
+app.config["DEBUG"] = False
 CORS(app)
 
 myCreds = sql.Creds()
@@ -277,4 +277,4 @@ def sort_price():
 
 #========================= View Pages #=========================
 
-app.run()
+app.run(host="0.0.0.0", port=5000)

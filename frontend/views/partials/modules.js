@@ -158,6 +158,9 @@ const mmc = {
   // Corvette E-Ray
   "1YG07": "", // Coupe
   "1YG67": "", // Conv
+  // Corvette ZR1
+  "1YR07": "", // Coupe
+  "1YR67": "", // Conv
   // Cadillac
   "6DB69": "1SB", // CT4 LUXURY
   "6DB79": "1SB", // CT5 LUXURY

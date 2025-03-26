@@ -2,6 +2,7 @@ import sql
 import flask
 from flask import request, jsonify
 from flask_cors import CORS
+import requests
 from sql import create_connection, execute_read_query, close_connection, Creds
 
 app = flask.Flask(__name__)

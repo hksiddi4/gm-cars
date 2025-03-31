@@ -182,7 +182,7 @@ def sort_price():
     if rpo:
         join_clause += "\n            JOIN Options opt ON v.vehicle_id = opt.vehicle_id"
         rpo_conditions = {
-            "H40": ["modelYear = '2024'", "model = 'CAMARO'", "trim = '2SS'", "color_name ='RADIANT RED TINTCOAT'", "opt.option_code = 'SL1'", "v.vin IN ('1G1FK1R65R0117449', '1G1FK3D62R0118478')"],
+            "H40": ["(modelYear = '2024' AND model = 'CAMARO' AND trim = '2SS' AND color_name = 'RADIANT RED TINTCOAT' AND opt.option_code = 'SL1')", "v.vin IN ('1G1FK1R65R0117449', '1G1FK3D62R0118478')"],
             "WBL": ["model = 'CAMARO'", "trim NOT IN ('ZL1', '1LS')", "color_name IN ('BLACK', 'SUMMIT WHITE', 'SHARKSKIN METALLIC', 'SATIN STEEL GRAY METALLIC')", f"opt.option_code = '{rpo}'"],
             "B2E": ["model = 'CAMARO'", "trim IN ('2LT', '2SS', '3LT')", "modelYear != '2024'", "color_name IN ('BLACK', 'SUMMIT WHITE', 'RAPID BLUE', 'SHARKSKIN METALLIC', 'SATIN STEEL GRAY METALLIC', 'SHOCK')", f"opt.option_code = '{rpo}'"],
             "Z4B": ["modelYear = '2024'", "model = 'CAMARO'", "color_name IN ('PANTHER BLACK MATTE', 'PANTHER BLACK METALLIC')", f"opt.option_code = '{rpo}'"],

@@ -362,3 +362,24 @@ SET se.special_desc = 'Hertz / Hendrick Motorsports Edition #001'
 WHERE v.vin = '1G1FH1R70L0105904';
 
 
+
+SELECT v.vin, v.modelYear, v.model, v.body, v.trim, 
+	e.engine_type, t.transmission_type, d.drivetrain_type, 
+	c.color_name, v.msrp, o.country, dl.dealer_name, 
+	GROUP_CONCAT(DISTINCT se.special_desc ORDER BY se.special_desc ASC SEPARATOR ', ') AS special_desc
+FROM Vehicles v 
+	JOIN Engines e ON v.engine_id = e.engine_id 
+	JOIN Transmissions t ON v.transmission_id = t.transmission_id 
+	JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id 
+	JOIN Colors c ON v.color_id = c.color_id 
+	JOIN Orders o ON v.order_id = o.order_id 
+	JOIN Dealers dl ON v.dealer_id = dl.dealer_id 
+	LEFT JOIN SpecialEditions se ON v.vehicle_id = se.vehicle_id 
+	JOIN Options opt ON v.vehicle_id = opt.vehicle_id
+WHERE (modelYear = '2024' AND model = 'CAMARO' AND trim = '2SS' AND color_name = 'RADIANT RED TINTCOAT' AND opt.option_code = 'SL1') OR v.vin IN ('1G1FK1R65R0117449', '1G1FK3D62R0118478')
+GROUP BY v.vin, v.modelYear, v.model, v.body, v.trim, 
+		e.engine_type, t.transmission_type, d.drivetrain_type, 
+		c.color_name, v.msrp, o.country, dl.dealer_name;
+        
+create user 'tester' identified by 'Hussain92';
+grant all privileges on vehicles.* to 'tester'@'%';

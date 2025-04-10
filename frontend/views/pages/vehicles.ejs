@@ -35,6 +35,11 @@
                     </form>
                 </div>
             </div>
+            <!-- RPO Search -->
+            <div class="col-md-4">
+                <input type="text" id="rpoSearchInput" class="form-control" placeholder="Search RPOs..." />
+                <ul id="rpoResults" class="list-group mt-2" style="max-height: 200px; overflow-y: auto;"></ul>
+            </div>
             <div class="stats d-flex">
                 <!-- Limit and Total -->
                 <div class="col-md-3 d-flex align-items-end" style="margin-top: 5px;">
@@ -53,7 +58,6 @@
                     </div>
                 </div>
             </div>
-            
             <!-- Vehicles Table -->
             <div class="table-responsive">
                 <% if (locals.vehicle_data) { %>
@@ -133,7 +137,7 @@
                             <th scope="col">
                                 <div class="dropdown-container">
                                     <select id="rpoSelect" class="form-select small-dropdown">
-                                        <option value="">Select Package/Option</option>
+                                        <option value="">Package/Option</option>
                                         <option value="Z4B" <% if (selectedRPO === 'Z4B') { %>selected<% } %>>Camaro Collector's Edition</option>
                                         <option value="X56" <% if (selectedRPO === 'X56') { %>selected<% } %>>Camaro Garage 56 Special Edition</option>
                                         <option value="WBL" <% if (selectedRPO === 'WBL') { %>selected<% } %>>Redline Edition</option>
@@ -263,6 +267,7 @@
         </div>
     </div>
     <%- include('../partials/footer'); %>
+    <script src="../partials/rpo.js"></script>
     <script>
         let startX;
 
@@ -302,6 +307,19 @@
             window.location.href = url;
         }
 
+        function addSelectListener(selectId, paramName) {
+            const selectElement = document.getElementById(selectId);
+            if (!selectElement) return;
+
+            selectElement.addEventListener('change', function(event) {
+                const value = event.target.value;
+                const url = new URL(window.location.href);
+                url.searchParams.set(paramName, value);
+                url.searchParams.set('page', 1);
+                window.location.href = url.toString();
+            });
+        }
+
         function updateIcons(selectedOrder) {
             const vinIcon = document.getElementById('vinIcon');
             const msrpIcon = document.getElementById('msrpIcon');
@@ -334,6 +352,29 @@
             selectedOrder = currentOrder;
             updateIcons(selectedOrder);
 
+            const rpoSearchInput = document.getElementById('rpoSearchInput');
+            const rpoResults = document.getElementById('rpoResults');
+
+            rpoSearchInput.addEventListener('input', function() {
+                const query = rpoSearchInput.value.toUpperCase().trim();
+                rpoResults.innerHTML = '';
+
+                if (query.length > 0) {
+                    const matchingRPOs = Object.entries(rpoDescriptions).filter(([rpo, description]) =>
+                        rpo.includes(query) || description.toLowerCase().includes(query.toLowerCase())
+                    );
+
+                    matchingRPOs.forEach(([rpo, description]) => {
+                        const li = document.createElement('li');
+                        li.classList.add('list-group-item');
+                        const highlightedRpo = rpo.replace(new RegExp(query, 'gi'), match => `<span class="highlight">${match}</span>`);
+                        const highlightedDescription = description.replace(new RegExp(query, 'gi'), match => `<span class="highlight">${match}</span>`);
+                        li.innerHTML = `<strong>${rpo}</strong>: ${highlightedDescription}`;
+                        rpoResults.appendChild(li);
+                    });
+                }
+            });
+
             filterToggle.addEventListener('click', function() {
                 if (filterContent.classList.contains('show')) {
                     filterContent.classList.remove('show');
@@ -348,85 +389,23 @@
                 window.location.href = '/vehicles';
             });
 
-            rpoSelect.addEventListener('change', function(event) {
-                const selectedRPO = event.target.value;
-                const url = new URL(window.location.href);
-                url.searchParams.set('rpo', selectedRPO);
-                url.searchParams.set('page', 1);
-                window.location.href = url.toString();
-            });
-
-            yearSelect.addEventListener('change', function(event) {
-                const selectedYear = event.target.value;
-                const url = new URL(window.location.href);
-                url.searchParams.set('year', selectedYear);
-                url.searchParams.set('page', 1);
-                window.location.href = url.toString();
-            });
-
-            bodySelect.addEventListener('change', function(event) {
-                const selectedBody = event.target.value;
-                const url = new URL(window.location.href);
-                url.searchParams.set('body', selectedBody);
-                url.searchParams.set('page', 1);
-                window.location.href = url.toString();
-            });
-
-            trimSelect.addEventListener('change', function(event) {
-                const selectedTrim = event.target.value;
-                const url = new URL(window.location.href);
-                url.searchParams.set('trim', selectedTrim);
-                url.searchParams.set('page', 1);
-                window.location.href = url.toString();
-            });
-
-            engineSelect.addEventListener('change', function(event) {
-                const selectedEngine = event.target.value;
-                const url = new URL(window.location.href);
-                url.searchParams.set('engine', selectedEngine);
-                url.searchParams.set('page', 1);
-                window.location.href = url.toString();
-            });
-
-            transSelect.addEventListener('change', function(event) {
-                const selectedTrans = event.target.value;
-                const url = new URL(window.location.href);
-                url.searchParams.set('trans', selectedTrans);
-                url.searchParams.set('page', 1);
-                window.location.href = url.toString();
-            });
-
-            colorSelect.addEventListener('change', function(event) {
-                const selectedColor = event.target.value;
-                const url = new URL(window.location.href);
-                url.searchParams.set('color', selectedColor);
-                url.searchParams.set('page', 1);
-                window.location.href = url.toString();
-            });
-
-            countrySelect.addEventListener('change', function(event) {
-                const selectedCountry = event.target.value;
-                const url = new URL(window.location.href);
-                url.searchParams.set('country', selectedCountry);
-                url.searchParams.set('page', 1);
-                window.location.href = url.toString();
-            });
-
-            limitSelect.addEventListener('change', function() {
-                const limit = event.target.value;
-                const url = new URL(window.location.href);
-                url.searchParams.set('limit', limit);
-                url.searchParams.set('page', 1);
-                window.location.href = url.toString();
-            });
+            addSelectListener('rpoSelect', 'rpo');
+            addSelectListener('yearSelect', 'year');
+            addSelectListener('bodySelect', 'body');
+            addSelectListener('trimSelect', 'trim');
+            addSelectListener('engineSelect', 'engine');
+            addSelectListener('transSelect', 'trans');
+            addSelectListener('colorSelect', 'color');
+            addSelectListener('countrySelect', 'country');
+            addSelectListener('limitSelect', 'limit');
 
             filterForm.addEventListener('submit', function(event) {
                 event.preventDefault();
                 
                 const checkboxes = filterForm.querySelectorAll('input[type="checkbox"]');
                 const selectedOptions = Array.from(checkboxes)
-                                            .filter(checkbox => checkbox.checked)
-                                            .map(checkbox => checkbox.value);
+                    .filter(checkbox => checkbox.checked)
+                    .map(checkbox => checkbox.value);
     
                 const modelQueryString = selectedOptions.length ? selectedOptions.map(option => `model=${encodeURIComponent(option)}`).join('&') : '';
 
@@ -440,8 +419,8 @@
                 const selectedCountry = countrySelect.value ? `country=${encodeURIComponent(countrySelect.value)}` : '';
                 const limit = limitSelect.value ? `limit=${encodeURIComponent(limitSelect.value)}` : '';
                 const queryStrings = [modelQueryString, selectedRPO, selectedYear, selectedBody, selectedEngine, selectedTrans, selectedColor, selectedCountry, limit]
-                                        .filter(Boolean)
-                                        .join('&');
+                    .filter(Boolean)
+                    .join('&');
                 const url = `/vehicles?page=1&${queryStrings}`;
                 window.location.href = url;
             });

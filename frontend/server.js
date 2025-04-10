@@ -30,12 +30,16 @@ app.get('/vehicles', function(req, res) {
     var engine = req.query.engine;
     var trans = req.query.trans;
     var models = req.query.model;
-    var rpo = req.query.rpo;
+    var rpos = req.query.rpo;
     var color = req.query.color;
     var country = req.query.country;
     var order = req.query.order;
     var page = parseInt(req.query.page) || 1;
     var limit = Math.min(parseInt(req.query.limit) || 100, 250);
+
+    if (typeof rpos === 'string') {
+        rpos = rpos.split(',');
+    }
 
     let url = `${baseURL}/vehicles?page=${page}&limit=${limit}`;
     if (year) url += `&year=${year}`;
@@ -44,7 +48,7 @@ app.get('/vehicles', function(req, res) {
     if (engine) url += `&engine=${engine}`;
     if (trans) url += `&trans=${trans}`;
     if (models) url += `&model=${Array.isArray(models) ? models.join(',') : models}`;
-    if (rpo) url += `&rpo=${rpo}`;
+    if (rpos) url += `&rpo=${Array.isArray(rpos) ? rpos.join(',') : rpos}`;
     if (color) url += `&color=${color}`;
     if (country) url += `&country=${country}`;
     if (order) url += `&order=${order}`;
@@ -91,7 +95,7 @@ app.get('/vehicles', function(req, res) {
                 limit: limit,
                 totalItems: totalItems,
                 elapsedTime: elapsedTime,
-                selectedRPO: rpo,
+                selectedRPO: rpos,
                 selectedColor: selectedColor,
                 selectedYear: selectedYear,
                 selectedBody: selectedBody,

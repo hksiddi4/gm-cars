@@ -145,6 +145,8 @@ def sort_price():
     limit = int(request.args.get('limit', 100))
     offset = (page - 1) * limit
 
+    rpo_list = []
+
     join_clause = """
             JOIN Engines e ON v.engine_id = e.engine_id 
             JOIN Transmissions t ON v.transmission_id = t.transmission_id 
@@ -152,7 +154,8 @@ def sort_price():
             JOIN Colors c ON v.color_id = c.color_id 
             JOIN Orders o ON v.order_id = o.order_id 
             JOIN Dealers dl ON v.dealer_id = dl.dealer_id 
-            LEFT JOIN SpecialEditions se ON v.vehicle_id = se.vehicle_id """
+            LEFT JOIN SpecialEditions se ON v.vehicle_id = se.vehicle_id
+    """
 
     country_map = {
         "CAN": "CANADA",
@@ -209,6 +212,9 @@ def sort_price():
             if rpo in rpo_conditions:
                 conditions.extend(rpo_conditions[rpo])
 
+        if 'H40' in rpo_list:
+            rpo_list = [code for code in rpo_list if code != 'H40']
+            rpo_n = len(rpo_list)
         if len(rpo_list) > 1:
             rpo_placeholders = "', '".join(rpo_list)
             conditions.append(f"opt.option_code IN ('{rpo_placeholders}')")
@@ -217,9 +223,10 @@ def sort_price():
 
     where_clause = "WHERE " + " AND ".join(conditions) if conditions else ""
 
-    if rpo:
+    if not rpo_list or 'H40' in rpo_list:
+        rpo_clause = ""
+    else:
         rpo_clause = f"HAVING COUNT(DISTINCT opt.option_code) = {rpo_n}"
-    else: rpo_clause = ""
 
     def get_all_distinct_values():
         columns = ['modelYear', 'body', 'trim', 'engine_type', 'transmission_type', 'model', 'color_name', 'country']

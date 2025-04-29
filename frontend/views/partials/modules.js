@@ -135,7 +135,6 @@ const seatCode = {
 const mmc = {
   // Camaro
   "1AG37": "1LT",
-  "1AG37": "1LS",
   "1AG67": "1LT",
   "1AH37": "2LT",
   "1AH37": "3LT",

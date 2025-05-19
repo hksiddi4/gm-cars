@@ -9,7 +9,7 @@ app.use(express.json());
 app.use(express.static('views'));
 app.set('view engine', 'ejs');
 
-const baseURL = 'http://backend:5000'
+const baseURL = 'http://192.168.1.111:5000'
 
 function formatCurrency(number) {
     if (number === null) {
@@ -138,41 +138,28 @@ app.get('/search', function(req, res) {
     })
 });
 
-// app.get('/stats', function(req, res) {
-//     const startTime = Date.now();
-//     var model = req.query.model;
-//     var year = req.query.year;
+app.get('/stats', function(req, res) {
+    var category = req.query.category;
+    let url = `${baseURL}/stats`;
+    if (category) url += `?category=${category}`;
 
-//     let url = `${baseURL}/stats`;
-//     if (model) url += `?model=${model}`;
-//     if (year) url += `&year=${year}`;
-
-//     axios.get(url)
-//         .then((response) => {
-//             var stat_data = Array.isArray(response.data.data) ? response.data.data : [];
-//             var years = response.data.year
-//             var bodys = response.data.body
-//             var trim = response.data.trim;
-//             var engine = response.data.engine;
-//             var trans = response.data.trans;
-//             var colors = response.data.color;
-//             var country = response.data.country;
-//             var models = response.data.model;
-//             const elapsedTime = ((Date.now() - startTime) / 1000).toFixed(2);
-
-//             res.render('pages/stats', {
-//                 stat_data: stat_data,
-//                 years: years,
-//                 models: models,
-//                 totalItems: totalItems,
-//                 elapsedTime: elapsedTime
-//             });
-//         })
-//         .catch((error) => {
-//             console.error(`Error fetching data: ${error}`);
-//             res.status(500).send('Error fetching data');
-//         });
-// });
+    axios.get(url)
+        .then((response)=>{
+            var stats_data = response.data;
+            stats_data.forEach(function(data) {
+                data.total_count = formatCurrency(data.total_count);
+            });
+            
+            res.render('pages/stats', {
+                stats_data: stats_data,
+                category: category
+            });
+        })
+        .catch((error) => {
+            console.error(`Error fetching data: ${error}`);
+            res.status(500).send('Error fetching data');
+        });
+});
 
 app.post('/api/rarity', async (req, res) => {
     const options = req.body.Options;

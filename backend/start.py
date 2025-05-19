@@ -99,7 +99,6 @@ def generate_url():
             # gmds11 = 2500x1407 | gmds10 = 1920x1080 | gmds5 = 320x178 | gmds4 = 640x360 | gmds3 = 205x115 | gmds2 = 960x540 | gmds1 = 480x270
             end_url = f"gmds10.png&v=deg{view:02d}&std=true&country=US&send404=true&transparentBackgroundPng=true"
             built_url = f"{base_url}{model_year}/{mmc_code}/{mmc_code}__{trim}/{color_value}_{rpos}{end_url}"
-            print(built_url)
             response = requests.head(built_url)
             view += 1
             if response.status_code == 404:
@@ -154,7 +153,6 @@ def sort_price():
             JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id 
             JOIN Colors c ON v.color_id = c.color_id 
             JOIN Orders o ON v.order_id = o.order_id 
-            JOIN Dealers dl ON v.dealer_id = dl.dealer_id 
             LEFT JOIN SpecialEditions se ON v.vehicle_id = se.vehicle_id
     """
 
@@ -275,13 +273,13 @@ def sort_price():
     select = f"""
         SELECT v.vin, v.modelYear, v.model, v.body, v.trim, 
             e.engine_type, t.transmission_type, d.drivetrain_type, 
-            c.color_name, v.msrp, o.country, dl.dealer_name, 
+            c.color_name, v.msrp, o.country, 
             GROUP_CONCAT(DISTINCT se.special_desc ORDER BY se.special_desc ASC SEPARATOR ', ') AS special_desc
         FROM Vehicles v {join_clause}
         {where_clause}
         GROUP BY v.vin, v.modelYear, v.model, v.body, v.trim, 
                 e.engine_type, t.transmission_type, d.drivetrain_type, 
-                c.color_name, v.msrp, o.country, dl.dealer_name
+                c.color_name, v.msrp, o.country 
         {rpo_clause}
         {order_clause}
         LIMIT {limit} OFFSET {offset}
@@ -304,6 +302,38 @@ def sort_price():
         'color': color_list,
         'country': country_list
     })
+
+@app.route('/stats', methods=['GET'])
+def color_stats():
+    category = request.args.get('category')
+    if category == 'color':
+        sqlStatement = """
+            WITH ColorCounts AS (
+                SELECT
+                    crm.rpo_code,
+                    COUNT(*) AS total_count,
+                    GROUP_CONCAT(DISTINCT crm.color_name ORDER BY crm.color_name SEPARATOR ', ') AS color_names
+                FROM Vehicles v
+                JOIN Colors c ON v.color_id = c.color_id
+                JOIN ColorRPOMap crm ON c.color_name = crm.color_name
+                GROUP BY crm.rpo_code
+            ),
+            Ranked AS (
+                SELECT
+                    ROW_NUMBER() OVER (ORDER BY total_count DESC) AS `rank`,
+                    rpo_code,
+                    total_count,
+                    color_names
+                FROM ColorCounts
+            )
+            SELECT * FROM Ranked
+        """
+        conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
+        viewTable = execute_read_query(conn, sqlStatement)
+        close_connection(conn)
+        return jsonify(viewTable)
+    else:
+        return jsonify([])
 
 #========================= View Pages #=========================
 

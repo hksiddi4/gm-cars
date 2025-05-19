@@ -60,7 +60,7 @@
             </div>
             <!-- Vehicles Table -->
             <div class="table-responsive">
-                <% if (locals.vehicle_data) { %>
+                <% if (vehicle_data) { %>
                 <table class="table-veh table-hover border border shadow" id="allTable">
                     <thead>
                         <tr>
@@ -174,11 +174,10 @@
                                     </select>
                                 </div>
                             </th>
-                            <!-- <th scope="col">Dealer</th> -->
                         </tr>
                     </thead>
                     <tbody>
-                        <% locals.vehicle_data.forEach(function(data) { %>
+                        <% vehicle_data.forEach(function(data) { %>
                             <tr style="cursor: pointer;" onmousedown="handleMouseDown(event);" data-url="/search?vin=<%= data.vin %>">
                                 <td scope="row" style="text-align: left;" class="<%= data.special_desc && data.special_desc.includes('Pre-Production Vehicle') ? 'highlight' : '' %>"><%= data.vin %></td>
                                 <td scope="row"><%= data.modelYear %></td>

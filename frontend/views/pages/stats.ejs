@@ -6,13 +6,66 @@
 </head>
 <body>
     <%- include('../partials/header'); %>
-    <div class="custom-container">
-        <div class="content">
-            <div class="container-fluid">
-                <h2 class="pt-4" style="font-weight: bold;">Statistics</h2>
+    <div class="container">
+        <div class="row pt-4">
+            <div class="col">
+                <h1 style="font-weight: bold;">Statistics</h1>
             </div>
         </div>
+        <div class="row mb-2">
+            <div class="col-md-2">
+                <select id="selectedStats" class="form-select">
+                    <option value="">Category</option>
+                    <option value="color" <% if (category === 'color') { %> selected <% } %>>Color</option>
+                </select>
+            </div>
+        </div>
+        <% if (stats_data && stats_data.length > 0) { %>
+            <table class="table-veh table-hover border shadow">
+                <thead>
+                    <tr>
+                        <th scope="col">
+                            Rank
+                        </th>
+                        <th scope="col">
+                            RPO
+                        </th>
+                        <th scope="col">
+                            Count
+                        </th>
+                        <th scope="col">
+                            Names
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% stats_data.forEach(function(data) { %>
+                        <tr>
+                            <td scope="row"><%= data.rank %></td>
+                            <td scope="row" style="display: flex; align-items: center;">
+                                <img id="sample" src="../img/extColors/<%= data.rpo_code || '../extColors/default' %>.png" width="20" height="20" style="margin-right: 8px; border-radius: 50%;">
+                                <%= data.rpo_code %>
+                            </td>
+                            <td scope="row"><%= data.total_count %></td>
+                            <td scope="row" style="text-align: left;"><%= data.color_names %></td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        <% } %>
+    </div>
     <%- include('../partials/footer'); %>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const statsSelect = document.getElementById('selectedStats');
+            statsSelect.addEventListener('change', function() {
+                const selectedValue = this.value;
+                const url = new URL(window.location.href);
+                url.searchParams.set('category', selectedValue);
+                window.location.href = url.toString();
+            });
+        });
+    </script>
 </body>
 </html>

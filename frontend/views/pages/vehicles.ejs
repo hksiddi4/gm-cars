@@ -217,17 +217,46 @@
                     </tbody>
                 </table>
                 <!-- Pagination -->
-                 <div class="pagination-wrapper">
+                <%
+                function buildQuery(params) {
+                    const entries = Object.entries(params)
+                        .filter(([_, v]) => v !== undefined && v !== null && v !== '');
+
+                    // Move 'page' to the end
+                    const pageEntry = entries.find(([k]) => k === 'page');
+                    const filtered = entries.filter(([k]) => k !== 'page');
+                    if (pageEntry) filtered.push(pageEntry);
+
+                    return filtered
+                        .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
+                        .join('&');
+                }
+
+                const baseQuery = {
+                    limit,
+                    model: selectedModels.length ? selectedModels.join(',') : '',
+                    rpo: selectedRPO,
+                    trim: selectedTrim,
+                    engine: selectedEngine,
+                    trans: selectedTrans,
+                    year: selectedYear,
+                    body: selectedBody,
+                    color: selectedColor,
+                    country: selectedCountry,
+                    order: selectedOrder
+                };
+                %>
+                <div class="pagination-wrapper">
                     <nav aria-label="Page navigation">
                         <ul class="pagination">
                             <% if (currentPage > 1) { %>
                                 <!-- First Page -->
                                 <li class="page-item">
-                                    <a class="page-link" href="?page=1&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&trim=<% selectedTrim %>&engine=<% selectedEngine %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&body=<%= selectedBody %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>">First</a>
+                                    <a class="page-link" href="?<%= buildQuery({ ...baseQuery, page: 1 }) %>">First</a>
                                 </li>
                                 <!-- Previous Page -->
                                 <li class="page-item">
-                                    <a class="page-link" href="?page=<%= currentPage - 1 %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&trim=<% selectedTrim %>&engine=<% selectedEngine %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&body=<%= selectedBody %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>">Previous</a>
+                                    <a class="page-link" href="?<%= buildQuery({ ...baseQuery, page: currentPage - 1 }) %>">Previous</a>
                                 </li>
                             <% } %>
                             <!-- Page Numbers -->
@@ -246,22 +275,22 @@
                             %>
                             <% for (let i = startPage; i <= endPage; i++) { %>
                                 <li class="page-item <%= i === currentPage ? 'active' : '' %>">
-                                    <a class="page-link" href="?page=<%= i %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&trim=<% selectedTrim %>&engine=<% selectedEngine %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&body=<%= selectedBody %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>"><%= i %></a>
+                                    <a class="page-link" href="?<%= buildQuery({ ...baseQuery, page: i }) %>"><%= i %></a>
                                 </li>
                             <% } %>
                             <% if (currentPage < totalPages) { %>
                                 <!-- Next Page -->
                                 <li class="page-item">
-                                    <a class="page-link" href="?page=<%= currentPage + 1 %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&trim=<% selectedTrim %>&engine=<% selectedEngine %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&body=<%= selectedBody %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>">Next</a>
+                                    <a class="page-link" href="?<%= buildQuery({ ...baseQuery, page: currentPage + 1 }) %>">Next</a>
                                 </li>
                                 <!-- Last Page -->
                                 <li class="page-item">
-                                    <a class="page-link" href="?page=<%= totalPages %>&limit=<%= limit %>&model=<%= selectedModels.join(',') %>&rpo=<%= selectedRPO %>&trim=<% selectedTrim %>&engine=<% selectedEngine %>&trans=<%= selectedTrans %>&year=<%= selectedYear %>&body=<%= selectedBody %>&color=<%= selectedColor %>&country=<%= selectedCountry %>&order=<%= selectedOrder %>">Last</a>
+                                    <a class="page-link" href="?<%= buildQuery({ ...baseQuery, page: totalPages }) %>">Last</a>
                                 </li>
                             <% } %>
                         </ul>
                     </nav>
-                 </div>
+                </div>
                 <% } %>
             </div>
         </div>
@@ -269,6 +298,7 @@
     <%- include('../partials/footer'); %>
     <script>
         let startX;
+        let selectedOrder = '';
 
         function buildQueryString(params) {
             const queryStrings = Object.entries(params)
@@ -298,7 +328,7 @@
             startX = event.clientX;
         }
 
-        function handleRowClick(url) {
+        function handleRowClick(url, event) {
             const distance = Math.abs(event.clientX - startX);
             if (distance > 5) {
                 return;
@@ -400,28 +430,30 @@
 
             filterForm.addEventListener('submit', function(event) {
                 event.preventDefault();
-                
-                const checkboxes = filterForm.querySelectorAll('input[type="checkbox"]');
-                const selectedOptions = Array.from(checkboxes)
-                    .filter(checkbox => checkbox.checked)
-                    .map(checkbox => checkbox.value);
-    
-                const modelQueryString = selectedOptions.length ? selectedOptions.map(option => `model=${encodeURIComponent(option)}`).join('&') : '';
 
-                const selectedRPO = rpoSelect.value ? `rpo=${encodeURIComponent(rpoSelect.value)}` : '';
-                const selectedYear = yearSelect.value ? `year=${encodeURIComponent(yearSelect.value)}` : '';
-                const selectedBody = bodySelect.value ? `body=${encodeURIComponent(bodySelect.value)}` : '';
-                const selectedTrim = trimSelect.value ? `trim=${encodeURIComponent(trimSelect.value)}` : '';
-                const selectedEngine = engineSelect.value ? `engine=${encodeURIComponent(engineSelect.value)}` : '';
-                const selectedTrans = transSelect.value ? `trans=${encodeURIComponent(transSelect.value)}` : '';
-                const selectedColor = colorSelect.value ? `color=${encodeURIComponent(colorSelect.value)}` : '';
-                const selectedCountry = countrySelect.value ? `country=${encodeURIComponent(countrySelect.value)}` : '';
-                const limit = limitSelect.value ? `limit=${encodeURIComponent(limitSelect.value)}` : '';
-                const queryStrings = [modelQueryString, selectedRPO, selectedYear, selectedBody, selectedEngine, selectedTrans, selectedColor, selectedCountry, limit]
-                    .filter(Boolean)
-                    .join('&');
-                const url = `/vehicles?page=1&${queryStrings}`;
-                window.location.href = url;
+                const params = new URLSearchParams();
+
+                const checkboxes = filterForm.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach(cb => {
+                    if (cb.checked) params.append('model', cb.value);
+                });
+
+                const addIfNotEmpty = (key, value) => {
+                    if (value) params.set(key, value);
+                };
+
+                addIfNotEmpty('rpo', rpoSelect.value);
+                addIfNotEmpty('year', yearSelect.value);
+                addIfNotEmpty('body', bodySelect.value);
+                addIfNotEmpty('trim', trimSelect.value);
+                addIfNotEmpty('engine', engineSelect.value);
+                addIfNotEmpty('trans', transSelect.value);
+                addIfNotEmpty('color', colorSelect.value);
+                addIfNotEmpty('country', countrySelect.value);
+                addIfNotEmpty('limit', limitSelect.value);
+                addIfNotEmpty('order', selectedOrder);
+
+                window.location.href = `/vehicles?${params.toString()}`;
             });
 
             document.querySelectorAll('#allTable tbody tr').forEach(row => {

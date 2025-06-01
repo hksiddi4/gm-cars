@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
     <%- include('../partials/head'); %>
-    <script src="../partials/rpo.js"></script>
     <title>
       <%= (vin_data[0].modelYear ? "'" + vin_data[0].modelYear.toString().slice(-2) : 'N/A') %>
       <%= vin_data[0].model || 'N/A' %> 
@@ -11,10 +10,10 @@
 </head>
 <body>
   <%- include('../partials/header'); %>
-    <div class="container">
+    <div class="custom-container">
         <div class="row">
           <% if (vin_data && vin_data.length > 0) { %>
-            <h1 style="padding-top: 20px; display: flex; align-items: center; width: 100%;">
+            <h1 style="padding-top: 20px;">
               <%= vin_data[0].modelYear || 'N/A' %>
               <%= vin_data[0].model || 'N/A' %>
               <%= vin_data[0].trim || 'N/A' %>
@@ -34,119 +33,127 @@
                 </h4>
               </div>
             <% } %>
-            <table class="table-veh table-hover border border shadow" id="vinTable">
-              <tbody>
-                  <% vin_data.forEach(function(data) { %>
-                  <tr>
-                    <td class="label-column"><strong>VIN:</strong></td>
-                    <td><%= data.vin || 'N/A' %></td>
-                  </tr>
-                  <tr>
-                    <td class="label-column"><strong>ORDER NUMBER:</strong></td>
-                    <td><%= data.order_number || 'N/A' %></td>
-                  </tr>
-                  <tr>
-                    <td class="label-column"><strong>STICKER CREATION DATE:</strong></td>
-                    <td>
-                      <%= data.formatted_date || 'N/A' %>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td class="label-column"><strong>YEAR:</strong></td>
-                    <td><%= data.modelYear || 'N/A' %></td>
-                  </tr>
-                  <tr>
-                    <td class="label-column"><strong>MODEL:</strong></td>
-                    <td><%= data.model || 'N/A' %></td>
-                  </tr>
-                  <tr>
-                    <td class="label-column"><strong>TRIM:</strong></td>
-                    <td><%= data.trim || 'N/A' %></td>
-                  </tr>
-                  <tr>
-                    <td class="label-column"><strong>BODY:</strong></td>
-                    <td><%= data.body || 'N/A' %></td>
-                  </tr>
-                  <tr>
-                    <td class="label-column"><strong>ENGINE:</strong></td>
-                    <td><%= data.engine_type || 'N/A' %></td>
-                  </tr>
-                  <tr>
-                    <td class="label-column"><strong>TRANSMISSION:</strong></td>
-                    <td><%= data.transmission_type || 'N/A' %></td>
-                  </tr>
-                  <tr>
-                    <td class="label-column"><strong>DRIVETRAIN:</strong></td>
-                    <td><%= data.drivetrain_type || 'N/A' %></td>
-                  </tr>
-                  <tr>
-                    <td class="label-column"><strong>EXTERIOR COLOR:</strong></td>
-                    <td><%= data.color_name || 'N/A' %></td>
-                  </tr>
-                  <% if (data.rpo_codes) { %>
-                    <%
-                      let matchedIntColor = 'N/A';
-                      let matchedSeat = 'N/A';
-                      data.rpo_codes.forEach(function(rpo) {
-                        if (intColor[rpo]) {
-                          matchedIntColor = intColor[rpo];
-                        }
-                        if (seatCode[rpo]) {
-                          matchedSeat = seatCode[rpo];
-                        }
-                      });
-                    %>
-                  <tr>
-                    <td class="label-column"><strong>INTERIOR COLOR:</strong></td>
-                    <td><%= matchedIntColor.toUpperCase() %></td>
-                  </tr>
-                  <tr>
-                    <td class="label-column"><strong>SEAT:</strong></td>
-                    <td><%= matchedSeat.toUpperCase() %></td>
-                  </tr>
-                  <% } %>
-                  <tr>
-                    <td class="label-column"><strong>MSRP:</strong></td>
-                    <td><%= (!data.msrp || data.msrp == 0) ? 'N/A' : `$${data.msrp}` %></td>
-                  </tr>                  
-                  <tr>
-                    <td class="label-column"><strong>DEALER:</strong></td>
-                    <td><%= data.dealer_name || 'N/A' %></td>
-                  </tr>
-                  <tr>
-                    <td class="label-column"><strong>LOCATION:</strong></td>
-                    <td><%= data.location || 'N/A' %></td>
-                  </tr>
-                  <tr>
-                    <td class="label-column"><strong>COUNTRY:</strong></td>
-                    <td>
-                      <% if (data.country) { %>
-                        <% if (data.country === 'CANADA') { %>
-                          <img src="../img/flags/canada_flag.png" alt="Canada" width="30" style="margin-right: 5px;">CANADA
-                        <% } else if (data.country === 'USA') { %>
-                          <img src="../img/flags/usa_flag.png" alt="USA" width="30" style="margin-right: 5px;">UNITED STATES
-                        <% } else if (data.country === 'MEXICO') { %>
-                          <img src="../img/flags/mexico_flag.png" alt="Mexico" width="30" style="margin-right: 5px;">Mexico
-                        <% } %>
-                      <% } %>
-                    </td>
-                  </tr>
-                  <% }) %>
-              </tbody>
-            </table>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: flex-start; padding: 10px;">
             <!-- Photo Carousel -->
-            <div id="carousel-container" style="position: relative; min-height: 740px; width: 100%; margin: auto; overflow: hidden;">
+            <div id="carousel-container" style="flex: 1; max-width: 867px; position: relative; min-height: 400px; overflow: hidden;">
               <div id="loading-animation">
-                <div class="spinner" style="position: absolute; top: 48%; left: 50%; transform: translate(-50%, -50%); align-items: center;"></div>
-                <h4 style="position: absolute; top: 58%; left: 51%; transform: translate(-50%, -50%); align-items: center;">Generating Photos...</h4>
-                <h4 style="position: absolute; top: 70%; left: 51%; transform: translate(-50%, -50%); align-items: center;">This will take a minute.</h4>
+                <div class="spinner" style="position: absolute; top: 35%; left: 50%; transform: translate(-50%, -50%); align-items: center;"></div>
+                <h4 style="position: absolute; top: 58%; left: 50%; transform: translate(-50%, -50%); align-items: center;">Generating Photos...</h4>
+                <h4 style="position: absolute; top: 70%; left: 50%; transform: translate(-50%, -50%); align-items: center;">This will take a minute.</h4>
               </div>
               <img id="carousel-image" src="" style="width: 100%;">
               <button id="prev" style="position: absolute; top: 50%; left: 0; background-color: rgba(0, 0, 0, 0.5); color: white; border: none; padding: 10px; cursor: pointer; z-index: 100;">&#10094;</button>
               <button id="next" style="position: absolute; top: 50%; right: 0; background-color: rgba(0, 0, 0, 0.5); color: white; border: none; padding: 10px; cursor: pointer; z-index: 100;">&#10095;</button>
             </div>
+            <div style="flex: 1;">
+              <table class="table-veh table-hover border shadow" id="vinTable">
+                <tbody>
+                    <% vin_data.forEach(function(data) { %>
+                    <tr>
+                      <td class="label-column"><strong>VIN</strong></td>
+                      <td><%= data.vin || 'N/A' %></td>
+                    </tr>
+                    <tr>
+                      <td class="label-column"><strong>ORDER NUMBER</strong></td>
+                      <td><%= data.order_number || 'N/A' %></td>
+                    </tr>
+                    <tr>
+                      <td class="label-column"><strong>STICKER CREATION DATE</strong></td>
+                      <td>
+                        <%= data.formatted_date || 'N/A' %>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="label-column"><strong>YEAR</strong></td>
+                      <td><%= data.modelYear || 'N/A' %></td>
+                    </tr>
+                    <tr>
+                      <td class="label-column"><strong>MODEL</strong></td>
+                      <td><%= data.model || 'N/A' %></td>
+                    </tr>
+                    <tr>
+                      <td class="label-column"><strong>TRIM</strong></td>
+                      <td><%= data.trim || 'N/A' %></td>
+                    </tr>
+                    <tr>
+                      <td class="label-column"><strong>BODY</strong></td>
+                      <td><%= data.body || 'N/A' %></td>
+                    </tr>
+                    <tr>
+                      <td class="label-column"><strong>ENGINE</strong></td>
+                      <td><%= data.engine_type || 'N/A' %></td>
+                    </tr>
+                    <tr>
+                      <td class="label-column"><strong>TRANSMISSION</strong></td>
+                      <td><%= data.transmission_type || 'N/A' %></td>
+                    </tr>
+                    <tr>
+                      <td class="label-column"><strong>DRIVETRAIN</strong></td>
+                      <td><%= data.drivetrain_type || 'N/A' %></td>
+                    </tr>
+                    <tr>
+                      <td class="label-column"><strong>EXTERIOR COLOR</strong></td>
+                      <td><%= data.color_name || 'N/A' %></td>
+                    </tr>
+                    <% if (data.rpo_codes) { %>
+                      <%
+                        let matchedIntColor = 'N/A';
+                        let matchedSeat = 'N/A';
+                        data.rpo_codes.forEach(function(rpo) {
+                          if (intColor[rpo]) {
+                            matchedIntColor = intColor[rpo];
+                          }
+                          if (seatCode[rpo]) {
+                            matchedSeat = seatCode[rpo];
+                          }
+                        });
+                      %>
+                    <tr>
+                      <td class="label-column"><strong>INTERIOR COLOR</strong></td>
+                      <td><%= matchedIntColor.toUpperCase() %></td>
+                    </tr>
+                    <tr>
+                      <td class="label-column"><strong>SEAT</strong></td>
+                      <td><%= matchedSeat.toUpperCase() %></td>
+                    </tr>
+                    <% } %>
+                    <tr>
+                      <td class="label-column"><strong>MSRP</strong></td>
+                      <td><%= (!data.msrp || data.msrp == 0) ? 'N/A' : `$${data.msrp}` %></td>
+                    </tr>                  
+                    <tr>
+                      <td class="label-column"><strong>DEALER</strong></td>
+                      <td><%= data.dealer_name || 'N/A' %></td>
+                    </tr>
+                    <tr>
+                      <td class="label-column"><strong>LOCATION</strong></td>
+                      <td><%= data.location || 'N/A' %></td>
+                    </tr>
+                    <tr>
+                      <td class="label-column"><strong>COUNTRY</strong></td>
+                      <td>
+                        <% if (data.country) { %>
+                          <% if (data.country === 'CANADA') { %>
+                            <img src="../img/flags/canada_flag.png" alt="Canada" width="30" style="margin-right: 5px;">CANADA
+                          <% } else if (data.country === 'USA') { %>
+                            <img src="../img/flags/usa_flag.png" alt="USA" width="30" style="margin-right: 5px;">UNITED STATES
+                          <% } else if (data.country === 'MEXICO') { %>
+                            <img src="../img/flags/mexico_flag.png" alt="Mexico" width="30" style="margin-right: 5px;">Mexico
+                          <% } %>
+                        <% } %>
+                      </td>
+                    </tr>
+                    <% }) %>
+                </tbody>
+              </table>
+            </div>
+        </div>
+    </div>
+    <div class="custom-container">
+        <div style="display: flex; gap: 10px; align-items: flex-start; padding: 10px;">
             <!-- Window Sticker -->
-            <div id="sticker-container" style="text-align: center; padding: 20px;">
+            <div id="sticker-container" style="flex: 1;">
               <% if (vin_data[0].country === 'MEXICO') { %>
                 <h2>No window sticker available</h2>
               <% } else { %>
@@ -164,52 +171,69 @@
                 <div><a id="snark" style="color: rgb(40, 40, 40);"></a></div>
               </div>
             </div> -->
-            <table class="table-veh table-hover border border shadow" id="rpoTable">
-              <thead>
-                <tr>
-                  <th scope="col" style="white-space: nowrap;">RPO Code</th>
-                  <th scope="col">Description</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% vin_data.forEach(function(data) { %>
-                  <% if (data.rpo_codes) { %>
-                    <% data.rpo_codes.forEach(function(rpo) { %>
-                      <% if (rpo) { %>
-                        <tr>
-                          <td class="<%= rpo.includes('OAR') ? 'highlight' : '' %>"><%= rpo %></td>
-                          <td class="rpo-description" data-code="<%= rpo %>" style="text-align: left;"></td>
-                        </tr>
-                      <% } %>
-                    <% }); %>
-                  <% } else { %>
-                    <tr>
-                      <td colspan="2">No data available</td>
-                    </tr>
-                  <% } %>
-                <% }) %>
-              </tbody>
-            </table>
-            <h5 style="color: white;">
-              RPOs Decoded by <a href="https://decoderpo.com/" style="color: white; text-decoration: underline;">https://decoderpo.com/</a>
-            </h5>            
-          <% } else { %>
-            <h1>No VIN data found</h1>
-          <% } %>
+            <div style="flex: 1; max-height: 825px; overflow-y: auto;">
+              <table class="table-veh table-hover border border shadow" id="rpoTable">
+                <thead>
+                  <tr>
+                    <th scope="col" style="white-space: nowrap;">RPO Code</th>
+                    <th scope="col">Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% vin_data.forEach(function(data) { %>
+                    <% if (data.rpo_codes) { %>
+                      <% data.rpo_codes.forEach(function(rpo) { %>
+                        <% if (rpo) { %>
+                          <tr>
+                            <td class="<%= rpo.includes('OAR') ? 'highlight' : '' %>"><%= rpo %></td>
+                            <td class="rpo-description" data-code="<%= rpo %>" style="text-align: left;"></td>
+                          </tr>
+                        <% } %>
+                      <% }); %>
+                    <% } else { %>
+                      <tr>
+                        <td colspan="2">No data available</td>
+                      </tr>
+                    <% } %>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
         </div>
+        <h5 style="color: white; text-align: right;">
+          RPOs Decoded by <a href="https://decoderpo.com/" style="color: white; text-decoration: underline;">https://decoderpo.com/</a>
+        </h5>
+        <% } else { %>
+          <h1>No VIN data found</h1>
+        <% } %>
     </div>
     <%- include('../partials/footer'); %>
     <script>
       document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.rpo-description').forEach(function(element) {
           const rpoCode = element.getAttribute('data-code');
-          const description = getRPODescription(rpoCode);
-          element.textContent = description;
+          fetch(`https://decoderpo.com/api/getRPODescription/${rpoCode}`)
+            .then(response => {
+              if (!response.ok) throw new Error('Not found');
+              return response.json();
+            })
+            .then(data => {
+              const base64 = data[0];
+              const decoded = atob(base64);
+              const lines = JSON.parse(decoded);
+
+              if (Array.isArray(lines) && lines.length > 0) {
+                element.innerHTML = lines.map(line => `<div>${line}</div>`).join('');
+              }
+            })
+            .catch(() => {
+              element.textContent = 'Not found';
+            });
         });
 
         const carouselImage = document.getElementById('carousel-image');
         const loadingAnimation = document.getElementById('loading-animation');
-        loadingAnimation.style.direction = 'block';
+        loadingAnimation.style.display = 'block';
         
         const mmc = <%- JSON.stringify(mmc) %>;
         const colorMap = <%- JSON.stringify(colorMap) %>;

@@ -171,3 +171,34 @@ GROUP BY v.vin, v.modelYear, v.model, v.body, v.trim,
 		e.engine_type, t.transmission_type, d.drivetrain_type, 
 		c.color_name, v.msrp, o.country
 LIMIT 100 OFFSET 0;
+
+CREATE TABLE ColorRPOMap (
+	color_name VARCHAR(64),
+	rpo_code VARCHAR(3)
+);
+
+-- Insert colors example -------------------------------
+INSERT INTO ColorRPOMap (color_name, rpo_code) VALUES
+	('ACCELERATE YELLOW METALLIC', 'GD0'),
+	('AMPLIFY ORANGE TINTCOAT', 'GC5');
+
+WITH ColorCounts AS (
+    SELECT
+        crm.rpo_code,
+        COUNT(*) AS total_count,
+        GROUP_CONCAT(DISTINCT crm.color_name ORDER BY crm.color_name SEPARATOR ', ') AS color_names
+    FROM Vehicles v
+    JOIN Colors c ON v.color_id = c.color_id
+    JOIN ColorRPOMap crm ON c.color_name = crm.color_name
+    GROUP BY crm.rpo_code
+),
+Ranked AS (
+    SELECT
+        ROW_NUMBER() OVER (ORDER BY total_count DESC) AS `rank`,
+        rpo_code,
+        total_count,
+        color_names,
+        ROUND(100.0 * total_count / SUM(total_count) OVER (), 2) AS percent
+    FROM ColorCounts
+)
+SELECT * FROM Ranked;

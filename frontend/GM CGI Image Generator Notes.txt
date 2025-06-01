@@ -1,0 +1,35 @@
+# Vehicle Images (Used on /search)
+https://cgi.chevrolet.com/mmgprod-us/dynres/prove/image.gen?i=2022/6DF79/6DF79__1SV/GRW_0ST_1NF_1SV_1SZ_2NF_2ST_4AA_53S_5A7_5CS_5FC_6X1_719_7X1_8X2_9L3_9X2_A2X_A45_A7K_AEF_AER_AF6_AHC_AHE_AHF_AHH_AHP_AJC_AJW_AKE_AKP_AL0_AM9_AQ9_AT8_ATH_AVK_AVN_AVU_AX7_AXG_AXJ_AYG_B4Z_B53_B7G_B9I_BTH_BYO_C3U_C70_C73_CDI_CE1_CJ2_CWM_D52_D75_DEG_DRZ_DXR_E22_E28_EF7_F55_FE4_FJW_G96_GRW_GT4_HD7_HGM_HME_HS1_IOT_J22_J6B_J6H_J77_JE2_JF5_K12_K34_K4C_KA1_KD4_KEM_KI3_KNR_KPA_KRV_KTI_KU9_LAL_LT4_MAH_MCR_MDB_MJK_N06_N08_N38_NE1_NE8_NK4_NUF_NWM_PB4_PPW_Q61_R8R_R9N_R9Z_ROF_RSR_RWL_SLL_SPY_SPZ_T4L_T87_TDM_TFK_TL3_TQ5_TTW_U2K_U2L_U80_UD5_UDV_UE1_UE4_UEC_UEU_UFG_UG1_UGC_UGE_UHX_UHY_UJN_UKC_UKJ_UKK_UMN_UQS_UQT_USS_UTR_UTU_UTV_UV2_UV6_V76_V8D_VGC_VH9_VHM_VK3_VP1_VRF_VRG_VRH_VRJ_VRK_VRL_VRM_VRN_VRR_VT7_VV4_WMW_XL8_XLC_XVR_Y26_Y5V_Y5W_Y5X_Y61_Y6F_Y6L_YM8gmds10.png&v=deg01&std=true&country=US&send404=true&transparentBackgroundPng=true
+
+https://cgi.chevrolet.com/mmgprod-us/dynres/prove/image.gen?i=YEAR/MMCCode/MMCCode__TRIM/EXTCOLOR_RPOCodeSgmds10.png&v=deg01&std=true&country=US&send404=true&transparentBackgroundPng=true
+
+ - Parts
+MMCCode retrieved per vehicle
+
+TRIM = special RPO for vehicle trim
+
+EXTColor = RPO for exterior color
+
+RPOCodeS = All RPO codes XXX_XXX_XXX_XXX format
+
+&v=deg01 = different views of the vehicle, some models have a few while others have up to 9
+
+
+# Exterior & Interior Colors (To be implemented onto /search)
+
+https://cgi.gm.com/mmgprod-us/dynres/prove/singlelayer/pngs/optionImagery/US/chevrolet/2024/1YC07/gmds2/HTE.jpg
+https://cgi.gm.com/mmgprod-us/dynres/prove/singlelayer/pngs/optionImagery/US/chevrolet/2024/1YC07/gmds2/HTE.jpg
+https://cgi.gm.com/mmgprod-us/dynres/prove/singlelayer/pngs/optionImagery/US/cadillac/2023/6DE79/gmds2/GRW.jpg
+
+https://cgi.gm.com/mmgprod-us/dynres/prove/singlelayer/pngs/optionImagery/US/MANUFACTURER/YEAR/MMCCode/gmds2/RPO.jpg
+
+ - Parts
+MANUFACTURER = chevrolet, cadillac - Depends on the vehicle
+
+MMCCode retrieved per vehicle
+
+RPO = must be exterior color or interior option rpo that matches with the specific vehicles model year, mmccode, and manufacturer.
+
+
+
+Need to test earlier model years to find limit of the API.

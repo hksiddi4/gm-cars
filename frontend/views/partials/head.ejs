@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 <!-- JavaScript -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
     html, body {
@@ -141,8 +142,14 @@
     }
 
     .table-veh {
-        width: 100%;
+        font-size: 0.75rem;
         table-layout: auto;
+        width: 100%;
+    }
+
+    .small-dropdown {
+        font-size: inherit;
+        height: auto;
     }
 
     .table-veh thead th {
@@ -266,19 +273,17 @@
     }
 
     #vinTable {
-        width: 100%;
         max-width: 100%;
         table-layout: auto;
         margin: 0 auto;
     }
 
-    #vinTable .label-column {
-        text-align: right;
-        width: 17%;
+    #vinTable td:first-child {
+        text-align: left;
     }
 
     #vinTable td:nth-child(2) {
-    text-align: left;
+    text-align: right;
     }
 
     #filterToggle {

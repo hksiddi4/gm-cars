@@ -204,7 +204,8 @@ def sort_price():
             "ZLK": ["modelYear = '2024'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "color_name = 'MERCURY SILVER METALLIC'"],
             "ZLJ": ["modelYear = '2024'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "color_name = 'BLACK RAVEN'"],
             "ZLR": ["modelYear = '2024'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "color_name = 'VELOCITY RED'"],
-            "ABQ": ["modelYear = '2023'", "model = 'CT5'", "trim = 'V-SERIES BLACKWING'", "msrp > '118000'"]
+            "ABQ": ["modelYear = '2023'", "model = 'CT5'", "trim = 'V-SERIES BLACKWING'", "msrp > '118000'"],
+            "ZLT": ["modelYear = '2024'", "model = 'CT5'", "trim = 'V-SERIES BLACKWING'", "msrp > ''"],
         }
 
         for rpo in rpo_list:
@@ -305,9 +306,32 @@ def sort_price():
 
 @app.route('/stats', methods=['GET'])
 def color_stats():
+    year = request.args.get('year')
+    model = request.args.get('model')
+    body = request.args.get('body')
+    trim = request.args.get('trim')
+    engine = request.args.get('engine')
+    trans = request.args.get('trans')
     category = request.args.get('category')
+
+    conditions = []
+    if year:
+        conditions.append(f"modelYear = '{year}'")
+    if model:
+        conditions.append(f"model = '{model}'")
+    if body:
+        conditions.append(f"body = '{body}'")
+    if trim:
+        conditions.append(f"trim = '{trim}'")
+    if engine:
+        conditions.append(f"engine_type = '{engine}'")
+    if trans:
+        conditions.append(f"transmission_type = '{trans}'")
+
+    where_clause = "WHERE " + " AND ".join(conditions) if conditions else ""
+
     if category == 'color':
-        sqlStatement = """
+        sqlStatement = f"""
             WITH ColorCounts AS (
                 SELECT
                     crm.rpo_code,
@@ -316,6 +340,7 @@ def color_stats():
                 FROM Vehicles v
                 JOIN Colors c ON v.color_id = c.color_id
                 JOIN ColorRPOMap crm ON c.color_name = crm.color_name
+                {where_clause}
                 GROUP BY crm.rpo_code
             ),
             Ranked AS (
@@ -323,11 +348,45 @@ def color_stats():
                     ROW_NUMBER() OVER (ORDER BY total_count DESC) AS `rank`,
                     rpo_code,
                     total_count,
-                    color_names
+                    color_names,
+                    ROUND(100.0 * total_count / SUM(total_count) OVER (), 2) AS percent
                 FROM ColorCounts
             )
             SELECT * FROM Ranked
         """
+
+        def get_all_distinct_values():
+            columns = ['modelYear', 'model', 'body', 'trim', 'engine_type', 'transmission_type']
+            sqlStatement = f"""
+                SELECT DISTINCT v.modelYear, v.model, v.body, v.trim, e.engine_type, t.transmission_type 
+                FROM Vehicles v 
+                JOIN Engines e ON v.engine_id = e.engine_id 
+                JOIN Transmissions t ON v.transmission_id = t.transmission_id 
+                {where_clause}
+                GROUP BY v.modelYear, v.model, v.body, v.trim, e.engine_type, t.transmission_type
+            """
+            conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
+            results = execute_read_query(conn, sqlStatement)
+            close_connection(conn)
+            distinct_values = {col: set() for col in columns}
+            for result in results:
+                for col in columns:
+                    if result[col] is not None:
+                        distinct_values[col].add(result[col])
+            sorted_values = {
+                'modelYear': sorted(list(distinct_values['modelYear']), reverse=True),
+                **{col: sorted(list(distinct_values[col])) for col in columns if col != 'modelYear'}
+            }
+            return sorted_values
+        distinct_values = get_all_distinct_values()
+
+        year_list = distinct_values['modelYear']
+        model_list = distinct_values['model']
+        body_list = distinct_values['body']
+        trim_list = distinct_values['trim']
+        engine_list = distinct_values['engine_type']
+        trans_list = distinct_values['transmission_type']
+
         conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
         viewTable = execute_read_query(conn, sqlStatement)
         close_connection(conn)

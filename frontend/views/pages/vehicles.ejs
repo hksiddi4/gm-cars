@@ -418,7 +418,17 @@
                 window.location.href = '/vehicles';
             });
 
-            addSelectListener('rpoSelect', 'rpo');
+            const rpoSelectElement = document.getElementById('rpoSelect');
+            if (rpoSelectElement) {
+                rpoSelectElement.addEventListener('change', function(event) {
+                    const value = event.target.value;
+                    const url = new URL(window.location.origin + window.location.pathname);
+                    if (value) {
+                        url.searchParams.set('rpo', value);
+                    }
+                    window.location.href = url.toString();
+                });
+            }
             addSelectListener('yearSelect', 'year');
             addSelectListener('bodySelect', 'body');
             addSelectListener('trimSelect', 'trim');

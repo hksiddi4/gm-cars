@@ -146,59 +146,7 @@ UPDATE gm SET trim = 'LT1' WHERE trim = '1LZ';
 -- Finding exact match with RPO values ---------------
 SELECT COUNT(*) AS Count FROM gm WHERE JSON_UNQUOTE(JSON_EXTRACT(allJson, '$.Options')) = '["AEF", "AEQ", "AF6", "AHC", "AHE", "AHF", "AHH", "AJC", "AJW", "AKE", "AL0", "AM9", "AQ9", "ATH", "AT8", "AVK", "AVN", "AVU", "AXG", "AXJ", "AYG", "A2X", "A45", "A69", "A7K", "BTV", "BYO", "B34", "B35", "B6A", "B70", "CE1", "CF5", "CJ2", "C59", "C73", "DD8", "DEG", "DMB", "D52", "D75", "EF7", "E22", "E28", "FE2", "FJW", "F46", "GJI", "HRD", "HS1", "H2X", "IOT", "JE5", "JF5", "JJ2", "JM8", "J22", "J77", "KA1", "KB7", "KD4", "KI3", "KL9", "KPA", "KRV", "KSG", "KU9", "K12", "K4C", "LAL", "LSY", "MAH", "MCR", "MDB", "M5N", "NB9", "NE1", "NE8", "NK4", "NUG", "N37", "PPW", "PZJ", "Q4D", "RFD", "RSR", "R6M", "R6W", "R9N", "SLM", "TDM", "TFK", "TQ5", "TSQ", "TTW", "T4L", "T8Z", "UC3", "UDD", "UD5", "UEU", "UE1", "UE4", "UFG", "UGE", "UGN", "UG1", "UHX", "UIT", "UJN", "UKC", "UKJ", "UMN", "UQS", "UVB", "UVZ", "U2K", "U2L", "U80", "VHM", "VH9", "VK3", "VRF", "VRG", "VRH", "VRJ", "VRK", "VRL", "VRM", "VRN", "VRR", "VT7", "VV4", "V76", "V8D", "WMW", "XL8", "Y26", "Y5X", "Y5Y", "Y6F", "0ST", "00G", "00Z", "1NF", "1SE", "1SZ", "2NF", "2ST", "4AA", "5A7", "5FC", "6X1", "7X1", "719", "8X2", "9L3", "9X2"]';
 
-SELECT * FROM staging_allGM WHERE ordernum = 'XNZT38';
-
-select * from staging_allGM;
-
 SHOW INDEXES FROM gm;
 
 CREATE INDEX ext_color_idx
 ON gm(exterior_color);
-
--- Stats Testing --------------------------------------
-SELECT v.vin, v.modelYear, v.model, v.body, v.trim, 
-	e.engine_type, t.transmission_type, d.drivetrain_type, 
-	c.color_name, v.msrp, o.country, 
-	GROUP_CONCAT(DISTINCT se.special_desc ORDER BY se.special_desc ASC SEPARATOR ', ') AS special_desc
-FROM Vehicles v 
-	JOIN Engines e ON v.engine_id = e.engine_id 
-	JOIN Transmissions t ON v.transmission_id = t.transmission_id 
-	JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id 
-	JOIN Colors c ON v.color_id = c.color_id 
-	JOIN Orders o ON v.order_id = o.order_id 
-	LEFT JOIN SpecialEditions se ON v.vehicle_id = se.vehicle_id
-GROUP BY v.vin, v.modelYear, v.model, v.body, v.trim, 
-		e.engine_type, t.transmission_type, d.drivetrain_type, 
-		c.color_name, v.msrp, o.country
-LIMIT 100 OFFSET 0;
-
-CREATE TABLE ColorRPOMap (
-	color_name VARCHAR(64),
-	rpo_code VARCHAR(3)
-);
-
--- Insert colors example -------------------------------
-INSERT INTO ColorRPOMap (color_name, rpo_code) VALUES
-	('ACCELERATE YELLOW METALLIC', 'GD0'),
-	('AMPLIFY ORANGE TINTCOAT', 'GC5');
-
-WITH ColorCounts AS (
-    SELECT
-        crm.rpo_code,
-        COUNT(*) AS total_count,
-        GROUP_CONCAT(DISTINCT crm.color_name ORDER BY crm.color_name SEPARATOR ', ') AS color_names
-    FROM Vehicles v
-    JOIN Colors c ON v.color_id = c.color_id
-    JOIN ColorRPOMap crm ON c.color_name = crm.color_name
-    GROUP BY crm.rpo_code
-),
-Ranked AS (
-    SELECT
-        ROW_NUMBER() OVER (ORDER BY total_count DESC) AS `rank`,
-        rpo_code,
-        total_count,
-        color_names,
-        ROUND(100.0 * total_count / SUM(total_count) OVER (), 2) AS percent
-    FROM ColorCounts
-)
-SELECT * FROM Ranked;

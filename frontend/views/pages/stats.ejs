@@ -20,57 +20,6 @@
                 </select>
             </div>
         </div>
-        <div class="row mb-2">
-            <% if (category) { %>
-                <div class="col-md-2">
-                    <select id="selectedYear" class="form-select">
-                        <option value="">Year</option>
-                        <% years.forEach(function(year) { %>
-                            <option value="<%= year %>" <% if (selectedYear == year.toString()) { %> selected <% } %>><%= year %></option>
-                        <% }) %>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <select id="selectedModel" class="form-select">
-                        <option value="">Model</option>
-                        <% models.forEach(function(model) { %>
-                            <option value="<%= model %>" <% if (selectedModel == model) { %> selected <% } %>><%= model %></option>
-                        <% }) %>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <select id="selectedBody" class="form-select">
-                        <option value="">Body</option>
-                        <% bodys.forEach(function(body) { %>
-                            <option value="<%= body %>" <% if (selectedBody == body) { %> selected <% } %>><%= body %></option>
-                        <% }) %>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <select id="selectedTrim" class="form-select">
-                        <option value="">Trim</option>
-                        <% trim.forEach(function(trim) { %>
-                            <option value="<%= trim %>" <% if (selectedTrim == trim) { %> selected <% } %>><%= trim %></option>
-                        <% }) %>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <select id="selectedEngine" class="form-select">
-                        <option value="">Engine</option>
-                        <% engine.forEach(function(engine) { %>
-                            <option value="<%= engine %>" <% if (selectedEngine == engine) { %> selected <% } %>><%= engine %></option>
-                        <% }) %>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <select id="selectedTrans" class="form-select">
-                        <% trans.forEach(function(trans) { %>
-                            <option value="<%= trans %>" <% if (selectedTrans == trans) { %> selected <% } %>><%= trans %></option>
-                        <% }) %>
-                    </select>
-                </div>
-            <% } %>
-        </div>
         <% if (stats_data && stats_data.length > 0) { %>
             <canvas id="barChart"></canvas>
             <table class="table-veh table-hover border shadow">
@@ -115,77 +64,98 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const statsSelect = document.getElementById('selectedStats');
-            const selectedYear = document.getElementById('selectedYear');
-            const selectedModel = document.getElementById('selectedModel');
-            const selectedBody = document.getElementById('selectedBody');
-            const selectedTrim = document.getElementById('selectedTrim');
-            const selectedEngine = document.getElementById('selectedEngine');
-            const selectedTrans = document.getElementById('selectedTrans');
             
             statsSelect.addEventListener('change', function () {
-            const selectedValue = this.value;
-            const url = new URL(window.location.href);
-            url.searchParams.set('category', selectedValue);
-            window.location.href = url.toString();
+                const selectedValue = this.value;
+                const url = new URL(window.location.href);
+                url.searchParams.set('category', selectedValue);
+                window.location.href = url.toString();
             });
         });
     </script>
     <% if (stats_data && stats_data.length > 0) { %>
         <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const labels = <%- JSON.stringify(stats_data.map(data => data.rpo_code || '')) %>;
-            const counts = <%- JSON.stringify(stats_data.map(d => Number(String(d.total_count).replace(/,/g, '')) || 0)) %>;
-            const ctx = document.getElementById('barChart').getContext('2d');
+            const stats_data = <%- JSON.stringify(stats_data) %>;
+        </script>
+        <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                let rawData = stats_data.map(data => ({
+                    label: data.rpo_code || '',
+                    count: Number(String(data.total_count).replace(/,/g, '')) || 0
+                }));
 
-            new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Count',
-                    data: counts,
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    borderWidth: 1,
-                    borderRadius: 2,
-                    barPercentage: 1,
-                    categoryPercentage: 0.8
-                }]
-            },
-            options: {
-                indexAxis: 'y',
-                scales: {
-                y: {
-                    type: 'category',
-                    ticks: {
-                        autoSkip: false,
-                        color: '#ffffff',
-                        font: { size: 10 }
-                    }
-                },
-                x: {
-                    beginAtZero: true,
-                    ticks: {
-                        color: '#ffffff',
-                        callback: function (value) {
-                            if (value >= 1e6) return (value / 1e6).toFixed(1) + 'M';
-                            if (value >= 1e3) return (value / 1e3).toFixed(1) + 'k';
-                            return value;
+                rawData.sort((a, b) => a.count - b.count);
+                rawData = rawData.slice(0, 20);
+
+                const labels = rawData.map(d => d.label);
+                const counts = rawData.map(d => d.count);
+
+                const ctx = document.getElementById('barChart').getContext('2d');
+
+                Chart.register(ChartDataLabels);
+
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Count',
+                            data: counts,
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1,
+                            borderRadius: 2,
+                            barPercentage: 1,
+                            categoryPercentage: 0.8
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        scales: {
+                        y: {
+                            type: 'category',
+                            ticks: {
+                                autoSkip: false,
+                                color: '#ffffff',
+                                font: { size: 10 }
+                            }
+                        },
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: '#ffffff',
+                                callback: function (value) {
+                                    if (value >= 1e6) return (value / 1e6).toFixed(1) + 'M';
+                                    if (value >= 1e3) return (value / 1e3).toFixed(1) + 'k';
+                                    return value;
+                                }
+                            }
+                        }
+                        },
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Top 20 Rarest Colors',
+                                color: '#ffffff',
+                                font: { size: 20 }
+                            },
+                            datalabels: {
+                                color: '#ffffff',
+                                align: 'end',
+                                anchor: 'right',
+                                formatter: (value) => value.toLocaleString(),
+                            },
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                label: ctx => `Count: ${ctx.parsed.x.toLocaleString()}`
+                                }
+                            }
                         }
                     }
-                }
-                },
-                plugins: {
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                    label: ctx => `Count: ${ctx.parsed.x.toLocaleString()}`
-                    }
-                }
-                }
-            }
+                });
             });
-        });
         </script>
     <% } %>
 </body>

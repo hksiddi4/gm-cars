@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('../partials/head'); %>
+    <title>500</title>
+</head>
+<body>
+    <%- include('../partials/header'); %>
+    <div class="wrapper">
+        <div class="content">
+            <div class="custom-container">
+                <div class="row">
+                    <h1 class="pagetitle">Server Error: 500</h1>
+                    <h4><%= JSON.stringify(error, null, 2) %></h4>
+                </div>
+            </div>
+        </div>
+        <%- include('../partials/footer'); %>
+    </div>
+</body>
+</html>

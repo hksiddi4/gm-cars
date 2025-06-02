@@ -46,7 +46,7 @@
                     <% stats_data.forEach(function(data) { %>
                         <tr>
                             <td scope="row"><%= data.rank %></td>
-                            <td scope="row" style="display: flex; align-items: center;">
+                            <td scope="row" style="white-space: nowrap; text-align: left;">
                                 <img id="sample" src="../img/extColors/<%= data.rpo_code || '../extColors/default' %>.png" width="20" height="20" style="margin-right: 8px; border-radius: 50%;">
                                 <%= data.rpo_code %>
                             </td>

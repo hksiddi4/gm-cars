@@ -41,7 +41,7 @@ app.get('/vehicles', function(req, res) {
         rpos = rpos.split(',');
     }
 
-    let url = `${baseURL}/vehicles?page=${page}&limit=${limit}`;
+    let url = `${baseURL}/vehicles?limit=${limit}&page=${page}`;
     if (year) url += `&year=${year}`;
     if (body) url += `&body=${body}`;
     if (trim) url += `&trim=${trim}`;
@@ -109,7 +109,7 @@ app.get('/vehicles', function(req, res) {
         })
         .catch((error) => {
             console.error(`Error fetching data: ${error}`);
-            res.status(500).send('Error fetching data');
+            res.status(500).render('pages/500', { error: error.toJSON ? error.toJSON() : { message: error.message } });
         });
 });
 
@@ -157,7 +157,7 @@ app.get('/stats', function(req, res) {
         })
         .catch((error) => {
             console.error(`Error fetching data: ${error}`);
-            res.status(500).send('Error fetching data');
+            res.status(500).render('pages/500', { error: error.toJSON ? error.toJSON() : { message: error.message } });
         });
 });
 
@@ -176,7 +176,7 @@ app.post('/api/rarity', async (req, res) => {
         const data = await response.json();
         res.json(data);
     } catch (error) {
-        res.status(500).json({ error: 'Failed to forward request to Python service' });
+        res.status(500).render('pages/500', { error: error.toJSON ? error.toJSON() : { message: error.message } });
     }
 });
 
@@ -189,12 +189,16 @@ app.post('/api/genurl', async (req, res) => {
         res.json({ url: generatedUrl });
     } catch (error) {
         console.error('Error generating URL:', error);
-        res.status(500).json({ error: 'Failed to generate URL' });
+        res.status(500).render('pages/500', { error: error.toJSON ? error.toJSON() : { message: error.message } });
     }
 });
 
 app.use(function(req, res) {
-    res.status(404).render('pages/404', { req: req });
+    res.status(404).render('pages/errors/404', { req: req });
+});
+
+app.use(function(req, res) {
+    res.status(500).render('pages/errors/500', { req: req });
 });
 
 const port = 80;

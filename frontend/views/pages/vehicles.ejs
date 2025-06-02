@@ -9,7 +9,7 @@
     <div class="custom-container">
         <div class="row" style="padding-top: 20px;">
             <!-- Filters -->
-            <div class="col-md-12 mb-3">
+            <div class="col-md-6">
                 <div id="filterToggle" class="d-inline-flex align-items-center">
                     <h4 class="mb-0">Filter</h4>
                     <i class="fas fa-sort-down" id="filterIcon" style="color: white;"></i>
@@ -35,27 +35,17 @@
                     </form>
                 </div>
             </div>
-            <!-- RPO Search -->
-            <div class="col-md-4">
-                <input type="text" id="rpoSearchInput" class="form-control" placeholder="Search RPOs..." />
-                <ul id="rpoResults" class="list-group mt-2" style="max-height: 200px; overflow-y: auto;"></ul>
-            </div>
-            <div class="stats d-flex">
-                <!-- Limit and Total -->
-                <div class="col-md-3 d-flex align-items-end" style="margin-top: 5px;">
-                    <p style="color: rgb(103, 103, 103);">
-                        Retrieved <%= totalItems.toLocaleString() %> vehicles in <%= elapsedTime.toLocaleString() %> seconds
-                    </p>
-                </div>
-                <div class="d-flex align-items-end ms-auto" style="margin-bottom: 10px;">
-                    <div class="dropdown-container">
-                        <select id="limitSelect" class="form-select small-dropdown">
-                            <option value="100" <% if (limit === 100) { %>selected<% } %>>100</option>
-                            <option value="150" <% if (limit === 150) { %>selected<% } %>>150</option>
-                            <option value="200" <% if (limit === 200) { %>selected<% } %>>200</option>
-                            <option value="250" <% if (limit === 250) { %>selected<% } %>>250</option>
-                        </select>
-                    </div>
+            <div class="stats d-flex justify-content-between align-items-end" style="margin-top: 5px; margin-bottom: 10px;">
+                <p style="color: rgb(103, 103, 103); margin: 0;">
+                    Retrieved <%= totalItems.toLocaleString() %> vehicles in <%= elapsedTime.toLocaleString() %> seconds
+                </p>
+                <div class="dropdown-container">
+                    <select id="limitSelect" class="form-select small-dropdown">
+                        <option value="100" <% if (limit === 100) { %>selected<% } %>>100</option>
+                        <option value="150" <% if (limit === 150) { %>selected<% } %>>150</option>
+                        <option value="200" <% if (limit === 200) { %>selected<% } %>>200</option>
+                        <option value="250" <% if (limit === 250) { %>selected<% } %>>250</option>
+                    </select>
                 </div>
             </div>
             <!-- Vehicles Table -->
@@ -308,20 +298,20 @@
             return queryStrings;
         }
 
-        function toggleMSRPOrder() {
-            selectedOrder = selectedOrder === "DESC" ? "ASC" : "DESC";
-            document.getElementById('msrpIcon').className = selectedOrder === "DESC" ? 'fas fa-sort-down' : 'fas fa-sort-up';
+        function toggleOrder(type, ascValue, descValue, iconId) {
+            selectedOrder = selectedOrder === ascValue ? descValue : ascValue;
+            document.getElementById(iconId).className = selectedOrder === ascValue ? 'fas fa-sort-up' : 'fas fa-sort-down';
             const params = new URLSearchParams(window.location.search);
             params.set('order', selectedOrder);
             window.location.search = params.toString();
         }
 
+        function toggleMSRPOrder() {
+            toggleOrder("msrp", "ASC", "DESC", "msrpIcon");
+        }
+
         function toggleVINOrder() {
-            selectedOrder = selectedOrder === "vinASC" ? "vinDESC" : "vinASC";
-            document.getElementById('vinIcon').className = selectedOrder === "vinASC" ? 'fas fa-sort-up' : 'fas fa-sort-down';
-            const params = new URLSearchParams(window.location.search);
-            params.set('order', selectedOrder);
-            window.location.search = params.toString();
+            toggleOrder("vin", "vinASC", "vinDESC", "vinIcon");
         }
 
         function handleMouseDown(event) {
@@ -380,29 +370,6 @@
             const currentOrder = new URLSearchParams(window.location.search).get('order');
             selectedOrder = currentOrder;
             updateIcons(selectedOrder);
-
-            const rpoSearchInput = document.getElementById('rpoSearchInput');
-            const rpoResults = document.getElementById('rpoResults');
-
-            rpoSearchInput.addEventListener('input', function() {
-                const query = rpoSearchInput.value.toUpperCase().trim();
-                rpoResults.innerHTML = '';
-
-                if (query.length > 0) {
-                    const matchingRPOs = Object.entries(rpoDescriptions).filter(([rpo, description]) =>
-                        rpo.includes(query) || description.toLowerCase().includes(query.toLowerCase())
-                    );
-
-                    matchingRPOs.forEach(([rpo, description]) => {
-                        const li = document.createElement('li');
-                        li.classList.add('list-group-item');
-                        const highlightedRpo = rpo.replace(new RegExp(query, 'gi'), match => `<span class="highlight">${match}</span>`);
-                        const highlightedDescription = description.replace(new RegExp(query, 'gi'), match => `<span class="highlight">${match}</span>`);
-                        li.innerHTML = `<strong>${rpo}</strong>: ${highlightedDescription}`;
-                        rpoResults.appendChild(li);
-                    });
-                }
-            });
 
             filterToggle.addEventListener('click', function() {
                 if (filterContent.classList.contains('show')) {

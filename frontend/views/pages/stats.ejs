@@ -51,7 +51,11 @@
                                 <%= data.rpo_code %>
                             </td>
                             <td scope="row"><%= data.total_count %></td>
-                            <td scope="row" style="text-align: left;"><%= data.color_names %></td>
+                            <td scope="row" style="text-align: left;">
+                            <% data.color_names.split(',').forEach((name, i) => { %>
+                                <a href="/vehicles?color=<%= encodeURIComponent(name.trim()) %>"><%= name.trim() %></a><%= i < data.color_names.split(',').length - 1 ? ', ' : '' %>
+                            <% }) %>
+                            </td>
                             <td scope="row"><%= data.percent %>%</td>
                         </tr>
                     <% }) %>

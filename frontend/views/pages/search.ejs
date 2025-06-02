@@ -184,7 +184,7 @@
                     <% if (data.rpo_codes) { %>
                       <% data.rpo_codes.forEach(function(rpo) { %>
                         <% if (rpo) { %>
-                          <tr>
+                          <tr style="cursor: pointer;" onmousedown="handleMouseDown(event);" data-url="/vehicles?rpo=<%= rpo %>">
                             <td class="<%= rpo.includes('OAR') ? 'highlight' : '' %>"><%= rpo %></td>
                             <td class="rpo-description" data-code="<%= rpo %>" style="text-align: left;"></td>
                           </tr>
@@ -209,6 +209,18 @@
     </div>
     <%- include('../partials/footer'); %>
     <script>
+      function handleMouseDown(event) {
+          startX = event.clientX;
+      }
+
+      function handleRowClick(url, event) {
+          const distance = Math.abs(event.clientX - startX);
+          if (distance > 5) {
+              return;
+          }
+          window.location.href = url;
+      }
+
       document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.rpo-description').forEach(function(element) {
           const rpoCode = element.getAttribute('data-code');
@@ -299,6 +311,12 @@
         })
         .catch(error => {
         console.error('Error loading generated photo:', error);
+        });
+
+        document.querySelectorAll('#rpoTable tbody tr').forEach(row => {
+            const url = row.getAttribute('data-url');
+            row.addEventListener('mousedown', handleMouseDown);
+            row.addEventListener('click', (event) => handleRowClick(url, event));
         });
 
         

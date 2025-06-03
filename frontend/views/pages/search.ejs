@@ -2,10 +2,11 @@
 <html lang="en">
 <head>
     <%- include('../partials/head'); %>
+    <% const vin = vin_data[0]; %>
     <title>
-      <%= (vin_data[0].modelYear ? "'" + vin_data[0].modelYear.toString().slice(-2) : 'N/A') %>
-      <%= vin_data[0].model || 'N/A' %> 
-      <%= vin_data[0].trim || 'N/A' %> 
+      <%= (vin.modelYear ? "'" + vin.modelYear.toString().slice(-2) : 'N/A') %>
+      <%= vin.model || 'N/A' %> 
+      <%= vin.trim || 'N/A' %> 
     </title>
 </head>
 <body>
@@ -14,17 +15,17 @@
         <div class="row">
           <% if (vin_data && vin_data.length > 0) { %>
             <h1 style="padding-top: 20px;">
-              <%= vin_data[0].modelYear || 'N/A' %>
-              <%= vin_data[0].model || 'N/A' %>
-              <%= vin_data[0].trim || 'N/A' %>
+              <%= vin.modelYear || 'N/A' %>
+              <%= vin.model || 'N/A' %>
+              <%= vin.trim || 'N/A' %>
             </h1>
-            <% if (vin_data[0].special_descs && vin_data[0].special_descs !== 'NA') { %>
+            <% if (vin.special_descs && vin.special_descs !== 'NA') { %>
               <div>
                 <h4>
                   <em>
                     <% 
                       // Split the special_descs by comma and iterate over each description
-                      const specialDescs = vin_data[0].special_descs.split(', ');
+                      const specialDescs = vin.special_descs.split(', ');
                       specialDescs.forEach(desc => { 
                     %>
                       <div><%= desc %></div>
@@ -43,9 +44,12 @@
                 <h4 style="position: absolute; top: 70%; left: 50%; transform: translate(-50%, -50%); align-items: center;">This will take a minute.</h4>
               </div>
               <img id="carousel-image" src="" style="width: 100%;">
-              <button id="prev" style="position: absolute; top: 50%; left: 0; background-color: rgba(0, 0, 0, 0.5); color: white; border: none; padding: 10px; cursor: pointer; z-index: 100;">&#10094;</button>
-              <button id="next" style="position: absolute; top: 50%; right: 0; background-color: rgba(0, 0, 0, 0.5); color: white; border: none; padding: 10px; cursor: pointer; z-index: 100;">&#10095;</button>
+              <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+                <button id="prev" style="position: absolute; top: 50%; left: 0; background-color: rgba(0, 0, 0, 0.5); color: white; border: none; padding: 10px; cursor: pointer; z-index: 100;">&#10094;</button>
+                <button id="next" style="position: absolute; top: 50%; right: 0; background-color: rgba(0, 0, 0, 0.5); color: white; border: none; padding: 10px; cursor: pointer; z-index: 100;">&#10095;</button>
+              </div>
             </div>
+            <div id="image-gallery" style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; overflow-x: hidden; justify-content: center; max-height: 478px;"></div>
             <div style="flex: 1;">
               <table class="table-veh table-hover border shadow" id="vinTable">
                 <tbody>
@@ -154,10 +158,10 @@
         <div style="display: flex; gap: 10px; align-items: flex-start; padding: 10px;">
             <!-- Window Sticker -->
             <div id="sticker-container" style="flex: 1;">
-              <% if (vin_data[0].country === 'MEXICO') { %>
+              <% if (vin.country === 'MEXICO') { %>
                 <h2>No window sticker available</h2>
               <% } else { %>
-                <iframe id="window-sticker" src="https://cws.gm.com/vs-cws/vehshop/v2/vehicle/windowsticker?vin=<%= vin_data[0].vin || 'N/A' %>" style="min-height: 886px; width: 100%;"></iframe>
+                <iframe id="window-sticker" src="https://cws.gm.com/vs-cws/vehshop/v2/vehicle/windowsticker?vin=<%= vin.vin || 'N/A' %>" style="min-height: 886px; width: 100%;"></iframe>
               <% } %>
             </div>
             <!-- <div class="rarity-container">
@@ -264,11 +268,27 @@
         .then(response => response.json())
         .then(data => {
           const images = data.url.generatedImages;
+          const gallery = document.getElementById('image-gallery');
 
           if (images === "../img/ghost-chevrolet-car-alt.png") {
             carouselImage.src = images;
             loadingAnimation.style.display = 'none';
           } else {
+            images.forEach((imgSrc, index) => {
+              const thumb = document.createElement('img');
+              thumb.src = imgSrc;
+              thumb.alt = `Thumbnail ${index + 1}`;
+              thumb.style.width = '100px';
+              thumb.style.cursor = 'pointer';
+              thumb.style.border = '2px solid transparent';
+
+              thumb.addEventListener('click', () => {
+                currentIndex = index;
+                showImage(currentIndex);
+              });
+
+              gallery.appendChild(thumb);
+            });
             let currentIndex = 0;
             let initialLoad = true;
 
@@ -291,6 +311,10 @@
                         carouselImage.style.opacity = 1;
                     }, 200);
                 }
+
+                [...gallery.children].forEach((img, i) => {
+                  img.style.border = i === index ? '2px solid #141414' : '2px solid transparent';
+                });
 
                 const nextIndex = (index + 1) % images.length;
                 preloadImage(images[nextIndex]);

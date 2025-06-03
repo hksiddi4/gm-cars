@@ -49,7 +49,7 @@
                 </div>
             </div>
             <!-- Vehicles Table -->
-            <div class="table-responsive">
+            <div class="table-responsive" style="overflow-x: auto;">
                 <% if (vehicle_data) { %>
                 <table class="table-veh table-hover border border shadow" id="allTable">
                     <thead>
@@ -206,83 +206,83 @@
                         <% }) %>
                     </tbody>
                 </table>
-                <!-- Pagination -->
-                <%
-                function buildQuery(params) {
-                    const entries = Object.entries(params)
-                        .filter(([_, v]) => v !== undefined && v !== null && v !== '');
-
-                    // Move 'page' to the end
-                    const pageEntry = entries.find(([k]) => k === 'page');
-                    const filtered = entries.filter(([k]) => k !== 'page');
-                    if (pageEntry) filtered.push(pageEntry);
-
-                    return filtered
-                        .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
-                        .join('&');
-                }
-
-                const baseQuery = {
-                    limit,
-                    model: selectedModels.length ? selectedModels.join(',') : '',
-                    rpo: selectedRPO,
-                    trim: selectedTrim,
-                    engine: selectedEngine,
-                    trans: selectedTrans,
-                    year: selectedYear,
-                    body: selectedBody,
-                    color: selectedColor,
-                    country: selectedCountry,
-                    order: selectedOrder
-                };
-                %>
-                <div class="pagination-wrapper">
-                    <nav aria-label="Page navigation">
-                        <ul class="pagination">
-                            <% if (currentPage > 1) { %>
-                                <!-- First Page -->
-                                <li class="page-item">
-                                    <a class="page-link" href="?<%= buildQuery({ ...baseQuery, page: 1 }) %>">First</a>
-                                </li>
-                                <!-- Previous Page -->
-                                <li class="page-item">
-                                    <a class="page-link" href="?<%= buildQuery({ ...baseQuery, page: currentPage - 1 }) %>">Previous</a>
-                                </li>
-                            <% } %>
-                            <!-- Page Numbers -->
-                            <% 
-                            const pageRange = 10; // Number of pages to show around the current page
-                            let startPage = Math.max(1, currentPage - Math.floor(pageRange / 2));
-                            let endPage = Math.min(totalPages, currentPage + Math.floor(pageRange / 2));
-
-                            if (currentPage - Math.floor(pageRange / 2) < 1) {
-                                endPage = Math.min(totalPages, endPage + (1 - (currentPage - Math.floor(pageRange / 2))));
-                            }
-
-                            if (currentPage + Math.floor(pageRange / 2) > totalPages) {
-                                startPage = Math.max(1, startPage - ((currentPage + Math.floor(pageRange / 2)) - totalPages));
-                            }
-                            %>
-                            <% for (let i = startPage; i <= endPage; i++) { %>
-                                <li class="page-item <%= i === currentPage ? 'active' : '' %>">
-                                    <a class="page-link" href="?<%= buildQuery({ ...baseQuery, page: i }) %>"><%= i %></a>
-                                </li>
-                            <% } %>
-                            <% if (currentPage < totalPages) { %>
-                                <!-- Next Page -->
-                                <li class="page-item">
-                                    <a class="page-link" href="?<%= buildQuery({ ...baseQuery, page: currentPage + 1 }) %>">Next</a>
-                                </li>
-                                <!-- Last Page -->
-                                <li class="page-item">
-                                    <a class="page-link" href="?<%= buildQuery({ ...baseQuery, page: totalPages }) %>">Last</a>
-                                </li>
-                            <% } %>
-                        </ul>
-                    </nav>
-                </div>
-                <% } %>
             </div>
+            <!-- Pagination -->
+            <%
+            function buildQuery(params) {
+                const entries = Object.entries(params)
+                    .filter(([_, v]) => v !== undefined && v !== null && v !== '');
+
+                // Move 'page' to the end
+                const pageEntry = entries.find(([k]) => k === 'page');
+                const filtered = entries.filter(([k]) => k !== 'page');
+                if (pageEntry) filtered.push(pageEntry);
+
+                return filtered
+                    .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
+                    .join('&');
+            }
+
+            const baseQuery = {
+                limit,
+                model: selectedModels.length ? selectedModels.join(',') : '',
+                rpo: selectedRPO,
+                trim: selectedTrim,
+                engine: selectedEngine,
+                trans: selectedTrans,
+                year: selectedYear,
+                body: selectedBody,
+                color: selectedColor,
+                country: selectedCountry,
+                order: selectedOrder
+            };
+            %>
+            <div class="pagination-wrapper">
+                <nav aria-label="Page navigation">
+                    <ul class="pagination">
+                        <% if (currentPage > 1) { %>
+                            <!-- First Page -->
+                            <li class="page-item">
+                                <a class="page-link" href="?<%= buildQuery({ ...baseQuery, page: 1 }) %>">First</a>
+                            </li>
+                            <!-- Previous Page -->
+                            <li class="page-item">
+                                <a class="page-link" href="?<%= buildQuery({ ...baseQuery, page: currentPage - 1 }) %>">Previous</a>
+                            </li>
+                        <% } %>
+                        <!-- Page Numbers -->
+                        <% 
+                        const pageRange = 10; // Number of pages to show around the current page
+                        let startPage = Math.max(1, currentPage - Math.floor(pageRange / 2));
+                        let endPage = Math.min(totalPages, currentPage + Math.floor(pageRange / 2));
+
+                        if (currentPage - Math.floor(pageRange / 2) < 1) {
+                            endPage = Math.min(totalPages, endPage + (1 - (currentPage - Math.floor(pageRange / 2))));
+                        }
+
+                        if (currentPage + Math.floor(pageRange / 2) > totalPages) {
+                            startPage = Math.max(1, startPage - ((currentPage + Math.floor(pageRange / 2)) - totalPages));
+                        }
+                        %>
+                        <% for (let i = startPage; i <= endPage; i++) { %>
+                            <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                                <a class="page-link" href="?<%= buildQuery({ ...baseQuery, page: i }) %>"><%= i %></a>
+                            </li>
+                        <% } %>
+                        <% if (currentPage < totalPages) { %>
+                            <!-- Next Page -->
+                            <li class="page-item">
+                                <a class="page-link" href="?<%= buildQuery({ ...baseQuery, page: currentPage + 1 }) %>">Next</a>
+                            </li>
+                            <!-- Last Page -->
+                            <li class="page-item">
+                                <a class="page-link" href="?<%= buildQuery({ ...baseQuery, page: totalPages }) %>">Last</a>
+                            </li>
+                        <% } %>
+                    </ul>
+                </nav>
+            </div>
+            <% } %>
         </div>
     </div>
     <%- include('../partials/footer'); %>

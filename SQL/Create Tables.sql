@@ -404,17 +404,19 @@ JOIN OrderedEditions oe ON se.vehicle_id = oe.vehicle_id
 WHERE se.special_desc LIKE '%Collectors Edition%'
 ORDER BY oe.row_num;
 
-
+select * from Vehicles where vin = '1G6D25R65R0962018';
 
 SELECT se.special_desc, v.vin
 FROM SpecialEditions se
 JOIN Vehicles v ON se.vehicle_id = v.vehicle_id
-WHERE v.vin = '1G1FJ1R6XR0100021';
+WHERE v.vin = '1G6D25R65R0962018';
 
 UPDATE SpecialEditions se
 JOIN Vehicles v ON se.vehicle_id = v.vehicle_id
-SET se.special_desc = 'Hertz / Hendrick Motorsports Edition #001'
-WHERE v.vin = '1G1FH1R70L0105904';
+SET se.special_desc = 'CT5-V Blackwing 20th Anniversary Edition'
+WHERE v.vin = '1G6D25R65R0962018';
+
+insert into SpecialEditions (vehicle_id, special_desc) values (286143, 'CT5-V Blackwing 20th Anniversary Edition');
 
 WITH ColorCounts AS (
     SELECT

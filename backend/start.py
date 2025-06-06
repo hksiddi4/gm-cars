@@ -182,6 +182,7 @@ def sort_price():
         conditions.append(f"country = '{country_map.get(country, 'USA')}'")
     if rpo:
         rpo_list = rpo.split(',') if ',' in rpo else [rpo]
+        h40_selected = 'H40' in rpo_list
         rpo_n = len(rpo_list)
         join_clause += "\n            JOIN Options opt ON v.vehicle_id = opt.vehicle_id"
         rpo_conditions = {
@@ -205,8 +206,21 @@ def sort_price():
             "ZLJ": ["modelYear = '2024'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "color_name = 'BLACK RAVEN'"],
             "ZLR": ["modelYear = '2024'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "color_name = 'VELOCITY RED'"],
             "ABQ": ["modelYear = '2023'", "model = 'CT5'", "trim = 'V-SERIES BLACKWING'", "msrp > '118000'"],
-            "ZLT": ["(modelYear = '2024' AND model = 'CT5' AND trim = 'V-SERIES BLACKWING' AND msrp > '' AND opt.option_code = 'ZLT') OR v.vin = '1G6D25R65R0962018'"],
+            "ZLT": ["modelYear = '2024'", "model = 'CT5'", "trim = 'V-SERIES BLACKWING'", "opt.option_code IN ('ZLT', 'ZLV')"],
         }
+
+        if h40_selected:
+            vin_filters = []
+            if trim:
+                vin_filters.append(f"trim = '{trim}'")
+            if color:
+                vin_filters.append(f"color_name = '{color}'")
+            vin_extra = " AND " + " AND ".join(vin_filters) if vin_filters else ""
+            rpo_conditions["H40"] = [
+                f"((modelYear = '2024' AND model = 'CAMARO' AND trim = '2SS' "
+                f"AND color_name = 'RADIANT RED TINTCOAT' AND opt.option_code = 'SL1') "
+                f"OR (v.vin IN ('1G1FK1R65R0117449','1G1FK3D62R0118478'){vin_extra}))"
+            ]
 
         for rpo in rpo_list:
             if rpo in rpo_conditions:
@@ -216,6 +230,7 @@ def sort_price():
             if code_to_remove in rpo_list:
                 rpo_list = [code for code in rpo_list if code != code_to_remove]
                 rpo_n = len(rpo_list)
+
         if len(rpo_list) > 1:
             rpo_placeholders = "', '".join(rpo_list)
             conditions.append(f"opt.option_code IN ('{rpo_placeholders}')")

@@ -389,6 +389,17 @@ WITH OrderedEditions AS (
 UPDATE SpecialEditions se
 JOIN OrderedEditions oe ON se.vehicle_id = oe.vehicle_id
 SET se.special_desc = CONCAT('Collectors Edition #', LPAD(oe.row_num, 3, '0'));
+
+WITH OrderedEditions AS (
+    SELECT se.vehicle_id, ROW_NUMBER() OVER (ORDER BY SUBSTRING(v.vin, -6)) AS row_num
+    FROM SpecialEditions se
+    JOIN Vehicles v ON se.vehicle_id = v.vehicle_id
+    WHERE v.color_id = 16
+      AND se.special_desc LIKE '%Garage 56 Special Edition%'
+)
+UPDATE SpecialEditions se
+JOIN OrderedEditions oe ON se.vehicle_id = oe.vehicle_id
+SET se.special_desc = CONCAT('Garage 56 Special Edition #', LPAD(oe.row_num, 2, '0'));
 commit;
 
 WITH OrderedEditions AS (

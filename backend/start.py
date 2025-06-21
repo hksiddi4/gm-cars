@@ -348,8 +348,6 @@ def color_stats():
             SELECT * FROM Ranked;
         """
 
-        print(sqlStatement)
-
         conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
         viewTable = execute_read_query(conn, sqlStatement)
         close_connection(conn)

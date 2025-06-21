@@ -78,19 +78,19 @@
         });
     </script>
     <% if (stats_data && stats_data.length > 0) { %>
-        <script>
-            const stats_data = <%- JSON.stringify(stats_data) %>;
-        </script>
         <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
         <script>
+            const stats_data = <%- JSON.stringify(stats_data) %>;
+
             document.addEventListener('DOMContentLoaded', function () {
                 let rawData = stats_data.map(data => ({
                     label: data.rpo_code || '',
-                    count: Number(String(data.total_count).replace(/,/g, '')) || 0
+                    count: Number(String(data.total_count).replace(/,/g, '')) || 0,
+                    color_names: data.color_names || ''
                 }));
 
                 rawData.sort((a, b) => a.count - b.count);
-                rawData = rawData.slice(0, 20);
+                rawData = rawData.slice(13, 33);
 
                 const labels = rawData.map(d => d.label);
                 const counts = rawData.map(d => d.count);
@@ -140,22 +140,25 @@
                         plugins: {
                             title: {
                                 display: true,
-                                text: 'Top 20 Rarest Colors',
+                                text: 'Top 20 Rarest Colors (excl. CT5V-BW 120th Edition)',
                                 color: '#ffffff',
                                 font: { size: 20 }
                             },
                             datalabels: {
                                 color: '#ffffff',
-                                align: 'end',
-                                anchor: 'right',
                                 formatter: (value) => value.toLocaleString(),
                             },
-                            legend: { display: false },
                             tooltip: {
                                 callbacks: {
-                                label: ctx => `Count: ${ctx.parsed.x.toLocaleString()}`
-                                }
-                            }
+                                    title: () => '',
+                                    label: (context) => {
+                                        const index = context.dataIndex;
+                                        return rawData[index].color_names;
+                                    }
+                                },
+                                displayColors: false
+                            },
+                            legend: { display: false }
                         }
                     }
                 });

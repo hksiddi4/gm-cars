@@ -205,7 +205,6 @@ SELECT
 FROM staging_allGM
 WHERE ordernum IS NOT NULL AND ordernum != '' AND ordernum NOT IN (SELECT order_number FROM Orders);
 SELECT * FROM Orders;
-select * from staging_allGM where vin = '1G6D35R67R0912024';
 
 -- Find/edit Order duplicates
 	SELECT
@@ -361,6 +360,8 @@ CROSS JOIN LATERAL (
     SELECT 'Hertz / Hendrick Motorsports Edition' WHERE options LIKE '%"PEH"%'
     UNION ALL
     SELECT '20th Anniversary of V-Series Special Edition' WHERE options LIKE '%"ZLT"%'
+    UNION ALL
+    SELECT 'ZTK Track Performance Package' WHERE options LIKE '%"ZTK"%'
 ) special_editions
 WHERE special_desc IS NOT NULL
 AND NOT EXISTS (
@@ -450,6 +451,7 @@ Ranked AS (
 )
 SELECT * FROM Ranked;
 
+-- Update Stats for new colors (after doing all new inserts)
 UPDATE Colors SET rpo_code = 'G4Z' WHERE color_name = 'ROSWELL GREEN METALLIC';
 UPDATE Colors SET rpo_code = 'GD0' WHERE color_name = 'ACCELERATE YELLOW METALLIC';
 UPDATE Colors SET rpo_code = 'GC5' WHERE color_name = 'AMPLIFY ORANGE TINTCOAT';
@@ -521,3 +523,12 @@ UPDATE Colors SET rpo_code = 'G1W' WHERE color_name = 'WHITE PEARL METALLIC TRIC
 UPDATE Colors SET rpo_code = 'GSK' WHERE color_name = 'WILD CHERRY TINTCOAT';
 UPDATE Colors SET rpo_code = 'GUI' WHERE color_name = 'ZEUS BRONZE METALLIC';
 UPDATE Colors SET rpo_code = 'N/A' WHERE color_name = 'HYPERSONIC METALLIC';
+
+-- Update Order_ID for all ZR1's
+UPDATE Orders
+SET mmc_code_id = 31
+WHERE order_id IN (
+    SELECT order_id
+    FROM Vehicles
+    WHERE model = 'CORVETTE ZR1'
+);

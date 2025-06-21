@@ -44,7 +44,7 @@ CREATE TABLE Drivetrains (
 -- Colors Table
 CREATE TABLE Colors (
     color_id SERIAL PRIMARY KEY,
-    color_name VARCHAR(32) UNIQUE,
+    color_name VARCHAR(64) UNIQUE,
     rpo_code VARCHAR(3)
 );
 

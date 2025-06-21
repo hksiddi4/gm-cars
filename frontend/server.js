@@ -109,7 +109,7 @@ app.get('/vehicles', function(req, res) {
         })
         .catch((error) => {
             console.error(`Error fetching data: ${error}`);
-            res.status(500).render('pages/500', { error: error.toJSON ? error.toJSON() : { message: error.message } });
+            res.status(500).render('pages/errors/500', { error: error.toJSON ? error.toJSON() : { message: error.message } });
         });
 });
 
@@ -120,7 +120,7 @@ app.get('/search', function(req, res) {
         var vin_data = response.data;
 
         if (vin_data.length === 0) {
-            res.status(404).render('pages/404', { req: req });
+            res.status(404).render('pages/errors/404', { req: req });
         } else {
             vin_data.forEach(function(data) {
                 data.msrp = formatCurrency(data.msrp);
@@ -157,7 +157,7 @@ app.get('/stats', function(req, res) {
         })
         .catch((error) => {
             console.error(`Error fetching data: ${error}`);
-            res.status(500).render('pages/500', { error: error.toJSON ? error.toJSON() : { message: error.message } });
+            res.status(500).render('pages/errors/500', { error: error.toJSON ? error.toJSON() : { message: error.message } });
         });
 });
 
@@ -176,7 +176,7 @@ app.post('/api/rarity', async (req, res) => {
         const data = await response.json();
         res.json(data);
     } catch (error) {
-        res.status(500).render('pages/500', { error: error.toJSON ? error.toJSON() : { message: error.message } });
+        res.status(500).render('pages/errors/500', { error: error.toJSON ? error.toJSON() : { message: error.message } });
     }
 });
 
@@ -189,7 +189,7 @@ app.post('/api/genurl', async (req, res) => {
         res.json({ url: generatedUrl });
     } catch (error) {
         console.error('Error generating URL:', error);
-        res.status(500).render('pages/500', { error: error.toJSON ? error.toJSON() : { message: error.message } });
+        res.status(500).render('pages/errors/500', { error: error.toJSON ? error.toJSON() : { message: error.message } });
     }
 });
 

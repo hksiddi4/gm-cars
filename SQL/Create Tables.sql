@@ -525,10 +525,20 @@ UPDATE Colors SET rpo_code = 'GUI' WHERE color_name = 'ZEUS BRONZE METALLIC';
 UPDATE Colors SET rpo_code = 'N/A' WHERE color_name = 'HYPERSONIC METALLIC';
 
 -- Update Order_ID for all ZR1's
+select * from MMC_Codes;
 UPDATE Orders
-SET mmc_code_id = 31
+SET mmc_code_id = 16
 WHERE order_id IN (
     SELECT order_id
     FROM Vehicles
-    WHERE model = 'CORVETTE ZR1'
+    WHERE model = 'CORVETTE E-RAY' and body = 'CONVERTIBLE'
 );
+
+select * from Vehicles where vin = '1G1YF3D38S5603722';
+
+SELECT DISTINCT v.model, v.body
+FROM Orders o
+JOIN Vehicles v ON o.order_id = v.order_id
+WHERE o.mmc_code_id IS NULL;
+
+

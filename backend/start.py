@@ -51,65 +51,6 @@ def search_inv():
             row['rpo_codes'] = row['rpo_codes'].split(', ')
     return jsonify(viewTable)
 
-@app.route('/api/genurl', methods=['POST'])
-def generate_url():
-    data = request.json["data"]
-    vin_data = data["vin_data"]
-
-    model_year = vin_data[0]["modelYear"]
-    mmc_code = vin_data[0]["mmc_code"]
-    mmcDict = data["mmc"]
-    colorMap = data["colorMap"]
-    intColor = data["intColor"]
-    options = vin_data[0]["rpo_codes"]
-    rpos = "_".join(options)
-    baseURL = "https://cgi.chevrolet.com/mmgprod-us/dynres/prove/image.gen?i="
-    baseURL_int = "https://cgi.chevrolet.com/mmgprod-us/dynres/prove/imageinterior.gen?i="
-
-    if mmc_code in ["1YC07", "1YC67"]:
-        trim = next((opt for opt in options if opt in ["1LT", "2LT", "3LT"]), mmcDict.get(mmc_code))
-    elif mmc_code in ["1YH07", "1YH67", "1YG07", "1YG67", "1YR07", "1YR67"]:
-        trim = next((opt for opt in options if opt in ["1LZ", "2LZ", "3LZ"]), mmcDict.get(mmc_code))
-    else:
-        trim = mmcDict.get(mmc_code)
-    
-    color = None
-    colorInt = None
-    for option in options:
-        if color is None:
-            for key, rpo in colorMap.items():
-                if rpo == option:
-                    color = rpo
-                    break
-        if colorInt is None:
-            for key, rpo in intColor.items():
-                if key == option:
-                    colorInt = key
-                    break
-        if color and colorInt:
-            break
-
-    urls_attempted = []
-    url_data = [
-        (baseURL, color, 1, 9),
-        (baseURL_int, colorInt, 1, 4)
-    ]
-    for base_url, color_value, view, view_limit in url_data:
-        while view <= view_limit:
-            # gmds11 = 2500x1407 | gmds10 = 1920x1080 | gmds5 = 320x178 | gmds4 = 640x360 | gmds3 = 205x115 | gmds2 = 960x540 | gmds1 = 480x270
-            end_url = f"gmds10.png&v=deg{view:02d}&std=true&country=US&send404=true&transparentBackgroundPng=true"
-            built_url = f"{base_url}{model_year}/{mmc_code}/{mmc_code}__{trim}/{color_value}_{rpos}{end_url}"
-            response = requests.head(built_url)
-            view += 1
-            if response.status_code == 404:
-                break
-            urls_attempted.append(built_url)
-    
-    if not urls_attempted:
-        ghost_img = "../img/ghost-chevrolet-car-alt.png"
-        return jsonify({"generatedImages": ghost_img})
-    return jsonify({"generatedImages": urls_attempted})
-
 # Working on replacing
 @app.route('/api/rarity', methods=['POST'])
 def unique():

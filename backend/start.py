@@ -68,7 +68,7 @@ def generate_url():
 
     if mmc_code in ["1YC07", "1YC67"]:
         trim = next((opt for opt in options if opt in ["1LT", "2LT", "3LT"]), mmcDict.get(mmc_code))
-    elif mmc_code in ["1YH07", "1YH67", "1YG07", "1YG67"]:
+    elif mmc_code in ["1YH07", "1YH67", "1YG07", "1YG67", "1YR07", "1YR67"]:
         trim = next((opt for opt in options if opt in ["1LZ", "2LZ", "3LZ"]), mmcDict.get(mmc_code))
     else:
         trim = mmcDict.get(mmc_code)

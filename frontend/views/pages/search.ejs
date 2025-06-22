@@ -271,22 +271,25 @@
         const modelYear = vin_data[0].modelYear;
         const mmc_code = vin_data[0].mmc_code;
         let options = vin_data[0].rpo_codes || [];
-        if (["1AJ37", "1AJ67"].includes(mmc_code)) {
-          options = options.filter(code => code !== "T3S");
-        }
 
-        let trim = mmc[mmc_code] || '';
-        if (["1YC07", "1YC67"].includes(mmc_code)) {
-          trim = options.find(opt => ["1LT", "2LT", "3LT"].includes(opt)) || trim;
-        } else if (["1YH07", "1YH67", "1YG07", "1YG67", "1YR07", "1YR67"].includes(mmc_code)) {
-          trim = options.find(opt => ["1LZ", "2LZ", "3LZ"].includes(opt)) || trim;
-        } else if (["1AJ37", "1AJ67"].includes(mmc_code) && modelYear > 2019) {
-          trim = options.find(opt => ["1LZ"].includes(opt)) || trim;
-        } else if (["1AH37", "1AH67"].includes(mmc_code)) {
-          trim = options.find(opt => ["3LT"].includes(opt)) || trim;
-        } else if (["1AG37", "1AG67"].includes(mmc_code) && modelYear < 2024) {
-          trim = options.find(opt => ["1LS"].includes(opt)) || trim;
-        }
+				let trim = mmc[mmc_code] || '';
+				
+				if (["1AJ37", "1AJ67"].includes(mmc_code) && modelYear > 2019) {
+				  if (options.includes("1LZ")) {
+				    trim = "1LZ";
+				    options = options.filter(code => code !== "T3S");
+				  }
+				} else {
+				  if (["1YC07", "1YC67"].includes(mmc_code)) {
+				    trim = options.find(opt => ["1LT", "2LT", "3LT"].includes(opt)) || trim;
+				  } else if (["1YH07", "1YH67", "1YG07", "1YG67", "1YR07", "1YR67"].includes(mmc_code)) {
+				    trim = options.find(opt => ["1LZ", "2LZ", "3LZ"].includes(opt)) || trim;
+				  } else if (["1AH37", "1AH67"].includes(mmc_code)) {
+				    trim = options.find(opt => ["3LT"].includes(opt)) || trim;
+				  } else if (["1AG37", "1AG67"].includes(mmc_code) && modelYear < 2024) {
+				    trim = options.find(opt => ["1LS"].includes(opt)) || trim;
+				  }
+				}
 
         const rpos = options.join('_');
         const color = options.find(opt => Object.values(colorMap).includes(opt));

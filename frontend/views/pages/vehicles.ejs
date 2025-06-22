@@ -35,6 +35,12 @@
                     </form>
                 </div>
             </div>
+            <!-- RPO Search -->
+            <div class="col-md-4 mt-2 position-relative">
+                <input type="text" id="rpoSearchInput" class="form-control" placeholder="Search RPOs..." />
+                <ul id="rpoResults" class="list-group mt-2" style="max-height: 200px; overflow-y: auto;"></ul>
+                <div id="selectedRPOs" class="selected-rpos mt-1"></div>
+            </div>
             <div class="stats d-flex justify-content-between align-items-end" style="margin-top: 5px; margin-bottom: 10px;">
                 <p style="color: rgb(103, 103, 103); margin: 0;">
                     Retrieved <%= totalItems.toLocaleString() %> vehicles in <%= elapsedTime.toLocaleString() %> seconds
@@ -292,6 +298,31 @@
         let startX;
         let selectedOrder = '';
 
+        let rpoDescriptions = {};
+
+        const cachedRPO = sessionStorage.getItem('rpoCodes');
+
+        if (cachedRPO) {
+            const data = JSON.parse(cachedRPO);
+            data.allRpoCodes.forEach(([code, desc]) => {
+                rpoDescriptions[code] = desc;
+            });
+            renderSelectedRPOs();
+        } else {
+            fetch('https://decoderpo.com/static/rpoCodes.json')
+                .then(res => res.json())
+                .then(data => {
+                    sessionStorage.setItem('rpoCodes', JSON.stringify(data));
+                    data.allRpoCodes.forEach(([code, desc]) => {
+                        rpoDescriptions[code] = desc;
+                    });
+                    renderSelectedRPOs();
+                })
+                .catch(err => {
+                    console.error('Failed to load RPO data:', err);
+                });
+        }
+
         function buildQueryString(params) {
             const queryStrings = Object.entries(params)
                 .filter(([key, value]) => value)
@@ -353,6 +384,38 @@
             setIcon(vinIcon, selectedOrder === 'vinASC' ? 'up' : 'down', selectedOrder === 'vinASC' || selectedOrder === 'vinDESC');
         }
 
+        function renderSelectedRPOs() {
+            const container = document.getElementById('selectedRPOs');
+            container.innerHTML = '';
+            const url = new URL(window.location.href);
+            const rpoParam = url.searchParams.get('rpo');
+            if (!rpoParam) return;
+            const rpos = rpoParam.split(',');
+
+            rpos.forEach(code => {
+                const tag = document.createElement('button');
+                tag.type = 'button';
+                tag.className = 'rpo-tag';
+
+                const desc = rpoDescriptions[code] || 'No description';
+                tag.innerHTML = `<strong>${code}</strong>: ${desc} &nbsp;×`;
+
+                tag.addEventListener('click', () => {
+                    const newRpos = rpos.filter(r => r !== code);
+                    const url = new URL(window.location.href);
+                    if (newRpos.length) {
+                        url.searchParams.set('rpo', newRpos.join(','));
+                    } else {
+                        url.searchParams.delete('rpo');
+                    }
+                    url.searchParams.set('page', 1);
+                    window.location.href = url.toString();
+                });
+
+                container.appendChild(tag);
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             const filterToggle = document.getElementById('filterToggle');
             const filterContent = document.getElementById('filterContent');
@@ -372,6 +435,48 @@
             const currentOrder = new URLSearchParams(window.location.search).get('order');
             selectedOrder = currentOrder;
             updateIcons(selectedOrder);
+
+            const rpoSearchInput = document.getElementById('rpoSearchInput');
+            const rpoResults = document.getElementById('rpoResults');
+
+            rpoSearchInput.addEventListener('input', function() {
+                const query = rpoSearchInput.value.toUpperCase().trim();
+                rpoResults.innerHTML = '';
+
+                if (query.length > 1) {
+                    const matchingRPOs = Object.entries(rpoDescriptions).filter(([rpo, description]) =>
+                        rpo.includes(query) || description.toLowerCase().includes(query.toLowerCase())
+                    );
+
+                    matchingRPOs.forEach(([rpo, description]) => {
+                        const li = document.createElement('li');
+                        li.classList.add('list-group-item');
+                        const highlightedRpo = rpo.replace(new RegExp(query, 'gi'), match => `<span class="highlight">${match}</span>`);
+                        const highlightedDescription = description.replace(new RegExp(query, 'gi'), match => `<span class="highlight">${match}</span>`);
+                        li.innerHTML = `<strong>${rpo}</strong>: ${highlightedDescription}`;
+                        
+                        li.style.cursor = 'pointer';
+                        li.addEventListener('click', () => {
+                            const url = new URL(window.location.href);
+                            const currentRPO = url.searchParams.get('rpo');
+                            let newRPO;
+
+                            if (currentRPO) {
+                                const rpoSet = new Set(currentRPO.split(','));
+                                rpoSet.add(rpo);
+                                newRPO = Array.from(rpoSet).join(',');
+                            } else {
+                                newRPO = rpo;
+                            }
+
+                            url.searchParams.set('rpo', newRPO);
+                            window.location.href = url.toString();
+                        });
+
+                        rpoResults.appendChild(li);
+                    });
+                }
+            });
 
             filterToggle.addEventListener('click', function() {
                 if (filterContent.classList.contains('show')) {

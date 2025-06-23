@@ -37,7 +37,7 @@
         </div>
         <div style="display: flex; gap: 10px; align-items: flex-start; padding: 10px;">
             <!-- Photo Carousel -->
-            <div id="carousel-container" style="flex: 1; max-width: 867px; position: relative; min-height: 400px; overflow: hidden;">
+            <div id="carousel-container" style="flex: 1; position: relative;">
               <div id="loading-animation">
                 <div class="spinner" style="position: absolute; top: 35%; left: 50%; transform: translate(-50%, -50%); align-items: center;"></div>
                 <h4 style="position: absolute; top: 58%; left: 50%; transform: translate(-50%, -50%); align-items: center;">Generating Photos...</h4>
@@ -48,8 +48,10 @@
                 <button id="prev" style="position: absolute; top: 50%; left: 0; background-color: rgba(0, 0, 0, 0.5); color: white; border: none; padding: 10px; cursor: pointer; z-index: 100;">&#10094;</button>
                 <button id="next" style="position: absolute; top: 50%; right: 0; background-color: rgba(0, 0, 0, 0.5); color: white; border: none; padding: 10px; cursor: pointer; z-index: 100;">&#10095;</button>
               </div>
+              <div style="display: flex; justify-content: center;">
+                <div id="image-gallery" style="display: flex; gap: 5px; overflow-y: auto;"></div>
+              </div>
             </div>
-            <div id="image-gallery" style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; overflow-x: hidden; justify-content: flex-start; max-height: 478px;"></div>
             <div style="flex: 1;">
               <table class="table-veh table-hover border shadow" id="vinTable">
                 <tbody>
@@ -155,54 +157,56 @@
         </div>
     </div>
     <div class="custom-container">
-        <div style="display: flex; gap: 10px; align-items: flex-start; padding: 10px;">
+        <div style="display: flex; gap: 5px;">
             <!-- Window Sticker -->
             <div id="sticker-container" style="flex: 1;">
               <% if (vin.country === 'MEXICO') { %>
                 <h2>No window sticker available</h2>
               <% } else { %>
-                <iframe id="window-sticker" src="https://cws.gm.com/vs-cws/vehshop/v2/vehicle/windowsticker?vin=<%= vin.vin || 'N/A' %>" style="min-height: 886px; width: 100%;"></iframe>
+                <div style="display: flex; justify-content: center; overflow-x: auto;">
+                  <embed src="https://cws.gm.com/vs-cws/vehshop/v2/vehicle/windowsticker?vin=<%= vin.vin %>" type="application/pdf" width="85%" height="1150px"/>
+                </div>
               <% } %>
             </div>
-            <!-- <div class="rarity-container">
+        </div>
+        <!-- <div class="rarity-container">
+          <% vin_data.forEach(function(data) { %>
+            <% if (data.allJson) { %>
+              <button id="see-rarity" class="btn btn-primary rarity-btn" data-alljson='<%= JSON.stringify(data.allJson) %>'>See Rarity</button>
+            <% } %>
+          <% }); %>
+          <div class="response-container">
+            <div id="response" class="response"></div>
+            <div><a id="snark" style="color: rgb(40, 40, 40);"></a></div>
+          </div>
+        </div> -->
+        <div style="flex: 1;">
+          <table class="table-veh table-hover border border shadow" id="rpoTable">
+            <thead>
+              <tr>
+                <th scope="col">RPO Code</th>
+                <th scope="col">Description</th>
+              </tr>
+            </thead>
+            <tbody>
               <% vin_data.forEach(function(data) { %>
-                <% if (data.allJson) { %>
-                  <button id="see-rarity" class="btn btn-primary rarity-btn" data-alljson='<%= JSON.stringify(data.allJson) %>'>See Rarity</button>
-                <% } %>
-              <% }); %>
-              <div class="response-container">
-                <div id="response" class="response"></div>
-                <div><a id="snark" style="color: rgb(40, 40, 40);"></a></div>
-              </div>
-            </div> -->
-            <div style="flex: 1; max-height: 825px; overflow-y: auto;">
-              <table class="table-veh table-hover border border shadow" id="rpoTable">
-                <thead>
-                  <tr>
-                    <th scope="col" style="white-space: nowrap;">RPO Code</th>
-                    <th scope="col">Description</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <% vin_data.forEach(function(data) { %>
-                    <% if (data.rpo_codes) { %>
-                      <% data.rpo_codes.forEach(function(rpo) { %>
-                        <% if (rpo) { %>
-                          <tr style="cursor: pointer;" onmousedown="handleMouseDown(event);" data-url="/vehicles?rpo=<%= rpo %>">
-                            <td class="<%= rpo.includes('OAR') ? 'highlight' : '' %>"><%= rpo %></td>
-                            <td class="rpo-description" data-code="<%= rpo %>" style="text-align: left;"></td>
-                          </tr>
-                        <% } %>
-                      <% }); %>
-                    <% } else { %>
-                      <tr>
-                        <td colspan="2">No data available</td>
+                <% if (data.rpo_codes) { %>
+                  <% data.rpo_codes.forEach(function(rpo) { %>
+                    <% if (rpo) { %>
+                      <tr style="cursor: pointer;" onmousedown="handleMouseDown(event);" data-url="/vehicles?rpo=<%= rpo %>">
+                        <td class="<%= rpo.includes('OAR') ? 'highlight' : '' %>"><%= rpo %></td>
+                        <td class="rpo-description" data-code="<%= rpo %>" style="text-align: left;"></td>
                       </tr>
                     <% } %>
-                  <% }) %>
-                </tbody>
-              </table>
-            </div>
+                  <% }); %>
+                <% } else { %>
+                  <tr>
+                    <td colspan="2">No data available</td>
+                  </tr>
+                <% } %>
+              <% }) %>
+            </tbody>
+          </table>
         </div>
         <% } else { %>
           <h1>No VIN data found</h1>
@@ -362,6 +366,14 @@
           [...gallery.children].forEach((img, i) => {
             img.style.border = (i === index && urls[i]) ? '2px solid #141414' : '2px solid transparent';
           });
+
+          if (gallery.children[index]) {
+            const el = gallery.children[index];
+            const galleryRect = gallery.getBoundingClientRect();
+            const elRect = el.getBoundingClientRect();
+            const offset = elRect.left - galleryRect.left - (galleryRect.width / 2) + (elRect.width / 2);
+            gallery.scrollBy({ left: offset, behavior: 'smooth' });
+          }
 
           let nextIndex = (index + 1) % urls.length;
           while (urls[nextIndex] === null && nextIndex !== index) {

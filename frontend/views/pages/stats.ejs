@@ -14,53 +14,57 @@
         </div>
         <div class="row mb-2">
             <div class="col-md-2">
-                <select id="selectedStats" class="form-select">
+                <select id="selectedStats" class="form-select small-dropdown">
                     <option value="">Category</option>
                     <option value="color" <% if (category === 'color') { %> selected <% } %>>Color</option>
                 </select>
             </div>
         </div>
         <% if (stats_data && stats_data.length > 0) { %>
-            <canvas id="barChart"></canvas>
-            <table class="table-veh table-hover border shadow">
-                <thead>
-                    <tr>
-                        <th scope="col">
-                            Rank
-                        </th>
-                        <th scope="col">
-                            RPO
-                        </th>
-                        <th scope="col">
-                            Count
-                        </th>
-                        <th scope="col">
-                            Names
-                        </th>
-                        <th scope="col">
-                            % of Total
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% stats_data.forEach(function(data) { %>
+            <div style="max-height: 600px; overflow: auto; margin-bottom: 20px;">
+                <canvas id="barChart"></canvas>
+            </div>
+            <div class="table-responsive">
+                <table class="table-veh table-hover border shadow">
+                    <thead>
                         <tr>
-                            <td scope="row"><%= data.rank %></td>
-                            <td scope="row" style="white-space: nowrap; text-align: left;">
-                                <img id="sample" src="../img/extColors/<%= data.rpo_code || '../extColors/default' %>.png" width="20" height="20" style="margin-right: 8px; border-radius: 50%;">
-                                <%= data.rpo_code %>
-                            </td>
-                            <td scope="row"><%= data.total_count %></td>
-                            <td scope="row" style="text-align: left;">
-                            <% data.color_names.split(',').forEach((name, i) => { %>
-                                <a href="/vehicles?color=<%= encodeURIComponent(name.trim()) %>"><%= name.trim() %></a><%= i < data.color_names.split(',').length - 1 ? ', ' : '' %>
-                            <% }) %>
-                            </td>
-                            <td scope="row"><%= data.percent %>%</td>
+                            <th scope="col">
+                                Rank
+                            </th>
+                            <th scope="col">
+                                RPO
+                            </th>
+                            <th scope="col">
+                                Count
+                            </th>
+                            <th scope="col">
+                                Names
+                            </th>
+                            <th scope="col">
+                                % of Total
+                            </th>
                         </tr>
-                    <% }) %>
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        <% stats_data.forEach(function(data) { %>
+                            <tr>
+                                <td scope="row"><%= data.rank %></td>
+                                <td scope="row" style="white-space: nowrap; text-align: left;">
+                                    <img id="sample" src="../img/extColors/<%= data.rpo_code || '../extColors/default' %>.png" width="20" height="20" style="margin-right: 8px; border-radius: 50%;">
+                                    <%= data.rpo_code %>
+                                </td>
+                                <td scope="row"><%= data.total_count %></td>
+                                <td scope="row" style="text-align: left;">
+                                <% data.color_names.split(',').forEach((name, i) => { %>
+                                    <a href="/vehicles?color=<%= encodeURIComponent(name.trim()) %>"><%= name.trim() %></a><%= i < data.color_names.split(',').length - 1 ? ', ' : '' %>
+                                <% }) %>
+                                </td>
+                                <td scope="row"><%= data.percent %>%</td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
         <% } %>
     </div>
     <%- include('../partials/footer'); %>
@@ -115,6 +119,8 @@
                         }]
                     },
                     options: {
+                        maintainAspectRatio: false,
+                        responsive: true,
                         indexAxis: 'y',
                         scales: {
                         y: {

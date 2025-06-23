@@ -39,9 +39,8 @@
             <!-- Photo Carousel -->
             <div id="carousel-container" style="flex: 1; position: relative;">
               <div id="loading-animation">
-                <div class="spinner" style="position: absolute; top: 35%; left: 50%; transform: translate(-50%, -50%); align-items: center;"></div>
-                <h4 style="position: absolute; top: 58%; left: 50%; transform: translate(-50%, -50%); align-items: center;">Generating Photos...</h4>
-                <h4 style="position: absolute; top: 70%; left: 50%; transform: translate(-50%, -50%); align-items: center;">This will take a minute.</h4>
+                <div class="spinner" style="position: absolute; top: 35%; left: 50%; transform: translate(-50%, -50%);"></div>
+                <h4 style="position: absolute; top: 58%; left: 50%; transform: translate(-50%, -50%);">Generating Photos...</h4>
               </div>
               <img id="carousel-image" src="" style="width: 100%;">
               <div style="display: flex; justify-content: space-between; margin-top: 10px;">
@@ -299,7 +298,15 @@
         const color = options.find(opt => Object.values(colorMap).includes(opt));
         const colorInt = options.find(opt => Object.keys(intColor).includes(opt));
         const modelUpper = vin_data[0].model ? vin_data[0].model.toUpperCase() : '';
-        let extMax = modelUpper === 'CAMARO' ? 4 : 7;
+        let extMax = 7;
+        if (
+          ((modelUpper === 'CT4' || modelUpper === 'CT5' || modelUpper === 'CT6') && modelYear <= 2022) ||
+          (modelUpper.startsWith('CORVETTE') && modelYear <= 2023)
+        ) {
+          extMax = 6;
+        } else if (modelUpper === 'CAMARO') {
+          extMax = 4;
+        }
         let intMax = modelUpper === 'CAMARO' ? 2 : 4;
 
         let urls = [];

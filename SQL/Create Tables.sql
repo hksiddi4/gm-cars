@@ -541,4 +541,15 @@ FROM Orders o
 JOIN Vehicles v ON o.order_id = v.order_id
 WHERE o.mmc_code_id IS NULL;
 
-
+-- Find unknown intColor RPOs
+SELECT v.vin, o.option_code
+FROM Vehicles v
+JOIN Options o ON v.vehicle_id = o.vehicle_id
+WHERE o.option_code NOT IN (
+  'HTA','HTE','HTJ','HTO','HU1','HU2','HU3','HUE','HUP','HUQ','HZN',
+  'H01','H0W','H0Y','H13','H16','H17','H1T','H72',
+  'E2B','E2D','E2G','H0L','H0M','H1Y','H2G','H2X','H66','HAV','HBE','HBF',
+  'HEA','HEB','HGM','HIK','HIT','HIZ','HJC','HJD','HK1','HMC','HMQ','HMR',
+  'HNC','HND','HTX','HTZ','HXR','HZK','HZQ'
+)
+ORDER BY v.vin, o.option_code;

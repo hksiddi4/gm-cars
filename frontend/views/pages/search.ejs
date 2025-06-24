@@ -42,16 +42,14 @@
                 <div class="spinner" style="position: absolute; top: 35%; left: 50%; transform: translate(-50%, -50%);"></div>
                 <h4 style="position: absolute; top: 58%; left: 50%; transform: translate(-50%, -50%);">Generating Photos...</h4>
               </div>
-              <img id="carousel-image" src="" style="width: 100%;">
-              <div style="display: flex; justify-content: space-between; margin-top: 10px;">
-                <button id="prev" style="position: absolute; top: 50%; left: 0; background-color: rgba(0, 0, 0, 0.5); color: white; border: none; padding: 10px; cursor: pointer; z-index: 100;">&#10094;</button>
-                <button id="next" style="position: absolute; top: 50%; right: 0; background-color: rgba(0, 0, 0, 0.5); color: white; border: none; padding: 10px; cursor: pointer; z-index: 100;">&#10095;</button>
-              </div>
+              <img id="carousel-image" src="../img/ghost-chevrolet-car-alt.png" style="width: 100%;">
+              <button id="prev">&#10094;</button>
+              <button id="next">&#10095;</button>
               <div style="display: flex; justify-content: center;">
                 <div id="image-gallery" style="display: flex; gap: 5px; overflow-y: auto;"></div>
               </div>
             </div>
-            <div style="flex: 1;">
+            <div class="table-responsive">
               <table class="table-veh table-hover border shadow" id="vinTable">
                 <tbody>
                     <% vin_data.forEach(function(data) { %>
@@ -163,7 +161,7 @@
                 <h2>No window sticker available</h2>
               <% } else { %>
                 <div style="display: flex; justify-content: center; overflow-x: auto;">
-                  <embed src="https://cws.gm.com/vs-cws/vehshop/v2/vehicle/windowsticker?vin=<%= vin.vin %>" type="application/pdf" width="85%" height="1150px"/>
+                  <embed src="https://cws.gm.com/vs-cws/vehshop/v2/vehicle/windowsticker?vin=<%= vin.vin %>" type="application/pdf" width="85%" height="800px"/>
                 </div>
               <% } %>
             </div>
@@ -269,6 +267,13 @@
         const colorMap = <%- JSON.stringify(colorMap) %>;
         const intColor = <%- JSON.stringify(intColor) %>;
         const vin_data = <%- JSON.stringify(vin_data) %>;
+        const model = vin_data[0].model?.toUpperCase() || '';
+        
+        if (model === 'CAMARO') fallbackImg = '../img/vehicleLogos/camaro.png';
+        else if (model.startsWith('CT')) fallbackImg = '../img/vehicleLogos/cadillac.png';
+        else if (model.startsWith('CORVETTE')) fallbackImg = '../img/vehicleLogos/corvette.png';
+
+        carouselImage.src = fallbackImg;
         const ghostImg = "../img/ghost-chevrolet-car-alt.png";
 
         const modelYear = vin_data[0].modelYear;

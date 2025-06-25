@@ -55,7 +55,10 @@
                 </div>
             </div>
             <!-- Vehicles Table -->
-            <div class="table-responsive" style="overflow-x: auto;">
+            <div id="top-scroll-wrapper">
+                <div id="top-scroll"></div>
+            </div>
+            <div class="table-responsive" id="bottom-scroll-wrapper">
                 <% if (vehicle_data) { %>
                 <table class="table-veh table-hover border border shadow" id="allTable">
                     <thead>
@@ -435,6 +438,38 @@
             const currentOrder = new URLSearchParams(window.location.search).get('order');
             selectedOrder = currentOrder;
             updateIcons(selectedOrder);
+
+            // SCROLL SYNC
+            const topScroll = document.getElementById('top-scroll-wrapper');
+            const bottomScroll = document.getElementById('bottom-scroll-wrapper');
+
+            if (topScroll && bottomScroll) {
+                let isSyncingTop = false;
+                let isSyncingBottom = false;
+
+                topScroll.addEventListener('scroll', () => {
+                    if (!isSyncingTop) {
+                    isSyncingBottom = true;
+                    bottomScroll.scrollLeft = topScroll.scrollLeft;
+                    }
+                    isSyncingTop = false;
+                });
+
+                bottomScroll.addEventListener('scroll', () => {
+                    if (!isSyncingBottom) {
+                    isSyncingTop = true;
+                    topScroll.scrollLeft = bottomScroll.scrollLeft;
+                    }
+                    isSyncingBottom = false;
+                });
+
+                const table = document.querySelector('.table-veh');
+                if (table) {
+                    requestAnimationFrame(() => {
+                        document.getElementById('top-scroll').style.width = table.scrollWidth + 'px';
+                    });
+                }
+            }
 
             const rpoSearchInput = document.getElementById('rpoSearchInput');
             const rpoResults = document.getElementById('rpoResults');

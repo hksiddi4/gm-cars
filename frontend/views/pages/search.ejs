@@ -37,6 +37,7 @@
         </div>
         <div style="display: flex; gap: 10px; align-items: flex-start; padding: 10px;">
             <!-- Photo Carousel -->
+            <div id="image-warning" style="color: white;"></div>
             <div id="carousel-container" style="flex: 1; position: relative;">
               <div id="loading-animation">
                 <div class="spinner" style="position: absolute; top: 35%; left: 50%; transform: translate(-50%, -50%);"></div>
@@ -97,7 +98,7 @@
                     </tr>
                     <tr>
                       <td class="label-column"><strong>EXTERIOR COLOR</strong></td>
-                      <td><%= data.color_name || 'N/A' %></td>
+                      <td id="extColorCell"><%= data.color_name || 'N/A' %></td>
                     </tr>
                     <% if (data.rpo_codes) { %>
                       <%
@@ -114,7 +115,7 @@
                       %>
                     <tr>
                       <td class="label-column"><strong>INTERIOR COLOR</strong></td>
-                      <td><%= matchedIntColor.toUpperCase() %></td>
+                      <td id="intColorCell"><%= matchedIntColor.toUpperCase() %></td>
                     </tr>
                     <tr>
                       <td class="label-column"><strong>SEAT</strong></td>
@@ -265,7 +266,7 @@
 
         const mmc = <%- JSON.stringify(mmc) %>;
         const colorMap = <%- JSON.stringify(colorMap) %>;
-        const intColor = <%- JSON.stringify(intColor) %>;
+        let intColor = <%- JSON.stringify(intColor) %>;
         const vin_data = <%- JSON.stringify(vin_data) %>;
         const model = vin_data[0].model?.toUpperCase() || '';
         
@@ -299,9 +300,9 @@
 				  }
 				}
 
-        const rpos = options.join('_');
-        const color = options.find(opt => Object.values(colorMap).includes(opt));
-        const colorInt = options.find(opt => Object.keys(intColor).includes(opt));
+        let rpos = options.join('_');
+        let color = options.find(opt => Object.values(colorMap).includes(opt));
+        let colorInt = options.find(opt => Object.keys(intColor).includes(opt));
         const modelUpper = vin_data[0].model ? vin_data[0].model.toUpperCase() : '';
         let extMax = 7;
         if (
@@ -313,6 +314,79 @@
           extMax = 4;
         }
         let intMax = modelUpper === 'CAMARO' ? 2 : 4;
+
+        const warningDiv = document.getElementById('image-warning');
+        // GM Image Gen API doesn't have some codes so pick closest available option
+        let unsupportedColors = null;
+        const unsupportedColorNames = [
+          'BLACK MEETS KETTLE',
+          'COPPERTINO METALLIC',
+          'CHARTREUSE METALLIC',
+          'ABALONE WHITE',
+          'TACTICAL TINT',
+          'BARB WIRE',
+          'KIMONO METALLIC',
+          'SEEKER METALLIC',
+          'HIGH VOLTAGE TINT',
+          'BAEGE METALLIC',
+          'SEYCHELLES METALLIC',
+          'HYPERSONIC METALLIC',
+          'CHARTREUSE MATTE'
+        ];
+        let unsupportedInts = null;
+        const colorName = vin_data[0].color_name;
+
+        if (color === 'GKA') {
+          unsupportedColors = color;
+          color = 'GXD';
+        } else if (color === 'GBA') {
+          const specialColors = {
+            'ABALONE WHITE': 'GAZ',
+            'BAEGE METALLIC': 'GAZ',
+            'TACTICAL TINT': 'G7C',
+            'BARB WIRE': 'GXD',
+            'HYPERSONIC METALLIC': 'GXD',
+            'SEEKER METALLIC': 'GJV',
+            'SEYCHELLES METALLIC': 'GJV'
+          };
+
+          if (specialColors.hasOwnProperty(colorName)) {
+            color = specialColors[colorName];
+            rpos = rpos.replace(new RegExp("GBA", 'g'), color);
+          }
+
+          if (unsupportedColorNames.includes(colorName)) {
+            unsupportedColors = unsupportedColors 
+              ? unsupportedColors + ', ' + colorName 
+              : colorName;
+          }
+          if (rpos.includes(unsupportedColors)) {
+            rpos = rpos.replace(new RegExp(unsupportedColors, 'g'), color);
+          }
+        }
+        if (['E2B', 'E2D', 'E2G'].includes(colorInt)) {
+          unsupportedInts = colorInt;
+          colorInt = 'HBF';
+        }
+
+        if (unsupportedColors || unsupportedInts) {
+          let msg = 'Image generation does not support the following: ';
+          if (unsupportedColors) {
+            msg += `Color <i>${unsupportedColors}</i>`;
+            const extCell = document.getElementById('extColorCell');
+            if (extCell) extCell.style.cssText = 'color:#e57373;';
+          }
+          if (unsupportedColors && unsupportedInts) {
+            msg += ', ';
+          }
+          if (unsupportedInts) {
+            msg += `Interior color <i>${unsupportedInts}</i>`;
+            const intCell = document.getElementById('intColorCell');
+            if (intCell) intCell.style.cssText = 'color:#e57373;';
+          }
+          msg += '. Closest available color/material match has been substituted.';
+          warningDiv.innerHTML = msg;
+        }
 
         let urls = [];
 

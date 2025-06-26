@@ -17,11 +17,11 @@
                 <select id="selectedStats" class="form-select small-dropdown <%= category ? 'active-filter' : '' %>">
                     <option value="">Category</option>
                     <option value="color" <% if (category === 'color') { %> selected <% } %>>Color</option>
-                    <option value="msrp" <% if (category === 'msrp') { %> selected <% } %>>MSRP</option>
+                    <!-- <option value="msrp" <% if (category === 'msrp') { %> selected <% } %>>MSRP</option> -->
                 </select>
             </div>
             <% if (category === 'color') { %>
-            <div class="d-flex flex-wrap gap-2 mb-3 w-100">                
+            <div class="d-flex flex-wrap gap-2 mb-3 w-100">
                 <div style="flex: 1 1 150px;">
                     <select id="filterYear" class="form-select small-dropdown <%= selectedYear ? 'active-filter' : '' %>">
                         <option value="">Year</option>
@@ -33,8 +33,12 @@
                 <div style="flex: 1 1 150px;">
                     <select id="filterModel" class="form-select small-dropdown <%= selectedModel ? 'active-filter' : '' %>">
                         <option value="">Model</option>
-                        <% model_list.forEach(m => { %>
-                        <option value="<%= m %>" <%= selectedModel == m ? 'selected' : '' %>><%= m %></option>
+                        <%
+                            const combinedModels = ['CORVETTE (ALL)', ...model_list];
+                            combinedModels.sort((a, b) => a.localeCompare(b));
+                            combinedModels.forEach(m => { 
+                        %>
+                        <option value="<%= m %>" <%= selectedModel === m ? 'selected' : '' %>><%= m %></option>
                         <% }) %>
                     </select>
                 </div>
@@ -72,80 +76,12 @@
                 </div>
             </div>
             <% } %>
-            <% if (category === 'msrp' && stats_data && stats_data.length > 0) { %>
-            <div style="max-height: 600px; overflow: auto; margin-bottom: 20px;">
-                <canvas id="msrpChart"></canvas>
-            </div>
-            <div class="table-responsive" id="bottom-scroll-wrapper">
-                <table class="table-veh table-hover border shadow" id="msrpTable">
-                <thead>
-                    <tr>
-                    <th>Year-Month</th>
-                    <th>Model</th>
-                    <th>Count</th>
-                    <th>Avg MSRP</th>
-                    <th>Min MSRP</th>
-                    <th>Max MSRP</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% stats_data.forEach(function(data) { %>
-                    <tr>
-                        <td><%= data.year_month %></td>
-                        <td><%= data.model %></td>
-                        <td><%= data.total_count %></td>
-                        <td>$<%= data.avg_msrp.toLocaleString() %></td>
-                        <td>$<%= data.min_msrp.toLocaleString() %></td>
-                        <td>$<%= data.max_msrp.toLocaleString() %></td>
-                    </tr>
-                    <% }) %>
-                </tbody>
-                </table>
-            </div>
-
-            <script>
-                const msrpData = <%- JSON.stringify(stats_data) %>;
-
-                document.addEventListener('DOMContentLoaded', function () {
-                const ctx = document.getElementById('msrpChart').getContext('2d');
-
-                const labels = msrpData.map(d => d.year_month + ' - ' + d.model);
-                const avgMsrp = msrpData.map(d => d.avg_msrp);
-
-                new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Avg MSRP',
-                        data: avgMsrp,
-                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                        borderColor: 'rgba(54, 162, 235, 1)',
-                        borderWidth: 1
-                    }]
-                    },
-                    options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                            return '$' + value.toLocaleString();
-                            }
-                        }
-                        }
-                    }
-                    }
-                });
-                });
-            </script>
-            <% } %>
         </div>
         <% if (stats_data && stats_data.length > 0) { %>
             <div style="max-height: 600px; overflow: auto; margin-bottom: 20px;">
                 <canvas id="barChart"></canvas>
             </div>
+            <p id="totalCount" style="color: rgb(103, 103, 103); margin: 0;"></p>
             <div id="top-scroll-wrapper">
                 <div id="top-scroll"></div>
             </div>
@@ -244,6 +180,13 @@
                     });
                 });
 
+                const totalCount = stats_data.reduce((sum, item) => {
+                    const count = Number(item.total_count.replace(/,/g, ''));
+                    return sum + (isNaN(count) ? 0 : count);
+                }, 0);
+                const totalCountText = document.getElementById('totalCount');
+                totalCountText.textContent = `Retrieved: ${totalCount.toLocaleString()} vehicles`;
+                
                 // SCROLL SYNC
                 const topScroll = document.getElementById('top-scroll-wrapper');
                 const bottomScroll = document.getElementById('bottom-scroll-wrapper');

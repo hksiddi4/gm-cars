@@ -12,7 +12,7 @@
             <div class="col-md-6">
                 <div id="filterToggle" class="d-inline-flex align-items-center">
                     <h4 class="mb-0">Filter</h4>
-                    <i class="fas fa-sort-down" id="filterIcon" style="color: white;"></i>
+                    <i class="bi bi-chevron-down fs-9" id="filterIcon" style="color: white;"></i>
                 </div>
                 <div id="filterContent" class="collapse">
                     <form id="filterForm">
@@ -65,7 +65,7 @@
                         <tr>
                             <th scope="col" id="vinHeader" class="sortable" onclick="toggleVINOrder()" style="cursor: pointer;">
                                 VIN
-                                <i class="fas fa-sort-down" id="vinIcon" style="display: none;"></i>
+                                <i class="bi bi-chevron-down" id="vinIcon" style="display: none;"></i>
                             </th>
                             <th scope="col">
                                 <div class="dropdown-container">
@@ -131,7 +131,7 @@
                             </th>
                             <th scope="col" id="msrpHeader" class="sortable" onclick="toggleMSRPOrder()" style="cursor: pointer;">
                                 MSRP
-                                <i class="fas fa-sort-down" id="msrpIcon" style="display: none;"></i>
+                                <i class="bi bi-chevron-down" id="msrpIcon" style="display: none;"></i>
                             </th>
                             <th scope="col">
                                 <div class="dropdown-container">
@@ -336,7 +336,7 @@
 
         function toggleOrder(type, ascValue, descValue, iconId) {
             selectedOrder = selectedOrder === ascValue ? descValue : ascValue;
-            document.getElementById(iconId).className = selectedOrder === ascValue ? 'fas fa-sort-up' : 'fas fa-sort-down';
+            document.getElementById(iconId).className = selectedOrder === ascValue ? 'bi bi-chevron-up' : 'bi bi-chevron-down';
             const params = new URLSearchParams(window.location.search);
             params.set('order', selectedOrder);
             window.location.search = params.toString();
@@ -380,7 +380,7 @@
             const msrpIcon = document.getElementById('msrpIcon');
 
             function setIcon(iconElement, iconType, condition) {
-                iconElement.className = condition ? `fas fa-sort-${iconType}` : '';
+                iconElement.className = condition ? `bi bi-chevron-${iconType}` : '';
                 iconElement.style.display = condition ? 'inline' : 'none';
             }
             setIcon(msrpIcon, selectedOrder === 'ASC' ? 'up' : 'down', selectedOrder === 'ASC' || selectedOrder === 'DESC');

@@ -9,7 +9,7 @@ app.use(express.json());
 app.use(express.static('views'));
 app.set('view engine', 'ejs');
 
-const baseURL = 'http://backend:5000'
+const baseURL = 'http://192.168.1.111:5000'
 
 function formatCurrency(number) {
     if (number === null) {
@@ -139,25 +139,50 @@ app.get('/search', function(req, res) {
 });
 
 app.get('/stats', function(req, res) {
-    var category = req.query.category;
-    let url = `${baseURL}/stats`;
-    if (category) url += `?category=${category}`;
+    const category = req.query.category;
+    const url = new URL(`${baseURL}/stats`);
+    const params = new URLSearchParams();
 
-    axios.get(url)
-        .then((response)=>{
-            var stats_data = response.data;
-            stats_data.forEach(function(data) {
-                data.total_count = formatCurrency(data.total_count);
+    if (category) params.append("category", category);
+    if (req.query.year) params.append("year", req.query.year);
+    if (req.query.body) params.append("body", req.query.body);
+    if (req.query.trim) params.append("trim", req.query.trim);
+    if (req.query.engine) params.append("engine", req.query.engine);
+    if (req.query.trans) params.append("trans", req.query.trans);
+    if (req.query.model) params.append("model", req.query.model);
+
+    url.search = params.toString();
+
+    axios.get(url.toString())
+        .then((response) => {
+            const data = response.data;
+            var stats_data = Array.isArray(response.data.stats_data) ? response.data.stats_data : [];
+            stats_data.forEach((item) => {
+                item.total_count = formatCurrency(item.total_count);
             });
-            
+
             res.render('pages/stats', {
-                stats_data: stats_data,
-                category: category
+                stats_data: data.stats_data,
+                category: data.category,
+                year_list: data.year,
+                model_list: data.model,
+                body_list: data.body,
+                trim_list: data.trim,
+                engine_list: data.engine,
+                trans_list: data.trans,
+                selectedYear: req.query.year || '',
+                selectedModel: req.query.model || '',
+                selectedBody: req.query.body || '',
+                selectedTrim: req.query.trim || '',
+                selectedEngine: req.query.engine || '',
+                selectedTrans: req.query.trans || ''
             });
         })
         .catch((error) => {
             console.error(`Error fetching data: ${error}`);
-            res.status(500).render('pages/errors/500', { error: error.toJSON ? error.toJSON() : { message: error.message } });
+            res.status(500).render('pages/errors/500', {
+                error: error.toJSON ? error.toJSON() : { message: error.message }
+            });
         });
 });
 
@@ -176,19 +201,6 @@ app.post('/api/rarity', async (req, res) => {
         const data = await response.json();
         res.json(data);
     } catch (error) {
-        res.status(500).render('pages/errors/500', { error: error.toJSON ? error.toJSON() : { message: error.message } });
-    }
-});
-
-app.post('/api/genurl', async (req, res) => {
-    const data = req.body;
-
-    try {
-        const response = await axios.post(`${baseURL}/api/genurl`, {data});
-        const generatedUrl = response.data;
-        res.json({ url: generatedUrl });
-    } catch (error) {
-        console.error('Error generating URL:', error);
         res.status(500).render('pages/errors/500', { error: error.toJSON ? error.toJSON() : { message: error.message } });
     }
 });

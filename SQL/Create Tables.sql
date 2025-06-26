@@ -431,23 +431,23 @@ WHERE v.vin = '1G6D25R65R0962018';
 insert into SpecialEditions (vehicle_id, special_desc) values (286143, 'CT5-V Blackwing 20th Anniversary Edition');
 
 WITH ColorCounts AS (
-    SELECT
-        crm.rpo_code,
-        COUNT(*) AS total_count,
-        GROUP_CONCAT(DISTINCT crm.color_name ORDER BY crm.color_name SEPARATOR ', ') AS color_names
-    FROM Vehicles v
-    JOIN Colors c ON v.color_id = c.color_id
-    JOIN ColorRPOMap crm ON c.color_name = crm.color_name
-    GROUP BY crm.rpo_code
+	SELECT
+		CASE WHEN c.rpo_code = 'N/A' THEN c.color_name ELSE c.rpo_code END AS rpo_code,
+		COUNT(*) AS total_count,
+		GROUP_CONCAT(DISTINCT c.color_name ORDER BY c.color_name SEPARATOR ', ') AS color_names
+	FROM Vehicles v
+	JOIN Colors c ON v.color_id = c.color_id
+    WHERE v.model = 'CAMARO' AND v.modelYear = 2020
+	GROUP BY CASE WHEN c.rpo_code = 'N/A' THEN c.color_name ELSE c.rpo_code END
 ),
 Ranked AS (
-    SELECT
-        ROW_NUMBER() OVER (ORDER BY total_count DESC) AS `rank`,
-        rpo_code,
-        total_count,
-        color_names,
-        ROUND(100.0 * total_count / SUM(total_count) OVER (), 2) AS percent
-    FROM ColorCounts
+	SELECT
+		DENSE_RANK() OVER (ORDER BY total_count DESC) AS `rank`,
+		rpo_code,
+		total_count,
+		color_names,
+		ROUND(100.0 * total_count / SUM(total_count) OVER (), 5) AS percent
+	FROM ColorCounts
 )
 SELECT * FROM Ranked;
 
@@ -534,7 +534,8 @@ WHERE order_id IN (
     WHERE model = 'CORVETTE E-RAY' and body = 'CONVERTIBLE'
 );
 
-select * from Vehicles where vin = '1G1YF3D38S5603722';
+select * from Vehicles where vin = '1G6D75RP6R0511058';
+select * from Orders where order_id = 290780;
 
 SELECT DISTINCT v.model, v.body
 FROM Orders o
@@ -542,14 +543,75 @@ JOIN Vehicles v ON o.order_id = v.order_id
 WHERE o.mmc_code_id IS NULL;
 
 -- Find unknown intColor RPOs
-SELECT v.vin, o.option_code
+SELECT v.vin
 FROM Vehicles v
-JOIN Options o ON v.vehicle_id = o.vehicle_id
-WHERE o.option_code NOT IN (
-  'HTA','HTE','HTJ','HTO','HU1','HU2','HU3','HUE','HUP','HUQ','HZN',
-  'H01','H0W','H0Y','H13','H16','H17','H1T','H72',
-  'E2B','E2D','E2G','H0L','H0M','H1Y','H2G','H2X','H66','HAV','HBE','HBF',
-  'HEA','HEB','HGM','HIK','HIT','HIZ','HJC','HJD','HK1','HMC','HMQ','HMR',
-  'HNC','HND','HTX','HTZ','HXR','HZK','HZQ'
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM Options o
+    WHERE o.vehicle_id = v.vehicle_id
+      AND o.option_code IN (
+        'HTA','HTE','HTJ','HTO','HU1','HU2','HU3','HUE','HUP','HUQ','HUR','HUL',
+        'HU7','HUA','HZN','HTM','HTP','HTT','HUN','HUK','HU6','HU9','HUV','HTN',
+        'HTQ','HTG','HUF','HT7','HFC','HNK','HV1','HV2','HUX','HUW','HZB','HVT',
+        'HVV','HMO','HUU','HZP','HU0','HXO','H01','H0W','H0Y','H13','H16','H17',
+        'H1T','H72','E2B','E2D','E2G','H0L','H0M','H1Y','H2G','H2X','H66','HAV',
+        'HBE','HBF','HEA','HEB','HGM','HIK','HIT','HIZ','HJC','HJD','HK1','HMC',
+        'HMQ','HMR','HNC','HND','HTX','HTZ','HXR','HZK','HZQ'
+      )
 )
-ORDER BY v.vin, o.option_code;
+ORDER BY v.vin;
+
+-- MSRP Stats
+
+WITH FilteredVehicles AS (
+    SELECT 
+        DATE_FORMAT(o.creation_date, '%Y-%m') AS `year_month`,
+        v.model,
+        v.msrp
+    FROM Vehicles v
+    JOIN Orders o ON v.order_id = o.order_id
+    WHERE o.creation_date IS NOT NULL
+)
+SELECT
+    `year_month`,
+    model,
+    COUNT(*) AS total_count,
+    AVG(msrp) AS avg_msrp,
+    MIN(msrp) AS min_msrp,
+    MAX(msrp) AS max_msrp
+FROM FilteredVehicles
+GROUP BY `year_month`, model
+ORDER BY `year_month` DESC, model;
+
+-- with all filters
+WITH FilteredVehicles AS (
+    SELECT 
+        DATE_FORMAT(o.creation_date, '%Y-%m') AS `year_month`,
+        v.modelYear, 
+        v.model, 
+        v.body, 
+        v.trim, 
+        e.engine_type, 
+        t.transmission_type,
+        v.msrp
+    FROM Vehicles v
+    JOIN Engines e ON v.engine_id = e.engine_id
+    JOIN Transmissions t ON v.transmission_id = t.transmission_id
+    JOIN Orders o ON v.order_id = o.order_id
+    WHERE o.creation_date IS NOT NULL
+)
+SELECT
+    `year_month`,
+    modelYear,
+    model,
+    body,
+    trim,
+    engine_type,
+    transmission_type,
+    COUNT(*) AS total_count,
+    AVG(msrp) AS avg_msrp,
+    MIN(msrp) AS min_msrp,
+    MAX(msrp) AS max_msrp
+FROM FilteredVehicles
+GROUP BY `year_month`, modelYear, model, body, trim, engine_type, transmission_type
+ORDER BY `year_month` DESC, modelYear DESC, model, body, trim, engine_type, transmission_type;

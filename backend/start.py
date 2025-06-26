@@ -264,9 +264,45 @@ def sort_price():
 
 @app.route('/stats', methods=['GET'])
 def color_stats():
-    category = request.args.get('category')
+    category = request.args.get('category', '').strip() or None
+    year = request.args.get('year', '').strip() or None
+    body = request.args.get('body', '').strip() or None
+    trim = request.args.get('trim', '').strip() or None
+    engine = request.args.get('engine', '').strip() or None
+    trans = request.args.get('trans', '').strip() or None
+    model = request.args.get('model', '').strip() or None
 
     if category == 'color':
+        conditions = []
+        if year:
+            conditions.append(f"v.modelYear = '{year}'")
+        if model:
+            conditions.append(f"v.model = '{model}'")
+        if body:
+            conditions.append(f"v.body = '{body}'")
+        if trim:
+            conditions.append(f"v.trim = '{trim}'")
+        if engine:
+            conditions.append(f"e.engine_type = '{engine}'")
+        if trans:
+            conditions.append(f"t.transmission_type = '{trans}'")
+
+        where_clause = f"WHERE {' AND '.join(conditions)}" if conditions else ""
+
+        join_clause = """
+            JOIN Colors c ON v.color_id = c.color_id
+            JOIN Engines e ON v.engine_id = e.engine_id
+            JOIN Transmissions t ON v.transmission_id = t.transmission_id
+        """
+
+        distinct_sql = f"""
+            SELECT DISTINCT v.modelYear, v.model, v.body, v.trim, e.engine_type, t.transmission_type
+            FROM Vehicles v
+            {join_clause}
+            {where_clause}
+            ORDER BY v.modelYear DESC, v.model, v.body, v.trim, e.engine_type, t.transmission_type
+        """
+
         sqlStatement = f"""
             WITH ColorCounts AS (
                 SELECT
@@ -274,7 +310,8 @@ def color_stats():
                     COUNT(*) AS total_count,
                     GROUP_CONCAT(DISTINCT c.color_name ORDER BY c.color_name SEPARATOR ', ') AS color_names
                 FROM Vehicles v
-                JOIN Colors c ON v.color_id = c.color_id
+                {join_clause}
+                {where_clause}
                 GROUP BY CASE WHEN c.rpo_code = 'N/A' THEN c.color_name ELSE c.rpo_code END
             ),
             Ranked AS (
@@ -290,9 +327,80 @@ def color_stats():
         """
 
         conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
+        distinct_results = execute_read_query(conn, distinct_sql)
+        year_list = sorted(set(r['modelYear'] for r in distinct_results if r['modelYear']), reverse=True)
+        model_list = sorted(set(r['model'] for r in distinct_results if r['model']))
+        body_list = sorted(set(r['body'] for r in distinct_results if r['body']))
+        trim_list = sorted(set(r['trim'] for r in distinct_results if r['trim']))
+        engine_list = sorted(set(r['engine_type'] for r in distinct_results if r['engine_type']))
+        trans_list = sorted(set(r['transmission_type'] for r in distinct_results if r['transmission_type']))
+
         viewTable = execute_read_query(conn, sqlStatement)
         close_connection(conn)
-        return jsonify(viewTable)
+
+        return jsonify({
+            'stats_data': viewTable,
+            'year': year_list,
+            'model': model_list,
+            'body': body_list,
+            'trim': trim_list,
+            'engine': engine_list,
+            'trans': trans_list,
+            'category': category
+        })
+    elif category == 'msrp':
+        conditions = ["o.creation_date IS NOT NULL"]
+        if year:
+            conditions.append(f"v.modelYear = '{year}'")
+        if model:
+            conditions.append(f"v.model = '{model}'")
+        if body:
+            conditions.append(f"v.body = '{body}'")
+        if trim:
+            conditions.append(f"v.trim = '{trim}'")
+        if engine:
+            conditions.append(f"e.engine_type = '{engine}'")
+        if trans:
+            conditions.append(f"t.transmission_type = '{trans}'")
+
+        where_clause = f"WHERE {' AND '.join(conditions)}" if conditions else ""
+
+        sql = f"""
+        WITH FilteredVehicles AS (
+            SELECT 
+                DATE_FORMAT(o.creation_date, '%Y-%m') AS `year_month`,
+                v.model,
+                v.msrp
+            FROM Vehicles v
+            JOIN Engines e ON v.engine_id = e.engine_id
+            JOIN Transmissions t ON v.transmission_id = t.transmission_id
+            JOIN Orders o ON v.order_id = o.order_id
+            {where_clause}
+        )
+        SELECT
+            `year_month`,
+            model,
+            COUNT(*) AS total_count,
+            AVG(msrp) AS avg_msrp,
+            MIN(msrp) AS min_msrp,
+            MAX(msrp) AS max_msrp
+        FROM FilteredVehicles
+        GROUP BY `year_month`, model
+        ORDER BY `year_month` DESC, model;
+        """
+
+        conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
+        results = execute_read_query(conn, sql)
+        close_connection(conn)
+
+        models = sorted(set(r['model'] for r in results if r['model']))
+
+        return jsonify({
+            'stats_data': results,
+            'model': models,
+            'category': category
+        })
+
     else:
         return jsonify([])
 

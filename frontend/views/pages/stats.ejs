@@ -6,26 +6,151 @@
 </head>
 <body>
     <%- include('../partials/header'); %>
-    <div class="container">
+    <div class="container" style="max-width: 75%;">
         <div class="row pt-4">
             <div class="col">
                 <h1 style="font-weight: bold;">Statistics</h1>
             </div>
         </div>
-        <div class="row mb-2">
-            <div class="col-md-2">
-                <select id="selectedStats" class="form-select small-dropdown">
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            <div style="flex: 1 1 150px;">
+                <select id="selectedStats" class="form-select small-dropdown <%= category ? 'active-filter' : '' %>">
                     <option value="">Category</option>
                     <option value="color" <% if (category === 'color') { %> selected <% } %>>Color</option>
+                    <option value="msrp" <% if (category === 'msrp') { %> selected <% } %>>MSRP</option>
                 </select>
             </div>
+            <% if (category === 'color') { %>
+            <div class="d-flex flex-wrap gap-2 mb-3 w-100">                
+                <div style="flex: 1 1 150px;">
+                    <select id="filterYear" class="form-select small-dropdown <%= selectedYear ? 'active-filter' : '' %>">
+                        <option value="">Year</option>
+                        <% year_list.forEach(y => { %>
+                        <option value="<%= y %>" <%= selectedYear == y ? 'selected' : '' %>><%= y %></option>
+                        <% }) %>
+                    </select>
+                </div>
+                <div style="flex: 1 1 150px;">
+                    <select id="filterModel" class="form-select small-dropdown <%= selectedModel ? 'active-filter' : '' %>">
+                        <option value="">Model</option>
+                        <% model_list.forEach(m => { %>
+                        <option value="<%= m %>" <%= selectedModel == m ? 'selected' : '' %>><%= m %></option>
+                        <% }) %>
+                    </select>
+                </div>
+                <div style="flex: 1 1 150px;">
+                    <select id="filterBody" class="form-select small-dropdown <%= selectedBody ? 'active-filter' : '' %>">
+                        <option value="">Body</option>
+                        <% body_list.forEach(y => { %>
+                        <option value="<%= y %>" <%= selectedBody == y ? 'selected' : '' %>><%= y %></option>
+                        <% }) %>
+                    </select>
+                </div>
+                <div style="flex: 1 1 150px;">
+                    <select id="filterTrim" class="form-select small-dropdown <%= selectedTrim ? 'active-filter' : '' %>">
+                        <option value="">Trim</option>
+                        <% trim_list.forEach(m => { %>
+                        <option value="<%= m %>" <%= selectedTrim == m ? 'selected' : '' %>><%= m %></option>
+                        <% }) %>
+                    </select>
+                </div>
+                <div style="flex: 1 1 150px;">
+                    <select id="filterEngine" class="form-select small-dropdown <%= selectedEngine ? 'active-filter' : '' %>">
+                        <option value="">Engine</option>
+                        <% engine_list.forEach(y => { %>
+                        <option value="<%= y %>" <%= selectedEngine == y ? 'selected' : '' %>><%= y %></option>
+                        <% }) %>
+                    </select>
+                </div>
+                <div style="flex: 1 1 150px;">
+                    <select id="filterTrans" class="form-select small-dropdown <%= selectedTrans ? 'active-filter' : '' %>">
+                        <option value="">Trans</option>
+                        <% trans_list.forEach(m => { %>
+                        <option value="<%= m %>" <%= selectedTrans == m ? 'selected' : '' %>><%= m %></option>
+                        <% }) %>
+                    </select>
+                </div>
+            </div>
+            <% } %>
+            <% if (category === 'msrp' && stats_data && stats_data.length > 0) { %>
+            <div style="max-height: 600px; overflow: auto; margin-bottom: 20px;">
+                <canvas id="msrpChart"></canvas>
+            </div>
+            <div class="table-responsive" id="bottom-scroll-wrapper">
+                <table class="table-veh table-hover border shadow" id="msrpTable">
+                <thead>
+                    <tr>
+                    <th>Year-Month</th>
+                    <th>Model</th>
+                    <th>Count</th>
+                    <th>Avg MSRP</th>
+                    <th>Min MSRP</th>
+                    <th>Max MSRP</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% stats_data.forEach(function(data) { %>
+                    <tr>
+                        <td><%= data.year_month %></td>
+                        <td><%= data.model %></td>
+                        <td><%= data.total_count %></td>
+                        <td>$<%= data.avg_msrp.toLocaleString() %></td>
+                        <td>$<%= data.min_msrp.toLocaleString() %></td>
+                        <td>$<%= data.max_msrp.toLocaleString() %></td>
+                    </tr>
+                    <% }) %>
+                </tbody>
+                </table>
+            </div>
+
+            <script>
+                const msrpData = <%- JSON.stringify(stats_data) %>;
+
+                document.addEventListener('DOMContentLoaded', function () {
+                const ctx = document.getElementById('msrpChart').getContext('2d');
+
+                const labels = msrpData.map(d => d.year_month + ' - ' + d.model);
+                const avgMsrp = msrpData.map(d => d.avg_msrp);
+
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Avg MSRP',
+                        data: avgMsrp,
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                    },
+                    options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                            return '$' + value.toLocaleString();
+                            }
+                        }
+                        }
+                    }
+                    }
+                });
+                });
+            </script>
+            <% } %>
         </div>
         <% if (stats_data && stats_data.length > 0) { %>
             <div style="max-height: 600px; overflow: auto; margin-bottom: 20px;">
                 <canvas id="barChart"></canvas>
             </div>
-            <div class="table-responsive">
-                <table class="table-veh table-hover border shadow">
+            <div id="top-scroll-wrapper">
+                <div id="top-scroll"></div>
+            </div>
+            <div class="table-responsive" id="bottom-scroll-wrapper">
+                <table class="table-veh table-hover border shadow" id="colorTable">
                     <thead>
                         <tr>
                             <th scope="col">
@@ -50,7 +175,7 @@
                             <tr>
                                 <td scope="row"><%= data.rank %></td>
                                 <td scope="row" style="white-space: nowrap; text-align: left;">
-                                    <img id="sample" src="../img/extColors/<%= data.rpo_code || '../extColors/default' %>.png" width="20" height="20" style="margin-right: 8px; border-radius: 50%;">
+                                    <img id="sample" src="../img/extColors/<%= data.rpo_code ? data.rpo_code : 'default' %>.png" width="20" height="20" style="margin-right: 8px; border-radius: 50%;">
                                     <%= data.rpo_code %>
                                 </td>
                                 <td scope="row"><%= data.total_count %></td>
@@ -87,6 +212,70 @@
             const stats_data = <%- JSON.stringify(stats_data) %>;
 
             document.addEventListener('DOMContentLoaded', function () {
+                const filters = ['selectedStats', 'filterYear', 'filterModel', 'filterBody', 'filterTrim', 'filterEngine', 'filterTrans'];
+                const url = new URL(window.location.href);
+
+                filters.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (!el) return;
+                    el.addEventListener('change', function () {
+                        const value = this.value;
+                        if (id === 'selectedStats') {
+                            if (value) {
+                                url.searchParams.set('category', value);
+                            } else {
+                                url.searchParams.delete('category');
+                                ['year','model','body','trim','engine','trans'].forEach(param => url.searchParams.delete(param));
+                            }
+                        } else {
+                            const paramMap = {
+                                filterYear: 'year',
+                                filterModel: 'model',
+                                filterBody: 'body',
+                                filterTrim: 'trim',
+                                filterEngine: 'engine',
+                                filterTrans: 'trans'
+                            };
+                            const param = paramMap[id];
+                            if (value) url.searchParams.set(param, value);
+                            else url.searchParams.delete(param);
+                        }
+                        window.location.href = url.toString();
+                    });
+                });
+
+                // SCROLL SYNC
+                const topScroll = document.getElementById('top-scroll-wrapper');
+                const bottomScroll = document.getElementById('bottom-scroll-wrapper');
+
+                if (topScroll && bottomScroll) {
+                    let isSyncingTop = false;
+                    let isSyncingBottom = false;
+
+                    topScroll.addEventListener('scroll', () => {
+                        if (!isSyncingTop) {
+                        isSyncingBottom = true;
+                        bottomScroll.scrollLeft = topScroll.scrollLeft;
+                        }
+                        isSyncingTop = false;
+                    });
+
+                    bottomScroll.addEventListener('scroll', () => {
+                        if (!isSyncingBottom) {
+                        isSyncingTop = true;
+                        topScroll.scrollLeft = bottomScroll.scrollLeft;
+                        }
+                        isSyncingBottom = false;
+                    });
+
+                    const table = document.querySelector('.table-veh');
+                    if (table) {
+                        requestAnimationFrame(() => {
+                            document.getElementById('top-scroll').style.width = table.scrollWidth + 'px';
+                        });
+                    }
+                }
+
                 let rawData = stats_data.map(data => ({
                     label: data.rpo_code || '',
                     count: Number(String(data.total_count).replace(/,/g, '')) || 0,
@@ -94,7 +283,7 @@
                 }));
 
                 rawData.sort((a, b) => a.count - b.count);
-                rawData = rawData.slice(13, 33);
+                rawData = rawData.slice(0, 20);
 
                 const labels = rawData.map(d => d.label);
                 const counts = rawData.map(d => d.count);
@@ -146,7 +335,7 @@
                         plugins: {
                             title: {
                                 display: true,
-                                text: 'Top 20 Rarest Colors (excl. CT5V-BW 120th Edition)',
+                                text: 'Top 20 Rarest Colors',
                                 color: '#ffffff',
                                 font: { size: 20 }
                             },

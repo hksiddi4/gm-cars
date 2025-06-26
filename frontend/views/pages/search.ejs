@@ -35,22 +35,26 @@
               </div>
             <% } %>
         </div>
-        <div style="display: flex; gap: 10px; align-items: flex-start; padding: 10px;">
+        <div style="display: flex; gap: 10px; align-items: flex-start; padding: 10px; flex-wrap: wrap;">
             <!-- Photo Carousel -->
             <div id="image-warning" style="color: white;"></div>
             <div id="carousel-container">
-              <div id="loading-animation">
-                <div class="spinner"></div>
-                <h4 style="position: absolute; top: 58%; left: 50%; transform: translate(-50%, -50%);">Generating Photos...</h4>
+              <div id="loading-animation" class="shimmer">
+                <div class="shimmer-box" style="width: 100%; height: 750px; border-radius: 8px;"></div>
               </div>
-              <img id="carousel-image" src="../img/ghost-chevrolet-car-alt.png" style="width: 100%;">
-              <button id="prev">&#10094;</button>
-              <button id="next">&#10095;</button>
+              <img id="carousel-image" src="../img/ghost-chevrolet-car-alt.png" style="width: 100%; display: none;">
+              <button id="prev" style="display: none;">&#10094;</button>
+              <button id="next" style="display: none;">&#10095;</button>
               <div style="display: flex; justify-content: center;">
-                <div id="image-gallery"></div>
+                <div id="image-gallery-shimmer" class="shimmer" style="display:flex; gap:5px; overflow:hidden; width:100%; padding: 10px 0;">
+                  <% for(let i=0; i<5; i++) { %>
+                    <div class="shimmer-box" style="width: 100px; height: 60px; border-radius: 4px;"></div>
+                  <% } %>
+                </div>
+                <div id="image-gallery" style="display:none;"></div>
               </div>
             </div>
-            <div class="table-responsive">
+            <div class="table-responsive" style="flex-basis: 40%; max-width: 40%;">
               <table class="table-veh table-hover border shadow" id="vinTable">
                 <tbody>
                     <% vin_data.forEach(function(data) { %>
@@ -435,6 +439,13 @@
             if (initialLoad) {
               carouselImage.onload = () => {
                 loadingAnimation.style.display = 'none';
+                carouselImage.style.display = 'block';
+                document.getElementById('prev').style.display = 'block';
+                document.getElementById('next').style.display = 'block';
+
+                // Show gallery and hide shimmer placeholder
+                document.getElementById('image-gallery-shimmer').style.display = 'none';
+                document.getElementById('image-gallery').style.display = 'flex';
                 initialLoad = false;
               };
             } else {

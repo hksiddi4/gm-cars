@@ -1,5 +1,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#515151">
 <link rel="icon" href="../img/gm.png">
 
 <!-- CSS -->
@@ -11,6 +12,48 @@
 
 <style>
     /* Universal */
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: #888 #ffffff00 ;
+    }
+
+    /* WebKit browsers */
+    *::-webkit-scrollbar {
+        height: 8px;
+        background: transparent;
+    }
+
+    *::-webkit-scrollbar-thumb {
+        background-color: #888;
+        border-radius: 4px;
+        border: 2px solid transparent;
+    }
+
+    *::-webkit-scrollbar-thumb:hover {
+        background-color: #555;
+    }
+
+    .shimmer {
+        animation: shimmer 1.5s infinite linear;
+        background: linear-gradient(to right, #444 8%, #555 18%, #444 33%);
+        background-size: 1000px 100%;
+        position: relative;
+        overflow: hidden;
+        background-repeat: no-repeat;
+    }
+
+    .shimmer-box {
+        width: 100%;
+        height: 100%;
+        display: inline-block;
+        border-radius: 4px;
+    }
+
+    @keyframes shimmer {
+        0% { background-position: -1000px 0; }
+        100% { background-position: 1000px 0; }
+    }
+
     #site-title {
         transition: text-shadow 0.2s ease-in-out;
         padding-left: 1rem;
@@ -330,6 +373,11 @@
     }
 
     /* Search */
+    #image-warning {
+        width: 100%;
+        margin-bottom: 2px;
+    }
+
     .spinner {
         position: absolute;
         top: 35%;
@@ -357,6 +405,7 @@
         white-space: nowrap;
         max-width: 100%;
         gap: 5px;
+        padding: 10px 0;
     }
 
     #image-gallery img {
@@ -365,7 +414,14 @@
     }
 
     #carousel-container {
+        box-sizing: border-box;
+        flex-basis: 100%;
         flex: 1;
+        margin-left: auto;
+        margin-right: auto;
+        max-width: 100%;
+        min-width: auto;
+        overflow: hidden;
         position: relative;
     }
 
@@ -415,8 +471,9 @@
     }
 
     #vinTable, #rpoTable {
-        max-width: 100%;
-        table-layout: auto;
+        max-width: 80%;
+        margin: 0 auto;
+        table-layout: fixed;
     }
 
     #vinTable td, #rpoTable td {
@@ -465,6 +522,7 @@
         .custom-container > .row,
         .custom-container > div[style*="display: flex"] {
             flex-direction: column !important;
+            flex-wrap: nowrap;
         }
 
         .form-select {
@@ -489,28 +547,8 @@
             -webkit-overflow-scrolling: touch;
         }
 
-        .table-responsive, #top-scroll-wrapper {
-            scrollbar-width: thin;
-            scrollbar-color: #888 #ffffff00 ;
-        }
-
-        /* WebKit browsers */
-        .table-responsive::-webkit-scrollbar,
-        #top-scroll-wrapper::-webkit-scrollbar {
-            height: 8px;
-            background: transparent;
-        }
-
-        .table-responsive::-webkit-scrollbar-thumb,
-        #top-scroll-wrapper::-webkit-scrollbar-thumb {
-            background-color: #888;
-            border-radius: 4px;
-            border: 2px solid transparent;
-        }
-
-        .table-responsive::-webkit-scrollbar-thumb:hover,
-        #top-scroll-wrapper::-webkit-scrollbar-thumb:hover {
-            background-color: #555;
+        .table-responsive {
+            overflow-x: auto;
         }
 
         .footer {
@@ -600,6 +638,18 @@
             white-space: nowrap;
         }
 
+        .table-responsive {
+            margin: 0 auto;
+            overflow-x: auto;
+        }
+
+            #vinTable {
+            width: 100% !important;
+            max-width: 100% !important;
+            table-layout: fixed !important;
+            word-wrap: break-word;
+        }
+
         #vinTable, #rpoTable, #colorTable {
             display: table;
         }
@@ -639,10 +689,6 @@
         }
 
         /* Search */
-        #image-gallery {
-            padding: 10px 0;
-        }
-
         #vinTable td:nth-child(2) {
             text-align: right;
         }

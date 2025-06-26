@@ -38,16 +38,16 @@
         <div style="display: flex; gap: 10px; align-items: flex-start; padding: 10px;">
             <!-- Photo Carousel -->
             <div id="image-warning" style="color: white;"></div>
-            <div id="carousel-container" style="flex: 1; position: relative;">
+            <div id="carousel-container">
               <div id="loading-animation">
-                <div class="spinner" style="position: absolute; top: 35%; left: 50%; transform: translate(-50%, -50%);"></div>
+                <div class="spinner"></div>
                 <h4 style="position: absolute; top: 58%; left: 50%; transform: translate(-50%, -50%);">Generating Photos...</h4>
               </div>
               <img id="carousel-image" src="../img/ghost-chevrolet-car-alt.png" style="width: 100%;">
               <button id="prev">&#10094;</button>
               <button id="next">&#10095;</button>
               <div style="display: flex; justify-content: center;">
-                <div id="image-gallery" style="display: flex; gap: 5px; overflow-y: auto;"></div>
+                <div id="image-gallery"></div>
               </div>
             </div>
             <div class="table-responsive">
@@ -408,7 +408,7 @@
           thumb.alt = `Thumbnail ${index + 1}`;
           thumb.style.width = '100px';
           thumb.style.cursor = 'pointer';
-          thumb.style.border = '2px solid transparent';
+          thumb.style.border = '1px solid transparent';
           thumb.addEventListener('click', () => {
             showImage(index);
           });
@@ -453,7 +453,7 @@
           });
 
           [...gallery.children].forEach((img, i) => {
-            img.style.border = (i === index && urls[i]) ? '2px solid #141414' : '2px solid transparent';
+            img.style.border = (i === index && urls[i]) ? '1px solid #141414' : '1px solid transparent';
           });
 
           if (gallery.children[index]) {

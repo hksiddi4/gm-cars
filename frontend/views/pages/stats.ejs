@@ -13,7 +13,7 @@
             </div>
         </div>
         <div class="d-flex flex-wrap gap-2 mb-3">
-            <div style="flex: 1 1 150px;">
+            <div class="statsDropdown">
                 <select id="selectedStats" class="form-select small-dropdown <%= category ? 'active-filter' : '' %>">
                     <option value="">Category</option>
                     <option value="color" <% if (category === 'color') { %> selected <% } %>>Color</option>
@@ -22,7 +22,7 @@
             </div>
             <% if (category === 'color') { %>
             <div class="d-flex flex-wrap gap-2 mb-3 w-100">
-                <div style="flex: 1 1 150px;">
+                <div class="statsDropdown">
                     <select id="filterYear" class="form-select small-dropdown <%= selectedYear ? 'active-filter' : '' %>">
                         <option value="">Year</option>
                         <% year_list.forEach(y => { %>
@@ -30,7 +30,7 @@
                         <% }) %>
                     </select>
                 </div>
-                <div style="flex: 1 1 150px;">
+                <div class="statsDropdown">
                     <select id="filterModel" class="form-select small-dropdown <%= selectedModel ? 'active-filter' : '' %>">
                         <option value="">Model</option>
                         <%
@@ -42,7 +42,7 @@
                         <% }) %>
                     </select>
                 </div>
-                <div style="flex: 1 1 150px;">
+                <div class="statsDropdown">
                     <select id="filterBody" class="form-select small-dropdown <%= selectedBody ? 'active-filter' : '' %>">
                         <option value="">Body</option>
                         <% body_list.forEach(y => { %>
@@ -50,7 +50,7 @@
                         <% }) %>
                     </select>
                 </div>
-                <div style="flex: 1 1 150px;">
+                <div class="statsDropdown">
                     <select id="filterTrim" class="form-select small-dropdown <%= selectedTrim ? 'active-filter' : '' %>">
                         <option value="">Trim</option>
                         <% trim_list.forEach(m => { %>
@@ -58,7 +58,7 @@
                         <% }) %>
                     </select>
                 </div>
-                <div style="flex: 1 1 150px;">
+                <div class="statsDropdown">
                     <select id="filterEngine" class="form-select small-dropdown <%= selectedEngine ? 'active-filter' : '' %>">
                         <option value="">Engine</option>
                         <% engine_list.forEach(y => { %>
@@ -66,7 +66,7 @@
                         <% }) %>
                     </select>
                 </div>
-                <div style="flex: 1 1 150px;">
+                <div class="statsDropdown">
                     <select id="filterTrans" class="form-select small-dropdown <%= selectedTrans ? 'active-filter' : '' %>">
                         <option value="">Trans</option>
                         <% trans_list.forEach(m => { %>
@@ -78,10 +78,10 @@
             <% } %>
         </div>
         <% if (stats_data && stats_data.length > 0) { %>
-            <div style="max-height: 600px; overflow: auto; margin-bottom: 20px;">
+            <div class="barChart">
                 <canvas id="barChart"></canvas>
             </div>
-            <p id="totalCount" style="color: rgb(103, 103, 103); margin: 0;"></p>
+            <p id="totalCount"></p>
             <div id="top-scroll-wrapper">
                 <div id="top-scroll"></div>
             </div>
@@ -117,7 +117,7 @@
                                 <td scope="row"><%= data.total_count %></td>
                                 <td scope="row" style="text-align: left;">
                                 <% data.color_names.split(',').forEach((name, i) => { %>
-                                    <a href="/vehicles?color=<%= encodeURIComponent(name.trim()) %>"><%= name.trim() %></a><%= i < data.color_names.split(',').length - 1 ? ', ' : '' %>
+                                    <a class="color-link" href="/vehicles?color=<%= encodeURIComponent(name.trim()) %>"><%= name.trim() %></a><%= i < data.color_names.split(',').length - 1 ? ', ' : '' %>
                                 <% }) %>
                                 </td>
                                 <td scope="row"><%= data.percent %>%</td>

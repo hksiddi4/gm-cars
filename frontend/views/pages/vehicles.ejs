@@ -190,7 +190,7 @@
                                 <td scope="row"><%= data.transmission_type %></td>
                                 <td scope="row"><%= data.drivetrain_type %></td>
                                 <td scope="row" style="text-align: left; align-items: center;">
-                                    <img id="sample" src="../img/extColors/<%= colorMap[data.color_name] || '../extColors/default' %>.png" width="20" height="20">
+                                    <img id="sample" src="../../img/extColors/<%= colorMap[data.color_name] || '../extColors/default' %>.png" width="20" height="20">
                                     <%= data.color_name %>
                                 </td>
                                 <td scope="row" class="accounting-format">
@@ -205,11 +205,11 @@
                                 <td scope="row"><%= data.special_desc %></td>
                                 <td scope="row">
                                     <% if (data.country == "USA") { %>
-                                        <img src="../img/flags/usa_flag.png" alt="USA" width="20">
+                                        <img src="../../img/flags/usa_flag.png" alt="USA" width="20">
                                     <% } else if (data.country == "CANADA") { %>
-                                        <img src="../img/flags/canada_flag.png" alt="Canada" width="20">
+                                        <img src="../../img/flags/canada_flag.png" alt="Canada" width="20">
                                     <% } else { %>
-                                        <img src="../img/flags/mexico_flag.png" alt="Mexico" width="20">
+                                        <img src="../../img/flags/mexico_flag.png" alt="Mexico" width="20">
                                     <% } %>                                    
                                 </td>
                                 <!-- <td scope="row" style="text-align: left;"><%= data.dealer_name || 'N/A' %></td> -->

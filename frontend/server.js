@@ -6,7 +6,7 @@ const { colorMap, intColor, seatCode, mmc } = require('./views/partials/modules.
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(express.static('views'));
+app.use(express.static('public'));
 app.set('view engine', 'ejs');
 
 const baseURL = 'http://backend:5000'

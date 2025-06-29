@@ -147,6 +147,7 @@ def sort_price():
             "ZLK": ["modelYear = '2024'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "color_name = 'MERCURY SILVER METALLIC'"],
             "ZLJ": ["modelYear = '2024'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "color_name = 'BLACK RAVEN'"],
             "ZLR": ["modelYear = '2024'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "color_name = 'VELOCITY RED'"],
+            "ZLZ": ["modelYear = '2025'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "color_name = 'MAGNUS METAL FROST'"].
             "ABQ": ["modelYear = '2023'", "model = 'CT5'", "trim = 'V-SERIES BLACKWING'", "msrp > '118000'"],
             "ZLT": ["modelYear = '2024'", "model = 'CT5'", "trim = 'V-SERIES BLACKWING'", "opt.option_code IN ('ZLT', 'ZLV')"],
         }

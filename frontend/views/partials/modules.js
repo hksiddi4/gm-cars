@@ -145,7 +145,7 @@ const intColor = {
   "H0M": "Cinnamon W/ Jet Black Accents Leather w/ Mini-Perforated Inserts",
   "H1Y": "Jet Black W/ Jet Black Accents Leather w/ Mini-Perforated Inserts",
   "H2G": "Jet Black W/ Jet Black Accents Inteluxe",
-  "H2X": "JET BLACK LEATHER W/ CHEVRON PERFORATED INSERTS",
+  // UNSURE "H2X": "JET BLACK LEATHER W/ CHEVRON PERFORATED INSERTS",
   "H2X": "Jet Black W/ Jet Black Accents Leather w/ Mini-Perforated Inserts",
   "H66": "JET BLACK LEATHER",
   "HAV": "Maple Sugar W/ Jet Black Accents Leather w/ Mini-Perforated Inserts",
@@ -170,6 +170,8 @@ const intColor = {
   "HXR": "Jet Black W/ Jet Black Accents Inteluxe",
   "HZK": "Sedona Sauvage W/ Jet Black Accents Semi-Aniline Full Leather w/ Chevron Perforated Inserts",
   "HZQ": "Jet Black W/ Jet Black Accents Inteluxe",
+  "EG1": "Sky Cool Gray W/ Santorini Blue Accents Leather W/ Mini-Perforated Custom Quilted Inserts and Sueded Front Seatbacks",
+  "E54": "Jet Black W/ Phantom Blue Accents Leather W/ Mini-Perforated Custom Quilted Inserts and Sueded Front Seatbacks",
 };
 
 const seatCode = {

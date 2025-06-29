@@ -29,7 +29,7 @@ app.get('/vehicles', function(req, res) {
     var trim = req.query.trim;
     var engine = req.query.engine;
     var trans = req.query.trans;
-    var models = req.query.model;
+    var selectedModels = req.query.model;
     var rpos = req.query.rpo;
     var color = req.query.color;
     var country = req.query.country;
@@ -47,7 +47,7 @@ app.get('/vehicles', function(req, res) {
     if (trim) url += `&trim=${trim}`;
     if (engine) url += `&engine=${engine}`;
     if (trans) url += `&trans=${trans}`;
-    if (models) url += `&model=${Array.isArray(models) ? models.join(',') : models}`;
+    if (selectedModels) url += `&model=${Array.isArray(selectedModels) ? selectedModels.join(',') : selectedModels}`;
     if (rpos) url += `&rpo=${Array.isArray(rpos) ? rpos.join(',') : rpos}`;
     if (color) url += `&color=${color}`;
     if (country) url += `&country=${country}`;
@@ -76,7 +76,7 @@ app.get('/vehicles', function(req, res) {
             var country = response.data.country;
             var selectedCountry = req.query.country;
             var models = response.data.model;
-            var selectedModels = selectedModels ? (Array.isArray(selectedModels) ? selectedModels : [selectedModels]) : [];
+            selectedModels = selectedModels ? (Array.isArray(selectedModels) ? selectedModels : [selectedModels]) : [];
             const elapsedTime = ((Date.now() - startTime) / 1000).toFixed(2);
 
             res.render('pages/vehicles', {

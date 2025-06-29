@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS staging_allGM (
     body varchar(20),
     trim varchar(25),
     vehicleEngine varchar(75),
-    transmission varchar(7),
+    transmission varchar(4),
     drivetrain varchar(3),
     exterior_color varchar(75),
     msrp int,
@@ -615,3 +615,13 @@ SELECT
 FROM FilteredVehicles
 GROUP BY `year_month`, modelYear, model, body, trim, engine_type, transmission_type
 ORDER BY `year_month` DESC, modelYear DESC, model, body, trim, engine_type, transmission_type;
+
+SELECT o.order_id, o.order_number, o.creation_date, v.body
+FROM Orders o
+JOIN Vehicles v ON o.order_id = v.order_id
+JOIN staging_allGM s ON v.vin = s.vin
+WHERE o.mmc_code_id IS NULL;
+select * from MMC_Codes where mmc_code = '1YR07'; -- mmc_code_id = 31
+UPDATE Orders
+SET mmc_code_id = 31
+WHERE mmc_code_id IS NULL;

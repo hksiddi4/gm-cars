@@ -256,6 +256,39 @@ img {
     margin-bottom: 10px;
 }
 
+.pagination .page-link {
+    background-color: #444;
+    color: white;
+    border: 1px solid #555;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    padding: 0.4rem 0.7rem;
+    font-size: 0.75rem;
+    min-width: 28px;
+    text-align: center;
+}
+
+.pagination .page-link:hover {
+    background-color: #666;
+    color: white;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #d1d1d1;
+    color: black;
+    border-color: #d1d1d1;
+    font-weight: bold;
+}
+
+.pagination .page-item.disabled .page-link {
+    color: #888;
+    pointer-events: none;
+}
+
+.pagination .page-link:focus,
+.pagination .page-link:focus-visible {
+    outline: 3px solid #d1d1d1;
+}
+
 .table-veh {
     font-size: 0.75rem;
     table-layout: auto;

@@ -625,3 +625,7 @@ select * from MMC_Codes where mmc_code = '1YR07'; -- mmc_code_id = 31
 UPDATE Orders
 SET mmc_code_id = 31
 WHERE mmc_code_id IS NULL;
+
+SELECT *
+FROM Orders
+ORDER BY creation_date ASC;

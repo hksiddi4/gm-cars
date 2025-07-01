@@ -296,8 +296,10 @@
 				} else {
 				  if (["1YC07", "1YC67"].includes(mmc_code)) {
 				    trim = options.find(opt => ["1LT", "2LT", "3LT"].includes(opt)) || trim;
-				  } else if (["1YH07", "1YH67", "1YG07", "1YG67", "1YR07", "1YR67"].includes(mmc_code)) {
+				  } else if (["1YH07", "1YH67", "1YG07", "1YG67", "1YR07", "1YR67", "1YZ07", "1YZ67"].includes(mmc_code)) {
 				    trim = options.find(opt => ["1LZ", "2LZ", "3LZ"].includes(opt)) || trim;
+				  } else if (["1YV07", "1YV67"].includes(mmc_code)) {
+				    trim = options.find(opt => ["1ZR", "3ZR"].includes(opt)) || trim;
 				  } else if (["1AH37", "1AH67"].includes(mmc_code)) {
 				    trim = options.find(opt => ["3LT"].includes(opt)) || trim;
 				  } else if (["1AG37", "1AG67"].includes(mmc_code) && modelYear < 2024) {
@@ -310,15 +312,17 @@
         let colorInt = options.find(opt => Object.keys(intColor).includes(opt));
         const modelUpper = vin_data[0].model ? vin_data[0].model.toUpperCase() : '';
         let extMax = 7;
-        if (
-          ((modelUpper === 'CT4' || modelUpper === 'CT5' || modelUpper === 'CT6') && modelYear <= 2022) ||
-          (modelUpper.startsWith('CORVETTE') && modelYear <= 2023)
-        ) {
+        if (modelUpper.startsWith('CORVETTE') && modelYear === 2019) {
+          extMax = 4;
+          intMax = 2;
+        } else if (((modelUpper === 'CT4' || modelUpper === 'CT5' || modelUpper === 'CT6') && modelYear <= 2022) || (modelUpper.startsWith('CORVETTE') && modelYear <= 2023)) {
           extMax = 6;
         } else if (modelUpper === 'CAMARO') {
           extMax = 4;
+          intMax = 2;
+        } else {
+          intMax = 4;
         }
-        let intMax = modelUpper === 'CAMARO' ? 2 : 4;
 
         const warningDiv = document.getElementById('image-warning');
         // GM Image Gen API doesn't have some codes so pick closest available option
@@ -394,6 +398,9 @@
         }
 
         let urls = [];
+
+        // console.log(`Model Year: ${modelYear}, MMC Code: ${mmc_code}, Trim: ${trim}, Color: ${color}, Interior Color: ${colorInt}`);
+        // console.log(`https://cgi.chevrolet.com/mmgprod-us/dynres/prove/image.gen?i=${modelYear}/${mmc_code}/${mmc_code}__${trim}/${color}_${rpos}gmds10.png&v=deg01&std=true&country=US&send404=true&transparentBackgroundPng=true`);
 
         if (modelYear && mmc_code && trim && color && colorInt) {
           for (let i = 1; i <= extMax; i++) {

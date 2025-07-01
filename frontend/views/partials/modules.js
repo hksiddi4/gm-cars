@@ -15,6 +15,7 @@ const colorMap = {
   "BLACK MEETS KETTLE": "BLACK MEETS KETTLE",
   "ACCELERATE YELLOW METALLIC": "GD0",
   "AMPLIFY ORANGE TINTCOAT": "GC5",
+  "CORVETTE RACING YELLOW TINTCOAT": "GC6",
   "ARCTIC WHITE": "G8G",
   "ARGENT SILVER METALLIC": "GXD",
   "BLACK DIAMOND TRICOAT": "GLK",
@@ -84,10 +85,37 @@ const colorMap = {
   "ZEUS BRONZE METALLIC": "GUI",
   "SILVER ICE METALLIC": "GAN",
   "MOSAIC BLACK METALLIC": "GB8",
+  "WATKINS GLEN GRAY METALLIC": "G7Q",
+  "ADMIRAL BLUE METALLIC": "GTR",
 };
 
 const intColor = {
   // Corvette
+  // - C7
+  "141": "Gray Perforated Mulan Leather",
+  "143": "Gray Perforated Mulan Leather",
+  "144": "Gray Leather w/ Sueded Microfiber Inserts",
+  "145": "Gray Perforated Napa Leather",
+  "146": "Gray Leather w/ Sueded Microfiber Inserts",
+  "191": "Jet Black Perforated Mulan Leather",
+  "192": "Jet Black Leather w/ Sueded Microfiber Inserts",
+  "193": "Jet Black Perforated Mulan Leather",
+  "194": "Jet Black Leather w/ Sueded Microfiber Inserts",
+  "195": "Jet Black Perforated Napa Leather",
+  "196": "Jet Black Leather w/ Sueded Microfiber Inserts",
+  "198": "Jet Black Leather w/ Sueded Microfiber Inserts",
+  "343": "Kalahari Perforated Mulan Leather",
+  "344": "Kalahari Leather w/ Sueded Microfiber Inserts",
+  "345": "Kalahari Perforated Napa Leather",
+  "346": "Kalahari Leather w/ Sueded Microfiber Inserts",
+  "701": "Adrenaline Red Perforated Mulan Leather",
+  "703": "Adrenaline Red Perforated Mulan Leather",
+  "704": "Adrenaline Red Leather w/ Sueded Microfiber Inserts",
+  "705": "Adrenaline Red Perforated Napa Leather",
+  "706": "Adrenaline Red Leather w/ Sueded Microfiber Inserts",
+  "755": "Spice Red Perforated Mulan Leather",
+  "000": "Jet Black w/ Orange Stitching Leather w/ Sueded Microfiber Inserts",
+  // - C8
   "HTA": "Jet Black Mulan Leather w/ Perforated Inserts",
   "HTE": "Jet Black Napa Leather w/ Perforated Inserts",
   "HTJ": "Jet Black Performance Textile",
@@ -200,16 +228,31 @@ const mmc = {
   "1AK67": "2SS",
   "1AL37": "1SE",
   "1AL67": "1SE",
-  // Corvette
+  // Corvette SR C7
+  "1YY07": "", // Coupe
+  "1YY67": "", // Conv
+  // Corvette GS C7
+  "1YW07": "", // Coupe
+  "1YW67": "", // Conv
+  // Corvette SR Z51 C7
+  "1YX07": "", // Coupe
+  "1YX67": "", // Conv
+  // Corvette Z06 C7
+  "1YZ07": "", // Coupe
+  "1YZ67": "", // Conv
+  // Corvette ZR1 C7
+  "1YV07": "", // Coupe
+  "1YV67": "", // Conv
+  // Corvette C8
   "1YC07": "", // Coupe
   "1YC67": "", // Conv
-  // Corvette Z06
+  // Corvette Z06 C8
   "1YH07": "", // Coupe
   "1YH67": "", // Conv
-  // Corvette E-Ray
+  // Corvette E-Ray C8
   "1YG07": "", // Coupe
   "1YG67": "", // Conv
-  // Corvette ZR1
+  // Corvette ZR1 C8
   "1YR07": "", // Coupe
   "1YR67": "", // Conv
   // Cadillac

@@ -111,7 +111,8 @@
                             <tr>
                                 <td scope="row"><%= data.rank %></td>
                                 <td scope="row" style="white-space: nowrap; text-align: left;">
-                                    <img id="sample" src="../../img/extColors/<%= data.rpo_code ? data.rpo_code : 'default' %>.png" width="20" height="20" style="margin-right: 8px; border-radius: 50%;">
+                                    <!-- Apply color RPO on SQL to Fix grouped colors -->
+                                    <img id="sample" src="../../img/extColors/<%= data.rpo_code ? data.rpo_code : 'default' %>.png" width="20" height="20" style="margin-right: 8px; border-radius: 50%;" onerror="this.onerror=null; this.src='../../img/extColors/default.png';">
                                     <%= data.rpo_code %>
                                 </td>
                                 <td scope="row"><%= data.total_count %></td>
@@ -146,6 +147,7 @@
         <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
         <script>
             const stats_data = <%- JSON.stringify(stats_data) %>;
+            console.log(stats_data);
 
             document.addEventListener('DOMContentLoaded', function () {
                 const filters = ['selectedStats', 'filterYear', 'filterModel', 'filterBody', 'filterTrim', 'filterEngine', 'filterTrans'];

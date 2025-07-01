@@ -83,6 +83,7 @@ const colorMap = {
   "WILD CHERRY TINTCOAT": "GSK",
   "ZEUS BRONZE METALLIC": "GUI",
   "SILVER ICE METALLIC": "GAN",
+  "MOSAIC BLACK METALLIC": "GB8",
 };
 
 const intColor = {

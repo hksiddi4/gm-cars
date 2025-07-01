@@ -18,7 +18,6 @@ RPOCodeS = All RPO codes XXX_XXX_XXX_XXX format
 # Exterior & Interior Colors (To be implemented onto /search)
 
 https://cgi.gm.com/mmgprod-us/dynres/prove/singlelayer/pngs/optionImagery/US/chevrolet/2024/1YC07/gmds2/HTE.jpg
-https://cgi.gm.com/mmgprod-us/dynres/prove/singlelayer/pngs/optionImagery/US/chevrolet/2024/1YC07/gmds2/HTE.jpg
 https://cgi.gm.com/mmgprod-us/dynres/prove/singlelayer/pngs/optionImagery/US/cadillac/2023/6DE79/gmds2/GRW.jpg
 
 https://cgi.gm.com/mmgprod-us/dynres/prove/singlelayer/pngs/optionImagery/US/MANUFACTURER/YEAR/MMCCode/gmds2/RPO.jpg

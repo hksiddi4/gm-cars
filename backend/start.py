@@ -124,6 +124,7 @@ def sort_price():
     if rpo:
         rpo_list = rpo.split(',') if ',' in rpo else [rpo]
         h40_selected = 'H40' in rpo_list
+        zlz_selected = 'ZLZ' in rpo_list
         rpo_n = len(rpo_list)
         join_clause += "\n            JOIN Options opt ON v.vehicle_id = opt.vehicle_id"
         rpo_conditions = {
@@ -147,7 +148,7 @@ def sort_price():
             "ZLK": ["modelYear = '2024'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "color_name = 'MERCURY SILVER METALLIC'"],
             "ZLJ": ["modelYear = '2024'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "color_name = 'BLACK RAVEN'"],
             "ZLR": ["modelYear = '2024'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "color_name = 'VELOCITY RED'"],
-            "ZLZ": ["modelYear = '2025'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "color_name = 'MAGNUS METAL FROST'"].
+            "ZLZ": ["modelYear = '2025'", "model IN ('CT4', 'CT5')", "trim = 'V-SERIES BLACKWING'", "color_name = 'MAGNUS METAL FROST'"],
             "ABQ": ["modelYear = '2023'", "model = 'CT5'", "trim = 'V-SERIES BLACKWING'", "msrp > '118000'"],
             "ZLT": ["modelYear = '2024'", "model = 'CT5'", "trim = 'V-SERIES BLACKWING'", "opt.option_code IN ('ZLT', 'ZLV')"],
         }

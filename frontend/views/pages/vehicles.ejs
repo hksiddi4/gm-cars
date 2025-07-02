@@ -86,6 +86,11 @@
                 order: selectedOrder
             };
             %>
+            <% if (selectedYear === '2019') { %>
+                <div style="color: #cc6666; margin-bottom: 10px;">
+                    Data available from May 17, 2019 onward
+                </div>
+            <% } %>
             <%- include('../partials/pagination', { currentPage, totalPages, baseQuery, buildQuery }) %>
             <!-- Vehicles Table -->
             <div id="top-scroll-wrapper">

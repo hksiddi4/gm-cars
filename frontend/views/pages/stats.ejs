@@ -77,6 +77,12 @@
             </div>
             <% } %>
         </div>
+        <% if (selectedYear === '2019') { %>
+            <div style="color: #cc6666; margin-bottom: 15px;">
+                Data available from May 17, 2019 onward
+            </div>
+        <% } %>
+
         <% if (stats_data && stats_data.length > 0) { %>
             <div class="barChart">
                 <canvas id="barChart"></canvas>

@@ -4,12 +4,28 @@ const bodyParser = require('body-parser');
 const axios = require('axios');
 const { colorMap, intColor, seatCode, mmc } = require('./views/partials/modules.js')
 
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
 
-const baseURL = 'http://backend:5000'
+const baseURL = 'http://192.168.1.111:5000'
+
+let maintenanceMode = true; // Edit this to toggle maintenance mode
+
+app.use((req, res, next) => {
+    if (maintenanceMode && req.path !== '/maintenance') {
+        return res.redirect('/maintenance');
+    }
+    if (!maintenanceMode && req.path === '/maintenance') {
+        return res.redirect('/');
+    }
+    next();
+});
+
+app.get('/maintenance', (req, res) => {
+    res.render('pages/errors/maintenance');
+});
 
 function formatCurrency(number) {
     if (number === null) {
@@ -53,7 +69,7 @@ app.get('/vehicles', function(req, res) {
     if (country) url += `&country=${country}`;
     if (order) url += `&order=${order}`;
 
-    axios.get(url)
+    axios.get(url, { timeout: 10000 })
         .then((response) => {
             var vehicle_data = Array.isArray(response.data.data) ? response.data.data : [];
             vehicle_data.forEach(function(data) {
@@ -115,7 +131,7 @@ app.get('/vehicles', function(req, res) {
 
 app.get('/search', function(req, res) {
     var vin = req.query.vin;
-    axios.get(`${baseURL}/search?vin=${vin}`)
+    axios.get(`${baseURL}/search?vin=${vin}`, { timeout: 10000 })
     .then((response)=>{
         var vin_data = response.data;
 
@@ -153,7 +169,7 @@ app.get('/stats', function(req, res) {
 
     url.search = params.toString();
 
-    axios.get(url.toString())
+    axios.get(url.toString(), { timeout: 10000 })
         .then((response) => {
             const data = response.data;
             var stats_data = Array.isArray(response.data.stats_data) ? response.data.stats_data : [];
@@ -205,12 +221,15 @@ app.post('/api/rarity', async (req, res) => {
     }
 });
 
-app.use(function(req, res) {
-    res.status(404).render('pages/errors/404', { req: req });
+app.use((req, res) => {
+    res.status(404).render('pages/errors/404', { req });
 });
 
-app.use(function(req, res) {
-    res.status(500).render('pages/errors/500', { req: req });
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).render('pages/errors/500', {
+        error: err.toJSON ? err.toJSON() : { message: err.message }
+    });
 });
 
 const port = 80;

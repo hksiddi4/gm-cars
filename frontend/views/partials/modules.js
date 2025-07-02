@@ -202,6 +202,8 @@ const intColor = {
   "HZQ": "Jet Black W/ Jet Black Accents Inteluxe",
   "EG1": "Sky Cool Gray W/ Santorini Blue Accents Leather W/ Mini-Perforated Custom Quilted Inserts and Sueded Front Seatbacks",
   "E54": "Jet Black W/ Phantom Blue Accents Leather W/ Mini-Perforated Custom Quilted Inserts and Sueded Front Seatbacks",
+  "H9F": "Jet Black Evotex",
+  "EMX": "Black Evotex",
 };
 
 const seatCode = {
@@ -213,7 +215,9 @@ const seatCode = {
   "AH2": "GT2 buckets",
   "AQ9": "GT1 buckets",
   // Cadillac
-  "": ""
+  "": "",
+  // Silverado EV
+  "AR9": "Front Bucket Seats",
 };
 
 const mmc = {
@@ -270,6 +274,8 @@ const mmc = {
   "6KH69": "1SB", // CT6 LUXURY
   "6KJ69": "1SD", // CT6 PREMIUM LUXURY
   "6KN69": "1SV", // CT6 V-SERIES
+  // Silverado EV
+  "CT35843": "",
 };
 
 module.exports = {

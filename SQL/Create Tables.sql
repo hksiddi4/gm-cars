@@ -23,6 +23,19 @@ CREATE TABLE IF NOT EXISTS staging_allGM (
     allJson json
 );
 
+-- temp test table
+CREATE TABLE IF NOT EXISTS temp_vin (
+	vid int NOT NULL auto_increment,
+    vin varchar(17),
+    primary key (vid)
+);
+drop table temp_vin;
+
+SELECT t.vin
+FROM temp_vin t
+LEFT JOIN staging_allGM s ON t.vin = s.vin
+WHERE s.vin IS NULL;
+
 -- Engines Table
 CREATE TABLE Engines (
     engine_id SERIAL PRIMARY KEY,
@@ -59,7 +72,7 @@ CREATE TABLE Dealers (
 -- MMC Codes Table
 CREATE TABLE MMC_Codes (
     mmc_code_id SERIAL PRIMARY KEY,
-    mmc_code VARCHAR(5) UNIQUE
+    mmc_code VARCHAR(7) UNIQUE
 );
 
 -- Orders Table
@@ -165,6 +178,18 @@ FROM staging_allGM
 WHERE (dealer, location, JSON_UNQUOTE(JSON_EXTRACT(allJson, '$.sitedealer_code'))) 
       NOT IN (SELECT dealer_name, location, sitedealer_code FROM Dealers);
 SELECT * FROM Dealers ORDER BY SITEDEALER_CODE;
+
+-- Dealer code too long check
+SELECT MAX(CHAR_LENGTH(JSON_UNQUOTE(JSON_EXTRACT(allJson, '$.sitedealer_code')))) AS max_length
+FROM staging_allGM;
+
+SELECT DISTINCT JSON_UNQUOTE(JSON_EXTRACT(allJson, '$.sitedealer_code')) AS sitedealer_code
+FROM staging_allGM
+WHERE CHAR_LENGTH(JSON_UNQUOTE(JSON_EXTRACT(allJson, '$.sitedealer_code'))) = 6;
+
+UPDATE staging_allGM
+SET allJson = JSON_SET(allJson, '$.sitedealer_code', '20057')
+WHERE JSON_UNQUOTE(JSON_EXTRACT(allJson, '$.sitedealer_code')) = ' 20057';
 
 -- Check Duplicate Dealers
 SELECT
@@ -378,7 +403,7 @@ JOIN Vehicles v ON se.vehicle_id = v.vehicle_id
 WHERE v.color_id = 1
   AND se.special_desc LIKE '%Collectors Edition%'
 ORDER BY SUBSTRING(v.vin, -6);
-
+commit;
 start transaction;
 WITH OrderedEditions AS (
     SELECT se.vehicle_id, ROW_NUMBER() OVER (ORDER BY SUBSTRING(v.vin, -6)) AS row_num
@@ -395,28 +420,13 @@ WITH OrderedEditions AS (
     SELECT se.vehicle_id, ROW_NUMBER() OVER (ORDER BY SUBSTRING(v.vin, -6)) AS row_num
     FROM SpecialEditions se
     JOIN Vehicles v ON se.vehicle_id = v.vehicle_id
-    WHERE v.color_id = 16
+    WHERE v.color_id = 17
       AND se.special_desc LIKE '%Garage 56 Special Edition%'
 )
 UPDATE SpecialEditions se
 JOIN OrderedEditions oe ON se.vehicle_id = oe.vehicle_id
 SET se.special_desc = CONCAT('Garage 56 Special Edition #', LPAD(oe.row_num, 2, '0'));
 commit;
-
-WITH OrderedEditions AS (
-    SELECT se.vehicle_id, ROW_NUMBER() OVER (ORDER BY SUBSTRING(v.vin, -6)) AS row_num
-    FROM SpecialEditions se
-    JOIN Vehicles v ON se.vehicle_id = v.vehicle_id
-    WHERE v.color_id = 1
-      AND se.special_desc LIKE '%Collectors Edition%'
-)
-SELECT se.vehicle_id, se.special_desc, CONCAT('Collectors Edition #', LPAD(oe.row_num, 3, '0')) AS new_special_desc
-FROM SpecialEditions se
-JOIN OrderedEditions oe ON se.vehicle_id = oe.vehicle_id
-WHERE se.special_desc LIKE '%Collectors Edition%'
-ORDER BY oe.row_num;
-
-select * from Vehicles where vin = '1G6D25R65R0962018';
 
 SELECT se.special_desc, v.vin
 FROM SpecialEditions se
@@ -425,10 +435,10 @@ WHERE v.vin = '1G6D25R65R0962018';
 
 UPDATE SpecialEditions se
 JOIN Vehicles v ON se.vehicle_id = v.vehicle_id
-SET se.special_desc = 'CT5-V Blackwing 20th Anniversary Edition'
+SET se.special_desc = '20th Anniversary of V-Series Special Edition'
 WHERE v.vin = '1G6D25R65R0962018';
 
-insert into SpecialEditions (vehicle_id, special_desc) values (286143, 'CT5-V Blackwing 20th Anniversary Edition');
+insert into SpecialEditions (vehicle_id, special_desc) values (286143, '20th Anniversary of V-Series Special Edition');
 
 WITH ColorCounts AS (
 	SELECT
@@ -450,7 +460,7 @@ Ranked AS (
 	FROM ColorCounts
 )
 SELECT * FROM Ranked;
-
+select * from Colors;
 -- Update Stats for new colors (after doing all new inserts)
 UPDATE Colors SET rpo_code = 'G4Z' WHERE color_name = 'ROSWELL GREEN METALLIC';
 UPDATE Colors SET rpo_code = 'GD0' WHERE color_name = 'ACCELERATE YELLOW METALLIC';
@@ -461,13 +471,13 @@ UPDATE Colors SET rpo_code = 'GLK' WHERE color_name = 'BLACK DIAMOND TRICOAT';
 UPDATE Colors SET rpo_code = 'GBA' WHERE color_name = 'BLACK RAVEN';
 UPDATE Colors SET rpo_code = 'GBA' WHERE color_name = 'BLACK';
 UPDATE Colors SET rpo_code = 'GAN' WHERE color_name = 'BLADE SILVER METALLIC';
-UPDATE Colors SET rpo_code = 'GCF' WHERE color_name = 'BLAZE METALLIC';
+UPDATE Colors SET rpo_code = 'GCF' WHERE color_name = 'BLAZE ORANGE METALLIC';
 UPDATE Colors SET rpo_code = 'GVR' WHERE color_name = 'CACTI GREEN';
 UPDATE Colors SET rpo_code = 'G48' WHERE color_name = 'CAFFEINE METALLIC';
 UPDATE Colors SET rpo_code = 'GAR' WHERE color_name = 'CARBON FLASH METALLIC';
 UPDATE Colors SET rpo_code = 'G9F' WHERE color_name = 'CERAMIC MATRIX GRAY METALLIC';
 UPDATE Colors SET rpo_code = 'GJV' WHERE color_name = 'COASTAL BLUE METALLIC';
-UPDATE Colors SET rpo_code = 'GBK' WHERE color_name = 'COMPETITION YELLOW TINTCOAT METALLIC';
+UPDATE Colors SET rpo_code = 'GBK' WHERE color_name = 'COMPETITION YELLOW TINTCOAT';
 UPDATE Colors SET rpo_code = 'G16' WHERE color_name = 'CRUSH';
 UPDATE Colors SET rpo_code = 'G1W' WHERE color_name = 'CRYSTAL WHITE TRICOAT';
 UPDATE Colors SET rpo_code = 'GCP' WHERE color_name = 'CYBER YELLOW METALLIC';
@@ -482,7 +492,7 @@ UPDATE Colors SET rpo_code = 'G7E' WHERE color_name = 'GARNET RED TINTCOAT';
 UPDATE Colors SET rpo_code = 'GA7' WHERE color_name = 'HYPERSONIC GRAY METALLIC';
 UPDATE Colors SET rpo_code = 'GXL' WHERE color_name = 'HYSTERIA PURPLE METALLIC';
 UPDATE Colors SET rpo_code = 'GSK' WHERE color_name = 'INFRARED TINTCOAT';
-UPDATE Colors SET rpo_code = 'G1E' WHERE color_name = 'LONG BEACH RED METALLIC';
+UPDATE Colors SET rpo_code = 'G1E' WHERE color_name = 'LONG BEACH RED METALLIC TINTCOAT';
 UPDATE Colors SET rpo_code = 'GCI' WHERE color_name = 'MANHATTAN NOIR METALLIC';
 UPDATE Colors SET rpo_code = 'GNW' WHERE color_name = 'MAVERICK NOIR FROST';
 UPDATE Colors SET rpo_code = 'GKA' WHERE color_name = 'MERCURY SILVER METALLIC';
@@ -490,7 +500,7 @@ UPDATE Colors SET rpo_code = 'GXF' WHERE color_name = 'MIDNIGHT SKY METALLIC';
 UPDATE Colors SET rpo_code = 'GXU' WHERE color_name = 'MIDNIGHT STEEL METALLIC';
 UPDATE Colors SET rpo_code = 'GCP' WHERE color_name = 'NITRO YELLOW METALLIC';
 UPDATE Colors SET rpo_code = 'GNW' WHERE color_name = 'PANTHER BLACK MATTE';
-UPDATE Colors SET rpo_code = 'GLK' WHERE color_name = 'PANTHER BLACK METALLIC';
+UPDATE Colors SET rpo_code = 'GLK' WHERE color_name = 'PANTHER BLACK METALLIC TINTCOAT';
 UPDATE Colors SET rpo_code = 'GNT' WHERE color_name = 'RADIANT RED TINTCOAT';
 UPDATE Colors SET rpo_code = 'GAN' WHERE color_name = 'RADIANT SILVER METALLIC';
 UPDATE Colors SET rpo_code = 'GJ0' WHERE color_name = 'RALLY GREEN METALLIC';
@@ -506,7 +516,7 @@ UPDATE Colors SET rpo_code = 'GLL' WHERE color_name = 'ROYAL SPICE METALLIC';
 UPDATE Colors SET rpo_code = 'G9K' WHERE color_name = 'SATIN STEEL GRAY METALLIC';
 UPDATE Colors SET rpo_code = 'G9K' WHERE color_name = 'SATIN STEEL METALLIC';
 UPDATE Colors SET rpo_code = 'GXA' WHERE color_name = 'SEA WOLF GRAY TRICOAT';
-UPDATE Colors SET rpo_code = 'G26' WHERE color_name = 'SEBRING ORANGE';
+UPDATE Colors SET rpo_code = 'G26' WHERE color_name = 'SEBRING ORANGE TINTCOAT';
 UPDATE Colors SET rpo_code = 'GJI' WHERE color_name = 'SHADOW GRAY METALLIC';
 UPDATE Colors SET rpo_code = 'GJI' WHERE color_name = 'SHADOW METALLIC';
 UPDATE Colors SET rpo_code = 'GXD' WHERE color_name = 'SHARKSKIN METALLIC';
@@ -523,23 +533,16 @@ UPDATE Colors SET rpo_code = 'G1W' WHERE color_name = 'WHITE PEARL METALLIC TRIC
 UPDATE Colors SET rpo_code = 'GSK' WHERE color_name = 'WILD CHERRY TINTCOAT';
 UPDATE Colors SET rpo_code = 'GUI' WHERE color_name = 'ZEUS BRONZE METALLIC';
 UPDATE Colors SET rpo_code = 'N/A' WHERE color_name = 'HYPERSONIC METALLIC';
+UPDATE Colors SET rpo_code = 'GTR' WHERE color_name = 'ADMIRAL BLUE METALLIC';
+UPDATE Colors SET rpo_code = 'GC6' WHERE color_name = 'CORVETTE RACING YELLOW TINTCOAT';
+UPDATE Colors SET rpo_code = 'GB8' WHERE color_name = 'MOSAIC BLACK METALLIC';
+UPDATE Colors SET rpo_code = 'GAN' WHERE color_name = 'SILVER ICE METALLIC';
+UPDATE Colors SET rpo_code = 'G7Q' WHERE color_name = 'WATKINS GLEN GRAY METALLIC';
 
--- Update Order_ID for all ZR1's
-select * from MMC_Codes;
-UPDATE Orders
-SET mmc_code_id = 16
-WHERE order_id IN (
-    SELECT order_id
-    FROM Vehicles
-    WHERE model = 'CORVETTE E-RAY' and body = 'CONVERTIBLE'
-);
-
-select * from Vehicles where vin = '1G6D75RP6R0511058';
-select * from Orders where order_id = 290780;
-
-SELECT DISTINCT v.model, v.body
+SELECT o.order_id, v.body, v.vin, v.model
 FROM Orders o
 JOIN Vehicles v ON o.order_id = v.order_id
+JOIN staging_allGM s ON v.vin = s.vin
 WHERE o.mmc_code_id IS NULL;
 
 -- Find unknown intColor RPOs
@@ -556,13 +559,14 @@ WHERE NOT EXISTS (
         'HVV','HMO','HUU','HZP','HU0','HXO','H01','H0W','H0Y','H13','H16','H17',
         'H1T','H72','E2B','E2D','E2G','H0L','H0M','H1Y','H2G','H2X','H66','HAV',
         'HBE','HBF','HEA','HEB','HGM','HIK','HIT','HIZ','HJC','HJD','HK1','HMC',
-        'HMQ','HMR','HNC','HND','HTX','HTZ','HXR','HZK','HZQ'
+        'HMQ','HMR','HNC','HND','HTX','HTZ','HXR','HZK','HZQ','141','143','144',
+        '145','146','191','192','193','194','195','196','198','343','344','345',
+        '346','701','703','704','705','706','755','000','EG1','E54','H9F','EMX'
       )
 )
 ORDER BY v.vin;
 
 -- MSRP Stats
-
 WITH FilteredVehicles AS (
     SELECT 
         DATE_FORMAT(o.creation_date, '%Y-%m') AS `year_month`,
@@ -615,17 +619,3 @@ SELECT
 FROM FilteredVehicles
 GROUP BY `year_month`, modelYear, model, body, trim, engine_type, transmission_type
 ORDER BY `year_month` DESC, modelYear DESC, model, body, trim, engine_type, transmission_type;
-
-SELECT o.order_id, o.order_number, o.creation_date, v.body
-FROM Orders o
-JOIN Vehicles v ON o.order_id = v.order_id
-JOIN staging_allGM s ON v.vin = s.vin
-WHERE o.mmc_code_id IS NULL;
-select * from MMC_Codes where mmc_code = '1YR07'; -- mmc_code_id = 31
-UPDATE Orders
-SET mmc_code_id = 31
-WHERE mmc_code_id IS NULL;
-
-SELECT *
-FROM Orders
-ORDER BY creation_date ASC;

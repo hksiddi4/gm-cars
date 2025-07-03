@@ -164,7 +164,9 @@
             <!-- Window Sticker -->
             <div id="sticker-container" style="flex: 1;">
               <% if (vin.country === 'MEXICO') { %>
-                <h2>No window sticker available</h2>
+                <div style="display: flex; justify-content: center; align-items: center;"
+                  <h2>No window sticker available</h2>
+                </div>
               <% } else { %>
                 <div style="display: flex; justify-content: center; overflow-x: auto;">
                   <embed src="https://cws.gm.com/vs-cws/vehshop/v2/vehicle/windowsticker?vin=<%= vin.vin %>" type="application/pdf" width="85%" height="800px"/>

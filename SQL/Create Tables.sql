@@ -283,12 +283,6 @@ SELECT v.vin, v.modelYear, v.model, v.body, v.trim,
                 e.engine_type, t.transmission_type, d.drivetrain_type,
                 c.color_name, v.msrp, o.country;
 
--- Fix Mexico VIN Orders to Display with all vehicles
-INSERT INTO Orders (order_number, mmc_code_id, country)
-VALUES ('XXXXXX', 1, 'MEXICO');
-select * from Orders where order_number = 'XXXXXX';
-UPDATE Vehicles SET order_id = '393211' WHERE vehicle_id = 20; -- Set for all 20 Mexico ZL1 Collector's Editions
-
 -- Test efficient Insert Vehicles
 CREATE TEMPORARY TABLE staging_resolved AS
 SELECT
@@ -396,6 +390,7 @@ AND NOT EXISTS (
     AND se.special_desc = special_editions.special_desc
 );
 select * from SpecialEditions;
+commit;
 
 SELECT se.special_desc, v.vin
 FROM SpecialEditions se
@@ -403,7 +398,7 @@ JOIN Vehicles v ON se.vehicle_id = v.vehicle_id
 WHERE v.color_id = 1
   AND se.special_desc LIKE '%Collectors Edition%'
 ORDER BY SUBSTRING(v.vin, -6);
-commit;
+
 start transaction;
 WITH OrderedEditions AS (
     SELECT se.vehicle_id, ROW_NUMBER() OVER (ORDER BY SUBSTRING(v.vin, -6)) AS row_num
@@ -427,18 +422,17 @@ UPDATE SpecialEditions se
 JOIN OrderedEditions oe ON se.vehicle_id = oe.vehicle_id
 SET se.special_desc = CONCAT('Garage 56 Special Edition #', LPAD(oe.row_num, 2, '0'));
 commit;
+select * from SpecialEditions where special_desc = 'Collectors Edition #001';
+delete from SpecialEditions where special_id = 11400;
 
 SELECT se.special_desc, v.vin
 FROM SpecialEditions se
 JOIN Vehicles v ON se.vehicle_id = v.vehicle_id
 WHERE v.vin = '1G6D25R65R0962018';
 
-UPDATE SpecialEditions se
-JOIN Vehicles v ON se.vehicle_id = v.vehicle_id
-SET se.special_desc = '20th Anniversary of V-Series Special Edition'
-WHERE v.vin = '1G6D25R65R0962018';
-
-insert into SpecialEditions (vehicle_id, special_desc) values (286143, '20th Anniversary of V-Series Special Edition');
+select vehicle_id from Vehicles where vin = '1G6D25R65R0962018';
+insert into SpecialEditions (vehicle_id, special_desc) values (321083, '20th Anniversary of V-Series Special Edition');
+select * from SpecialEditions where vehicle_id = 321083;
 
 WITH ColorCounts AS (
 	SELECT
@@ -532,13 +526,15 @@ UPDATE Colors SET rpo_code = 'GKK' WHERE color_name = 'WAVE METALLIC';
 UPDATE Colors SET rpo_code = 'G1W' WHERE color_name = 'WHITE PEARL METALLIC TRICOAT';
 UPDATE Colors SET rpo_code = 'GSK' WHERE color_name = 'WILD CHERRY TINTCOAT';
 UPDATE Colors SET rpo_code = 'GUI' WHERE color_name = 'ZEUS BRONZE METALLIC';
-UPDATE Colors SET rpo_code = 'N/A' WHERE color_name = 'HYPERSONIC METALLIC';
 UPDATE Colors SET rpo_code = 'GTR' WHERE color_name = 'ADMIRAL BLUE METALLIC';
 UPDATE Colors SET rpo_code = 'GC6' WHERE color_name = 'CORVETTE RACING YELLOW TINTCOAT';
 UPDATE Colors SET rpo_code = 'GB8' WHERE color_name = 'MOSAIC BLACK METALLIC';
 UPDATE Colors SET rpo_code = 'GAN' WHERE color_name = 'SILVER ICE METALLIC';
 UPDATE Colors SET rpo_code = 'G7Q' WHERE color_name = 'WATKINS GLEN GRAY METALLIC';
+UPDATE Colors SET rpo_code = 'N/A' WHERE color_name = 'BAEGE METALLIC';
+SELECT * FROM Colors WHERE rpo_code is null;
 
+-- Find null mmc_code_id
 SELECT o.order_id, v.body, v.vin, v.model
 FROM Orders o
 JOIN Vehicles v ON o.order_id = v.order_id

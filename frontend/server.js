@@ -11,7 +11,7 @@ app.set('view engine', 'ejs');
 
 const baseURL = 'http://backend:5000'
 
-let maintenanceMode = true; // Edit this to toggle maintenance mode
+let maintenanceMode = false; // Edit this to toggle maintenance mode
 
 app.use((req, res, next) => {
     if (maintenanceMode && req.path !== '/maintenance') {

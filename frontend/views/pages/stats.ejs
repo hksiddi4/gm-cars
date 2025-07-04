@@ -30,15 +30,16 @@
                         <% }) %>
                     </select>
                 </div>
+                <%
+                    const hasCorvette = model_list.some(m => m.startsWith('CORVETTE'));
+                    const combinedModels = hasCorvette ? ['CORVETTE (ALL)', ...model_list] : model_list;
+                    combinedModels.sort((a, b) => a.localeCompare(b));
+                %>
                 <div class="statsDropdown">
                     <select id="filterModel" class="form-select small-dropdown <%= selectedModel ? 'active-filter' : '' %>">
                         <option value="">Model</option>
-                        <%
-                            const combinedModels = ['CORVETTE (ALL)', ...model_list];
-                            combinedModels.sort((a, b) => a.localeCompare(b));
-                            combinedModels.forEach(m => { 
-                        %>
-                        <option value="<%= m %>" <%= selectedModel === m ? 'selected' : '' %>><%= m %></option>
+                        <% combinedModels.forEach(m => { %>
+                            <option value="<%= m %>" <%= selectedModel === m ? 'selected' : '' %>><%= m %></option>
                         <% }) %>
                     </select>
                 </div>

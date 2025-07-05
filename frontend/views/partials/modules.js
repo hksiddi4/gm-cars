@@ -87,6 +87,20 @@ const colorMap = {
   "MOSAIC BLACK METALLIC": "GB8",
   "WATKINS GLEN GRAY METALLIC": "G7Q",
   "ADMIRAL BLUE METALLIC": "GTR",
+  "INTERSTELLAR WHITE": "GAZ",
+  "VOID BLACK": "GBA",
+  "METEORITE METALLIC": "GNO",
+  "DEEP AURORA METALLIC": "GXN",
+  "AFTERBURNER TINTCOAT": "GC5",
+  "TIDE METALLIC": "G7X",
+  "SUPERNOVA METALLIC": "GKK",
+  "NEPTUNE BLUE MATTE": "GLG",
+  "SOLAR ORANGE": "GAG",
+  "GRAPHITE BLUE METALLIC": "GAI",
+  "MOONSHOT GREEN MATTE": "G7W",
+  "COASTAL DUNE": "G42",
+  "MAGNUS GRAY MATTE": "GBL",
+  "AUBURN MATTE": "GNR",
 };
 
 const intColor = {
@@ -204,6 +218,12 @@ const intColor = {
   "E54": "Jet Black W/ Phantom Blue Accents Leather W/ Mini-Perforated Custom Quilted Inserts and Sueded Front Seatbacks",
   "H9F": "Jet Black Evotex",
   "EMX": "Black Evotex",
+  // Hummer EV
+  "H9Z": "LUNAR HORIZON (JET BLACK/LIGHT GREY) Premium Leather-Alternative",
+  "HAS": "LUNAR SHADOW (JET BLACK/TAUPE) Premium Leather-Alternative",
+  "HBZ": "GRANITE DRIFT PREMIUM LEATHER-ALTERNATIVE",
+  "HR5": "STEALTH ECLIPSE PREMIUM LEATHER-ALTERNATIVE",
+  "EHM": "VELOCITY EMBER PREMIUM LEATHER-ALTERNATIVE",
 };
 
 const seatCode = {

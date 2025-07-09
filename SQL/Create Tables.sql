@@ -381,6 +381,8 @@ CROSS JOIN LATERAL (
     SELECT '20th Anniversary of V-Series Special Edition' WHERE options LIKE '%"ZLT"%'
     UNION ALL
     SELECT 'ZTK Track Performance Package' WHERE options LIKE '%"ZTK"%'
+    UNION ALL
+    SELECT 'Extreme Off-Road Package' WHERE options LIKE '%"Z6X"%'
 ) special_editions
 WHERE special_desc IS NOT NULL
 AND NOT EXISTS (
@@ -531,6 +533,13 @@ UPDATE Colors SET rpo_code = 'GC6' WHERE color_name = 'CORVETTE RACING YELLOW TI
 UPDATE Colors SET rpo_code = 'GB8' WHERE color_name = 'MOSAIC BLACK METALLIC';
 UPDATE Colors SET rpo_code = 'GAN' WHERE color_name = 'SILVER ICE METALLIC';
 UPDATE Colors SET rpo_code = 'G7Q' WHERE color_name = 'WATKINS GLEN GRAY METALLIC';
+UPDATE Colors SET rpo_code = 'GAZ' WHERE color_name = 'INTERSTELLAR WHITE';
+UPDATE Colors SET rpo_code = 'GBA' WHERE color_name = 'VOID BLACK';
+UPDATE Colors SET rpo_code = 'GNO' WHERE color_name = 'METEORITE METALLIC';
+UPDATE Colors SET rpo_code = 'GXN' WHERE color_name = 'DEEP AURORA METALLIC';
+UPDATE Colors SET rpo_code = 'GC5' WHERE color_name = 'AFTERBURNER TINTCOAT';
+UPDATE Colors SET rpo_code = 'G7X' WHERE color_name = 'TIDE METALLIC';
+UPDATE Colors SET rpo_code = 'GKK' WHERE color_name = 'SUPERNOVA METALLIC';
 UPDATE Colors SET rpo_code = 'N/A' WHERE color_name = 'BAEGE METALLIC';
 SELECT * FROM Colors WHERE rpo_code is null;
 
@@ -571,6 +580,7 @@ WITH FilteredVehicles AS (
     FROM Vehicles v
     JOIN Orders o ON v.order_id = o.order_id
     WHERE o.creation_date IS NOT NULL
+		AND o.country = 'USA'
 )
 SELECT
     `year_month`,
@@ -581,7 +591,7 @@ SELECT
     MAX(msrp) AS max_msrp
 FROM FilteredVehicles
 GROUP BY `year_month`, model
-ORDER BY `year_month` DESC, model;
+ORDER BY `year_month` ASC, model;
 
 -- with all filters
 WITH FilteredVehicles AS (

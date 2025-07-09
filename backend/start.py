@@ -280,7 +280,7 @@ def color_stats():
             conditions.append(f"v.modelYear = '{year}'")
         if model:
             if model == "CORVETTE (ALL)":
-                corvette_models = ["CORVETTE STINGRAY", "CORVETTE E-RAY", "CORVETTE Z06", "CORVETTE ZR1"]
+                corvette_models = ["CORVETTE STINGRAY", "CORVETTE STINGRAY W/ Z51", "CORVETTE GRAND SPORT", "CORVETTE E-RAY", "CORVETTE Z06", "CORVETTE ZR1"]
                 corvette_list = ", ".join(f"'{m}'" for m in corvette_models)
                 conditions.append(f"v.model IN ({corvette_list})")
             else:
@@ -360,14 +360,11 @@ def color_stats():
         if year:
             conditions.append(f"v.modelYear = '{year}'")
         if model:
-            print(model)
             if model == "CORVETTE (ALL)":
-                print("C ALL")
-                corvette_models = ["CORVETTE STINGRAY", "CORVETTE E-RAY", "CORVETTE Z06", "CORVETTE ZR1"]
+                corvette_models = ["CORVETTE STINGRAY", "CORVETTE STINGRAY W/ Z51", "CORVETTE GRAND SPORT", "CORVETTE E-RAY", "CORVETTE Z06", "CORVETTE ZR1"]
                 corvette_list = ", ".join(f"'{m}'" for m in corvette_models)
                 conditions.append(f"v.model IN ({corvette_list})")
             else:
-                print("CORVETTE REG")
                 conditions.append(f"v.model = '{model}'")
         if body:
             conditions.append(f"v.body = '{body}'")

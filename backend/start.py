@@ -151,6 +151,8 @@ def sort_price():
             "ZLZ": ["modelYear = '2025'", "model IN ('CT4', 'CT5')", "trim = 'V-SERIES BLACKWING'", "color_name = 'MAGNUS METAL FROST'"],
             "ABQ": ["modelYear = '2023'", "model = 'CT5'", "trim = 'V-SERIES BLACKWING'", "msrp > '118000'"],
             "ZLT": ["modelYear = '2024'", "model = 'CT5'", "trim = 'V-SERIES BLACKWING'", "opt.option_code IN ('ZLT', 'ZLV')"],
+            "Z6X": ["model IN ('HUMMER EV SUV', 'HUMMER EV PICKUP')"],
+            "WFP": ["modelYear = '2024'", "model = 'HUMMER EV SUV'", "trim = '3X'", "color_name = 'NEPTUNE BLUE MATTE'"],
         }
 
         if h40_selected:

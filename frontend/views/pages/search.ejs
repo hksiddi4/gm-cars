@@ -287,6 +287,7 @@
         const modelYear = vin_data[0].modelYear;
         const mmc_code = vin_data[0].mmc_code;
         let options = vin_data[0].rpo_codes || [];
+        let vehicleTrim = vin_data[0].trim;
 
         let trim = mmc[mmc_code] || '';
         
@@ -308,6 +309,8 @@
             trim = options.find(opt => ["1LS"].includes(opt)) || trim;
           } else if (["TT35743", "TT35526"].includes(mmc_code)) {
             trim = options.find(opt => ["1SE", "1SF", "1SG", "1SB", "1SC", "1SD"].includes(opt)) || trim;
+          } else if (["CT35843"].includes(mmc_code)) {
+            trim = options.find(opt => ["2WT", "3WT", "4WT", "5WT", "8WT", "3LT", "2SP", "3SP"].includes(opt)) || trim;
           }
         }
 
@@ -329,6 +332,9 @@
           extMax = 6;
         } else if (modelUpper === 'CAMARO') {
           extMax = 4;
+          intMax = 2;
+        } else if (modelUpper === 'SILVERADO EV') {
+          extMax = 5;
           intMax = 2;
         } else if (['HUMMER EV PICKUP', 'HUMMER EV SUV'].includes(modelUpper)) {
           if (modelYear === 2022) {
@@ -415,10 +421,10 @@
 
         let urls = [];
 
-        // console.log(`Model Year: ${modelYear}, MMC Code: ${mmc_code}, Trim: ${trim}, Color: ${color}, Interior Color: ${colorInt}`);
-        // console.log(`https://cgi.chevrolet.com/mmgprod-us/dynres/prove/image.gen?i=${modelYear}/${mmc_code}/${mmc_code}__${trim}/${color}_${rpos}gmds10.png&v=deg01&std=true&country=US&send404=true&transparentBackgroundPng=true`);
-
-        if (modelYear && mmc_code && trim && color && colorInt) {
+        if ((['3WT', '4WT'].includes(vehicleTrim)) && modelYear === 2024) {
+          warningDiv.innerHTML = 'Image generation does not support the 2024 Silverado EV WT.';
+          urls = [ghostImg];
+        } else if (modelYear && mmc_code && trim && color && colorInt) {
           for (let i = 1; i <= extMax; i++) {
             urls.push(`https://cgi.chevrolet.com/mmgprod-us/dynres/prove/image.gen?i=${modelYear}/${mmc_code}/${mmc_code}__${trim}/${color}_${rpos}gmds10.png&v=deg${String(i).padStart(2, '0')}&std=true&country=US&send404=true&transparentBackgroundPng=true`);
           }
@@ -430,18 +436,22 @@
         }
 
         const gallery = document.getElementById('image-gallery');
-        urls.forEach((imgSrc, index) => {
-          const thumb = document.createElement('img');
-          thumb.src = imgSrc;
-          thumb.alt = `Thumbnail ${index + 1}`;
-          thumb.style.width = '100px';
-          thumb.style.cursor = 'pointer';
-          thumb.style.border = '1px solid transparent';
-          thumb.addEventListener('click', () => {
-            showImage(index);
+        if (urls.length === 1 && urls[0] === ghostImg) {
+          document.getElementById('image-gallery').style.display = 'none';
+        } else {
+          urls.forEach((imgSrc, index) => {
+            const thumb = document.createElement('img');
+            thumb.src = imgSrc;
+            thumb.alt = `Thumbnail ${index + 1}`;
+            thumb.style.width = '100px';
+            thumb.style.cursor = 'pointer';
+            thumb.style.border = '1px solid transparent';
+            thumb.addEventListener('click', () => {
+              showImage(index);
+            });
+            gallery.appendChild(thumb);
           });
-          gallery.appendChild(thumb);
-        });
+        }
 
         let currentIndex = 0;
         let initialLoad = true;

@@ -383,6 +383,8 @@ CROSS JOIN LATERAL (
     SELECT 'ZTK Track Performance Package' WHERE options LIKE '%"ZTK"%'
     UNION ALL
     SELECT 'Extreme Off-Road Package' WHERE options LIKE '%"Z6X"%'
+    UNION ALL
+    SELECT 'Omega Edition' WHERE options LIKE '%"WFP"%'
 ) special_editions
 WHERE special_desc IS NOT NULL
 AND NOT EXISTS (
@@ -540,6 +542,13 @@ UPDATE Colors SET rpo_code = 'GXN' WHERE color_name = 'DEEP AURORA METALLIC';
 UPDATE Colors SET rpo_code = 'GC5' WHERE color_name = 'AFTERBURNER TINTCOAT';
 UPDATE Colors SET rpo_code = 'G7X' WHERE color_name = 'TIDE METALLIC';
 UPDATE Colors SET rpo_code = 'GKK' WHERE color_name = 'SUPERNOVA METALLIC';
+UPDATE Colors SET rpo_code = 'GNO' WHERE color_name = 'METEORITE METALLIC';
+UPDATE Colors SET rpo_code = 'GC5' WHERE color_name = 'AFTERBURNER TINTCOAT';
+UPDATE Colors SET rpo_code = 'G7X' WHERE color_name = 'TIDE METALLIC';
+UPDATE Colors SET rpo_code = 'GKK' WHERE color_name = 'SUPERNOVA METALLIC';
+UPDATE Colors SET rpo_code = 'GXN' WHERE color_name = 'DEEP AURORA METALLIC';
+UPDATE Colors SET rpo_code = 'G7W' WHERE color_name = 'MOONSHOT GREEN MATTE';
+UPDATE Colors SET rpo_code = 'GLG' WHERE color_name = 'NEPTUNE BLUE MATTE';
 UPDATE Colors SET rpo_code = 'N/A' WHERE color_name = 'BAEGE METALLIC';
 SELECT * FROM Colors WHERE rpo_code is null;
 

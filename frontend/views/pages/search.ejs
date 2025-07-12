@@ -422,7 +422,7 @@
         let urls = [];
 
         if ((['3WT', '4WT'].includes(vehicleTrim)) && modelYear === 2024) {
-          warningDiv.innerHTML = 'Image generation does not support the 2024 Silverado EV WT.';
+          warningDiv.innerHTML = 'Image generation does not support 2024 Silverado EV WT.';
           urls = [ghostImg];
         } else if (modelYear && mmc_code && trim && color && colorInt) {
           for (let i = 1; i <= extMax; i++) {

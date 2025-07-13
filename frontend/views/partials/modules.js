@@ -105,6 +105,12 @@ const colorMap = {
   "SLATE GRAY METALLIC": "GNO",
   "HABANERO ORANGE": "GAG",
   "ZEPHYR BLUE MATTE METALLIC": "GLG",
+  "DARK EMBER TINTCOAT": "GAB",
+  "DEEP OCEAN METALLIC": "GAI",
+  "ONYX BLACK": "GBA",
+  "MOONLIGHT MATTE": "GLG",
+  "GLACIER WHITE TRICOAT": "G4J",
+  "DEEP BRONZE METALLIC": "GXN",
 };
 
 const intColor = {
@@ -231,6 +237,13 @@ const intColor = {
   // Silverado EV
   "H7D": "Black Evotex",
   "EMW": "Black w/ Sky Cool Gray Evotex",
+  // Sierra EV
+  "E4V": "After Dark (Black) Premium Leather alternative",
+  "EWA": "Desert Dune Premium Leather alternative",
+  "EH7": "AFTER DARK (BLACK) CORETEC",
+  "EH9": "FOREST STORM CORETEC",
+  "HCN": "Black Evotex",
+  "EB9": "Black w/ Artemis Evotex",
 };
 
 const seatCode = {
@@ -301,8 +314,13 @@ const mmc = {
   "6KH69": "1SB", // CT6 LUXURY
   "6KJ69": "1SD", // CT6 PREMIUM LUXURY
   "6KN69": "1SV", // CT6 V-SERIES
+  // Hummer EV
+  "TT35526": "", // SUV
+  "TT35743": "", // Pickup
   // Silverado EV
   "CT35843": "",
+  // Sierra EV
+  "TT35843": "",
 };
 
 module.exports = {

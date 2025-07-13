@@ -579,10 +579,12 @@ WHERE NOT EXISTS (
         'HBE','HBF','HEA','HEB','HGM','HIK','HIT','HIZ','HJC','HJD','HK1','HMC',
         'HMQ','HMR','HNC','HND','HTX','HTZ','HXR','HZK','HZQ','141','143','144',
         '145','146','191','192','193','194','195','196','198','343','344','345',
-        '346','701','703','704','705','706','755','000','EG1','E54','H9F','EMX'
+        '346','701','703','704','705','706','755','000','EG1','E54','H9F','EMX',
+        'H9Z','HAS','HBZ','HR5','EHM','H7D','EMW', 'E4V', 'EWA'
       )
 )
 ORDER BY v.vin;
+
 
 -- MSRP Stats
 WITH FilteredVehicles AS (

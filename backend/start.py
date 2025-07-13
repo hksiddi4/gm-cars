@@ -124,7 +124,7 @@ def sort_price():
     if rpo:
         rpo_list = rpo.split(',') if ',' in rpo else [rpo]
         h40_selected = 'H40' in rpo_list
-        zlz_selected = 'ZLZ' in rpo_list
+        zlz_selected = 'ZLZ' in rpo_list # Come back to this later
         rpo_n = len(rpo_list)
         join_clause += "\n            JOIN Options opt ON v.vehicle_id = opt.vehicle_id"
         rpo_conditions = {

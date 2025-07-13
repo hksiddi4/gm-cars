@@ -421,6 +421,10 @@
 
         let urls = [];
 
+        // Troubleshooting imgGen
+        //console.log(`Model Year: ${modelYear}, MMC Code: ${mmc_code}, Trim: ${trim}, Color: ${color}, Interior Color: ${colorInt}`);
+        //console.log(`https://cgi.chevrolet.com/mmgprod-us/dynres/prove/image.gen?i=${modelYear}/${mmc_code}/${mmc_code}__${trim}/${color}_${rpos}gmds10.png&v=deg01&std=true&country=US&send404=true&transparentBackgroundPng=true`);
+
         if ((['3WT', '4WT'].includes(vehicleTrim)) && modelYear === 2024) {
           warningDiv.innerHTML = 'Image generation does not support 2024 Silverado EV WT.';
           urls = [ghostImg];

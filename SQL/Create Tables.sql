@@ -549,6 +549,10 @@ UPDATE Colors SET rpo_code = 'GKK' WHERE color_name = 'SUPERNOVA METALLIC';
 UPDATE Colors SET rpo_code = 'GXN' WHERE color_name = 'DEEP AURORA METALLIC';
 UPDATE Colors SET rpo_code = 'G7W' WHERE color_name = 'MOONSHOT GREEN MATTE';
 UPDATE Colors SET rpo_code = 'GLG' WHERE color_name = 'NEPTUNE BLUE MATTE';
+UPDATE Colors SET rpo_code = 'GNO' WHERE color_name = 'SLATE GRAY METALLIC';
+UPDATE Colors SET rpo_code = 'GLG' WHERE color_name = 'ZEPHYR BLUE MATTE METALLIC';
+UPDATE Colors SET rpo_code = 'GAI' WHERE color_name = 'BLUE SMOKE METALLIC';
+UPDATE Colors SET rpo_code = 'GAG' WHERE color_name = 'HABANERO ORANGE';
 UPDATE Colors SET rpo_code = 'N/A' WHERE color_name = 'BAEGE METALLIC';
 SELECT * FROM Colors WHERE rpo_code is null;
 

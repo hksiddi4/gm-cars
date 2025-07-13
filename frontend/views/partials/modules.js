@@ -101,6 +101,10 @@ const colorMap = {
   "COASTAL DUNE": "G42",
   "MAGNUS GRAY MATTE": "GBL",
   "AUBURN MATTE": "GNR",
+  "BLUE SMOKE METALLIC": "GAI",
+  "SLATE GRAY METALLIC": "GNO",
+  "HABANERO ORANGE": "GAG",
+  "ZEPHYR BLUE MATTE METALLIC": "GLG",
 };
 
 const intColor = {
@@ -224,6 +228,9 @@ const intColor = {
   "HBZ": "GRANITE DRIFT PREMIUM LEATHER-ALTERNATIVE",
   "HR5": "STEALTH ECLIPSE PREMIUM LEATHER-ALTERNATIVE",
   "EHM": "VELOCITY EMBER PREMIUM LEATHER-ALTERNATIVE",
+  // Silverado EV
+  "H7D": "Black Evotex",
+  "EMW": "Black w/ Sky Cool Gray Evotex",
 };
 
 const seatCode = {

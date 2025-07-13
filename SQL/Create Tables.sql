@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS temp_vin (
     vin varchar(17),
     primary key (vid)
 );
+select * from temp_vin;
 drop table temp_vin;
 
 SELECT t.vin
@@ -553,6 +554,7 @@ UPDATE Colors SET rpo_code = 'GNO' WHERE color_name = 'SLATE GRAY METALLIC';
 UPDATE Colors SET rpo_code = 'GLG' WHERE color_name = 'ZEPHYR BLUE MATTE METALLIC';
 UPDATE Colors SET rpo_code = 'GAI' WHERE color_name = 'BLUE SMOKE METALLIC';
 UPDATE Colors SET rpo_code = 'GAG' WHERE color_name = 'HABANERO ORANGE';
+UPDATE Colors SET rpo_code = 'GNO' WHERE color_name = 'THUNDERSTORM GRAY';
 UPDATE Colors SET rpo_code = 'N/A' WHERE color_name = 'BAEGE METALLIC';
 SELECT * FROM Colors WHERE rpo_code is null;
 

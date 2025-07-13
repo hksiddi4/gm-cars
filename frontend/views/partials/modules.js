@@ -111,6 +111,7 @@ const colorMap = {
   "MOONLIGHT MATTE": "GLG",
   "GLACIER WHITE TRICOAT": "G4J",
   "DEEP BRONZE METALLIC": "GXN",
+  "THUNDERSTORM GRAY": "GNO",
 };
 
 const intColor = {

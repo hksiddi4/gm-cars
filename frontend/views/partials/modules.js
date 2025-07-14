@@ -112,6 +112,13 @@ const colorMap = {
   "GLACIER WHITE TRICOAT": "G4J",
   "DEEP BRONZE METALLIC": "GXN",
   "THUNDERSTORM GRAY": "GNO",
+  "SANDSTONE": "G42",
+  "VIBRANT WHITE TRICOAT": "G4J",
+  "BLACK CHERRY TINTCOAT": "GAB",
+  "MONARCH ORANGE": "GAG",
+  "MAGNUS METAL FROST": "GBL",
+  "LUNA METALLIC": "GNO",
+  "ADOBE FROST": "GNR",
 };
 
 const intColor = {
@@ -229,6 +236,10 @@ const intColor = {
   "E54": "Jet Black W/ Phantom Blue Accents Leather W/ Mini-Perforated Custom Quilted Inserts and Sueded Front Seatbacks",
   "H9F": "Jet Black Evotex",
   "EMX": "Black Evotex",
+  // ESCALADE IQ
+  "ENB": "SHEER GRAY W/ DARK MEDIUM CINDER ACCENTS INTELUXE W/ FJORD (CHEVRON) QUILTING PATTERN",
+  "EMY": "CAMELIA W/ BACKEN BLACK ACCENTS NOUVEAULUXE W/ EVREN (BACK INSERTS) AND CYGUS (SEAT CUSHION) PERFORATED PATTERN",
+  "ENK": "HARBOR BLUE W/ BACKEN BLACK ACCENTS NOUVEAULUXE W/ CARRINGTON FALLS PERFORATED PATTERN",
   // Hummer EV
   "H9Z": "LUNAR HORIZON (JET BLACK/LIGHT GREY) Premium Leather-Alternative",
   "HAS": "LUNAR SHADOW (JET BLACK/TAUPE) Premium Leather-Alternative",
@@ -237,6 +248,7 @@ const intColor = {
   "EHM": "VELOCITY EMBER PREMIUM LEATHER-ALTERNATIVE",
   // Silverado EV
   "H7D": "Black Evotex",
+  //"H7D": "BACKEN BLACK W/ SANTORINI ACCENTS INTELUXE W/ FJORD (CHEVRON) QUILTING PATTERN", ESCALADE IQ
   "EMW": "Black w/ Sky Cool Gray Evotex",
   // Sierra EV
   "E4V": "After Dark (Black) Premium Leather alternative",

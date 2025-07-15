@@ -565,6 +565,7 @@ UPDATE Colors SET rpo_code = 'GAG' WHERE color_name = 'MONARCH ORANGE';
 UPDATE Colors SET rpo_code = 'GBL' WHERE color_name = 'MAGNUS METAL FROST';
 UPDATE Colors SET rpo_code = 'GNO' WHERE color_name = 'LUNA METALLIC';
 UPDATE Colors SET rpo_code = 'GNR' WHERE color_name = 'ADOBE FROST';
+UPDATE Colors SET rpo_code = 'GAI' WHERE color_name = 'DEEP SPACE METALLIC';
 UPDATE Colors SET rpo_code = 'N/A' WHERE color_name = 'BAEGE METALLIC';
 SELECT * FROM Colors WHERE rpo_code is null;
 

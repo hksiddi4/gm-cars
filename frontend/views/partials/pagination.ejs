@@ -31,9 +31,15 @@
             <% } %>
 
             <% for (let i = startPage; i <= endPage; i++) { %>
-                <li class="page-item <%= i === currentPage ? 'active' : '' %>">
-                    <a class="page-link" href="?<%= buildQuery({ ...baseQuery, page: i }) %>" aria-current="<%= i === currentPage ? 'page' : undefined %>"><%= i %></a>
-                </li>
+                <% if (i === currentPage) { %>
+                    <li class="page-item active" aria-current="page">
+                        <span class="page-link"><%= i %></span>
+                    </li>
+                <% } else { %>
+                    <li class="page-item">
+                        <a class="page-link" href="?<%= buildQuery({ ...baseQuery, page: i }) %>"><%= i %></a>
+                    </li>
+                <% } %>
             <% } %>
 
             <% if (endPage < totalPages) { %>

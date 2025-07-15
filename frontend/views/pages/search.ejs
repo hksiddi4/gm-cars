@@ -117,6 +117,16 @@
                             matchedSeat = seatCode[rpo];
                           }
                         });
+
+                        if (data.model === 'Escalade IQ' && matchedSeat === 'AQ9') {
+                          matchedSeat = 'Front bucket';
+                        }
+                        if (data.model === 'CT4' && matchedSeat === 'AQJ') {
+                          matchedSeat = 'Front bucket high-performance';
+                        }
+                        if (data.model === 'SIERRA EV' && matchedSeat === 'AR9') {
+                          matchedSeat = 'Front bucket seats with center console';
+                        }
                       %>
                     <tr>
                       <td class="label-column"><strong>INTERIOR COLOR</strong></td>

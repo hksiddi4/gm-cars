@@ -266,13 +266,15 @@ const seatCode = {
   "A50": "Sport front buckets",
   "AQJ": "RECARO Performance front buckets",
   // Corvette
-  "AE4": "Competition buckets",
-  "AH2": "GT2 buckets",
   "AQ9": "GT1 buckets",
+  "AE4": "Competition buckets",
+  "AH2": "GT2 / Competition buckets",
   // Cadillac
   "": "",
   // Silverado EV
   "AR9": "Front Bucket Seats",
+  // Hummer EV
+  "A50": "Front bucket seats with center console",
 };
 
 const mmc = {

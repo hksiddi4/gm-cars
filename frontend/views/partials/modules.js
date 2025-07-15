@@ -119,6 +119,8 @@ const colorMap = {
   "MAGNUS METAL FROST": "GBL",
   "LUNA METALLIC": "GNO",
   "ADOBE FROST": "GNR",
+  "FLARE METALLIC": "GSJ",
+  "MIDNIGHT STEEL FROST": "GLG",
 };
 
 const intColor = {

@@ -31,11 +31,7 @@ CREATE TABLE IF NOT EXISTS temp_vin (
 );
 select * from temp_vin;
 drop table temp_vin;
-
-SELECT t.vin
-FROM temp_vin t
-LEFT JOIN staging_allGM s ON t.vin = s.vin
-WHERE s.vin IS NULL;
+SELECT vin, COUNT(*) FROM temp_vin GROUP BY vin HAVING COUNT(*) > 1;
 
 -- Engines Table
 CREATE TABLE Engines (
@@ -555,6 +551,20 @@ UPDATE Colors SET rpo_code = 'GLG' WHERE color_name = 'ZEPHYR BLUE MATTE METALLI
 UPDATE Colors SET rpo_code = 'GAI' WHERE color_name = 'BLUE SMOKE METALLIC';
 UPDATE Colors SET rpo_code = 'GAG' WHERE color_name = 'HABANERO ORANGE';
 UPDATE Colors SET rpo_code = 'GNO' WHERE color_name = 'THUNDERSTORM GRAY';
+UPDATE Colors SET rpo_code = 'GBA' WHERE color_name = 'ONYX BLACK';
+UPDATE Colors SET rpo_code = 'GAI' WHERE color_name = 'DEEP OCEAN METALLIC';
+UPDATE Colors SET rpo_code = 'GAB' WHERE color_name = 'DARK EMBER TINTCOAT';
+UPDATE Colors SET rpo_code = 'GLG' WHERE color_name = 'MOONLIGHT MATTE';
+-- NEW
+UPDATE Colors SET rpo_code = 'GSJ' WHERE color_name = 'FLARE METALLIC';
+UPDATE Colors SET rpo_code = 'GAB' WHERE color_name = 'BLACK CHERRY TINTCOAT';
+UPDATE Colors SET rpo_code = 'GLG' WHERE color_name = 'MIDNIGHT STEEL FROST';
+UPDATE Colors SET rpo_code = 'G42' WHERE color_name = 'SANDSTONE';
+UPDATE Colors SET rpo_code = 'G4J' WHERE color_name = 'VIBRANT WHITE TRICOAT';
+UPDATE Colors SET rpo_code = 'GAG' WHERE color_name = 'MONARCH ORANGE';
+UPDATE Colors SET rpo_code = 'GBL' WHERE color_name = 'MAGNUS METAL FROST';
+UPDATE Colors SET rpo_code = 'GNO' WHERE color_name = 'LUNA METALLIC';
+UPDATE Colors SET rpo_code = 'GNR' WHERE color_name = 'ADOBE FROST';
 UPDATE Colors SET rpo_code = 'N/A' WHERE color_name = 'BAEGE METALLIC';
 SELECT * FROM Colors WHERE rpo_code is null;
 

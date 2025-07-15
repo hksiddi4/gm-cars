@@ -313,6 +313,8 @@
             trim = options.find(opt => ["2WT", "3WT", "4WT", "5WT", "8WT", "3LT", "2SP", "3SP"].includes(opt)) || trim;
           } else if (["TT35843"].includes(mmc_code)) {
             trim = options.find(opt => ["5SD", "5SB", "5SC", "3SB", "3SC", "4SC", "4SD"].includes(opt)) || trim;
+          } else if (["6T35726"].includes(mmc_code)) {
+            trim = options.find(opt => ["1SC", "1SF", "1SD", "1SG"].includes(opt)) || trim;
           }
         }
 

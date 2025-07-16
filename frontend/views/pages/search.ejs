@@ -281,6 +281,7 @@
         const loadingAnimation = document.getElementById('loading-animation');
         loadingAnimation.style.display = 'block';
 
+        const warningDiv = document.getElementById('image-warning');
         const mmc = <%- JSON.stringify(mmc) %>;
         const colorMap = <%- JSON.stringify(colorMap) %>;
         let intColor = <%- JSON.stringify(intColor) %>;
@@ -328,6 +329,20 @@
           }
         }
 
+        let warningMessages = [];
+
+        if (!mmc_code) {
+          warningMessages.push('ERROR: MMC_Code unset in database');
+        }
+        if (!trim) {
+          warningMessages.push('ERROR: Trim unset in file');
+        }
+
+        if (warningMessages.length > 0) {
+          warningDiv.innerHTML = warningMessages.join('<br>');
+          warningDiv.style.color = '#e57373';
+        }
+
         let rpos = options.join('_');
         let color = options.find(opt => Object.values(colorMap).includes(opt));
         let colorInt = options.find(opt => Object.keys(intColor).includes(opt));
@@ -360,7 +375,6 @@
           }
         }
 
-        const warningDiv = document.getElementById('image-warning');
         // GM Image Gen API doesn't have some codes so pick closest available option
         let unsupportedColors = null;
         const unsupportedColorNames = [

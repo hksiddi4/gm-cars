@@ -569,12 +569,14 @@ UPDATE Colors SET rpo_code = 'GAI' WHERE color_name = 'DEEP SPACE METALLIC';
 UPDATE Colors SET rpo_code = 'N/A' WHERE color_name = 'BAEGE METALLIC';
 SELECT * FROM Colors WHERE rpo_code is null;
 
--- Find null mmc_code_id
+-- Find null mmc_code_id | Update
 SELECT o.order_id, v.body, v.vin, v.model
 FROM Orders o
 JOIN Vehicles v ON o.order_id = v.order_id
-JOIN staging_allGM s ON v.vin = s.vin
 WHERE o.mmc_code_id IS NULL;
+
+update Orders set mmc_code_id = 45 where mmc_code_id is null;
+select * from MMC_Codes;
 
 -- Find unknown intColor RPOs
 SELECT v.vin

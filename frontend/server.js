@@ -9,7 +9,7 @@ app.use(express.json());
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
 
-const baseURL = 'http://backend:5000'
+const baseURL = 'http://192.168.1.111:5000'
 
 let maintenanceMode = false; // Edit this to toggle maintenance mode
 
@@ -192,6 +192,33 @@ app.get('/stats', function(req, res) {
                 selectedTrim: req.query.trim || '',
                 selectedEngine: req.query.engine || '',
                 selectedTrans: req.query.trans || ''
+            });
+        })
+        .catch((error) => {
+            console.error(`Error fetching data: ${error}`);
+            res.status(500).render('pages/errors/500', {
+                error: error.toJSON ? error.toJSON() : { message: error.message }
+            });
+        });
+});
+
+app.get('/wheels', function(req, res) {
+    const model = req.query.model;
+    const url = new URL(`${baseURL}/wheels`);
+    const params = new URLSearchParams();
+
+    if (req.query.model) params.append("model", req.query.model);
+    url.search = params.toString();
+
+    axios.get(url.toString(), { timeout: 10000 })
+        .then((response) => {
+            const data = response.data;
+            var wheel_data = Array.isArray(response.data.wheel_data) ? response.data.wheel_data : [];
+
+            res.render('pages/wheels', {
+                wheel_data: data.wheel_data,
+                model_list: data.model,
+                selectedModel: req.query.model || '',
             });
         })
         .catch((error) => {

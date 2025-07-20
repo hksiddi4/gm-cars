@@ -16,12 +16,19 @@ RPOCodeS = All RPO codes XXX_XXX_XXX_XXX format
 
 
 # Exterior & Interior Colors (To be implemented onto /search)
-
+# Square image
 https://cgi.gm.com/mmgprod-us/dynres/prove/singlelayer/pngs/optionImagery/US/chevrolet/2024/1YC07/gmds2/HTE.jpg
 https://cgi.gm.com/mmgprod-us/dynres/prove/singlelayer/pngs/optionImagery/US/cadillac/2023/6DE79/gmds2/GRW.jpg
 
-https://cgi.gm.com/mmgprod-us/dynres/prove/singlelayer/pngs/optionImagery/US/MANUFACTURER/YEAR/MMCCode/gmds2/RPO.jpg
+# Rectangle zoomed image
+https://www.chevrolet.com/bypass/master_tools/ddp/gmna/assets/US/chevrolet/2025/corvette/corvette/small_byo3/GPH.jpg
+https://www.chevrolet.com/bypass/master_tools/ddp/gmna/assets/US/chevrolet/2025/corvette/corvette/large_byo3/GPH.jpg
+https://www.chevrolet.com/bypass/master_tools/ddp/gmna/assets/US/chevrolet/2025/corvette/corvette/large_byo/GPH.jpg
 
+
+
+https://cgi.gm.com/mmgprod-us/dynres/prove/singlelayer/pngs/optionImagery/US/MANUFACTURER/YEAR/MMCCode/gmds2/RPO.jpg
+https://www.chevrolet.com/bypass/master_tools/ddp/gmna/assets/US/MANUFACTURER/YEAR/MODEL/MODEL/small_byo3/RPO.jpg
  - Parts
 MANUFACTURER = chevrolet, cadillac - Depends on the vehicle
 

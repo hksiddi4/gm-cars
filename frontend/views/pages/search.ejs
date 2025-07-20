@@ -351,7 +351,10 @@
         let extMax = 7;
         let intMax = 4;
               
-        if (modelUpper.startsWith('CORVETTE')) {
+        if (modelUpper === 'CAMARO') {
+          intMax = 2;
+          extMax = modelYear >= 2023 ? 5 : 4;
+        } else if (modelUpper.startsWith('CORVETTE')) {
           if (modelYear === 2019) {
             extMax = 4;
             intMax = 2;
@@ -360,20 +363,12 @@
           }
         } else if (['CT4', 'CT5', 'CT6'].includes(modelUpper) && modelYear <= 2022) {
           extMax = 6;
-        } else if (modelUpper === 'CAMARO') {
-          extMax = 4;
-          intMax = 2;
         } else if (['SILVERADO EV', 'SIERRA EV'].includes(modelUpper)) {
           extMax = 5;
           intMax = 2;
         } else if (['HUMMER EV PICKUP', 'HUMMER EV SUV'].includes(modelUpper)) {
-          if (modelYear === 2022) {
-            extMax = 4;
-            intMax = 2;
-          } else if (modelYear >= 2023) {
-            extMax = 5;
-            intMax = 2;
-          }
+          intMax = 2;
+          extMax = modelYear >= 2023 ? 5 : 4;
         }
 
         // GM Image Gen API doesn't have some codes so pick closest available option

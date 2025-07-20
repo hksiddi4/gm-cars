@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('../partials/head'); %>
+    <title>Wheels</title>
+</head>
+<body>
+    <%- include('../partials/header'); %>
+    <div class="container" style="max-width: 75%;">
+        <div class="row pt-4">
+            <div class="col">
+                <h1 style="font-weight: bold;">Wheels</h1>
+            </div>
+        </div>
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            <div class="d-flex flex-wrap gap-2 mb-3 w-100">
+                <div class="statsDropdown">
+                    <select id="filterModel" class="form-select small-dropdown <%= selectedModel ? 'active-filter' : '' %>">
+                        <option value="">Model</option>
+                        <% combinedModels.forEach(m => { %>
+                            <option value="<%= m %>" <%= selectedModel === m ? 'selected' : '' %>><%= m %></option>
+                        <% }) %>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div id="top-scroll-wrapper">
+            <div id="top-scroll"></div>
+        </div>
+        <div class="table-responsive" id="bottom-scroll-wrapper">
+            <table class="table-veh table-hover border shadow" id="wheelTable">
+                <thead>
+                    <tr>
+                        <th scope="col">
+                            Wheel
+                        </th>
+                        <th scope="col">
+                            RPO
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% wheel_data.forEach(function(data) { %>
+                        <tr>
+                            <td scope="row"><img id="sample" src="../../img/extColors/<%= data.rpo_code ? data.rpo_code : 'default' %>.png" width="20" height="20" style="margin-right: 8px; border-radius: 50%;" onerror="this.onerror=null; this.src='../../img/extColors/default.png';"></td>
+                            <td scope="row"><%= data.rpo %></td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <%- include('../partials/footer'); %>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const modelSelect = document.getElementById('filterModel');   
+            modelSelect.addEventListener('change', function () {
+                const selectedValue = this.value;
+                const url = new URL(window.location.href);
+                url.searchParams.set('category', selectedValue);
+                window.location.href = url.toString();
+            });
+            const filters = ['filterModel'];
+            const url = new URL(window.location.href);
+
+            filters.forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.addEventListener('change', function () {
+                    const value = this.value;
+                    const paramMap = {
+                        filterModel: 'model',
+                    };
+                    const param = paramMap[id];
+                    if (value) url.searchParams.set(param, value);
+                    else url.searchParams.delete(param);
+                })
+                window.location.href = url.toString();
+            });
+        });
+        
+        // SCROLL SYNC
+        const topScroll = document.getElementById('top-scroll-wrapper');
+        const bottomScroll = document.getElementById('bottom-scroll-wrapper');
+
+        if (topScroll && bottomScroll) {
+            let isSyncingTop = false;
+            let isSyncingBottom = false;
+
+            topScroll.addEventListener('scroll', () => {
+                if (!isSyncingTop) {
+                isSyncingBottom = true;
+                bottomScroll.scrollLeft = topScroll.scrollLeft;
+                }
+                isSyncingTop = false;
+            });
+
+            bottomScroll.addEventListener('scroll', () => {
+                if (!isSyncingBottom) {
+                isSyncingTop = true;
+                topScroll.scrollLeft = bottomScroll.scrollLeft;
+                }
+                isSyncingBottom = false;
+            });
+
+            const table = document.querySelector('.table-veh');
+            if (table) {
+                requestAnimationFrame(() => {
+                    document.getElementById('top-scroll').style.width = table.scrollWidth + 'px';
+                });
+            }
+        }
+    </script>
+</body>
+</html>

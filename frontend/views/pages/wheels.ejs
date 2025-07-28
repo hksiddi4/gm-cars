@@ -52,7 +52,9 @@
         <%- include('../partials/footer'); %>
     </div>
     <script>
+        let rpoDescriptions = {};
         const rpoDescriptionCache = {};
+
         const modelRpoMap = {
             'CAMARO': [
                 'REG', 'SGE', '5K9', '57V', '56F', 'SHH', 'SRI', '58E', 'SHL', '56H', 'RQ9',
@@ -60,14 +62,10 @@
                 'SKW', '56M', 'WR1', '5JW', '57W', '56K', 'Q7G', '56Z', 'RSK', 'RTQ', 'PKJ'
             ],
             'CT4': [
-                '', '', '', '', '', '', '', '', '', '', '',
-                '', '', '', '', '', '', '', '', '', '', '',
-                '', '', '', '', '', '', '', '', '', '', '',
+                'RID', '58F', 'Q7B', 'PZJ', 'Q6Z', 'RT2', 'SOX', 'SPQ', 'SOY', 'SGV', 'SOU', 'R38', 'R37', 'RRR'
             ],
             'CT5': [
-                '', '', '', '', '', '', '', '', '', '', '',
-                '', '', '', '', '', '', '', '', '', '', '',
-                '', '', '', '', '', '', '', '', '', '', '',
+                'QE1', 'Q81', '57R', 'RQL', 'Q84', 'Q83', '57M', 'Q82', 'SQ9', 'SKW', 'SKX', 'Q7N', 'SSE', 'SSJ', 'Q63', 'Q61', 'RHL'
             ],
             'CT6': [
                 '', '', '', '', '', '', '', '', '', '', '',
@@ -91,11 +89,36 @@
                 '5DG', '5DO', 'Q8P', 'Q8Q', 'Q9Y', 'Q9O', 'Q99', 'Q9I', 'Q9A', '5DG', 'QE5'
             ],
         };
+
+        function loadRpoDescriptions() {
+            const cached = sessionStorage.getItem('rpoCodes');
+            if (cached) {
+                const data = JSON.parse(cached);
+                data.allRpoCodes.forEach(([code, desc]) => {
+                    rpoDescriptions[code] = desc;
+                });
+                return Promise.resolve();
+            } else {
+                return fetch('https://decoderpo.com/static/rpoCodes.json')
+                    .then(res => res.json())
+                    .then(data => {
+                        sessionStorage.setItem('rpoCodes', JSON.stringify(data));
+                        data.allRpoCodes.forEach(([code, desc]) => {
+                            rpoDescriptions[code] = desc;
+                        });
+                    })
+                    .catch(err => {
+                        console.error('Failed to load RPO data:', err);
+                    });
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function () {
             const modelSelect = document.getElementById('filterModel');
             const tableBody = document.querySelector('#wheelTable tbody');
             const url = new URL(window.location.href);
 
+            // Attach event listener immediately
             modelSelect.addEventListener('change', function () {
                 const selected = this.value?.toUpperCase();
 
@@ -109,123 +132,100 @@
                     modelLower = 'corvette';
                 }
                 const category = modelLower.startsWith('corvette') ? 'corvette' : modelLower;
-                const year = (selected === 'ESCALADE IQ' || selected === 'CORVETTE ZR1' || selected === 'CORVETTE Z06' || selected === 'CORVETTE STINGRAY') ? '2025' : '2024';
+                const year = (selected === 'CAMARO') ? '2024' : '2025';
                 const cadillacModels = ['ESCALADE IQ', 'CT4', 'CT5', 'CT6'];
                 const manufacturer = cadillacModels.includes(selected) ? 'cadillac' : 'chevrolet';
+
                 if (modelRpoMap[selected]) {
                     modelRpoMap[selected].forEach(rpo => {
                         const row = document.createElement('tr');
-                        const imgRpo = (rpo === '5K9') ? '57V' : rpo;
-                        const imgRpo = (rpo === '5JW') ? 'WR1' : rpo;
+                        let imgRpo = rpo;
+                        if (rpo === '5K9') imgRpo = '57V';
+                        if (rpo === '5JW') imgRpo = 'WR1';
                         row.innerHTML = `
                             <td>
                                 <img 
-                                src="https://www.${manufacturer}.com/bypass/master_tools/ddp/gmna/assets/US/${manufacturer}/${year}/${category}/${modelLower}/small_byo3/${imgRpo}.jpg" 
-                                alt="Wheel Image" 
-                                style="height: 200px; width: auto;" 
-                                onerror="
-                                    const isEscalade = '${selected}' === 'ESCALADE IQ';
-                                    if (isEscalade) {
-                                        this.onerror = null;
-                                        this.src = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
-                                        this.title = 'Image Generation not supported for this RPO';
-                                    } else if (!this.dataset.retryBoyo3) {
-                                        this.dataset.retryBoyo3 = 'true';
-                                        this.src = this.src.replace('large_byo', 'large_byo3');
-                                    } else if (!this.dataset.retryYear) {
-                                        this.dataset.retryYear = 'true';
-                                        this.src = this.src.replace('/2024/', '/2023/').replace('large_byo3', 'large_byo');
-                                    } else {
-                                        this.onerror = null;
-                                        this.src = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
-                                        this.title = 'Image Generation not supported for this RPO';
-                                    }
-                                "
+                                    class="wheel-image"
+                                    data-rpo="${imgRpo}"
+                                    data-year="${year}"
+                                    src="https://www.${manufacturer}.com/bypass/master_tools/ddp/gmna/assets/US/${manufacturer}/${year}/${category}/${modelLower}/small_byo3/${imgRpo}.jpg"
+                                    onerror="
+                                        if (!this.dataset.fallback) {
+                                            this.dataset.fallback = 'true';
+                                            this.src = this.src.replace('/${year}/', '/2024/');
+                                        }
+                                    "
+                                    alt="Wheel Image"
+                                    style="height: 200px; width: auto;"
                                 />
                             </td>
                             <td style="text-align: left;">
                                 <strong>${rpo}</strong>
-                                <div class="rpo-description" data-code="${rpo}" margin-top: 4px;"></div>
+                                <div class="rpo-description" data-code="${rpo}" style="margin-top: 4px;"></div>
                             </td>
                         `;
                         tableBody.appendChild(row);
                     });
                     document.querySelectorAll('.rpo-description').forEach(element => {
                         const rpoCode = element.getAttribute('data-code');
+                        
                         if (rpoDescriptionCache[rpoCode]) {
                             element.innerHTML = rpoDescriptionCache[rpoCode];
                             return;
                         }
-                        fetch(`https://decoderpo.com/api/getRPODescription/${rpoCode}`)
-                        .then(response => {
-                            if (!response.ok) throw new Error('Not found');
-                            return response.json();
-                        })
-                        .then(data => {
-                            const base64 = data[0];
-                            const decoded = atob(base64);
-                            const lines = JSON.parse(decoded);
-                            if (Array.isArray(lines) && lines.length > 0) {
-                                const html = lines.map(line => `<div>${line}</div>`).join('');
-                                element.innerHTML = html;
-                                rpoDescriptionCache[rpoCode] = html;
 
-                                if (decoded.toLowerCase().includes('forged')) {
-                                    const row = element.closest('tr');
-                                    row.style.border = '4px solid #494949';
-                                }
-                                if (decoded.toLowerCase().includes('carbon')) {
-                                    const row = element.closest('tr');
-                                    row.style.border = '4px solid #242424';
-                                }
+                        const applyFormatting = (desc) => {
+                            let lines = Array.isArray(desc) ? desc : [desc];
+                            const formattedLines = lines.map(line =>
+                                line
+                                .replace(/forged/gi, '<strong>forged</strong>')
+                                .replace(/carbon fiber/gi, '<strong>carbon fiber</strong>')
+                            );
+                            const html = formattedLines.map(line => `<div>${line}</div>`).join('');
+                            element.innerHTML = html;
+                            rpoDescriptionCache[rpoCode] = html;
+
+                            const row = element.closest('tr');
+                            const descText = lines.join(' ').toLowerCase();
+                            if (descText.includes('forged')) {
+                                row.style.border = '4px solid #494949';
                             }
-                        })
-                        .catch(() => {
-                            element.textContent = 'Not found';
-                            rpoDescriptionCache[rpoCode] = 'Not found';
-                        });
+                            if (descText.includes('carbon')) {
+                                row.style.border = '4px solid #242424';
+                            }
+                        };
+
+                        if (rpoDescriptions[rpoCode]) {
+                            applyFormatting(rpoDescriptions[rpoCode]);
+                        } else {
+                            // fallback to API
+                            fetch(`https://decoderpo.com/api/getRPODescription/${rpoCode}`)
+                            .then(resp => {
+                                if (!resp.ok) throw new Error('Not found');
+                                return resp.json();
+                            })
+                            .then(data => {
+                                const decoded = atob(data[0]);
+                                const lines = JSON.parse(decoded);
+                                applyFormatting(lines);
+                            })
+                            .catch(() => {
+                                element.textContent = 'Not found';
+                                rpoDescriptionCache[rpoCode] = 'Not found';
+                            });
+                        }
                     });
                 }
             });
 
-            const initialModel = url.searchParams.get('model')?.toUpperCase();
-            if (initialModel && modelRpoMap[initialModel]) {
-                modelSelect.value = initialModel;
-                modelSelect.dispatchEvent(new Event('change'));
-            }
+            loadRpoDescriptions().then(() => {
+                const initialModel = url.searchParams.get('model')?.toUpperCase();
+                if (initialModel && modelRpoMap[initialModel]) {
+                    modelSelect.value = initialModel;
+                    modelSelect.dispatchEvent(new Event('change'));
+                }
+            });
         });
-        
-        // SCROLL SYNC
-        const topScroll = document.getElementById('top-scroll-wrapper');
-        const bottomScroll = document.getElementById('bottom-scroll-wrapper');
-
-        if (topScroll && bottomScroll) {
-            let isSyncingTop = false;
-            let isSyncingBottom = false;
-
-            topScroll.addEventListener('scroll', () => {
-                if (!isSyncingTop) {
-                isSyncingBottom = true;
-                bottomScroll.scrollLeft = topScroll.scrollLeft;
-                }
-                isSyncingTop = false;
-            });
-
-            bottomScroll.addEventListener('scroll', () => {
-                if (!isSyncingBottom) {
-                isSyncingTop = true;
-                topScroll.scrollLeft = bottomScroll.scrollLeft;
-                }
-                isSyncingBottom = false;
-            });
-
-            const table = document.querySelector('.table-veh');
-            if (table) {
-                requestAnimationFrame(() => {
-                    document.getElementById('top-scroll').style.width = table.scrollWidth + 'px';
-                });
-            }
-        }
     </script>
 </body>
 </html>

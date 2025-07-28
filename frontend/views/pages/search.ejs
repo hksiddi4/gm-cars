@@ -257,24 +257,54 @@
       }
 
       document.addEventListener('DOMContentLoaded', () => {
-        document.querySelectorAll('.rpo-description').forEach(function(element) {
-          const rpoCode = element.getAttribute('data-code');
-          fetch(`https://decoderpo.com/api/getRPODescription/${rpoCode}`)
-            .then(response => {
-              if (!response.ok) throw new Error('Not found');
-              return response.json();
-            })
-            .then(data => {
-              const base64 = data[0];
-              const decoded = atob(base64);
-              const lines = JSON.parse(decoded);
-              if (Array.isArray(lines) && lines.length > 0) {
-                element.innerHTML = lines.map(line => `<div>${line}</div>`).join('');
-              }
-            })
-            .catch(() => {
-              element.textContent = 'Not found';
+        let rpoDescriptions = {};
+        const rpoDescriptionCache = {};
+
+        function loadRpoDescriptions() {
+          const cached = sessionStorage.getItem('rpoCodes');
+          if (cached) {
+            const data = JSON.parse(cached);
+            data.allRpoCodes.forEach(([code, desc]) => {
+              rpoDescriptions[code] = desc;
             });
+            return Promise.resolve();
+          } else {
+            return fetch('https://decoderpo.com/static/rpoCodes.json')
+              .then(res => res.json())
+              .then(data => {
+                sessionStorage.setItem('rpoCodes', JSON.stringify(data));
+                data.allRpoCodes.forEach(([code, desc]) => {
+                  rpoDescriptions[code] = desc;
+                });
+              })
+              .catch(err => {
+                console.error('Failed to load RPO data:', err);
+              });
+          }
+        }
+
+        loadRpoDescriptions().then(() => {
+          document.querySelectorAll('.rpo-description').forEach(element => {
+          const rpoCode = element.getAttribute('data-code');
+          
+          if (rpoDescriptions[rpoCode]) {
+            element.innerHTML = `<div>${rpoDescriptions[rpoCode]}</div>`;
+          } else {
+            fetch(`https://decoderpo.com/api/getRPODescription/${rpoCode}`)
+              .then(resp => {
+                if (!resp.ok) throw new Error('Not found');
+                return resp.json();
+              })
+              .then(data => {
+                const decoded = atob(data[0]);
+                const lines = JSON.parse(decoded);
+                element.innerHTML = lines.map(line => `<div>${line}</div>`).join('');
+              })
+              .catch(() => {
+                element.textContent = 'Not found';
+              });
+          }
+        });
         });
 
         const carouselImage = document.getElementById('carousel-image');

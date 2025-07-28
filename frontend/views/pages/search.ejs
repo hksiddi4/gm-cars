@@ -174,7 +174,7 @@
             <!-- Window Sticker -->
             <div id="sticker-container" style="flex: 1;">
               <% if (vin.country === 'MEXICO') { %>
-                <div style="display: flex; justify-content: center; align-items: center;"
+                <div style="display: flex; justify-content: center; align-items: center;">
                   <h2>No window sticker available</h2>
                 </div>
               <% } else { %>
@@ -226,8 +226,8 @@
         <% } else { %>
           <h1>No VIN data found</h1>
         <% } %>
+      <%- include('../partials/footer'); %>
     </div>
-    <%- include('../partials/footer'); %>
     <script>
       function handleMouseDown(event) {
         startX = event.clientX;

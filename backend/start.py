@@ -51,24 +51,24 @@ def search_inv():
             row['rpo_codes'] = row['rpo_codes'].split(', ')
     return jsonify(viewTable)
 
-# Working on replacing
-@app.route('/api/rarity', methods=['POST'])
-def unique():
-    data = request.json
-    options = data.get('Options')
+# Replace with better implementation
+# @app.route('/api/rarity', methods=['POST'])
+# def unique():
+#     data = request.json
+#     options = data.get('Options')
 
-    if options is not None:
-        formatted_options = json.dumps(options)
-        try:
-            sqlStatement = f"SELECT COUNT(*) AS Count FROM gm WHERE JSON_UNQUOTE(JSON_EXTRACT(allJson, '$.Options')) = '{formatted_options}'"
-            conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
-            response = execute_read_query(conn, sqlStatement)
-            close_connection(conn)
-            return response
-        except ValueError:
-            return jsonify({'error': 'Invalid value'}), 400
-    else:
-        return jsonify({'error': 'No value provided'}), 400
+#     if options is not None:
+#         formatted_options = json.dumps(options)
+#         try:
+#             sqlStatement = f"SELECT COUNT(*) AS Count FROM gm WHERE JSON_UNQUOTE(JSON_EXTRACT(allJson, '$.Options')) = '{formatted_options}'"
+#             conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
+#             response = execute_read_query(conn, sqlStatement)
+#             close_connection(conn)
+#             return response
+#         except ValueError:
+#             return jsonify({'error': 'Invalid value'}), 400
+#     else:
+#         return jsonify({'error': 'No value provided'}), 400
 
 @app.route('/vehicles', methods=['GET'])
 def sort_price():
@@ -417,6 +417,37 @@ def color_stats():
 
     else:
         return jsonify([])
+    
+@app.route('/wheels', methods=['GET'])
+def wheel_stats():
+    model = request.args.get('model', '').strip() or None
+
+    conditions = []
+    if model:
+        if model == "CORVETTE (ALL)":
+            corvette_models = ["CORVETTE STINGRAY", "CORVETTE STINGRAY W/ Z51", "CORVETTE GRAND SPORT", "CORVETTE E-RAY", "CORVETTE Z06", "CORVETTE ZR1"]
+            corvette_list = ", ".join(f"'{m}'" for m in corvette_models)
+            conditions.append(f"model IN ({corvette_list})")
+        else:
+            conditions.append(f"model = '{model}'")
+
+    where_clause = f"WHERE {' AND '.join(conditions)}" if conditions else ""
+
+    distinct_sql = f"""
+        SELECT DISTINCT model
+        FROM Vehicles
+        {where_clause}
+    """
+
+    conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
+    distinct_results = execute_read_query(conn, distinct_sql)
+    model_list = sorted(set(r['model'] for r in distinct_results if r['model']))
+
+    close_connection(conn)
+
+    return jsonify({
+        'model': model_list,
+    })
 
 #========================= View Pages #=========================
 

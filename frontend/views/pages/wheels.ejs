@@ -14,11 +14,16 @@
         </div>
         <div class="d-flex flex-wrap gap-2 mb-3">
             <div class="d-flex flex-wrap gap-2 mb-3 w-100">
+                <%
+                    const hasCorvette = model_list.some(m => m.startsWith('CORVETTE'));
+                    const combinedModels = hasCorvette ? ['CORVETTE (ALL)', ...model_list] : model_list;
+                    combinedModels.sort((a, b) => a.localeCompare(b));
+                %>
                 <div class="statsDropdown">
-                    <select id="filterModel" class="form-select small-dropdown <%= selectedModel ? 'active-filter' : '' %>">
+                    <select id="filterModel" class="form-select small-dropdown">
                         <option value="">Model</option>
                         <% combinedModels.forEach(m => { %>
-                            <option value="<%= m %>" <%= selectedModel === m ? 'selected' : '' %>><%= m %></option>
+                            <option value="<%= m %>"><%= m %></option>
                         <% }) %>
                     </select>
                 </div>
@@ -41,44 +46,152 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <% wheel_data.forEach(function(data) { %>
-                        <tr>
-                            <td scope="row"><img id="sample" src="../../img/extColors/<%= data.rpo_code ? data.rpo_code : 'default' %>.png" width="20" height="20" style="margin-right: 8px; border-radius: 50%;" onerror="this.onerror=null; this.src='../../img/extColors/default.png';"></td>
-                            <td scope="row"><%= data.rpo %></td>
-                        </tr>
-                    <% }) %>
                 </tbody>
             </table>
         </div>
-    </div>
-    <%- include('../partials/footer'); %>
+        <%- include('../partials/footer'); %>
     </div>
     <script>
+        const rpoDescriptionCache = {};
+        const modelRpoMap = {
+            'CAMARO': [
+                'REG', 'SGE', '5K9', '57V', '56F', 'SHH', 'SRI', '58E', 'SHL', '56H', 'RQ9',
+                'RTJ', '56R', '5JX', '57S', '56W', 'RQA', '56S', 'RTH', '56V', 'Q7F', '56Y',
+                'SKW', '56M', 'WR1', '5JW', '57W', '56K', 'Q7G', '56Z', 'RSK', 'RTQ', 'PKJ'
+            ],
+            'CT4': [
+                '', '', '', '', '', '', '', '', '', '', '',
+                '', '', '', '', '', '', '', '', '', '', '',
+                '', '', '', '', '', '', '', '', '', '', '',
+            ],
+            'CT5': [
+                '', '', '', '', '', '', '', '', '', '', '',
+                '', '', '', '', '', '', '', '', '', '', '',
+                '', '', '', '', '', '', '', '', '', '', '',
+            ],
+            'CT6': [
+                '', '', '', '', '', '', '', '', '', '', '',
+                '', '', '', '', '', '', '', '', '', '', '',
+                '', '', '', '', '', '', '', '', '', '', '',
+            ],
+            'ESCALADE IQ': [
+                'RDP', 'SF3'
+            ],
+            'CORVETTE ZR1': [
+                'SOJ', 'SOG', 'SOF', 'SOH', 'SU1'
+            ],
+            'CORVETTE Z06': [
+                'SOE', 'SOA', 'SRK', 'SRN', 'STE', 'STX', '5DK', '5DH', 'ROY', 'ROZ', 'STZ',
+                '5DH'
+            ],
+            'CORVETTE E-RAY': [
+                'ROU', 'SON', 'ROX', 'SOM', 'ROY', 'ROZ', 'STZ'
+            ],
+            'CORVETTE STINGRAY': [
+                '5DG', '5DO', 'Q8P', 'Q8Q', 'Q9Y', 'Q9O', 'Q99', 'Q9I', 'Q9A', '5DG', 'QE5'
+            ],
+        };
         document.addEventListener('DOMContentLoaded', function () {
-            const modelSelect = document.getElementById('filterModel');   
-            modelSelect.addEventListener('change', function () {
-                const selectedValue = this.value;
-                const url = new URL(window.location.href);
-                url.searchParams.set('category', selectedValue);
-                window.location.href = url.toString();
-            });
-            const filters = ['filterModel'];
+            const modelSelect = document.getElementById('filterModel');
+            const tableBody = document.querySelector('#wheelTable tbody');
             const url = new URL(window.location.href);
 
-            filters.forEach(id => {
-                const el = document.getElementById(id);
-                if (!el) return;
-                el.addEventListener('change', function () {
-                    const value = this.value;
-                    const paramMap = {
-                        filterModel: 'model',
-                    };
-                    const param = paramMap[id];
-                    if (value) url.searchParams.set(param, value);
-                    else url.searchParams.delete(param);
-                })
-                window.location.href = url.toString();
+            modelSelect.addEventListener('change', function () {
+                const selected = this.value?.toUpperCase();
+
+                if (selected) url.searchParams.set('model', selected);
+                else url.searchParams.delete('model');
+                history.replaceState(null, '', url.toString());
+
+                tableBody.innerHTML = '';
+                let modelLower = selected.toLowerCase().replace(/ /g, '-').replace('e-ray', 'eray');
+                if (selected === 'CORVETTE STINGRAY') {
+                    modelLower = 'corvette';
+                }
+                const category = modelLower.startsWith('corvette') ? 'corvette' : modelLower;
+                const year = (selected === 'ESCALADE IQ' || selected === 'CORVETTE ZR1' || selected === 'CORVETTE Z06' || selected === 'CORVETTE STINGRAY') ? '2025' : '2024';
+                const cadillacModels = ['ESCALADE IQ', 'CT4', 'CT5', 'CT6'];
+                const manufacturer = cadillacModels.includes(selected) ? 'cadillac' : 'chevrolet';
+                if (modelRpoMap[selected]) {
+                    modelRpoMap[selected].forEach(rpo => {
+                        const row = document.createElement('tr');
+                        const imgRpo = (rpo === '5K9') ? '57V' : rpo;
+                        row.innerHTML = `
+                            <td>
+                                <img 
+                                src="https://www.${manufacturer}.com/bypass/master_tools/ddp/gmna/assets/US/${manufacturer}/${year}/${category}/${modelLower}/small_byo3/${imgRpo}.jpg" 
+                                alt="Wheel Image" 
+                                style="height: 200px; width: auto;" 
+                                onerror="
+                                    const isEscalade = '${selected}' === 'ESCALADE IQ';
+                                    if (isEscalade) {
+                                        this.onerror = null;
+                                        this.src = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
+                                        this.title = 'Image Generation not supported for this RPO';
+                                    } else if (!this.dataset.retryBoyo3) {
+                                        this.dataset.retryBoyo3 = 'true';
+                                        this.src = this.src.replace('large_byo', 'large_byo3');
+                                    } else if (!this.dataset.retryYear) {
+                                        this.dataset.retryYear = 'true';
+                                        this.src = this.src.replace('/2024/', '/2023/').replace('large_byo3', 'large_byo');
+                                    } else {
+                                        this.onerror = null;
+                                        this.src = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
+                                        this.title = 'Image Generation not supported for this RPO';
+                                    }
+                                "
+                                />
+                            </td>
+                            <td style="text-align: left;">
+                                <strong>${rpo}</strong>
+                                <div class="rpo-description" data-code="${rpo}" margin-top: 4px;"></div>
+                            </td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                    document.querySelectorAll('.rpo-description').forEach(element => {
+                        const rpoCode = element.getAttribute('data-code');
+                        if (rpoDescriptionCache[rpoCode]) {
+                            element.innerHTML = rpoDescriptionCache[rpoCode];
+                            return;
+                        }
+                        fetch(`https://decoderpo.com/api/getRPODescription/${rpoCode}`)
+                        .then(response => {
+                            if (!response.ok) throw new Error('Not found');
+                            return response.json();
+                        })
+                        .then(data => {
+                            const base64 = data[0];
+                            const decoded = atob(base64);
+                            const lines = JSON.parse(decoded);
+                            if (Array.isArray(lines) && lines.length > 0) {
+                                const html = lines.map(line => `<div>${line}</div>`).join('');
+                                element.innerHTML = html;
+                                rpoDescriptionCache[rpoCode] = html;
+
+                                if (decoded.toLowerCase().includes('forged')) {
+                                    const row = element.closest('tr');
+                                    row.style.border = '4px solid #494949';
+                                }
+                                if (decoded.toLowerCase().includes('carbon')) {
+                                    const row = element.closest('tr');
+                                    row.style.border = '4px solid #242424';
+                                }
+                            }
+                        })
+                        .catch(() => {
+                            element.textContent = 'Not found';
+                            rpoDescriptionCache[rpoCode] = 'Not found';
+                        });
+                    });
+                }
             });
+
+            const initialModel = url.searchParams.get('model')?.toUpperCase();
+            if (initialModel && modelRpoMap[initialModel]) {
+                modelSelect.value = initialModel;
+                modelSelect.dispatchEvent(new Event('change'));
+            }
         });
         
         // SCROLL SYNC

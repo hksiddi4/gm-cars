@@ -120,7 +120,7 @@
                                 <td scope="row"><%= data.rank %></td>
                                 <td scope="row" style="white-space: nowrap; text-align: left;">
                                     <!-- Apply color RPO on SQL to Fix grouped colors -->
-                                    <img id="sample" src="../../img/extColors/<%= data.rpo_code ? data.rpo_code : 'default' %>.png" alt="<%= data.rpo_code %>" width="20" height="20" style="margin-right: 8px; border-radius: 50%;" onerror="this.onerror=null; this.src='../../img/extColors/default.png';">
+                                    <img id="sample" src="../../img/extColors/<%= data.rpo_code ? data.rpo_code : 'default' %>.png" alt="Color Code: <%= data.rpo_code %>" width="20" height="20" style="margin-right: 8px; border-radius: 50%;" onerror="this.onerror=null; this.src='../../img/extColors/default.png';">
                                     <%= data.rpo_code %>
                                 </td>
                                 <td scope="row"><%= data.total_count %></td>

@@ -22,24 +22,21 @@
 
 .shimmer {
     animation: shimmer 1.5s infinite linear;
-    background: linear-gradient(to right, #444 8%, #555 18%, #444 33%);
-    background-size: 1000px 100%;
-    position: relative;
-    overflow: hidden;
+    background: linear-gradient(to left, #444 8%, #555 18%, #444 33%);
+    background-size: 200% 100%;
     background-repeat: no-repeat;
     will-change: background-position;
 }
 
 .shimmer-box {
-    width: 100%;
-    height: 100%;
-    display: inline-block;
+    width: 100px;
+    height: 60px;
     border-radius: 4px;
 }
 
 @keyframes shimmer {
-    0% { background-position: -1000px 0; }
-    100% { background-position: 1000px 0; }
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
 }
 
 #site-title {
@@ -451,6 +448,27 @@ img {
 #image-gallery img {
     scroll-snap-align: center;
     display: inline-block;
+}
+
+#image-gallery-shimmer {
+  display: flex;
+  gap: 5px;
+  overflow: hidden;
+  width: 100%;
+  padding: 10px 0;
+  justify-content: center;
+  align-items: center;
+}
+
+#image-gallery-shimmer .shimmer-box {
+  width: 100px;
+  height: 60px;
+  border-radius: 4px;
+  animation: shimmer 2s infinite linear;
+  background: linear-gradient(to left, #444 8%, #555 18%, #444 33%);
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  will-change: background-position;
 }
 
 #carousel-container {

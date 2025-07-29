@@ -224,7 +224,11 @@ img {
     overflow: visible;
 }
 
-.form-select.small-dropdown.active-filter {
+.form-select.small-dropdown option {
+    font-weight: normal;
+}
+
+.form-select.small-dropdown option:checked {
     font-weight: bold;
 }
 

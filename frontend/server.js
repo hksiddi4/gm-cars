@@ -9,7 +9,7 @@ app.use(express.json());
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
 
-const baseURL = 'http://backend:5000'
+const baseURL = 'http://192.168.1.111:5000'
 
 let maintenanceMode = false; // Edit this to toggle maintenance mode
 

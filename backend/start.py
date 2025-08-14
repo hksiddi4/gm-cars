@@ -135,7 +135,7 @@ def sort_price():
             "X56": ["modelYear = '2024'", "model = 'CAMARO'", "body = 'COUPE'", "trim = 'ZL1'", "transmission_type = 'M6'", "color_name = 'RIPTIDE BLUE METALLIC'", "msrp = '89185'"],
             "A1Z": ["model = 'CAMARO'", "body = 'COUPE'", "trim = 'ZL1'"],
             "A1Y": ["model = 'CAMARO'", "body = 'COUPE'", "trim IN ('1SS', '2SS')"],
-            "A1X": ["modelYear IN ('2020', '2021')", "model = 'CAMARO'", "body = 'COUPE'", "trim IN ('1LT', '2LT', '3LT')"],
+            "A1X": ["modelYear IN ('2019', '2020', '2021')", "model = 'CAMARO'", "body = 'COUPE'", "trim IN ('1LT', '2LT', '3LT')"],
             "PEH": ["modelYear = '2020'", "model = 'CAMARO'", "body = 'COUPE'", "trim IN ('2SS', 'ZL1')", "transmission_type = 'A10'", "color_name = 'BLACK'"],
             "Z51": ["model = 'CORVETTE STINGRAY'"],
             "ZCR": ["model = 'CORVETTE STINGRAY'", "modelYear = '2022'", "trim = '3LT'", "(color_name = 'HYPERSONIC GRAY METALLIC' OR color_name = 'ACCELERATE YELLOW METALLIC')"],

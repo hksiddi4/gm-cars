@@ -1,22 +1,42 @@
 version: "3.8"
 services:
   frontend:
-    build: ./frontend
-    ports:
-      - "192.168.1.1:80:80"
-    depends_on:
-      - backend
+    build: /mnt/HKS/Apps/GM-Vehicles/frontend
     restart: always
     networks:
-      - front-macvlan
       - app-network
 
   backend:
-    build: ./backend
-    ports:
-      - "5000:5000"
+    build: /mnt/HKS/Apps/GM-Vehicles/backend
     env_file:
-      - .env
+      - /mnt/HKS/Apps/GM-Vehicles/backend/.env
+    restart: always
+    networks:
+      - app-network
+
+  nginx:
+    image: nginx:stable
+    volumes:
+      - /mnt/HKS/Apps/GM-Vehicles/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - /mnt/HKS/Apps/GM-Vehicles/certbot/conf:/etc/letsencrypt
+      - /mnt/HKS/Apps/GM-Vehicles/certbot/www:/var/www/certbot
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - frontend
+      - backend
+    restart: always
+    networks:
+      - app-network
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+      - /mnt/HKS/Apps/GM-Vehicles/certbot/conf:/etc/letsencrypt
+      - /mnt/HKS/Apps/GM-Vehicles/certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; certbot renew --webroot -w /var/www/certbot; done'"
     restart: always
     networks:
       - app-network
@@ -24,5 +44,3 @@ services:
 networks:
   app-network:
     driver: bridge
-  front-macvlan:
-    external: true

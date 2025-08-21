@@ -233,6 +233,8 @@ SELECT * FROM Orders;
 		JSON_UNQUOTE(JSON_EXTRACT(allJson, '$.order_number')) AS order_number,
 		COUNT(*) AS occurrences
 	FROM staging_allGM GROUP BY order_number HAVING occurrences > 1;
+    
+    select * from Orders where order_number = 'FCNXBX';
 
 	SELECT COUNT(vin) FROM Vehicles;
 
@@ -655,3 +657,19 @@ SELECT
 FROM FilteredVehicles
 GROUP BY `year_month`, modelYear, model, body, trim, engine_type, transmission_type
 ORDER BY `year_month` DESC, modelYear DESC, model, body, trim, engine_type, transmission_type;
+
+UPDATE Vehicles v
+JOIN Options o ON v.vehicle_id = o.vehicle_id
+SET v.transmission_id = 3
+WHERE o.option_code = 'A1X'
+  AND v.transmission_id = 2;
+  
+  SELECT v.vehicle_id,
+       v.vin,
+       v.transmission_id,
+       o.option_code
+FROM Vehicles v
+JOIN Options o 
+    ON v.vehicle_id = o.vehicle_id
+WHERE o.option_code = 'A1X'
+  AND v.transmission_id = 2;

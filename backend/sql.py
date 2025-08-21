@@ -22,12 +22,15 @@ def create_connection(host_name, user_name, user_password, db_name):
         print(f"Unsuccessful DB Connection, the error: {e} occurred.")
     return connection
 
-def execute_read_query(connection, query):
+def execute_read_query(connection, query, params=None):
     result = None
     cursor = None
     try:
         cursor = connection.cursor(pymysql.cursors.DictCursor)
-        cursor.execute(query)
+        if params:
+            cursor.execute(query, params)
+        else:
+            cursor.execute(query)
         result = cursor.fetchall()
     except MySQLError as e:
         print(f"The error {e} occurred.")

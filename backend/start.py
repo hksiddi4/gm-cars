@@ -28,28 +28,59 @@ def search_inv():
         LEFT JOIN MMC_Codes mc ON o.mmc_code_id = mc.mmc_code_id
     """
     sqlStatement = f"""
-        SELECT v.vin, v.modelYear, v.model, v.body, v.trim, e.engine_type, t.transmission_type, 
-            d.drivetrain_type, c.color_name, v.msrp, o.country, o.order_number, mc.mmc_code, 
-            UPPER(DATE_FORMAT(o.creation_date, '%W, %d %M %Y')) AS formatted_date, 
-            dl.dealer_name, dl.location, 
-            COALESCE(GROUP_CONCAT(DISTINCT se.special_desc SEPARATOR ', '), 'NA') AS special_descs,
-            GROUP_CONCAT(DISTINCT opt.option_code SEPARATOR ', ') AS rpo_codes
+        SELECT v.vin, v.modelYear, v.model, v.body, v.trim, e.engine_type, 
+               t.transmission_type, d.drivetrain_type, c.color_name, v.msrp, 
+               o.country, o.order_number, mc.mmc_code, 
+               UPPER(DATE_FORMAT(o.creation_date, '%%W, %%d %%M %%Y')) AS formatted_date, 
+               dl.dealer_name, dl.location,
+               se.special_desc,
+               opt.option_code
         FROM Vehicles v
         {join_clause}
-        WHERE v.vin = '{vin}' 
-        GROUP BY v.vin, v.modelYear, v.model, v.body, v.trim, e.engine_type, t.transmission_type, 
-                d.drivetrain_type, c.color_name, v.msrp, o.country, o.order_number, mc.mmc_code, 
-                formatted_date, dl.dealer_name, dl.location
-        LIMIT 1
+        WHERE v.vin = %s
     """
     conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
-    viewTable = execute_read_query(conn, sqlStatement)
+    rows = execute_read_query(conn, sqlStatement, (vin,))
     close_connection(conn)
-    
-    for row in viewTable:
-        if 'rpo_codes' in row:
-            row['rpo_codes'] = row['rpo_codes'].split(', ')
-    return jsonify(viewTable)
+
+    if not rows:
+        return jsonify([])
+
+    # Aggregate results
+    vehicle = {}
+    rpo_codes = []
+    special_descs = []
+
+    for row in rows:
+        if not vehicle:  # fill in once
+            vehicle = {
+                'vin': row['vin'],
+                'modelYear': row['modelYear'],
+                'model': row['model'],
+                'body': row['body'],
+                'trim': row['trim'],
+                'engine_type': row['engine_type'],
+                'transmission_type': row['transmission_type'],
+                'drivetrain_type': row['drivetrain_type'],
+                'color_name': row['color_name'],
+                'msrp': row['msrp'],
+                'country': row['country'],
+                'order_number': row['order_number'],
+                'mmc_code': row['mmc_code'],
+                'formatted_date': row['formatted_date'],
+                'dealer_name': row['dealer_name'],
+                'location': row['location']
+            }
+
+        if row['option_code']:
+            rpo_codes.append(row['option_code'])
+        if row['special_desc']:
+            special_descs.append(row['special_desc'])
+
+    vehicle['rpo_codes'] = sorted(set(rpo_codes))
+    vehicle['special_descs'] = ', '.join(sorted(set(special_descs))) if special_descs else 'NA'
+
+    return jsonify([vehicle])
 
 # Replace with better implementation
 # @app.route('/api/rarity', methods=['POST'])

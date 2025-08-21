@@ -1,11 +1,7 @@
 version: "3.8"
 services:
   backend:
-    image: python:3.9-slim
-    volumes:
-      - /mnt/HKS/Apps/GM-Vehicles/backend:/app
-    working_dir: /app
-    command: gunicorn -w 4 -b 0.0.0.0:5000 start:app --preload
+    build: /mnt/HKS/Apps/GM-Vehicles/backend
     networks:
       - app-network
 

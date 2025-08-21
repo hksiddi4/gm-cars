@@ -14,7 +14,7 @@ services:
     image: nginx:stable
     networks:
       front-macvlan:
-        ipv4_address: 192.168.1.70
+        ipv4_address: 192.168.1.200
       app-network: {}
     volumes:
       - ./nginx:/etc/nginx/conf.d:ro

@@ -331,7 +331,7 @@
         let trim = mmc[mmc_code] || '';
 
         // Fix 2022+ 1LE mirrors
-        if (model === 'CAMARO' && modelYear >= 2022 && (options.includes('A1Y') || options.includes('A1Z'))) {
+        if (model === 'CAMARO' && modelYear >= 2020 && (options.includes('A1Y') || options.includes('A1Z'))) {
           options = options.filter(code => code !== 'DD1' && code !== 'DG7');
         }
         

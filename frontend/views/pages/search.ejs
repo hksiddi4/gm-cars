@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <%- include('../partials/head'); %>
-    <% const vin = vin_data[0]; %>
-    <title>
-      <%= (vin.modelYear ? "'" + vin.modelYear.toString().slice(-2) : 'N/A') %>
-      <%= vin.model || 'N/A' %> 
-      <%= vin.trim || 'N/A' %> 
-    </title>
+  <%- include('../partials/analytics'); %>
+  <%- include('../partials/head'); %>
+  <% const vin = vin_data[0]; %>
+  <title>
+    <%= (vin.modelYear ? "'" + vin.modelYear.toString().slice(-2) : 'N/A') %>
+    <%= vin.model || 'N/A' %> 
+    <%= vin.trim || 'N/A' %> 
+  </title>
 </head>
-<%- include('../partials/analytics'); %>
 <body>
   <%- include('../partials/header'); %>
     <div class="custom-container">

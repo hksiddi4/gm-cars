@@ -607,6 +607,21 @@
         });
       });
     </script>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const vin = "<%= vin.vin %>";
+        if (vin && typeof gtag === "function") {
+          gtag('event', 'view_vin', {
+            event_category: 'Vehicle',
+            event_label: vin,
+            vin: vin,
+            year: "<%= vin.modelYear %>",
+            model: "<%= vin.model %>",
+            trim: "<%= vin.trim %>"
+          });
+        }
+      });
+    </script>
 </body>
 
 </html>

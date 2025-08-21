@@ -268,6 +268,42 @@
         <%- include('../partials/footer'); %>
     </div>
     <script>
+          function sendFiltersToGA() {
+            if (typeof gtag !== "function") return;
+
+            const selectedFilters = {
+                model: [],
+                year: document.getElementById("yearSelect")?.value || "",
+                body: document.getElementById("bodySelect")?.value || "",
+                trim: document.getElementById("trimSelect")?.value || "",
+                engine: document.getElementById("engineSelect")?.value || "",
+                trans: document.getElementById("transSelect")?.value || "",
+                color: document.getElementById("colorSelect")?.value || "",
+                country: document.getElementById("countrySelect")?.value || "",
+                rpo: document.getElementById("rpoSelect")?.value || "",
+                limit: document.getElementById("limitSelect")?.value || ""
+            };
+
+            document.querySelectorAll("#filterForm input[type='checkbox']:checked").forEach(cb => {
+                selectedFilters.model.push(cb.value);
+            });
+
+            gtag("event", "filter_applied", {
+                event_category: "Vehicles",
+                event_label: JSON.stringify(selectedFilters),
+                ...selectedFilters
+            });
+        }
+
+        document.getElementById("filterForm")?.addEventListener("submit", function(e) {
+            sendFiltersToGA();
+        });
+        
+        ["yearSelect","bodySelect","trimSelect","engineSelect","transSelect","colorSelect","countrySelect","rpoSelect","limitSelect"]
+            .forEach(id => {
+                document.getElementById(id)?.addEventListener("change", sendFiltersToGA);
+            });
+
         let startX;
         let selectedOrder = '';
 

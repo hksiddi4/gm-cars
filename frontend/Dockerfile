@@ -4,4 +4,4 @@ COPY package*.json ./
 RUN npm install -g nodemon && npm install
 COPY . .
 EXPOSE 80
-CMD ["nodemon", "server.js"]
+CMD ["node", "server.js"]

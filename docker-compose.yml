@@ -8,8 +8,6 @@ services:
 
   backend:
     build: /mnt/HKS/Apps/GM-Vehicles/backend
-    env_file:
-      - /mnt/HKS/Apps/GM-Vehicles/backend/.env
     restart: always
     networks:
       - app-network

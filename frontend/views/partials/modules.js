@@ -1,19 +1,34 @@
 const colorMap = {
+  "ROSWELL GREEN METALLIC": "G4Z",
+  "BAEGE METALLIC": "BAEGE METALLIC",
+  "COPPERTINO METALLIC": "COPPERTINO METALLIC",
+  "ABALONE WHITE": "ABALONE WHITE",
+  "SEYCHELLES METALLIC": "SEYCHELLES METALLIC",
+  "SEEKER METALLIC": "SEEKER METALLIC",
+  "KIMONO METALLIC": "KIMONO METALLIC",
+  "CHARTREUSE METALLIC": "CHARTREUSE METALLIC",
+  "CHARTREUSE MATTE": "CHARTREUSE MATTE",
+  "HIGH VOLTAGE TINT": "HIGH VOLTAGE TINT",
+  "TACTICAL TINT": "TACTICAL TINT",
+  "HYPERSONIC METALLIC": "HYPERSONIC METALLIC",
+  "BARB WIRE": "BARB WIRE",
+  "BLACK MEETS KETTLE": "BLACK MEETS KETTLE",
   "ACCELERATE YELLOW METALLIC": "GD0",
   "AMPLIFY ORANGE TINTCOAT": "GC5",
+  "CORVETTE RACING YELLOW TINTCOAT": "GC6",
   "ARCTIC WHITE": "G8G",
   "ARGENT SILVER METALLIC": "GXD",
   "BLACK DIAMOND TRICOAT": "GLK",
   "BLACK RAVEN": "GBA",
   "BLACK": "GBA",
   "BLADE SILVER METALLIC": "GAN",
-  "BLAZE METALLIC": "GCF",
+  "BLAZE ORANGE METALLIC": "GCF",
   "CACTI GREEN": "GVR",
   "CAFFEINE METALLIC": "G48",
   "CARBON FLASH METALLIC": "GAR",
   "CERAMIC MATRIX GRAY METALLIC": "G9F",
   "COASTAL BLUE METALLIC": "GJV",
-  "COMPETITION YELLOW TINTCOAT METALLIC": "GBK",
+  "COMPETITION YELLOW TINTCOAT": "GBK",
   "CRUSH": "G16",
   "CRYSTAL WHITE TRICOAT": "G1W",
   "CYBER YELLOW METALLIC": "GCP",
@@ -28,7 +43,7 @@ const colorMap = {
   "HYPERSONIC GRAY METALLIC": "GA7",
   "HYSTERIA PURPLE METALLIC": "GXL",
   "INFRARED TINTCOAT": "GSK",
-  "LONG BEACH RED METALLIC": "G1E",
+  "LONG BEACH RED METALLIC TINTCOAT": "G1E",
   "MANHATTAN NOIR METALLIC": "GCI",
   "MAVERICK NOIR FROST": "GNW",
   "MERCURY SILVER METALLIC": "GKA",
@@ -36,7 +51,7 @@ const colorMap = {
   "MIDNIGHT STEEL METALLIC": "GXU",
   "NITRO YELLOW METALLIC": "GCP",
   "PANTHER BLACK MATTE": "GNW",
-  "PANTHER BLACK METALLIC": "GLK",
+  "PANTHER BLACK METALLIC TINTCOAT": "GLK",
   "RADIANT RED TINTCOAT": "GNT",
   "RADIANT SILVER METALLIC": "GAN",
   "RALLY GREEN METALLIC": "GJ0",
@@ -52,7 +67,7 @@ const colorMap = {
   "SATIN STEEL GRAY METALLIC": "G9K",
   "SATIN STEEL METALLIC": "G9K",
   "SEA WOLF GRAY TRICOAT": "GXA",
-  "SEBRING ORANGE": "G26",
+  "SEBRING ORANGE TINTCOAT": "G26",
   "SHADOW GRAY METALLIC": "GJI",
   "SHADOW METALLIC": "GJI",
   "SHARKSKIN METALLIC": "GXD",
@@ -67,25 +82,119 @@ const colorMap = {
   "WAVE METALLIC": "GKK",
   "WHITE PEARL METALLIC TRICOAT": "G1W",
   "WILD CHERRY TINTCOAT": "GSK",
-  "ZEUS BRONZE METALLIC": "GUI"
+  "ZEUS BRONZE METALLIC": "GUI",
+  "SILVER ICE METALLIC": "GAN",
+  "MOSAIC BLACK METALLIC": "GB8",
+  "WATKINS GLEN GRAY METALLIC": "G7Q",
+  "ADMIRAL BLUE METALLIC": "GTR",
+  "INTERSTELLAR WHITE": "GAZ",
+  "VOID BLACK": "GBA",
+  "METEORITE METALLIC": "GNO",
+  "DEEP AURORA METALLIC": "GXN",
+  "AFTERBURNER TINTCOAT": "GC5",
+  "TIDE METALLIC": "G7X",
+  "SUPERNOVA METALLIC": "GKK",
+  "NEPTUNE BLUE MATTE": "GLG",
+  "SOLAR ORANGE": "GAG",
+  "GRAPHITE BLUE METALLIC": "GAI",
+  "MOONSHOT GREEN MATTE": "G7W",
+  "COASTAL DUNE": "G42",
+  "MAGNUS GRAY MATTE": "GBL",
+  "AUBURN MATTE": "GNR",
+  "BLUE SMOKE METALLIC": "GAI",
+  "SLATE GRAY METALLIC": "GNO",
+  "HABANERO ORANGE": "GAG",
+  "ZEPHYR BLUE MATTE METALLIC": "GLG",
+  "DARK EMBER TINTCOAT": "GAB",
+  "DEEP OCEAN METALLIC": "GAI",
+  "ONYX BLACK": "GBA",
+  "MOONLIGHT MATTE": "GLG",
+  "GLACIER WHITE TRICOAT": "G4J",
+  "DEEP BRONZE METALLIC": "GXN",
+  "THUNDERSTORM GRAY": "GNO",
+  "SANDSTONE": "G42",
+  "VIBRANT WHITE TRICOAT": "G4J",
+  "BLACK CHERRY TINTCOAT": "GAB",
+  "MONARCH ORANGE": "GAG",
+  "MAGNUS METAL FROST": "GBL",
+  "LUNA METALLIC": "GNO",
+  "ADOBE FROST": "GNR",
+  "FLARE METALLIC": "GSJ",
+  "MIDNIGHT STEEL FROST": "GLG",
 };
 
 const intColor = {
   // Corvette
+  // - C7
+  "141": "Gray Perforated Mulan Leather",
+  "143": "Gray Perforated Mulan Leather",
+  "144": "Gray Leather w/ Sueded Microfiber Inserts",
+  "145": "Gray Perforated Napa Leather",
+  "146": "Gray Leather w/ Sueded Microfiber Inserts",
+  "191": "Jet Black Perforated Mulan Leather",
+  "192": "Jet Black Leather w/ Sueded Microfiber Inserts",
+  "193": "Jet Black Perforated Mulan Leather",
+  "194": "Jet Black Leather w/ Sueded Microfiber Inserts",
+  "195": "Jet Black Perforated Napa Leather",
+  "196": "Jet Black Leather w/ Sueded Microfiber Inserts",
+  "198": "Jet Black Leather w/ Sueded Microfiber Inserts",
+  "343": "Kalahari Perforated Mulan Leather",
+  "344": "Kalahari Leather w/ Sueded Microfiber Inserts",
+  "345": "Kalahari Perforated Napa Leather",
+  "346": "Kalahari Leather w/ Sueded Microfiber Inserts",
+  "701": "Adrenaline Red Perforated Mulan Leather",
+  "703": "Adrenaline Red Perforated Mulan Leather",
+  "704": "Adrenaline Red Leather w/ Sueded Microfiber Inserts",
+  "705": "Adrenaline Red Perforated Napa Leather",
+  "706": "Adrenaline Red Leather w/ Sueded Microfiber Inserts",
+  "755": "Spice Red Perforated Mulan Leather",
+  "000": "Jet Black w/ Orange Stitching Leather w/ Sueded Microfiber Inserts",
+  // - C8
   "HTA": "Jet Black Mulan Leather w/ Perforated Inserts",
   "HTE": "Jet Black Napa Leather w/ Perforated Inserts",
   "HTJ": "Jet Black Performance Textile",
-  "HTO": "Tension/Twilight Blue Dipped Napa Leather w/ Perforated Inserts",
+  "HTO": "Tension W/ Twilight Blue Dipped Napa Leather w/ Perforated Inserts",
   "HU1": "Sky Cool Gray Napa Leather w/ Perforated Inserts",
   "HU2": "Adrenaline Red Napa Leather w/ Perforated Inserts",
   "HU3": "Morello Red Dipped Napa Leather w/ Perforated Inserts",
   "HUE": "Natural Napa Leather w/ Perforated Inserts",
   "HUP": "Sky Cool Gray Mulan Leather w/ Perforated Inserts",
   "HUQ": "Adrernaline Red Mulan Leather w/ Perforated Inserts",
+  "HUR": "Adrernaline Red Mulan Leather w/ Perforated Inserts",
+  "HUL": "Adrernaline Red NAPA Leather w/ Perforated Inserts",
+  "HU7": "Adrernaline Red NAPA Leather w/ Perforated SUEDED MICROFIBER Inserts",
+  "HUA": "Adrernaline Red NAPA Leather w/ Perforated SUEDED MICROFIBER Inserts",
   "HZN": "Natural Dipped Napa Leather w/ Perforated Inserts",
+  "HTM": "JET BLACK NAPA LEATHER W/ PERFORATED INSERTS",
+  "HTP": "JET BLACK NAPA LEATHER W/ PERFORATED SUEDED MICROFIBER INSERTS",
+  "HTT": "JET BLACK NAPA LEATHER W/ PERFORATED SUEDED MICROFIBER INSERTS",
+  "HUN": "SKY COOL GRAY MULAN LEATHER W/ PERFORATED INSERTS",
+  "HUK": "SKY COOL GRAY NAPA LEATHER W/ PERFORATED INSERTS",
+  "HU6": "SKY COOL GRAY NAPA LEATHER W/ PERFORATED SUEDED MICROFIBER INSERTS",
+  "HU9": "SKY COOL GRAY NAPA LEATHER W/ PERFORATED SUEDED MICROFIBER INSERTS",
+  "HUV": "NATURAL MULAN LEATHER W/ PERFORATED INSERTS",
+  "HTN": "NATURAL NAPA LEATHER W/ PERFORATED INSERTS",
+  "HTQ": "NATURAL NAPA LEATHER W/ PERFORATED SUEDED MICROFIBER INSERTS",
+  "HTG": "NATURAL NAPA LEATHER W/ PERFORATED SUEDED MICROFIBER INSERTS",
+  "HUF": "NATURAL DIPPED NAPA LEATHER W/ PERFORATED SUEDED MICROFIBER INSERTS",
+  "HT7": "SKY COOL GRAY W/ STRIKE YELLOW NAPA LEATHER W/ PERFORATED INSERTS",
+  "HFC": "SKY COOL GRAY W/ STRIKE YELLOW NAPA LEATHER W/ PERFORATED SUEDED MICROFIBER INSERTS",
+  "HNK": "ADDRENALINE RED DIPPED NAPA LEATHER W/ PERFORATED INSERTS",
+  "HV1": "CERAMIC WHITE W/ RED STITCHING NAPA LEATHER W/ PERFORATED INSERTS",
+  "HV2": "ARTEMIS NAPA LEATHER W/ PERFORATED INSERTS",
+  "HUX": "HABANERO NAPA LEATHER W/ PERFORATED SUEDED MICROFIBER INSERTS",
+  "HUW": "HABANERO NAPA LEATHER W/ PERFORATED INSERTS",
+  "HZB": "CUSTOM SKY COOL GRAY W/ JET BLACK ACCENTS NAPA LEATHER W/ PERFORATED INSERTS",
+  "HVT": "CUSTOM SKY COOL GRAY W/ JET BLACK ACCENTS NAPA LEATHER W/ PERFORATED SUEDED MICROFIBER INSERTS",
+  "HVV": "CUSTOM JET BLACK W/ SKY COOL GRAY ACCENTS NAPA LEATHER W/ PERFORATED INSERTS",
+  "HMO": "CUSTOM JET BLACK W/ SKY COOL GRAY ACCENTS NAPA LEATHER W/ PERFORATED SUEDED MICROFIBER INSERTS",
+  "HUU": "CUSTOM ADRENALINE RED W/ JET BLACK ACCENTS NAPA LEATHER W/ PERFORATED INSERTS",
+  "HZP": "CUSTOM ADRENALINE RED W/ JET BLACK ACCENTS NAPA LEATHER W/ PERFORATED SUEDED MICROFIBER INSERTS",
+  "HU0": "CUSTOM JET BLACK W/ ADRENALINE RED ACCENTS NAPA LEATHER W/ PERFORATED INSERTS",
+  "HXO": "CUSTOM JET BLACK W/ ADRENALINE RED ACCENTS NAPA LEATHER W/ PERFORATED SUEDED MICROFIBER INSERTS",
   // Camaro
   "H01": "Kalahari Leather",
-  "H0W": "Jet Black Leather with Red accents",
+  "H0W": "Jet Black Leather W/ Red accents",
   "H0Y": "Jet Black Leather",
   "H13": "Ceramic White Leather",
   "H16": "Adrenaline Red Leather",
@@ -93,31 +202,63 @@ const intColor = {
   "H1T": "Jet Black Cloth",
   "H72": "Medium Ash Gray Cloth",
   // Cadillac
-  "E2B": "Jet Black with Signet Accents Leather w/ Mini-Perforated Custom Quilted Inserts and Sueded Front Seatbacks",
-  "E2D": "Jet Black with Adrenaline Red Accents Leather w/ Mini-Perforated Custom Quilted Inserts and Sueded Front Seatbacks",
-  "E2G": "Jet Black with Sky Cool Gray Accents Leather w/ Mini-Perforated Custom Quilted Inserts and Sueded Front Seatbacks",
-  "H0L": "Sangria with Jet Black Accents Leather w/ Mini-Perforated Inserts",
-  "H0M": "Cinnamon with Jet Black Accents Leather w/ Mini-Perforated Inserts",
-  "H1Y": "Jet Black with Jet Black Accents Leather w/ Mini-Perforated Inserts",
-  "H2G": "Jet Black with Jet Black Accents Inteluxe",
-  "H2X": "Jet Black with Jet Black Accents Leather w/ Mini-Perforated Inserts",
-  "HAV": "Maple Sugar with Jet Black Accents Leather w/ Mini-Perforated Inserts",
-  "HBE": "Jet Black with Jet Black Accents Leather/Performance Cloth/Sueded Microfiber/Ineluxe and Sueded Front Seatbacks",
-  "HBF": "Natural Tan with Jet Black Accents Leather w/ Mini-Perforated Custom Quilted Inserts and Sueded Front Seatbacks",
-  "HEA": "Jet Black with Jet Black Accents Leather w/ Sueded Front Seatbacks",
-  "HEB": "Sky Cool Gray with Jet Black Accents Leather w/ Sueded Front Seatbacks",
-  "HGM": "Jet Black with Jet Black Accents Leather w/ Mini-Perforated Inserts",
-  "HIK": "Sahara Beige with Jet Black Accents Leather w/ Mini-Perforated Inserts",
-  "HIT": "Sahara Beige with Jet Black Accents Inteluxe",
-  "HJC": "Natural Tan with Jet Black Accents Full Semi-Aniline Leather w/ Mini-Perforated Inserts: Custom Quilting and Carbon Fiber Front Seatbacks",
-  "HJD": "Sky Cool Gray with Jet Black Accents Full Semi-Aniline Leather w/ Mini-Perforated Inserts: Custom Quilting and Carbon Fiber Front Seatbacks",
-  "HMC": "Whisper Beige with Jet Black Accents Inteluxe",
-  "HMR": "Jet Black with Jet Black Accents Full Semi-Aniline Leather w/ Mini-Perforated Inserts: Custom Quilting and Carbon Fiber Front Seatbacks",
-  "HNC": "Whisper Beige with Jet Black Accents Leather w/ Mini-Perforated Inserts",
-  "HND": "Whisper Beige with Jet Black Accents Leather w/ Mini-Perforated Inserts",
-  "HXR": "Jet Black with Jet Black Accents Inteluxe",
-  "HZK": "Sedona Sauvage with Jet Black Accents Semi-Aniline Full Leather w/ Chevron Perforated Inserts",
-  "HZQ": "Jet Black with Jet Black Accents Inteluxe"
+  "E2B": "Jet Black W/ Signet Accents Leather w/ Mini-Perforated Custom Quilted Inserts and Sueded Front Seatbacks",
+  "E2D": "Jet Black W/ Adrenaline Red Accents Leather w/ Mini-Perforated Custom Quilted Inserts and Sueded Front Seatbacks",
+  "E2G": "Jet Black W/ Sky Cool Gray Accents Leather w/ Mini-Perforated Custom Quilted Inserts and Sueded Front Seatbacks",
+  "H0L": "Sangria W/ Jet Black Accents Leather w/ Mini-Perforated Inserts",
+  "H0M": "Cinnamon W/ Jet Black Accents Leather w/ Mini-Perforated Inserts",
+  "H1Y": "Jet Black W/ Jet Black Accents Leather w/ Mini-Perforated Inserts",
+  "H2G": "Jet Black W/ Jet Black Accents Inteluxe",
+  // UNSURE "H2X": "JET BLACK LEATHER W/ CHEVRON PERFORATED INSERTS",
+  "H2X": "Jet Black W/ Jet Black Accents Leather w/ Mini-Perforated Inserts",
+  "H66": "JET BLACK LEATHER",
+  "HAV": "Maple Sugar W/ Jet Black Accents Leather w/ Mini-Perforated Inserts",
+  "HBE": "Jet Black W/ Jet Black Accents Leather/Performance Cloth/Sueded Microfiber/Ineluxe and Sueded Front Seatbacks",
+  "HBF": "Natural Tan W/ Jet Black Accents Leather w/ Mini-Perforated Custom Quilted Inserts and Sueded Front Seatbacks",
+  "HEA": "Jet Black W/ Jet Black Accents Leather w/ Sueded Front Seatbacks",
+  "HEB": "Sky Cool Gray W/ Jet Black Accents Leather w/ Sueded Front Seatbacks",
+  "HGM": "Jet Black W/ Jet Black Accents Leather w/ Mini-Perforated Inserts",
+  "HIK": "Sahara Beige W/ Jet Black Accents Leather w/ Mini-Perforated Inserts",
+  "HIT": "Sahara Beige W/ Jet Black Accents Inteluxe",
+  "HIZ": "SEMI-ANILINE LEATHER W/ CHEVRON PERFORATED INSERTS",
+  "HJC": "Natural Tan W/ Jet Black Accents Full Semi-Aniline Leather w/ Mini-Perforated Inserts: Custom Quilting and Carbon Fiber Front Seatbacks",
+  "HJD": "Sky Cool Gray W/ Jet Black Accents Full Semi-Aniline Leather w/ Mini-Perforated Inserts: Custom Quilting and Carbon Fiber Front Seatbacks",
+  "HK1": "VERY LIGHT CASHMERE W/ MAPLE SUGAR ACCENTS SEMI-ANILINE LEATHER W/ CHEVRON PERFORATED INSERTS",
+  "HMC": "Whisper Beige W/ Jet Black Accents Inteluxe",
+  "HMQ": "SAHARA BEIGE W/ JET BLACK ACCENTS LEATHER W/ CHEVRON PERFORATED INSERTS",
+  "HMR": "Jet Black W/ Jet Black Accents Full Semi-Aniline Leather w/ Mini-Perforated Inserts: Custom Quilting and Carbon Fiber Front Seatbacks",
+  "HNC": "Whisper Beige W/ Jet Black Accents Leather w/ Mini-Perforated Inserts",
+  "HND": "Whisper Beige W/ Jet Black Accents Leather w/ Mini-Perforated Inserts",
+  "HTX": "DARK AUBURN W/ JET BLACK ACCENTS LEATHER W/ CHEVRON PERFORATED INSERTS",
+  "HTZ": "SAHARA BEIGE W/ JET BLACK ACCENTS LEATHER",
+  "HXR": "Jet Black W/ Jet Black Accents Inteluxe",
+  "HZK": "Sedona Sauvage W/ Jet Black Accents Semi-Aniline Full Leather w/ Chevron Perforated Inserts",
+  "HZQ": "Jet Black W/ Jet Black Accents Inteluxe",
+  "EG1": "Sky Cool Gray W/ Santorini Blue Accents Leather W/ Mini-Perforated Custom Quilted Inserts and Sueded Front Seatbacks",
+  "E54": "Jet Black W/ Phantom Blue Accents Leather W/ Mini-Perforated Custom Quilted Inserts and Sueded Front Seatbacks",
+  "H9F": "Jet Black Evotex",
+  "EMX": "Black Evotex",
+  // ESCALADE IQ
+  "ENB": "SHEER GRAY W/ DARK MEDIUM CINDER ACCENTS INTELUXE W/ FJORD (CHEVRON) QUILTING PATTERN",
+  "EMY": "CAMELIA W/ BACKEN BLACK ACCENTS NOUVEAULUXE W/ EVREN (BACK INSERTS) AND CYGUS (SEAT CUSHION) PERFORATED PATTERN",
+  "ENK": "HARBOR BLUE W/ BACKEN BLACK ACCENTS NOUVEAULUXE W/ CARRINGTON FALLS PERFORATED PATTERN",
+  // Hummer EV
+  "H9Z": "LUNAR HORIZON (JET BLACK/LIGHT GREY) Premium Leather-Alternative",
+  "HAS": "LUNAR SHADOW (JET BLACK/TAUPE) Premium Leather-Alternative",
+  "HBZ": "GRANITE DRIFT PREMIUM LEATHER-ALTERNATIVE",
+  "HR5": "STEALTH ECLIPSE PREMIUM LEATHER-ALTERNATIVE",
+  "EHM": "VELOCITY EMBER PREMIUM LEATHER-ALTERNATIVE",
+  // Silverado EV
+  "H7D": "Black Evotex",
+  //"H7D": "BACKEN BLACK W/ SANTORINI ACCENTS INTELUXE W/ FJORD (CHEVRON) QUILTING PATTERN", ESCALADE IQ
+  "EMW": "Black w/ Sky Cool Gray Evotex",
+  // Sierra EV
+  "E4V": "After Dark (Black) Premium Leather alternative",
+  "EWA": "Desert Dune Premium Leather alternative",
+  "EH7": "AFTER DARK (BLACK) CORETEC",
+  "EH9": "FOREST STORM CORETEC",
+  "HCN": "Black Evotex",
+  "EB9": "Black w/ Artemis Evotex",
 };
 
 const seatCode = {
@@ -125,40 +266,54 @@ const seatCode = {
   "A50": "Sport front buckets",
   "AQJ": "RECARO Performance front buckets",
   // Corvette
-  "AE4": "Competition buckets",
-  "AH2": "GT2 buckets",
   "AQ9": "GT1 buckets",
+  "AE4": "Competition buckets",
+  "AH2": "GT2 / Competition buckets",
   // Cadillac
-  "": ""
+  "": "",
+  // Silverado EV
+  "AR9": "Front Bucket Seats",
+  // Hummer EV
+  "A50": "Front bucket seats with center console",
 };
 
 const mmc = {
   // Camaro
   "1AG37": "1LT",
-  "1AG37": "1LS",
   "1AG67": "1LT",
   "1AH37": "2LT",
-  "1AH37": "3LT",
   "1AH67": "2LT",
-  "1AH67": "3LT",
-  "1AJ37": "LT1",
   "1AJ37": "1SS",
-  "1AJ67": "LT1",
   "1AJ67": "1SS",
   "1AK37": "2SS",
   "1AK67": "2SS",
   "1AL37": "1SE",
   "1AL67": "1SE",
-  // Corvette
+  // Corvette SR C7
+  "1YY07": "", // Coupe
+  "1YY67": "", // Conv
+  // Corvette GS C7
+  "1YW07": "", // Coupe
+  "1YW67": "", // Conv
+  // Corvette SR Z51 C7
+  "1YX07": "", // Coupe
+  "1YX67": "", // Conv
+  // Corvette Z06 C7
+  "1YZ07": "", // Coupe
+  "1YZ67": "", // Conv
+  // Corvette ZR1 C7
+  "1YV07": "", // Coupe
+  "1YV67": "", // Conv
+  // Corvette C8
   "1YC07": "", // Coupe
   "1YC67": "", // Conv
-  // Corvette Z06
+  // Corvette Z06 C8
   "1YH07": "", // Coupe
   "1YH67": "", // Conv
-  // Corvette E-Ray
+  // Corvette E-Ray C8
   "1YG07": "", // Coupe
   "1YG67": "", // Conv
-  // Corvette ZR1
+  // Corvette ZR1 C8
   "1YR07": "", // Coupe
   "1YR67": "", // Conv
   // Cadillac
@@ -176,6 +331,13 @@ const mmc = {
   "6KH69": "1SB", // CT6 LUXURY
   "6KJ69": "1SD", // CT6 PREMIUM LUXURY
   "6KN69": "1SV", // CT6 V-SERIES
+  // Hummer EV
+  "TT35526": "", // SUV
+  "TT35743": "", // Pickup
+  // Silverado EV
+  "CT35843": "",
+  // Sierra EV
+  "TT35843": "",
 };
 
 module.exports = {

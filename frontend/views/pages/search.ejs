@@ -1,33 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <%- include('../partials/head'); %>
-    <script src="../partials/rpo.js"></script>
-    <title>
-      <%= (vin_data[0].modelYear ? "'" + vin_data[0].modelYear.toString().slice(-2) : 'N/A') %>
-      <%= vin_data[0].model || 'N/A' %> 
-      <%= vin_data[0].trim || 'N/A' %> 
-    </title>
+  <%- include('../partials/analytics'); %>
+  <%- include('../partials/head'); %>
+  <% const vin = vin_data[0]; %>
+  <title>
+    <%= (vin.modelYear ? "'" + vin.modelYear.toString().slice(-2) : 'N/A') %>
+    <%= vin.model || 'N/A' %> 
+    <%= vin.trim || 'N/A' %> 
+  </title>
 </head>
-
 <body>
   <%- include('../partials/header'); %>
-    <div class="container">
+    <div class="custom-container">
         <div class="row">
           <% if (vin_data && vin_data.length > 0) { %>
-            <h1 style="padding-top: 20px; display: flex; align-items: center; width: 100%;">
-              <%= vin_data[0].modelYear || 'N/A' %>
-              <%= vin_data[0].model || 'N/A' %>
-              <%= vin_data[0].trim || 'N/A' %>
+            <h1 style="padding-top: 20px;">
+              <%= vin.modelYear || 'N/A' %>
+              <%= vin.model || 'N/A' %>
+              <%= vin.trim || 'N/A' %>
             </h1>
-            <% if (vin_data[0].special_descs && vin_data[0].special_descs !== 'NA') { %>
+            <% if (vin.special_descs && vin.special_descs !== 'NA') { %>
               <div>
                 <h4>
                   <em>
                     <% 
                       // Split the special_descs by comma and iterate over each description
-                      const specialDescs = vin_data[0].special_descs.split(', ');
+                      const specialDescs = vin.special_descs.split(', ');
                       specialDescs.forEach(desc => { 
                     %>
                       <div><%= desc %></div>
@@ -36,270 +35,581 @@
                 </h4>
               </div>
             <% } %>
-            <table class="table-veh table-hover border border shadow" id="vinTable">
-              <tbody>
-                  <% vin_data.forEach(function(data) { %>
-                  <tr>
-                    <td class="label-column"><strong>VIN:</strong></td>
-                    <td><%= data.vin || 'N/A' %></td>
-                  </tr>
-                  <tr>
-                    <td class="label-column"><strong>ORDER NUMBER:</strong></td>
-                    <td><%= data.order_number || 'N/A' %></td>
-                  </tr>
-                  <tr>
-                    <td class="label-column"><strong>STICKER CREATION DATE:</strong></td>
-                    <td>
-                      <%= data.formatted_date || 'N/A' %>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td class="label-column"><strong>YEAR:</strong></td>
-                    <td><%= data.modelYear || 'N/A' %></td>
-                  </tr>
-                  <tr>
-                    <td class="label-column"><strong>MODEL:</strong></td>
-                    <td><%= data.model || 'N/A' %></td>
-                  </tr>
-                  <tr>
-                    <td class="label-column"><strong>TRIM:</strong></td>
-                    <td><%= data.trim || 'N/A' %></td>
-                  </tr>
-                  <tr>
-                    <td class="label-column"><strong>BODY:</strong></td>
-                    <td><%= data.body || 'N/A' %></td>
-                  </tr>
-                  <tr>
-                    <td class="label-column"><strong>ENGINE:</strong></td>
-                    <td><%= data.engine_type || 'N/A' %></td>
-                  </tr>
-                  <tr>
-                    <td class="label-column"><strong>TRANSMISSION:</strong></td>
-                    <td><%= data.transmission_type || 'N/A' %></td>
-                  </tr>
-                  <tr>
-                    <td class="label-column"><strong>DRIVETRAIN:</strong></td>
-                    <td><%= data.drivetrain_type || 'N/A' %></td>
-                  </tr>
-                  <tr>
-                    <td class="label-column"><strong>EXTERIOR COLOR:</strong></td>
-                    <td><%= data.color_name || 'N/A' %></td>
-                  </tr>
-                  <% if (data.rpo_codes) { %>
-                    <%
-                      let matchedIntColor = 'N/A';
-                      let matchedSeat = 'N/A';
-                      data.rpo_codes.forEach(function(rpo) {
-                        if (intColor[rpo]) {
-                          matchedIntColor = intColor[rpo];
-                        }
-                        if (seatCode[rpo]) {
-                          matchedSeat = seatCode[rpo];
-                        }
-                      });
-                    %>
-                  <tr>
-                    <td class="label-column"><strong>INTERIOR COLOR:</strong></td>
-                    <td><%= matchedIntColor.toUpperCase() %></td>
-                  </tr>
-                  <tr>
-                    <td class="label-column"><strong>SEAT:</strong></td>
-                    <td><%= matchedSeat.toUpperCase() %></td>
-                  </tr>
-                  <% } %>
-                  <tr>
-                    <td class="label-column"><strong>MSRP:</strong></td>
-                    <td><%= (!data.msrp || data.msrp == 0) ? 'N/A' : `$${data.msrp}` %></td>
-                  </tr>                  
-                  <tr>
-                    <td class="label-column"><strong>DEALER:</strong></td>
-                    <td><%= data.dealer_name || 'N/A' %></td>
-                  </tr>
-                  <tr>
-                    <td class="label-column"><strong>LOCATION:</strong></td>
-                    <td><%= data.location || 'N/A' %></td>
-                  </tr>
-                  <tr>
-                    <td class="label-column"><strong>COUNTRY:</strong></td>
-                    <td>
-                      <% if (data.country) { %>
-                        <% if (data.country === 'CANADA') { %>
-                          <img src="../img/flags/canada_flag.png" alt="Canada" width="30" style="margin-right: 5px;">CANADA
-                        <% } else if (data.country === 'USA') { %>
-                          <img src="../img/flags/usa_flag.png" alt="USA" width="30" style="margin-right: 5px;">UNITED STATES
-                        <% } else if (data.country === 'MEXICO') { %>
-                          <img src="../img/flags/mexico_flag.png" alt="Mexico" width="30" style="margin-right: 5px;">Mexico
-                        <% } %>
-                      <% } %>
-                    </td>
-                  </tr>
-                  <% }) %>
-              </tbody>
-            </table>
+        </div>
+        <div class="flex-row-wrap">
             <!-- Photo Carousel -->
-            <div id="carousel-container" style="position: relative; min-height: 740px; width: 100%; margin: auto; overflow: hidden;">
-              <div id="loading-animation">
-                <div class="spinner" style="position: absolute; top: 48%; left: 50%; transform: translate(-50%, -50%); align-items: center;"></div>
-                <h4 style="position: absolute; top: 58%; left: 51%; transform: translate(-50%, -50%); align-items: center;">Generating Photos...</h4>
-                <h4 style="position: absolute; top: 70%; left: 51%; transform: translate(-50%, -50%); align-items: center;">This will take a minute.</h4>
+            <div id="image-warning" style="color: white;"></div>
+            <div id="carousel-container">
+              <div id="loading-animation" class="shimmer">
+                <div class="shimmer-box" style="width: 100%; height: 675px; border-radius: 8px;"></div>
               </div>
-              <img id="carousel-image" src="" style="width: 100%;">
-              <button id="prev" style="position: absolute; top: 50%; left: 0; background-color: rgba(0, 0, 0, 0.5); color: white; border: none; padding: 10px; cursor: pointer; z-index: 100;">&#10094;</button>
-              <button id="next" style="position: absolute; top: 50%; right: 0; background-color: rgba(0, 0, 0, 0.5); color: white; border: none; padding: 10px; cursor: pointer; z-index: 100;">&#10095;</button>
-            </div>
-            <!-- Window Sticker -->
-            <div id="sticker-container" style="text-align: center; padding: 20px;">
-              <% if (vin_data[0].country === 'MEXICO') { %>
-                <h2>No window sticker available</h2>
-              <% } else { %>
-                <iframe id="window-sticker" src="https://cws.gm.com/vs-cws/vehshop/v2/vehicle/windowsticker?vin=<%= vin_data[0].vin || 'N/A' %>" style="min-height: 886px; width: 100%;"></iframe>
-              <% } %>
-            </div>
-            <!-- <div class="rarity-container">
-              <% vin_data.forEach(function(data) { %>
-                <% if (data.allJson) { %>
-                  <button id="see-rarity" class="btn btn-primary rarity-btn" data-alljson='<%= JSON.stringify(data.allJson) %>'>See Rarity</button>
-                <% } %>
-              <% }); %>
-              <div class="response-container">
-                <div id="response" class="response"></div>
-                <div><a id="snark" style="color: rgb(40, 40, 40);"></a></div>
+              <img id="carousel-image" alt="Vehicle Image" style="width: 100%; display: none;">
+              <button id="prev" style="display: none;">&#10094;</button>
+              <button id="next" style="display: none;">&#10095;</button>
+              <div style="display: flex; justify-content: center;">
+                <div id="image-gallery-shimmer" style="display:flex; gap:5px; overflow:hidden; width:100%; padding: 10px 0;"></div>
+                <div id="image-gallery" style="display:none;"></div>
               </div>
-            </div> -->
-            <table class="table-veh table-hover border border shadow" id="rpoTable">
-              <thead>
-                <tr>
-                  <th scope="col" style="white-space: nowrap;">RPO Code</th>
-                  <th scope="col">Description</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% vin_data.forEach(function(data) { %>
-                  <% if (data.rpo_codes) { %>
-                    <% data.rpo_codes.forEach(function(rpo) { %>
-                      <% if (rpo) { %>
-                        <tr>
-                          <td class="<%= rpo.includes('OAR') ? 'highlight' : '' %>"><%= rpo %></td>
-                          <td class="rpo-description" data-code="<%= rpo %>" style="text-align: left;"></td>
-                        </tr>
-                      <% } %>
-                    <% }); %>
-                  <% } else { %>
+            </div>
+            <!-- vinTable -->
+            <div class="table-responsive" style="text-align: left; justify-content: flex-start;">
+              <table class="table-veh table-hover border shadow" id="vinTable">
+                <tbody>
+                    <% vin_data.forEach(function(data) { %>
                     <tr>
-                      <td colspan="2">No data available</td>
+                      <td class="label-column"><strong>VIN</strong></td>
+                      <td><%= data.vin || 'N/A' %></td>
                     </tr>
-                  <% } %>
-                <% }) %>
-              </tbody>
-            </table>
-            <h5 style="color: white;">
-              RPOs Decoded by <a href="https://decoderpo.com/" style="color: white; text-decoration: underline;">https://decoderpo.com/</a>
-            </h5>            
-          <% } else { %>
-            <h1>No VIN data found</h1>
-          <% } %>
+                    <tr>
+                      <td class="label-column"><strong>ORDER NUMBER</strong></td>
+                      <td><%= data.order_number || 'N/A' %></td>
+                    </tr>
+                    <tr>
+                      <td class="label-column"><strong>STICKER CREATION DATE</strong></td>
+                      <td>
+                        <%= data.formatted_date || 'N/A' %>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="label-column"><strong>YEAR</strong></td>
+                      <td><%= data.modelYear || 'N/A' %></td>
+                    </tr>
+                    <tr>
+                      <td class="label-column"><strong>MODEL</strong></td>
+                      <td><%= data.model || 'N/A' %></td>
+                    </tr>
+                    <tr>
+                      <td class="label-column"><strong>TRIM</strong></td>
+                      <td><%= data.trim || 'N/A' %></td>
+                    </tr>
+                    <tr>
+                      <td class="label-column"><strong>BODY</strong></td>
+                      <td><%= data.body || 'N/A' %></td>
+                    </tr>
+                    <tr>
+                      <td class="label-column"><strong>ENGINE</strong></td>
+                      <td><%= data.engine_type || 'N/A' %></td>
+                    </tr>
+                    <tr>
+                      <td class="label-column"><strong>TRANSMISSION</strong></td>
+                      <td><%= data.transmission_type || 'N/A' %></td>
+                    </tr>
+                    <tr>
+                      <td class="label-column"><strong>DRIVETRAIN</strong></td>
+                      <td><%= data.drivetrain_type || 'N/A' %></td>
+                    </tr>
+                    <tr>
+                      <td class="label-column"><strong>EXTERIOR COLOR</strong></td>
+                      <td id="extColorCell"><%= data.color_name || 'N/A' %></td>
+                    </tr>
+                    <% if (data.rpo_codes) { %>
+                      <%
+                        let matchedIntColor = 'N/A';
+                        let matchedSeat = 'N/A';
+                        data.rpo_codes.forEach(function(rpo) {
+                          if (intColor[rpo]) {
+                            matchedIntColor = intColor[rpo];
+                          }
+                          if (seatCode[rpo]) {
+                            matchedSeat = seatCode[rpo];
+                          }
+                        });
+
+                        if (data.model === 'Escalade IQ' && matchedSeat === 'AQ9') {
+                          matchedSeat = 'Front bucket';
+                        }
+                        if (data.model === 'CT4' && matchedSeat === 'AQJ') {
+                          matchedSeat = 'Front bucket high-performance';
+                        }
+                        if (data.model === 'SIERRA EV' && matchedSeat === 'AR9') {
+                          matchedSeat = 'Front bucket seats with center console';
+                        }
+                      %>
+                    <tr>
+                      <td class="label-column"><strong>INTERIOR COLOR</strong></td>
+                      <td id="intColorCell"><%= matchedIntColor.toUpperCase() %></td>
+                    </tr>
+                    <tr>
+                      <td class="label-column"><strong>SEAT</strong></td>
+                      <td><%= matchedSeat.toUpperCase() %></td>
+                    </tr>
+                    <% } %>
+                    <tr>
+                      <td class="label-column"><strong>MSRP</strong></td>
+                      <td><%= (!data.msrp || data.msrp == 0) ? 'N/A' : `$${data.msrp}` %></td>
+                    </tr>                  
+                    <tr>
+                      <td class="label-column"><strong>DEALER</strong></td>
+                      <td><%= data.dealer_name || 'N/A' %></td>
+                    </tr>
+                    <tr>
+                      <td class="label-column"><strong>LOCATION</strong></td>
+                      <td><%= data.location || 'N/A' %></td>
+                    </tr>
+                    <tr>
+                      <td class="label-column"><strong>COUNTRY</strong></td>
+                      <td>
+                        <% if (data.country) { %>
+                          <% if (data.country === 'CANADA') { %>
+                            <img src="../../img/flags/canada_flag.png" alt="Canada Flag" width="30" style="margin-right: 5px;">CANADA
+                          <% } else if (data.country === 'USA') { %>
+                            <img src="../../img/flags/usa_flag.png" alt="USA Flag" width="30" style="margin-right: 5px;">UNITED STATES
+                          <% } else if (data.country === 'MEXICO') { %>
+                            <img src="../../img/flags/mexico_flag.png" alt="Mexico Flag" width="30" style="margin-right: 5px;">Mexico
+                          <% } %>
+                        <% } %>
+                      </td>
+                    </tr>
+                    <% }) %>
+                </tbody>
+              </table>
+            </div>
         </div>
     </div>
-    <%- include('../partials/footer'); %>
+    <div class="custom-container">
+        <div style="display: flex; gap: 5px;">
+            <!-- Window Sticker -->
+            <div id="sticker-container" style="flex: 1;">
+              <% if (vin.country === 'MEXICO') { %>
+                <div style="display: flex; justify-content: center; align-items: center;">
+                  <h2>No window sticker available</h2>
+                </div>
+              <% } else { %>
+                <div style="display: flex; justify-content: center; overflow-x: auto;">
+                  <embed src="https://cws.gm.com/vs-cws/vehshop/v2/vehicle/windowsticker?vin=<%= vin.vin %>" type="application/pdf" width="85%" height="800px"/>
+                </div>
+              <% } %>
+            </div>
+        </div>
+        <!-- <div class="rarity-container">
+          <% vin_data.forEach(function(data) { %>
+            <% if (data.allJson) { %>
+              <button id="see-rarity" class="btn btn-primary rarity-btn" data-alljson='<%= JSON.stringify(data.allJson) %>'>See Rarity</button>
+            <% } %>
+          <% }); %>
+          <div class="response-container">
+            <div id="response" class="response"></div>
+            <div><a id="snark" style="color: rgb(40, 40, 40);"></a></div>
+          </div>
+        </div> -->
+        <div style="flex: 1;">
+          <table class="table-veh table-hover border border shadow" id="rpoTable">
+            <thead>
+              <tr>
+                <th scope="col">RPO Code</th>
+                <th scope="col">Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% vin_data.forEach(function(data) { %>
+                <% if (data.rpo_codes) { %>
+                  <% data.rpo_codes.forEach(function(rpo) { %>
+                    <% if (rpo) { %>
+                      <tr style="cursor: pointer;" onmousedown="handleMouseDown(event);" data-url="/vehicles?rpo=<%= rpo %>">
+                        <td class="<%= rpo.includes('OAR') ? 'highlight' : '' %>"><%= rpo %></td>
+                        <td class="rpo-description" data-code="<%= rpo %>" style="text-align: left;"></td>
+                      </tr>
+                    <% } %>
+                  <% }); %>
+                <% } else { %>
+                  <tr>
+                    <td colspan="2">No data available</td>
+                  </tr>
+                <% } %>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+        <% } else { %>
+          <h1>No VIN data found</h1>
+        <% } %>
+      <%- include('../partials/footer'); %>
+    </div>
     <script>
+      function handleMouseDown(event) {
+        startX = event.clientX;
+      }
+
+      function handleRowClick(url, event) {
+        const distance = Math.abs(event.clientX - startX);
+        if (distance > 5) return;
+        window.location.href = url;
+      }
+
+      function loadImageWithRetry(url, retries = 3, delay = 1000) {
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => resolve(url);
+          img.onerror = () => {
+            if (retries > 0) {
+              setTimeout(() => {
+                loadImageWithRetry(url, retries - 1, delay).then(resolve).catch(reject);
+              }, delay);
+            } else {
+              reject(url);
+            }
+          };
+          img.src = url;
+        });
+      }
+
       document.addEventListener('DOMContentLoaded', () => {
-        document.querySelectorAll('.rpo-description').forEach(function(element) {
+        let rpoDescriptions = {};
+        const rpoDescriptionCache = {};
+
+        function loadRpoDescriptions() {
+          const cached = sessionStorage.getItem('rpoCodes');
+          if (cached) {
+            const data = JSON.parse(cached);
+            data.allRpoCodes.forEach(([code, desc]) => {
+              rpoDescriptions[code] = desc;
+            });
+            return Promise.resolve();
+          } else {
+            return fetch('https://decoderpo.com/static/rpoCodes.json')
+              .then(res => res.json())
+              .then(data => {
+                sessionStorage.setItem('rpoCodes', JSON.stringify(data));
+                data.allRpoCodes.forEach(([code, desc]) => {
+                  rpoDescriptions[code] = desc;
+                });
+              })
+              .catch(err => {
+                console.error('Failed to load RPO data:', err);
+              });
+          }
+        }
+
+        loadRpoDescriptions().then(() => {
+          document.querySelectorAll('.rpo-description').forEach(element => {
           const rpoCode = element.getAttribute('data-code');
-          const description = getRPODescription(rpoCode);
-          element.textContent = description;
+          
+          if (rpoDescriptions[rpoCode]) {
+            element.innerHTML = `<div>${rpoDescriptions[rpoCode]}</div>`;
+          } else {
+            fetch(`https://decoderpo.com/api/getRPODescription/${rpoCode}`)
+              .then(resp => {
+                if (!resp.ok) throw new Error('Not found');
+                return resp.json();
+              })
+              .then(data => {
+                const decoded = atob(data[0]);
+                const lines = JSON.parse(decoded);
+                element.innerHTML = lines.map(line => `<div>${line}</div>`).join('');
+              })
+              .catch(() => {
+                element.textContent = 'Not found';
+              });
+          }
+        });
         });
 
         const carouselImage = document.getElementById('carousel-image');
         const loadingAnimation = document.getElementById('loading-animation');
-        loadingAnimation.style.direction = 'block';
-        
+        loadingAnimation.style.display = 'block';
+
+        const warningDiv = document.getElementById('image-warning');
         const mmc = <%- JSON.stringify(mmc) %>;
         const colorMap = <%- JSON.stringify(colorMap) %>;
-        const intColor = <%- JSON.stringify(intColor) %>;
-        const seatCode = <%- JSON.stringify(seatCode) %>;
+        let intColor = <%- JSON.stringify(intColor) %>;
         const vin_data = <%- JSON.stringify(vin_data) %>;
-        const data = { mmc, colorMap, intColor, vin_data };
+        const model = vin_data[0].model?.toUpperCase() || '';
+        const ghostImg = '../../img/ghost-chevrolet-car-alt.png';
+        
+        if (model === 'CAMARO') fallbackImg = '../../img/vehicleLogos/camaro.png';
+        else if (model.startsWith('CT')) fallbackImg = '../../img/vehicleLogos/cadillac.png';
+        else if (model.startsWith('CORVETTE')) fallbackImg = '../../img/vehicleLogos/corvette.png';
+        else fallbackImg = ghostImg;
+        carouselImage.removeAttribute('src');
+        carouselImage.classList.add('shimmer');
 
-        fetch('/api/genurl', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data),
-        })
-        .then(response => response.json())
-        .then(data => {
-          const images = data.url.generatedImages;
+        const modelYear = vin_data[0].modelYear;
+        const mmc_code = vin_data[0].mmc_code;
+        let options = vin_data[0].rpo_codes || [];
+        let vehicleTrim = vin_data[0].trim;
 
-          if (images === "../img/ghost-chevrolet-car-alt.png") {
-            carouselImage.src = images;
-            loadingAnimation.style.display = 'none';
-          } else {
-            let currentIndex = 0;
-            let initialLoad = true;
+        let trim = mmc[mmc_code] || '';
 
-            function preloadImage(src) {
-              const img = new Image();
-              img.src = src;
-            }
-
-            function showImage(index) {
-                if (initialLoad) {
-                    carouselImage.src = images[index];
-                    carouselImage.alt = `Image ${index + 1}`;
-                    loadingAnimation.style.display = 'none';
-                    initialLoad = false;
-                } else {
-                    carouselImage.style.opacity = 0;
-                    setTimeout(() => {
-                        carouselImage.src = images[index];
-                        carouselImage.alt = `Image ${index + 1}`;
-                        carouselImage.style.opacity = 1;
-                    }, 200);
-                }
-
-                const nextIndex = (index + 1) % images.length;
-                preloadImage(images[nextIndex]);
-            }
-
-            showImage(currentIndex);
-
-            document.getElementById('prev').addEventListener('click', () => {
-              currentIndex = (currentIndex === 0) ? images.length - 1 : currentIndex - 1;
-              showImage(currentIndex);
-            });
-
-            document.getElementById('next').addEventListener('click', () => {
-              currentIndex = (currentIndex === images.length - 1) ? 0 : currentIndex + 1;
-              showImage(currentIndex);
-            });
+        // Fix 2022+ 1LE mirrors
+        if (model === 'CAMARO' && modelYear >= 2020 && (options.includes('A1Y') || options.includes('A1Z'))) {
+          options = options.filter(code => code !== 'DD1' && code !== 'DG7');
+        }
+        
+        if (["1AJ37", "1AJ67"].includes(mmc_code) && modelYear > 2019) {
+          if (options.includes("1LZ")) {
+            trim = "1LZ";
+            options = options.filter(code => code !== "T3S");
           }
-        })
-        .catch(error => {
-        console.error('Error loading generated photo:', error);
+        } else {
+          if (["1YC07", "1YC67", "1YY07", "1YY67", "1YW07", "1YW67", "1YX07", "1YX67"].includes(mmc_code)) {
+            trim = options.find(opt => ["1LT", "2LT", "3LT"].includes(opt)) || trim;
+          } else if (["1YH07", "1YH67", "1YG07", "1YG67", "1YR07", "1YR67", "1YZ07", "1YZ67"].includes(mmc_code)) {
+            trim = options.find(opt => ["1LZ", "2LZ", "3LZ"].includes(opt)) || trim;
+          } else if (["1YV07", "1YV67"].includes(mmc_code)) {
+            trim = options.find(opt => ["1ZR", "3ZR"].includes(opt)) || trim;
+          } else if (["1AH37", "1AH67"].includes(mmc_code)) {
+            trim = options.find(opt => ["3LT"].includes(opt)) || trim;
+          } else if (["1AG37", "1AG67"].includes(mmc_code) && modelYear < 2024) {
+            trim = options.find(opt => ["1LS"].includes(opt)) || trim;
+          } else if (["TT35743", "TT35526"].includes(mmc_code)) {
+            trim = options.find(opt => ["1SE", "1SF", "1SG", "1SB", "1SC", "1SD"].includes(opt)) || trim;
+          } else if (["CT35843"].includes(mmc_code)) {
+            trim = options.find(opt => ["2WT", "3WT", "4WT", "5WT", "8WT", "3LT", "2SP", "3SP"].includes(opt)) || trim;
+          } else if (["TT35843"].includes(mmc_code)) {
+            trim = options.find(opt => ["5SD", "5SB", "5SC", "3SB", "3SC", "4SC", "4SD"].includes(opt)) || trim;
+          } else if (["6T35726"].includes(mmc_code)) {
+            trim = options.find(opt => ["1SC", "1SF", "1SD", "1SG"].includes(opt)) || trim;
+          }
+        }
+
+        let warningMessages = [];
+
+        if (!mmc_code) {
+          warningMessages.push('ERROR: MMC_Code unset in database');
+        }
+        if (!trim) {
+          warningMessages.push('ERROR: Trim unset in file');
+        }
+
+        if (warningMessages.length > 0) {
+          warningDiv.innerHTML = warningMessages.join('<br>');
+          warningDiv.style.color = '#e57373';
+        }
+
+        let rpos = options.join('_');
+        let color = options.find(opt => Object.values(colorMap).includes(opt));
+        let colorInt = options.find(opt => Object.keys(intColor).includes(opt));
+        const modelUpper = vin_data[0].model ? vin_data[0].model.toUpperCase() : '';
+        let extMax = 7;
+        let intMax = 4;
+              
+        if (modelUpper === 'CAMARO') {
+          intMax = 2;
+          extMax = modelYear >= 2023 ? 5 : 4;
+        } else if (modelUpper.startsWith('CORVETTE')) {
+          if (modelYear === 2019) {
+            extMax = 4;
+            intMax = 2;
+          } else if (modelYear <= 2023) {
+            extMax = 6;
+          }
+        } else if (['CT4', 'CT5', 'CT6'].includes(modelUpper) && modelYear <= 2022) {
+          extMax = 6;
+        } else if (['SILVERADO EV', 'SIERRA EV'].includes(modelUpper)) {
+          extMax = 5;
+          intMax = 2;
+        } else if (['HUMMER EV PICKUP', 'HUMMER EV SUV'].includes(modelUpper)) {
+          intMax = 2;
+          extMax = modelYear >= 2023 ? 5 : 4;
+        }
+
+        const shimmerContainer = document.getElementById('image-gallery-shimmer');
+        shimmerContainer.innerHTML = '';
+
+        const totalBoxes = intMax + extMax;
+        for (let i = 0; i < totalBoxes; i++) {
+          const box = document.createElement('div');
+          box.classList.add('shimmer-box', 'shimmer');
+          box.style.width = '100px';
+          box.style.height = '60px';
+          box.style.borderRadius = '4px';
+          shimmerContainer.appendChild(box);
+        }
+
+        // GM Image Gen API doesn't have some codes so pick closest available option
+        let unsupportedColors = null;
+        const unsupportedColorNames = [
+          'BLACK MEETS KETTLE',
+          'COPPERTINO METALLIC',
+          'CHARTREUSE METALLIC',
+          'ABALONE WHITE',
+          'TACTICAL TINT',
+          'BARB WIRE',
+          'KIMONO METALLIC',
+          'SEEKER METALLIC',
+          'HIGH VOLTAGE TINT',
+          'BAEGE METALLIC',
+          'SEYCHELLES METALLIC',
+          'HYPERSONIC METALLIC',
+          'CHARTREUSE MATTE'
+        ];
+        let unsupportedInts = null;
+        const colorName = vin_data[0].color_name;
+
+        if (color === 'GKA') {
+          unsupportedColors = color;
+          color = 'GXD';
+        } else if (color === 'GBA') {
+          const specialColors = {
+            'ABALONE WHITE': 'GAZ',
+            'BAEGE METALLIC': 'GAZ',
+            'TACTICAL TINT': 'G7C',
+            'BARB WIRE': 'GXD',
+            'HYPERSONIC METALLIC': 'GXD',
+            'SEEKER METALLIC': 'GJV',
+            'SEYCHELLES METALLIC': 'GJV'
+          };
+
+          if (specialColors.hasOwnProperty(colorName)) {
+            color = specialColors[colorName];
+            rpos = rpos.replace(new RegExp("GBA", 'g'), color);
+          }
+
+          if (unsupportedColorNames.includes(colorName)) {
+            unsupportedColors = unsupportedColors 
+              ? unsupportedColors + ', ' + colorName 
+              : colorName;
+          }
+          if (rpos.includes(unsupportedColors)) {
+            rpos = rpos.replace(new RegExp(unsupportedColors, 'g'), color);
+          }
+        }
+        if (['E2B', 'E2D', 'E2G'].includes(colorInt)) {
+          unsupportedInts = colorInt;
+          colorInt = 'HBF';
+        }
+
+        if (unsupportedColors || unsupportedInts) {
+          let msg = 'Image generation does not support the following: ';
+          if (unsupportedColors) {
+            msg += `Color <i>${unsupportedColors}</i>`;
+            const extCell = document.getElementById('extColorCell');
+            if (extCell) extCell.style.cssText = 'color:#e57373;';
+          }
+          if (unsupportedColors && unsupportedInts) {
+            msg += ', ';
+          }
+          if (unsupportedInts) {
+            msg += `Interior color <i>${unsupportedInts}</i>`;
+            const intCell = document.getElementById('intColorCell');
+            if (intCell) intCell.style.cssText = 'color:#e57373;';
+          }
+          msg += '. Closest available color/material match has been substituted.';
+          warningDiv.innerHTML = msg;
+        }
+
+        let urls = [];
+
+        // Troubleshooting imgGen
+        //console.log(`Model Year: ${modelYear}, MMC Code: ${mmc_code}, Trim: ${trim}, Color: ${color}, Interior Color: ${colorInt}`);
+        //console.log(`https://cgi.chevrolet.com/mmgprod-us/dynres/prove/image.gen?i=${modelYear}/${mmc_code}/${mmc_code}__${trim}/${color}_${rpos}gmds10.png&v=deg01&std=true&country=US&send404=true&transparentBackgroundPng=true`);
+
+        if ((['3WT', '4WT'].includes(vehicleTrim)) && modelYear === 2024) {
+          warningDiv.innerHTML = 'Image generation does not support 2024 Silverado EV WT.';
+          urls = [ghostImg];
+        } else if (modelYear && mmc_code && trim && color && colorInt) {
+          for (let i = 1; i <= extMax; i++) {
+            urls.push(`https://cgi.chevrolet.com/mmgprod-us/dynres/prove/image.gen?i=${modelYear}/${mmc_code}/${mmc_code}__${trim}/${color}_${rpos}gmds10.png&v=deg${String(i).padStart(2, '0')}&std=true&country=US&send404=true&transparentBackgroundPng=true`);
+          }
+          for (let i = 1; i <= intMax; i++) {
+            urls.push(`https://cgi.chevrolet.com/mmgprod-us/dynres/prove/imageinterior.gen?i=${modelYear}/${mmc_code}/${mmc_code}__${trim}/${colorInt}_${rpos}gmds10.png&v=deg${String(i).padStart(2, '0')}&std=true&country=US&send404=true&transparentBackgroundPng=true`);
+          }
+        } else {
+          urls = [ghostImg];
+        }
+
+        const gallery = document.getElementById('image-gallery');
+        if (urls.length === 1 && urls[0] === ghostImg) {
+          document.getElementById('image-gallery').style.display = 'none';
+        } else {
+          urls.forEach((imgSrc, index) => {
+            const thumb = document.createElement('img');
+            thumb.src = imgSrc;
+            thumb.alt = `Thumbnail ${index + 1}`;
+            thumb.style.width = '100px';
+            thumb.style.cursor = 'pointer';
+            thumb.style.border = '1px solid transparent';
+            thumb.addEventListener('click', () => {
+              showImage(index);
+            });
+            gallery.appendChild(thumb);
+          });
+        }
+
+        let currentIndex = 0;
+        let initialLoad = true;
+
+        function preloadImage(src) {
+          const img = new Image();
+          img.src = src;
+        }
+
+        function showImage(index) {
+          while (urls[index] === null) {
+            index = (index + 1) % urls.length;
+            if (index === currentIndex) break;
+          }
+          currentIndex = index;
+          const imgSrc = urls[index];
+
+          if (initialLoad) {
+            carouselImage.onload = () => {
+              loadingAnimation.style.display = 'none';
+              carouselImage.style.display = 'block';
+              carouselImage.classList.remove('shimmer');
+              carouselImage.style.opacity = 1;
+              document.getElementById('prev').style.display = 'block';
+              document.getElementById('next').style.display = 'block';
+              document.getElementById('image-gallery-shimmer').style.display = 'none';
+              document.getElementById('image-gallery').style.display = 'flex';
+              initialLoad = false;
+            };
+            carouselImage.src = imgSrc;
+          } else {
+            carouselImage.style.opacity = 0;
+
+            setTimeout(() => {
+              carouselImage.onload = () => {
+                carouselImage.style.opacity = 1;
+              };
+
+              carouselImage.src = imgSrc;
+              carouselImage.alt = `Image ${index + 1}`;
+            }, 200);
+          }
+
+          [...gallery.children].forEach((img, i) => {
+            img.style.border = (i === index && urls[i]) ? '1px solid #141414' : '1px solid transparent';
+          });
+
+          const el = gallery.children[index];
+          if (el) {
+            const galleryRect = gallery.getBoundingClientRect();
+            const elRect = el.getBoundingClientRect();
+            const offset = elRect.left - galleryRect.left - (galleryRect.width / 2) + (elRect.width / 2);
+            gallery.scrollBy({ left: offset, behavior: 'smooth' });
+          }
+
+          let nextIndex = (index + 1) % urls.length;
+          while (urls[nextIndex] === null && nextIndex !== index) {
+            nextIndex = (nextIndex + 1) % urls.length;
+          }
+          if (urls[nextIndex]) preloadImage(urls[nextIndex]);
+        }
+
+        showImage(currentIndex);
+
+        document.getElementById('prev').addEventListener('click', () => {
+          let prevIndex = currentIndex;
+          do {
+            prevIndex = (prevIndex === 0) ? urls.length - 1 : prevIndex - 1;
+          } while (urls[prevIndex] === null && prevIndex !== currentIndex);
+          showImage(prevIndex);
         });
 
-        
-        // const button = document.getElementById('see-rarity');
-        // button.addEventListener('click', () => {
-        //   const dataObject = JSON.parse(vin_data.vin);
+        document.getElementById('next').addEventListener('click', () => {
+          let nextIndex = currentIndex;
+          do {
+            nextIndex = (nextIndex === urls.length - 1) ? 0 : nextIndex + 1;
+          } while (urls[nextIndex] === null && nextIndex !== currentIndex);
+          showImage(nextIndex);
+        });
 
-        //   fetch('/api/rarity', {
-        //       method: 'POST',
-        //       headers: {
-        //           'Content-Type': 'application/json',
-        //       },
-        //       body: dataObject,
-        //   })
-        //   .then(response => response.json())
-        //   .then(data => {
-        //       document.getElementById('response').textContent = `1 of ${data[0].Count}`;
-        //       document.getElementById('snark').textContent = "- on the fourth Tuesday, after company lunch with a crescent moon when Joey went home early...";
-        //   })
-        //   .catch((error) => {
-        //       console.error('Error:', error);
-        //   });
-        // });
+        document.querySelectorAll('#rpoTable tbody tr').forEach(row => {
+          const url = row.getAttribute('data-url');
+          row.addEventListener('mousedown', handleMouseDown);
+          row.addEventListener('click', (event) => handleRowClick(url, event));
+        });
       });
     </script>
 </body>

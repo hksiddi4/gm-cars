@@ -1,8 +1,3 @@
-DROP DATABASE vehicles;
-CREATE DATABASE vehicles;
-USE vehicles;
-
-DROP TABLE gm;
 CREATE TABLE IF NOT EXISTS gm (
 	vin varchar(17) PRIMARY KEY,
     modelYear int,
@@ -115,7 +110,7 @@ ORDER BY msrp DESC;
 SELECT * FROM gm WHERE JSON_CONTAINS(allJson->'$.maker', '"GMCANADA"');
 -- Option 3
 SELECT * FROM gm WHERE JSON_CONTAINS(allJson->'$.sell_source', '"14"');
--------------------------------------------------------------------------------------
+
 -- Playing with queries -------------------------------------------------------------
 SELECT allJson->'$.maker' AS maker, 
        modelYear,
@@ -143,11 +138,10 @@ SELECT * FROM gm
 WHERE trim = 'V-SERIES BLACKWING' AND
 allJson->'$.maker' = 'CADILLAC'
 ORDER BY msrp DESC;
---------------------------------------------------------------------------------------
+
 -- Updating LT1 trim to proper 1LZ designation--------
 SELECT * FROM gm WHERE trim = '1LZ';
 UPDATE gm SET trim = 'LT1' WHERE trim = '1LZ';
-------------------------------------------------------
 
 -- Finding exact match with RPO values ---------------
 SELECT COUNT(*) AS Count FROM gm WHERE JSON_UNQUOTE(JSON_EXTRACT(allJson, '$.Options')) = '["AEF", "AEQ", "AF6", "AHC", "AHE", "AHF", "AHH", "AJC", "AJW", "AKE", "AL0", "AM9", "AQ9", "ATH", "AT8", "AVK", "AVN", "AVU", "AXG", "AXJ", "AYG", "A2X", "A45", "A69", "A7K", "BTV", "BYO", "B34", "B35", "B6A", "B70", "CE1", "CF5", "CJ2", "C59", "C73", "DD8", "DEG", "DMB", "D52", "D75", "EF7", "E22", "E28", "FE2", "FJW", "F46", "GJI", "HRD", "HS1", "H2X", "IOT", "JE5", "JF5", "JJ2", "JM8", "J22", "J77", "KA1", "KB7", "KD4", "KI3", "KL9", "KPA", "KRV", "KSG", "KU9", "K12", "K4C", "LAL", "LSY", "MAH", "MCR", "MDB", "M5N", "NB9", "NE1", "NE8", "NK4", "NUG", "N37", "PPW", "PZJ", "Q4D", "RFD", "RSR", "R6M", "R6W", "R9N", "SLM", "TDM", "TFK", "TQ5", "TSQ", "TTW", "T4L", "T8Z", "UC3", "UDD", "UD5", "UEU", "UE1", "UE4", "UFG", "UGE", "UGN", "UG1", "UHX", "UIT", "UJN", "UKC", "UKJ", "UMN", "UQS", "UVB", "UVZ", "U2K", "U2L", "U80", "VHM", "VH9", "VK3", "VRF", "VRG", "VRH", "VRJ", "VRK", "VRL", "VRM", "VRN", "VRR", "VT7", "VV4", "V76", "V8D", "WMW", "XL8", "Y26", "Y5X", "Y5Y", "Y6F", "0ST", "00G", "00Z", "1NF", "1SE", "1SZ", "2NF", "2ST", "4AA", "5A7", "5FC", "6X1", "7X1", "719", "8X2", "9L3", "9X2"]';

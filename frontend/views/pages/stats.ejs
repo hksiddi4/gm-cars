@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('../partials/analytics'); %>
+    <%- include('../partials/head'); %>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Stats</title>
+</head>
+<body>
+    <%- include('../partials/header'); %>
+    <div class="container" style="max-width: 75%;">
+        <div class="row pt-4">
+            <div class="col">
+                <h1 style="font-weight: bold;">Statistics</h1>
+            </div>
+        </div>
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            <div class="statsDropdown">
+                <select id="selectedStats" class="form-select small-dropdown <%= category ? 'active-filter' : '' %>">
+                    <option value="">Category</option>
+                    <option value="color" <% if (category === 'color') { %> selected <% } %>>Color</option>
+                    <!-- <option value="msrp" <% if (category === 'msrp') { %> selected <% } %>>MSRP</option> -->
+                </select>
+            </div>
+            <% if (category === 'color') { %>
+            <div class="d-flex flex-wrap gap-2 mb-3 w-100">
+                <div class="statsDropdown">
+                    <select id="filterYear" class="form-select small-dropdown <%= selectedYear ? 'active-filter' : '' %>">
+                        <option value="">Year</option>
+                        <% year_list.forEach(y => { %>
+                        <option value="<%= y %>" <%= selectedYear == y ? 'selected' : '' %>><%= y %></option>
+                        <% }) %>
+                    </select>
+                </div>
+                <%
+                    const hasCorvette = model_list.some(m => m.startsWith('CORVETTE'));
+                    const combinedModels = hasCorvette ? ['CORVETTE (ALL)', ...model_list] : model_list;
+                    combinedModels.sort((a, b) => a.localeCompare(b));
+                %>
+                <div class="statsDropdown">
+                    <select id="filterModel" class="form-select small-dropdown <%= selectedModel ? 'active-filter' : '' %>">
+                        <option value="">Model</option>
+                        <% combinedModels.forEach(m => { %>
+                            <option value="<%= m %>" <%= selectedModel === m ? 'selected' : '' %>><%= m %></option>
+                        <% }) %>
+                    </select>
+                </div>
+                <div class="statsDropdown">
+                    <select id="filterBody" class="form-select small-dropdown <%= selectedBody ? 'active-filter' : '' %>">
+                        <option value="">Body</option>
+                        <% body_list.forEach(y => { %>
+                        <option value="<%= y %>" <%= selectedBody == y ? 'selected' : '' %>><%= y %></option>
+                        <% }) %>
+                    </select>
+                </div>
+                <div class="statsDropdown">
+                    <select id="filterTrim" class="form-select small-dropdown <%= selectedTrim ? 'active-filter' : '' %>">
+                        <option value="">Trim</option>
+                        <% trim_list.forEach(m => { %>
+                        <option value="<%= m %>" <%= selectedTrim == m ? 'selected' : '' %>><%= m %></option>
+                        <% }) %>
+                    </select>
+                </div>
+                <div class="statsDropdown">
+                    <select id="filterEngine" class="form-select small-dropdown <%= selectedEngine ? 'active-filter' : '' %>">
+                        <option value="">Engine</option>
+                        <% engine_list.forEach(y => { %>
+                        <option value="<%= y %>" <%= selectedEngine == y ? 'selected' : '' %>><%= y %></option>
+                        <% }) %>
+                    </select>
+                </div>
+                <div class="statsDropdown">
+                    <select id="filterTrans" class="form-select small-dropdown <%= selectedTrans ? 'active-filter' : '' %>">
+                        <option value="">Trans</option>
+                        <% trans_list.forEach(m => { %>
+                        <option value="<%= m %>" <%= selectedTrans == m ? 'selected' : '' %>><%= m %></option>
+                        <% }) %>
+                    </select>
+                </div>
+            </div>
+            <% } %>
+        </div>
+        <% if (selectedYear === '2019') { %>
+            <div style="color: #cc6666; margin-bottom: 15px;">
+                Data available from May 17, 2019 onward
+            </div>
+        <% } %>
+
+        <% if (stats_data && stats_data.length > 0) { %>
+            <div class="barChart">
+                <canvas id="barChart"></canvas>
+            </div>
+            <p id="totalCount"></p>
+            <div id="top-scroll-wrapper">
+                <div id="top-scroll"></div>
+            </div>
+            <div class="table-responsive" id="bottom-scroll-wrapper">
+                <table class="table-veh table-hover border shadow" id="colorTable">
+                    <thead>
+                        <tr>
+                            <th scope="col">
+                                Rank
+                            </th>
+                            <th scope="col">
+                                RPO
+                            </th>
+                            <th scope="col">
+                                Count
+                            </th>
+                            <th scope="col">
+                                Names
+                            </th>
+                            <th scope="col">
+                                % of Total
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% stats_data.forEach(function(data) { %>
+                            <tr>
+                                <td scope="row"><%= data.rank %></td>
+                                <td scope="row" style="white-space: nowrap; text-align: left;">
+                                    <!-- Apply color RPO on SQL to Fix grouped colors -->
+                                    <img id="sample" src="../../img/extColors/<%= data.rpo_code ? data.rpo_code : 'default' %>.png" alt="Color Code: <%= data.rpo_code %>" width="20" height="20" style="margin-right: 8px; border-radius: 50%;" onerror="this.onerror=null; this.src='../../img/extColors/default.png';">
+                                    <%= data.rpo_code %>
+                                </td>
+                                <td scope="row"><%= data.total_count %></td>
+                                <td scope="row" style="text-align: left;">
+                                <% data.color_names.split(',').forEach((name, i) => { %>
+                                    <a class="color-link" href="/vehicles?color=<%= encodeURIComponent(name.trim()) %>"><%= name.trim() %></a><%= i < data.color_names.split(',').length - 1 ? ', ' : '' %>
+                                <% }) %>
+                                </td>
+                                <td scope="row"><%= data.percent %>%</td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        <% } %>
+        <%- include('../partials/footer'); %>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const statsSelect = document.getElementById('selectedStats');
+            
+            statsSelect.addEventListener('change', function () {
+                const selectedValue = this.value;
+                const url = new URL(window.location.href);
+                url.searchParams.set('category', selectedValue);
+                window.location.href = url.toString();
+            });
+        });
+    </script>
+    <% if (stats_data && stats_data.length > 0) { %>
+        <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+        <script>
+            const stats_data = <%- JSON.stringify(stats_data) %>;
+            console.log(stats_data);
+
+            document.addEventListener('DOMContentLoaded', function () {
+                const filters = ['selectedStats', 'filterYear', 'filterModel', 'filterBody', 'filterTrim', 'filterEngine', 'filterTrans'];
+                const url = new URL(window.location.href);
+
+                filters.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (!el) return;
+                    el.addEventListener('change', function () {
+                        const value = this.value;
+                        if (id === 'selectedStats') {
+                            if (value) {
+                                url.searchParams.set('category', value);
+                            } else {
+                                url.searchParams.delete('category');
+                                ['year','model','body','trim','engine','trans'].forEach(param => url.searchParams.delete(param));
+                            }
+                        } else {
+                            const paramMap = {
+                                filterYear: 'year',
+                                filterModel: 'model',
+                                filterBody: 'body',
+                                filterTrim: 'trim',
+                                filterEngine: 'engine',
+                                filterTrans: 'trans'
+                            };
+                            const param = paramMap[id];
+                            if (value) url.searchParams.set(param, value);
+                            else url.searchParams.delete(param);
+                        }
+                        window.location.href = url.toString();
+                    });
+                });
+
+                const totalCount = stats_data.reduce((sum, item) => {
+                    const count = Number(item.total_count.replace(/,/g, ''));
+                    return sum + (isNaN(count) ? 0 : count);
+                }, 0);
+                const totalCountText = document.getElementById('totalCount');
+                totalCountText.textContent = `Retrieved: ${totalCount.toLocaleString()} vehicles`;
+                
+                // SCROLL SYNC
+                const topScroll = document.getElementById('top-scroll-wrapper');
+                const bottomScroll = document.getElementById('bottom-scroll-wrapper');
+
+                if (topScroll && bottomScroll) {
+                    let isSyncingTop = false;
+                    let isSyncingBottom = false;
+
+                    topScroll.addEventListener('scroll', () => {
+                        if (!isSyncingTop) {
+                        isSyncingBottom = true;
+                        bottomScroll.scrollLeft = topScroll.scrollLeft;
+                        }
+                        isSyncingTop = false;
+                    });
+
+                    bottomScroll.addEventListener('scroll', () => {
+                        if (!isSyncingBottom) {
+                        isSyncingTop = true;
+                        topScroll.scrollLeft = bottomScroll.scrollLeft;
+                        }
+                        isSyncingBottom = false;
+                    });
+
+                    const table = document.querySelector('.table-veh');
+                    if (table) {
+                        requestAnimationFrame(() => {
+                            document.getElementById('top-scroll').style.width = table.scrollWidth + 'px';
+                        });
+                    }
+                }
+
+                let rawData = stats_data.map(data => ({
+                    label: data.rpo_code || '',
+                    count: Number(String(data.total_count).replace(/,/g, '')) || 0,
+                    color_names: data.color_names || ''
+                }));
+
+                rawData.sort((a, b) => a.count - b.count);
+                rawData = rawData.slice(0, 20);
+
+                const labels = rawData.map(d => d.label);
+                const counts = rawData.map(d => d.count);
+
+                const ctx = document.getElementById('barChart').getContext('2d');
+
+                Chart.register(ChartDataLabels);
+
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Count',
+                            data: counts,
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1,
+                            borderRadius: 2,
+                            barPercentage: 1,
+                            categoryPercentage: 0.8
+                        }]
+                    },
+                    options: {
+                        maintainAspectRatio: false,
+                        responsive: true,
+                        indexAxis: 'y',
+                        scales: {
+                        y: {
+                            type: 'category',
+                            ticks: {
+                                autoSkip: false,
+                                color: '#ffffff',
+                                font: { size: 10 }
+                            }
+                        },
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: '#ffffff',
+                                callback: function (value) {
+                                    if (value >= 1e6) return (value / 1e6).toFixed(1) + 'M';
+                                    if (value >= 1e3) return (value / 1e3).toFixed(1) + 'k';
+                                    return value;
+                                }
+                            }
+                        }
+                        },
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Top 20 Rarest Colors',
+                                color: '#ffffff',
+                                font: { size: 20 }
+                            },
+                            datalabels: {
+                                color: '#ffffff',
+                                formatter: (value) => value.toLocaleString(),
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    title: () => '',
+                                    label: (context) => {
+                                        const index = context.dataIndex;
+                                        return rawData[index].color_names;
+                                    }
+                                },
+                                displayColors: false
+                            },
+                            legend: { display: false }
+                        }
+                    }
+                });
+            });
+        </script>
+    <% } %>
+</body>
+</html>

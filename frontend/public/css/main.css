@@ -208,6 +208,9 @@ img {
     padding: 20px 0 5px;
     color: #858585;
     margin-top: auto;
+    justify-content: space-between;
+    align-items: center;
+    display: flex;
 }
 
 /* Vehicles */
@@ -614,8 +617,10 @@ img {
     .footer .container-fluid {
         flex-direction: row;
         flex-wrap: wrap;
-        justify-content: center;
+        justify-content: space-between;
         text-align: center;
+        align-items: center;
+        display: flex;
         gap: 3px;
     }
 

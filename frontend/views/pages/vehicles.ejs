@@ -177,32 +177,43 @@
                                     <select id="rpoSelect" class="form-select small-dropdown <%= selectedRPO ? 'active-filter' : '' %>">
                                         <% const rpo = Array.isArray(selectedRPO) ? selectedRPO[0] : selectedRPO; %>
                                         <option value="" <% if (!rpo) { %>selected<% } %>>Package/Option</option>
-                                        <option value="Z4B" <% if (rpo === 'Z4B') { %>selected<% } %>>Camaro Collector's Edition</option>
-                                        <option value="X56" <% if (rpo === 'X56') { %>selected<% } %>>Camaro Garage 56 Special Edition</option>
-                                        <option value="WBL" <% if (rpo === 'WBL') { %>selected<% } %>>Redline Edition</option>
-                                        <option value="B2E" <% if (rpo === 'B2E') { %>selected<% } %>>Shock and Steel Edition</option>
-                                        <option value="H40" <% if (rpo === 'H40') { %>selected<% } %>>Hendrick Motorsports 40th Anniversary Edition</option>
-                                        <option value="PEH" <% if (rpo === 'PEH') { %>selected<% } %>>Hertz / Hendrick Motorsports Edition</option>
-                                        <option value="A1Z" <% if (rpo === 'A1Z') { %>selected<% } %>>ZL1 1LE Extreme Track Performance Package</option>
-                                        <option value="A1Y" <% if (rpo === 'A1Y') { %>selected<% } %>>SS 1LE Track Performance Package</option>
-                                        <option value="A1X" <% if (rpo === 'A1X') { %>selected<% } %>>LT 1LE Track Performance Package</option>
-                                        <option value="ZCR" <% if (rpo === 'ZCR') { %>selected<% } %>>IMSA GTLM Championship C8.R Edition</option>
-                                        <option value="Y70" <% if (rpo === 'Y70') { %>selected<% } %>>Corvette Stingray 70th Anniversary Edition</option>
-                                        <option value="Z07" <% if (rpo === 'Z07') { %>selected<% } %>>Z07 Performance Package</option>
-                                        <option value="Z51" <% if (rpo === 'Z51') { %>selected<% } %>>Z51 Performance Package</option>
-                                        <option value="ZTK" <% if (rpo === 'ZTK') { %>selected<% } %>>ZTK Track Performance Package</option>
-                                        <option value="ZLE" <% if (rpo === 'ZLE') { %>selected<% } %>>CT4-V Blackwing Watkins Glen IMSA Edition</option>
-                                        <option value="ZLD" <% if (rpo === 'ZLD') { %>selected<% } %>>CT4-V Blackwing Sebring IMSA Edition</option>
-                                        <option value="ZLG" <% if (rpo === 'ZLG') { %>selected<% } %>>CT4-V Blackwing Road Atlanta IMSA Edition</option>
-                                        <option value="ZLK" <% if (rpo === 'ZLK') { %>selected<% } %>>CT4-V Blackwing Arrival Edition</option>
-                                        <option value="ZLJ" <% if (rpo === 'ZLJ') { %>selected<% } %>>CT4-V Blackwing Impact Edition</option>
-                                        <option value="ZLR" <% if (rpo === 'ZLR') { %>selected<% } %>>CT4-V Blackwing Elevation Edition</option>
-                                        <option value="ZLZ" <% if (rpo === 'ZLZ') { %>selected<% } %>>CT4-V Blackwing Petit Pataud Special Edition</option>
-                                        <option value="ABQ" <% if (rpo === 'ABQ') { %>selected<% } %>>CT5-V Blackwing 120th Anniversary Edition</option>
-                                        <option value="ZLT" <% if (rpo === 'ZLT') { %>selected<% } %>>CT5-V Blackwing 20th Anniversary Edition</option>
-                                        <option value="ZLZ" <% if (rpo === 'ZLZ') { %>selected<% } %>>CT5-V Blackwing Le Monstre Special Edition</option>
-                                        <option value="Z6X" <% if (rpo === 'Z6X') { %>selected<% } %>>Extreme Off-Road Package</option>
-                                        <option value="WFP" <% if (rpo === 'WFP') { %>selected<% } %>>Omega Edition</option>
+                                        <optgroup label="Camaro">
+                                            <option value="Z4B" <% if (rpo === 'Z4B') { %>selected<% } %>>Collector's Edition</option>
+                                            <option value="X56" <% if (rpo === 'X56') { %>selected<% } %>>Garage 56 Special Edition</option>
+                                            <option value="A1Z" <% if (rpo === 'A1Z') { %>selected<% } %>>ZL1 1LE Extreme Track Performance Package</option>
+                                            <option value="A1Y" <% if (rpo === 'A1Y') { %>selected<% } %>>SS 1LE Track Performance Package</option>
+                                            <option value="A1X" <% if (rpo === 'A1X') { %>selected<% } %>>LT 1LE Track Performance Package</option>
+                                            <option value="H40" <% if (rpo === 'H40') { %>selected<% } %>>Hendrick Motorsports 40th Anniversary Edition</option>
+                                            <option value="PEH" <% if (rpo === 'PEH') { %>selected<% } %>>Hertz / Hendrick Motorsports Edition</option>
+                                            <option value="Z4Z" <% if (rpo === 'Z4Z') { %>selected<% } %>>Indy 500 Pace Car</option>
+                                            <option value="WBL" <% if (rpo === 'WBL') { %>selected<% } %>>Redline Edition</option>
+                                            <option value="B2E" <% if (rpo === 'B2E') { %>selected<% } %>>Shock and Steel Edition</option>
+                                        </optgroup>
+                                        <optgroup label="Corvette C8">
+                                            <option value="ZCR" <% if (rpo === 'ZCR') { %>selected<% } %>>IMSA GTLM Championship C8.R Edition</option>
+                                            <option value="ZTK" <% if (rpo === 'ZTK') { %>selected<% } %>>ZTK Track Performance Package</option>
+                                            <option value="Z07" <% if (rpo === 'Z07') { %>selected<% } %>>Z07 Performance Package</option>
+                                            <option value="Z51" <% if (rpo === 'Z51') { %>selected<% } %>>Z51 Performance Package</option>
+                                            <option value="Y70" <% if (rpo === 'Y70') { %>selected<% } %>>Stingray 70th Anniversary Edition</option>
+                                        </optgroup>
+                                        <optgroup label="CT4-V Blackwing">
+                                            <option value="ZLE" <% if (rpo === 'ZLE') { %>selected<% } %>>Watkins Glen IMSA Edition</option>
+                                            <option value="ZLD" <% if (rpo === 'ZLD') { %>selected<% } %>>Sebring IMSA Edition</option>
+                                            <option value="ZLG" <% if (rpo === 'ZLG') { %>selected<% } %>>Road Atlanta IMSA Edition</option>
+                                            <option value="ZLK" <% if (rpo === 'ZLK') { %>selected<% } %>>Arrival Edition</option>
+                                            <option value="ZLJ" <% if (rpo === 'ZLJ') { %>selected<% } %>>Impact Edition</option>
+                                            <option value="ZLR" <% if (rpo === 'ZLR') { %>selected<% } %>>Elevation Edition</option>
+                                            <option value="ZLZ" <% if (rpo === 'ZLZ') { %>selected<% } %>>Petit Pataud Special Edition</option>
+                                        </optgroup>
+                                        <optgroup label="CT5-V Blackwing">
+                                            <option value="ABQ" <% if (rpo === 'ABQ') { %>selected<% } %>>120th Anniversary Edition</option>
+                                            <option value="ZLT" <% if (rpo === 'ZLT') { %>selected<% } %>>20th Anniversary Edition</option>
+                                            <option value="ZLZ" <% if (rpo === 'ZLZ') { %>selected<% } %>>Le Monstre Special Edition</option>
+                                        </optgroup>
+                                        <optgroup label="Hummer EV">
+                                            <option value="Z6X" <% if (rpo === 'Z6X') { %>selected<% } %>>Extreme Off-Road Package</option>
+                                            <option value="WFP" <% if (rpo === 'WFP') { %>selected<% } %>>Omega Edition</option>
+                                        </optgroup>
                                         <option value="OAR" <% if (rpo === 'OAR') { %>selected<% } %>>Pre-Production Vehicle</option>
                                     </select>
                                 </div>
@@ -313,7 +324,7 @@
         }
 
         function toggleMSRPOrder() {
-            toggleOrder("msrp", "ASC", "DESC", "msrpIcon");
+            toggleOrder("msrp", "DESC", "ASC", "msrpIcon");
         }
 
         function toggleVINOrder() {

@@ -159,20 +159,21 @@ def sort_price():
         rpo_n = len(rpo_list)
         join_clause += "\n            JOIN Options opt ON v.vehicle_id = opt.vehicle_id"
         rpo_conditions = {
-            "H40": ["(modelYear = '2024' AND model = 'CAMARO' AND trim = '2SS' AND color_name = 'RADIANT RED TINTCOAT' AND opt.option_code = 'SL1') OR v.vin IN ('1G1FK1R65R0117449', '1G1FK3D62R0118478')"],
-            "WBL": ["model = 'CAMARO'", "trim NOT IN ('ZL1', '1LS')", "color_name IN ('BLACK', 'SUMMIT WHITE', 'SHARKSKIN METALLIC', 'SATIN STEEL GRAY METALLIC')"],
-            "B2E": ["model = 'CAMARO'", "trim IN ('2LT', '2SS', '3LT')", "modelYear != '2024'", "color_name IN ('BLACK', 'SUMMIT WHITE', 'RAPID BLUE', 'SHARKSKIN METALLIC', 'SATIN STEEL GRAY METALLIC', 'SHOCK')"],
             "Z4B": ["modelYear = '2024'", "model = 'CAMARO'", "color_name IN ('PANTHER BLACK MATTE', 'PANTHER BLACK METALLIC')"],
             "X56": ["modelYear = '2024'", "model = 'CAMARO'", "body = 'COUPE'", "trim = 'ZL1'", "transmission_type = 'M6'", "color_name = 'RIPTIDE BLUE METALLIC'", "msrp = '89185'"],
             "A1Z": ["model = 'CAMARO'", "body = 'COUPE'", "trim = 'ZL1'"],
             "A1Y": ["model = 'CAMARO'", "body = 'COUPE'", "trim IN ('1SS', '2SS')"],
             "A1X": ["modelYear IN ('2019', '2020', '2021')", "model = 'CAMARO'", "body = 'COUPE'", "trim IN ('1LT', '2LT', '3LT')"],
+            "H40": ["(modelYear = '2024' AND model = 'CAMARO' AND trim = '2SS' AND color_name = 'RADIANT RED TINTCOAT' AND opt.option_code = 'SL1') OR v.vin IN ('1G1FK1R65R0117449', '1G1FK3D62R0118478')"],
             "PEH": ["modelYear = '2020'", "model = 'CAMARO'", "body = 'COUPE'", "trim IN ('2SS', 'ZL1')", "transmission_type = 'A10'", "color_name = 'BLACK'"],
-            "Z51": ["model = 'CORVETTE STINGRAY'"],
+            "Z4Z": ["model = 'CAMARO'", "body = 'CONVERTIBLE'", "trim = '2SS'", "color_name IN ('WILD CHERRY TINTCOAT', 'SUMMIT WHITE', 'SHARKSKIN METALLIC', 'SATIN STEEL GRAY METALLIC')"],
+            "WBL": ["model = 'CAMARO'", "trim NOT IN ('ZL1', '1LS')", "color_name IN ('BLACK', 'SUMMIT WHITE', 'SHARKSKIN METALLIC', 'SATIN STEEL GRAY METALLIC')"],
+            "B2E": ["model = 'CAMARO'", "trim IN ('2LT', '2SS', '3LT')", "modelYear != '2024'", "color_name IN ('BLACK', 'SUMMIT WHITE', 'RAPID BLUE', 'SHARKSKIN METALLIC', 'SATIN STEEL GRAY METALLIC', 'SHOCK')"],
             "ZCR": ["model = 'CORVETTE STINGRAY'", "modelYear = '2022'", "trim = '3LT'", "(color_name = 'HYPERSONIC GRAY METALLIC' OR color_name = 'ACCELERATE YELLOW METALLIC')"],
-            "Y70": ["model IN ('CORVETTE STINGRAY', 'CORVETTE Z06')", "modelYear = '2023'", "trim IN ('3LT', '3LZ')", "(color_name = 'WHITE PEARL METALLIC TRICOAT' OR color_name = 'CARBON FLASH METALLIC')"],
-            "Z07": ["model = 'CORVETTE Z06'", "modelYear >= '2023'"],
             "ZTK": ["model = 'CORVETTE ZR1'", "modelYear >= '2025'"],
+            "Z07": ["model = 'CORVETTE Z06'", "modelYear >= '2023'"],
+            "Z51": ["model = 'CORVETTE STINGRAY'"],
+            "Y70": ["model IN ('CORVETTE STINGRAY', 'CORVETTE Z06')", "modelYear = '2023'", "trim IN ('3LT', '3LZ')", "(color_name = 'WHITE PEARL METALLIC TRICOAT' OR color_name = 'CARBON FLASH METALLIC')"],
             "ZLE": ["modelYear = '2023'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "color_name = 'ELECTRIC BLUE'"],
             "ZLD": ["modelYear = '2023'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "color_name = 'MAVERICK NOIR FROST'"],
             "ZLG": ["modelYear = '2023'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "color_name = 'RIFT METALLIC'"],
@@ -182,6 +183,7 @@ def sort_price():
             "ZLZ": ["modelYear = '2025'", "model IN ('CT4', 'CT5')", "trim = 'V-SERIES BLACKWING'", "color_name = 'MAGNUS METAL FROST'"],
             "ABQ": ["modelYear = '2023'", "model = 'CT5'", "trim = 'V-SERIES BLACKWING'", "msrp > '118000'"],
             "ZLT": ["modelYear = '2024'", "model = 'CT5'", "trim = 'V-SERIES BLACKWING'", "opt.option_code IN ('ZLT', 'ZLV')"],
+            # ZLZ
             "Z6X": ["model IN ('HUMMER EV SUV', 'HUMMER EV PICKUP')"],
             "WFP": ["modelYear = '2024'", "model = 'HUMMER EV SUV'", "trim = '3X'", "color_name = 'NEPTUNE BLUE MATTE'"],
         }

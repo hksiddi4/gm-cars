@@ -221,6 +221,15 @@ img {
     overflow: visible;
 }
 
+.form-select.small-dropdown optgroup {
+    font-weight: bold;
+    padding-left: 0 !important;
+}
+
+.form-select.small-dropdown optgroup option {
+    padding-left: 1.25rem;
+}
+
 .form-select.small-dropdown option {
     font-weight: normal;
 }

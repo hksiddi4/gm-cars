@@ -143,6 +143,8 @@ body {
     background-color: #2e2e2e;
     display: flex;
     flex-direction: column;
+    min-height: 100vh;
+    margin: 0;
 }
 
 h1, h2, h4, p {
@@ -175,9 +177,9 @@ h1, h2, h4, p {
 }
 
 .wrapper {
+    flex: 1;
+    display: flex;
     flex-direction: column;
-    min-height: 100vh;
-    overflow: hidden;
 }
 
 .table-responsive {
@@ -205,7 +207,7 @@ img {
 .footer {
     width: 100%;
     text-align: inherit;
-    padding: 20px 0 5px;
+    padding: 0 0 5px;
     color: #858585;
     margin-top: auto;
     justify-content: space-between;
@@ -624,13 +626,11 @@ img {
     }
 
     .footer .container-fluid {
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        text-align: center;
-        align-items: center;
         display: flex;
-        gap: 3px;
+    }
+
+    .footer a {
+        text-align: right;
     }
 
     /* Vehicles */

@@ -4,6 +4,7 @@
   <%- include('../partials/analytics'); %>
   <%- include('../partials/head'); %>
   <% const vin = vin_data[0]; %>
+  <link rel="canonical" href="https://gmbuildcounts.com/search">
   <title>
     <%= (vin.modelYear ? "'" + vin.modelYear.toString().slice(-2) : 'N/A') %>
     <%= vin.model || 'N/A' %> 

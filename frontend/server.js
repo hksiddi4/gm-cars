@@ -130,13 +130,16 @@ app.get('/vehicles', function(req, res) {
 });
 
 app.get('/search', function(req, res) {
-    var vin = req.query.vin;
-    axios.get(`${baseURL}/search?vin=${vin}`, { timeout: 10000 })
+    var vin = req.query.vin.trim();
+    if (!vin || vin.length !== 17) {
+        return res.status(400).render('pages/errors/400', { req: req });
+    }
+    axios.get(`${baseURL}/search?vin=${encodeURIComponent(vin)}`, { timeout: 10000 })
     .then((response)=>{
         var vin_data = response.data;
 
-        if (vin_data.length === 0) {
-            res.status(404).render('pages/errors/404', { req: req });
+        if (!vin_data || vin_data.length === 0) {
+            res.status(400).render('pages/errors/400', { req: req });
         } else {
             vin_data.forEach(function(data) {
                 data.msrp = formatCurrency(data.msrp);

@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <%- include('../partials/analytics'); %>
   <%- include('../partials/head'); %>
   <% const vin = vin_data[0]; %>
   <link rel="canonical" href="https://gmbuildcounts.com/search">
@@ -10,6 +9,7 @@
     <%= vin.model || 'N/A' %> 
     <%= vin.trim || 'N/A' %> 
   </title>
+  <%- include('../partials/analytics'); %>
 </head>
 <body>
   <%- include('../partials/header'); %>

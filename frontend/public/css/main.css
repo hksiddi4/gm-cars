@@ -56,8 +56,10 @@
 }
 
 header {
-    position: relative;
-    z-index: 1000;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1001;
 }
 
 .header-background {
@@ -141,6 +143,7 @@ html, body {
 body {
     font-family: 'Inter', sans-serif;
     background-color: #2e2e2e;
+    padding-top: 70px;
     display: flex;
     flex-direction: column;
     min-height: 100vh;

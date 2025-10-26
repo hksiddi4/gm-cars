@@ -33,43 +33,63 @@
 
     <div class="container pt-4">
         <h1 style="font-weight: bold;">RPOs</h1>
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            <div class="statsDropdown">
+                <select id="modelSelect" class="form-select small-dropdown">
+                    <option value="">Select Model</option>
+                    <option value="camaro">Camaro</option>
+                </select>
+            </div>
+        </div>
         <div class="rpo-container" id="rpoContainer"></div>
     </div>
 
-    <%- include('../partials/footer'); %>
-
     <script>
         const container = document.getElementById('rpoContainer');
-        let camaroRpo = <%- JSON.stringify(camaroRpo) %>;
+        const modelSelect = document.getElementById('modelSelect');
 
-        Object.keys(camaroRpo).forEach(rpo => {
-            const card = document.createElement('div');
-            card.className = 'rpo-card';
+        // Example RPO data for multiple models
+        const allRpos = {
+            camaro: <%- JSON.stringify(camaroRpo) %>,
+        };
 
-            const img = document.createElement('img');
-            img.src = `../img/rpos/camaro/${rpo}.jpg`;
-            img.alt = rpo;
-            img.onerror = function() {
-                if (!this.dataset.fallback) {
-                    this.dataset.fallback = 'true';
-                    this.src = '../img/rpos/camaro/placeholder.jpg';
-                }
-            };
+        function renderRPOs(model) {
+            container.innerHTML = '';
+            const rpos = allRpos[model];
+            Object.keys(rpos).forEach(rpo => {
+                const card = document.createElement('div');
+                card.className = 'rpo-card';
 
-            const title = document.createElement('strong');
-            title.textContent = rpo;
+                const img = document.createElement('img');
+                img.src = `../img/rpos/${model}/${rpo}.jpg`;
+                img.alt = rpo;
+                img.onerror = function() {
+                    if (!this.dataset.fallback) {
+                        this.dataset.fallback = 'true';
+                        this.src = `../img/rpos/${model}/placeholder.jpg`;
+                    }
+                };
 
-            const descDiv = document.createElement('div');
-            descDiv.className = 'rpo-description';
-            const desc = camaroRpo[rpo];
-            const lines = Array.isArray(desc) ? desc : [desc];
-            descDiv.innerHTML = lines.map(line => `<div>${line}</div>`).join('');
+                const title = document.createElement('strong');
+                title.textContent = rpo;
 
-            card.appendChild(img);
-            card.appendChild(title);
-            card.appendChild(descDiv);
-            container.appendChild(card);
-        });
+                const descDiv = document.createElement('div');
+                descDiv.className = 'rpo-description';
+                const desc = rpos[rpo];
+                const lines = Array.isArray(desc) ? desc : [desc];
+                descDiv.innerHTML = lines.map(line => `<div>${line}</div>`).join('');
+
+                card.appendChild(img);
+                card.appendChild(title);
+                card.appendChild(descDiv);
+                container.appendChild(card);
+            });
+        }
+
+        modelSelect.addEventListener('change', e => renderRPOs(e.target.value));
+
+        // Initial render
+        renderRPOs(modelSelect.value);
     </script>
 </body>
 </html>

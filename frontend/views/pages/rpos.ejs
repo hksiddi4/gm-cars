@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('../partials/head'); %>
+    <meta property="og:url" content="https://www.gmbuildcounts.com/">
+    <link rel="canonical" href="https://gmbuildcounts.com/rpos">
+    <title>RPOs</title>
+    <%- include('../partials/analytics'); %>
+    <style>
+        .rpo-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            justify-content: start;
+        }
+        .rpo-card {
+            padding: 8px;
+            width: 400px;
+            text-align: center;
+            color: white;
+        }
+        .rpo-card img {
+            width: 100%;
+            height: auto;
+        }
+        .rpo-description {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <%- include('../partials/header'); %>
+
+    <div class="container pt-4">
+        <h1 style="font-weight: bold;">RPOs</h1>
+        <div class="rpo-container" id="rpoContainer"></div>
+    </div>
+
+    <%- include('../partials/footer'); %>
+
+    <script>
+        const container = document.getElementById('rpoContainer');
+        let camaroRpo = <%- JSON.stringify(camaroRpo) %>;
+
+        Object.keys(camaroRpo).forEach(rpo => {
+            const card = document.createElement('div');
+            card.className = 'rpo-card';
+
+            const img = document.createElement('img');
+            img.src = `../img/rpos/camaro/${rpo}.jpg`;
+            img.alt = rpo;
+            img.onerror = function() {
+                if (!this.dataset.fallback) {
+                    this.dataset.fallback = 'true';
+                    this.src = '../img/rpos/camaro/placeholder.jpg';
+                }
+            };
+
+            const title = document.createElement('strong');
+            title.textContent = rpo;
+
+            const descDiv = document.createElement('div');
+            descDiv.className = 'rpo-description';
+            const desc = camaroRpo[rpo];
+            const lines = Array.isArray(desc) ? desc : [desc];
+            descDiv.innerHTML = lines.map(line => `<div>${line}</div>`).join('');
+
+            card.appendChild(img);
+            card.appendChild(title);
+            card.appendChild(descDiv);
+            container.appendChild(card);
+        });
+    </script>
+</body>
+</html>

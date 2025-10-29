@@ -64,6 +64,7 @@ CREATE TABLE Dealers (
     dealer_name VARCHAR(64),
     location VARCHAR(64),
     sitedealer_code VARCHAR(5)
+    UNIQUE KEY idx_dealer_unique (dealer_name, location, sitedealer_code)
 );
 
 -- MMC Codes Table
@@ -166,6 +167,13 @@ WHERE exterior_color NOT IN (SELECT color_name FROM Colors);
 SELECT * FROM Colors;
 
 -- Insert Dealers
+INSERT IGNORE INTO Dealers (dealer_name, location, sitedealer_code)
+SELECT DISTINCT 
+    dealer, 
+    location, 
+    JSON_UNQUOTE(JSON_EXTRACT(allJson, '$.sitedealer_code')) AS sitedealer_code
+FROM staging_allGM;
+-- Old Insert Dealers
 INSERT INTO Dealers (dealer_name, location, sitedealer_code)
 SELECT DISTINCT 
     dealer, 
@@ -336,6 +344,41 @@ JOIN Vehicles v ON v.vin = s.vin
 WHERE (v.vehicle_id, opt.option_value) NOT IN (SELECT vehicle_id, option_code FROM Options);
 select * from options where vehicle_id = 1;
 
+-- Insert SpecialEditions
+INSERT IGNORE INTO SpecialEditions (vehicle_id, special_desc)
+SELECT v.vehicle_id, special_desc
+FROM Vehicles v
+JOIN Options opt ON v.vehicle_id = opt.vehicle_id
+CROSS JOIN (
+    SELECT 'A1X' AS rpo_code, '1LE' AS special_desc
+    UNION ALL SELECT 'A1Y', '1LE'
+    UNION ALL SELECT 'Z4B', 'Collectors Edition'
+    UNION ALL SELECT 'X56', 'Garage 56 Special Edition'
+    UNION ALL SELECT 'Z51', 'Z51 Performance Package'
+    UNION ALL SELECT 'ZCR', 'IMSA GTLM Championship C8.R Edition'
+    UNION ALL SELECT 'Y70', '70th Anniversary Edition'
+    UNION ALL SELECT 'Z07', 'Z07 Performance Package'
+    UNION ALL SELECT 'ZLE', 'Watkins Glen IMSA Edition'
+    UNION ALL SELECT 'ZLD', 'Sebring IMSA Edition'
+    UNION ALL SELECT 'ZLG', 'Road Atlanta IMSA Edition'
+    UNION ALL SELECT 'ZLK', 'Arrival Edition'
+    UNION ALL SELECT 'ZLJ', 'Impact Edition'
+    UNION ALL SELECT 'ZLR', 'Elevation Edition'
+    UNION ALL SELECT 'ABQ', '120th Anniversary Edition'
+    UNION ALL SELECT 'OAR', 'Pre-Production Vehicle'
+    UNION ALL SELECT 'PEH', 'Hertz / Hendrick Motorsports Edition'
+    UNION ALL SELECT 'ZLT', '20th Anniversary of V-Series Special Edition'
+    UNION ALL SELECT 'ZTK', 'ZTK Track Performance Package'
+    UNION ALL SELECT 'Z6X', 'Extreme Off-Road Package'
+    UNION ALL SELECT 'WFP', 'Omega Edition'
+) AS special_map ON opt.option_code = special_map.rpo_code
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM SpecialEditions se 
+    WHERE se.vehicle_id = v.vehicle_id 
+    AND se.special_desc = special_map.special_desc
+);
+-- Old Insert SpecialEditions
 INSERT IGNORE INTO SpecialEditions (vehicle_id, special_desc)
 SELECT vehicle_id, special_desc
 FROM (

@@ -261,5 +261,5 @@ app.use((err, req, res, next) => {
 
 const port = 80;
 app.listen(port, "0.0.0.0",() => {
-    console.log(`Frontend is running on port ${port}`);
+    // console.log(`Frontend is running on port ${port}`);
 });

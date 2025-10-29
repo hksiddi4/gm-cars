@@ -3,4 +3,4 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
-CMD ["gunicorn", "-w", "4", "-k", "gevent", "-b", "0.0.0.0:5000", "start:app", "--preload"]
+CMD ["gunicorn", "-w", "4", "-k", "gevent", "-b", "unix:/tmp/gunicorn.sock", "start:app", "--preload"]

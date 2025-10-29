@@ -1,6 +1,7 @@
-Flask==3.1.0
-Flask_Cors==5.0.1
-PyMySQL==1.1.1
-Requests==2.32.3
+Flask==3.1.2
+Flask_Cors==6.0.1
+PyMySQL==1.1.2
+Requests==2.32.5
 gunicorn==23.0.0
-cryptography==44.0.2
+cryptography==46.0.3
+gevent==25.9.1

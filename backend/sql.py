@@ -1,13 +1,14 @@
 import pymysql
 from pymysql import MySQLError
 import pymysql.cursors
+import os
 
 # Create new user in mysql wb, don't use root. Will not work otherwise!
 class Creds:
-    conString = '192.168.1.126'
-    userName = 'tester'
-    password = 'Hussain92'
-    dbName = 'vehicles'
+    conString = os.environ.get('DB_HOST')
+    userName = os.environ.get('DB_USER')
+    password = os.environ.get('DB_PASS')
+    dbName = os.environ.get('DB_NAME')
 
 def create_connection(host_name, user_name, user_password, db_name):
     connection = None

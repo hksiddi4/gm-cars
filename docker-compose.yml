@@ -44,7 +44,7 @@ services:
 
 volumes:
   socket-volume:
-  driver: local
+    driver: local
 
 networks:
   app-network:

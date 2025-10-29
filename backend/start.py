@@ -281,7 +281,11 @@ def sort_price():
         LIMIT {limit} OFFSET {offset}
     """
     viewTable = execute_read_query(conn, select)
-    totalSql = f"SELECT COUNT(*) AS total FROM (\n        SELECT v.vehicle_id FROM Vehicles v {join_clause} \n        {where_clause} \n        GROUP BY v.vehicle_id \n        {rpo_clause}\n) AS filtered_vehicles"
+    print(select)
+    if where_clause:
+        totalSql = f"SELECT COUNT(*) AS total FROM (\n        SELECT v.vehicle_id FROM Vehicles v {join_clause} \n        {where_clause} \n        GROUP BY v.vehicle_id \n        {rpo_clause}\n) AS filtered_vehicles"
+    else:
+        totalSql = f"SELECT COUNT(vehicle_id) AS total FROM Vehicles"
     total_items = execute_read_query(conn, totalSql)[0]['total']
     close_connection(conn)
 

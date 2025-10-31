@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
 const axios = require('axios');
-const { colorMap, intColor, seatCode, mmc, camaroRpo } = require('./views/partials/modules.js')
+const { colorMap, intColor, seatCode, mmc, camaroRpo, corvetteRpo } = require('./views/partials/modules.js')
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -206,7 +206,7 @@ app.get('/stats', function(req, res) {
 });
 
 app.get('/rpos', function(req, res) {
-    res.render('pages/rpos', { camaroRpo: camaroRpo });
+    res.render('pages/rpos', { camaroRpo: camaroRpo, corvetteRpo: corvetteRpo });
 });
 
 app.get('/wheels', function(req, res) {

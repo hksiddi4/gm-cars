@@ -38,6 +38,7 @@
                 <select id="modelSelect" class="form-select small-dropdown">
                     <option value="">Select Model</option>
                     <option value="camaro">Camaro</option>
+                    <option value="corvette">Corvette</option>
                 </select>
             </div>
         </div>
@@ -51,11 +52,14 @@
         // Example RPO data for multiple models
         const allRpos = {
             camaro: <%- JSON.stringify(camaroRpo) %>,
+            corvette: <%- JSON.stringify(corvetteRpo) %>,
         };
 
         function renderRPOs(model) {
             container.innerHTML = '';
             const rpos = allRpos[model];
+            const missingRpos = [];
+
             Object.keys(rpos).forEach(rpo => {
                 const card = document.createElement('div');
                 card.className = 'rpo-card';
@@ -66,7 +70,8 @@
                 img.onerror = function() {
                     if (!this.dataset.fallback) {
                         this.dataset.fallback = 'true';
-                        this.src = `../img/rpos/${model}/placeholder.jpg`;
+                        this.src = `../img/gm-brand-logo.png`;
+                        missingRpos.push(rpo);
                     }
                 };
 
@@ -84,6 +89,19 @@
                 card.appendChild(descDiv);
                 container.appendChild(card);
             });
+
+            setTimeout(() => {
+                // if (missingRpos.length > 0) downloadMissingRpos(missingRpos);
+            }, 5000);
+        }
+
+        function downloadMissingRpos(list) {
+            const blob = new Blob([list.join('\n')], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'missing_rpos.txt';
+            a.click();
+            URL.revokeObjectURL(a.href);
         }
 
         modelSelect.addEventListener('change', e => renderRPOs(e.target.value));

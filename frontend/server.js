@@ -11,6 +11,10 @@ app.set('view engine', 'ejs');
 
 const baseURL = 'http://backend:5000'
 
+const axiosInstance = axios.create({
+    timeout: 30000
+});
+
 let maintenanceMode = false; // Edit this to toggle maintenance mode
 
 app.use((req, res, next) => {
@@ -64,12 +68,12 @@ app.get('/vehicles', function(req, res) {
     if (engine) url += `&engine=${engine}`;
     if (trans) url += `&trans=${trans}`;
     if (selectedModels) url += `&model=${Array.isArray(selectedModels) ? selectedModels.join(',') : selectedModels}`;
-    if (rpos) url += `&rpo=${Array.isArray(rpos) ? rpos.join(',') : rpos}`;
+    if (rpos && (!Array.isArray(rpos) || rpos.length > 0)) url += `&rpo=${Array.isArray(rpos) ? rpos.join(',') : rpos}`;
     if (color) url += `&color=${color}`;
     if (country) url += `&country=${country}`;
     if (order) url += `&order=${order}`;
 
-    axios.get(url, { timeout: 10000 })
+    axiosInstance.get(url)
         .then((response) => {
             var vehicle_data = Array.isArray(response.data.data) ? response.data.data : [];
             vehicle_data.forEach(function(data) {
@@ -134,7 +138,7 @@ app.get('/search', function(req, res) {
     if (!vin || vin.length !== 17) {
         return res.status(400).render('pages/errors/400', { req: req });
     }
-    axios.get(`${baseURL}/search?vin=${encodeURIComponent(vin)}`, { timeout: 10000 })
+    axiosInstance.get(`${baseURL}/search?vin=${encodeURIComponent(vin)}`)
     .then((response)=>{
         var vin_data = response.data;
 
@@ -151,7 +155,9 @@ app.get('/search', function(req, res) {
                 colorMap: colorMap,
                 intColor: intColor,
                 seatCode: seatCode,
-                mmc: mmc
+                mmc: mmc,
+                camaroRpo: camaroRpo,
+                corvetteRpo: corvetteRpo
             });
         }
     })
@@ -172,7 +178,7 @@ app.get('/stats', function(req, res) {
 
     url.search = params.toString();
 
-    axios.get(url.toString(), { timeout: 10000 })
+    axiosInstance.get(url.toString())
         .then((response) => {
             const data = response.data;
             var stats_data = Array.isArray(response.data.stats_data) ? response.data.stats_data : [];
@@ -213,7 +219,7 @@ app.get('/wheels', function(req, res) {
     const url = new URL(`${baseURL}/wheels`);
     const params = new URLSearchParams();
 
-    axios.get(url.toString(), { timeout: 10000 })
+    axiosInstance.get(url.toString())
         .then((response) => {
             const data = response.data;
 

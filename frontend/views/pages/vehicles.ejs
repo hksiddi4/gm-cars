@@ -99,7 +99,7 @@
                 <div id="top-scroll"></div>
             </div>
             <div class="table-responsive" id="bottom-scroll-wrapper">
-                <% if (vehicle_data) { %>
+                <% if (vehicle_data && vehicle_data.length) { %>
                 <table class="table-veh table-hover border border shadow" id="allTable">
                     <thead>
                         <tr>
@@ -275,6 +275,16 @@
             </div>
             <!-- Pagination -->
             <%- include('../partials/pagination', { currentPage, totalPages, baseQuery, buildQuery }) %>
+            <% } else { %>
+                <div class="response-container" style="padding: 40px 0;">
+                    <div class="response" role="status">
+                        <p>No results found for the current filters.</p>
+                        <div style="margin-top: 12px; display:flex; gap:10px; justify-content:center;">
+                            <button type="button" class="btn btn-outline-light" onclick="history.back()">Go Back</button>
+                            <button type="button" class="btn btn-secondary" id="clearFiltersBtn" onclick="window.location.href='/vehicles'">Clear Filters</button>
+                        </div>
+                    </div>
+                </div>
             <% } %>
         </div>
         <%- include('../partials/footer'); %>
@@ -351,7 +361,11 @@
             selectElement.addEventListener('change', function(event) {
                 const value = event.target.value;
                 const url = new URL(window.location.href);
-                url.searchParams.set(paramName, value);
+                if (value) {
+                    url.searchParams.set(paramName, value);
+                } else {
+                    url.searchParams.delete(paramName);
+                }
                 url.searchParams.set('page', 1);
                 window.location.href = url.toString();
             });
@@ -383,7 +397,8 @@
                 tag.className = 'rpo-tag';
 
                 const desc = rpoDescriptions[code] || 'No description';
-                tag.innerHTML = `<strong>${code}</strong>: ${desc} &nbsp;×`;
+                const descHtml = rpoDescriptions[code] ? `<span class="rpo-outsourced">${desc}</span>` : desc;
+                tag.innerHTML = `<strong>${code}</strong>: ${descHtml} &nbsp;×`;
 
                 tag.addEventListener('click', () => {
                     const newRpos = rpos.filter(r => r !== code);
@@ -422,36 +437,67 @@
             updateIcons(selectedOrder);
 
             // SCROLL SYNC
-            const topScroll = document.getElementById('top-scroll-wrapper');
-            const bottomScroll = document.getElementById('bottom-scroll-wrapper');
+            (function() {
+                const topWrapper = document.getElementById('top-scroll-wrapper');
+                const topInner = document.getElementById('top-scroll');
+                const bottomWrapper = document.getElementById('bottom-scroll-wrapper');
 
-            if (topScroll && bottomScroll) {
-                let isSyncingTop = false;
-                let isSyncingBottom = false;
+                if (!topWrapper || !topInner || !bottomWrapper) return;
 
-                topScroll.addEventListener('scroll', () => {
-                    if (!isSyncingTop) {
-                    isSyncingBottom = true;
-                    bottomScroll.scrollLeft = topScroll.scrollLeft;
+                // Helper to find the actual scrollable element inside a container
+                function findScrollable(el) {
+                    if (!el) return null;
+                    if (el.scrollWidth > el.clientWidth) return el;
+                    // search children
+                    const walker = document.createTreeWalker(el, NodeFilter.SHOW_ELEMENT, null);
+                    let node;
+                    while ((node = walker.nextNode())) {
+                        if (node.scrollWidth > node.clientWidth) return node;
                     }
-                    isSyncingTop = false;
-                });
+                    return el; // fallback
+                }
 
-                bottomScroll.addEventListener('scroll', () => {
-                    if (!isSyncingBottom) {
-                    isSyncingTop = true;
-                    topScroll.scrollLeft = bottomScroll.scrollLeft;
-                    }
-                    isSyncingBottom = false;
-                });
+                const topScrollable = findScrollable(topWrapper);
+                const bottomScrollable = findScrollable(bottomWrapper);
 
-                const table = document.querySelector('.table-veh');
-                if (table) {
-                    requestAnimationFrame(() => {
-                        document.getElementById('top-scroll').style.width = table.scrollWidth + 'px';
+                let isSyncingFromTop = false;
+                let isSyncingFromBottom = false;
+
+                function mirrorScroll(source, target, stateFlagSetter, stateFlagChecker) {
+                    source.addEventListener('scroll', () => {
+                        if (stateFlagChecker()) return; // avoid recursion
+                        stateFlagSetter(true);
+                        try {
+                            target.scrollLeft = source.scrollLeft;
+                        } finally {
+                            // small timeout to allow the other handler to run
+                            requestAnimationFrame(() => stateFlagSetter(false));
+                        }
                     });
                 }
-            }
+
+                mirrorScroll(topScrollable, bottomScrollable, (v) => isSyncingFromTop = v, () => isSyncingFromBottom);
+                mirrorScroll(bottomScrollable, topScrollable, (v) => isSyncingFromBottom = v, () => isSyncingFromTop);
+
+                function updateTopInnerWidth() {
+                    const table = document.querySelector('.table-veh');
+                    if (table && topInner) {
+                        const width = table.scrollWidth;
+                        if (width && topInner.style.width !== width + 'px') {
+                            topInner.style.width = width + 'px';
+                        }
+                    }
+                }
+
+                requestAnimationFrame(updateTopInnerWidth);
+                window.addEventListener('resize', () => requestAnimationFrame(updateTopInnerWidth));
+
+                const tableEl = document.querySelector('.table-veh');
+                if (tableEl && window.MutationObserver) {
+                    const mo = new MutationObserver(() => requestAnimationFrame(updateTopInnerWidth));
+                    mo.observe(tableEl, { childList: true, subtree: true, attributes: true });
+                }
+            })();
 
             const rpoSearchInput = document.getElementById('rpoSearchInput');
             const rpoResults = document.getElementById('rpoResults');
@@ -470,7 +516,8 @@
                         li.classList.add('list-group-item');
                         const highlightedRpo = rpo.replace(new RegExp(query, 'gi'), match => `<span class="highlight">${match}</span>`);
                         const highlightedDescription = description.replace(new RegExp(query, 'gi'), match => `<span class="highlight">${match}</span>`);
-                        li.innerHTML = `<strong>${rpo}</strong>: ${highlightedDescription}`;
+                        // Highlighted description comes from outsourced rpoDescriptions -> italicize
+                        li.innerHTML = `<strong>${rpo}</strong>: <span class="rpo-outsourced">${highlightedDescription}</span>`;
                         
                         li.style.cursor = 'pointer';
                         li.addEventListener('click', () => {
@@ -513,10 +560,13 @@
             if (rpoSelectElement) {
                 rpoSelectElement.addEventListener('change', function(event) {
                     const value = event.target.value;
-                    const url = new URL(window.location.origin + window.location.pathname);
+                    const url = new URL(window.location.href);
                     if (value) {
                         url.searchParams.set('rpo', value);
+                    } else {
+                        url.searchParams.delete('rpo');
                     }
+                    url.searchParams.set('page', 1);
                     window.location.href = url.toString();
                 });
             }

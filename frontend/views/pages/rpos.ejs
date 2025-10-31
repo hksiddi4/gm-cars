@@ -26,6 +26,13 @@
         .rpo-description {
             text-align: center;
         }
+        .rpo-card {
+            transition: transform 0.2s ease-in-out;
+        }
+        .rpo-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
     </style>
 </head>
 <body>
@@ -61,6 +68,11 @@
             const missingRpos = [];
 
             Object.keys(rpos).forEach(rpo => {
+                const link = document.createElement('a');
+                link.href = `/vehicles?model=${model}&rpo=${rpo}`;
+                link.style.textDecoration = 'none';
+                link.style.display = 'block';
+
                 const card = document.createElement('div');
                 card.className = 'rpo-card';
 
@@ -87,7 +99,8 @@
                 card.appendChild(img);
                 card.appendChild(title);
                 card.appendChild(descDiv);
-                container.appendChild(card);
+                link.appendChild(card);
+                container.appendChild(link);
             });
 
             setTimeout(() => {

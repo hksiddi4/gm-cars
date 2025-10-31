@@ -144,10 +144,8 @@
                         tableBody.appendChild(row);
                     });
 
-                    // Show table
                     table.style.display = 'table';
 
-                    // Load and apply RPO descriptions
                     document.querySelectorAll('.rpo-description').forEach(element => {
                         const rpoCode = element.getAttribute('data-code');
                         if (rpoDescriptionCache[rpoCode]) {
@@ -161,7 +159,7 @@
                                 line.replace(/forged/gi, '<strong>forged</strong>')
                                     .replace(/carbon fiber/gi, '<strong>carbon fiber</strong>')
                             );
-                            const html = formattedLines.map(line => `<div>${line}</div>`).join('');
+                            const html = formattedLines.map(line => `<div class="rpo-outsourced">${line}</div>`).join('');
                             element.innerHTML = html;
                             rpoDescriptionCache[rpoCode] = html;
 
@@ -191,7 +189,6 @@
                         }
                     });
                 } else {
-                    // Hide table if no model selected
                     table.style.display = 'none';
                 }
             });

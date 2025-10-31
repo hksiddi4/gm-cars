@@ -281,7 +281,6 @@ def sort_price():
         LIMIT {limit} OFFSET {offset}
     """
     viewTable = execute_read_query(conn, select)
-    print(select)
     if where_clause:
         totalSql = f"SELECT COUNT(*) AS total FROM (\n        SELECT v.vehicle_id FROM Vehicles v {join_clause} \n        {where_clause} \n        GROUP BY v.vehicle_id \n        {rpo_clause}\n) AS filtered_vehicles"
     else:

@@ -158,6 +158,14 @@ h1, h2, h4, p {
     width: 95%;
     margin: auto;
     flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.custom-container > .row {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 .small-dropdown {
@@ -258,6 +266,10 @@ img {
     display: inline-flex;
     align-items: center;
     font-size: 0.9rem;
+}
+
+.rpo-outsourced {
+    font-style: italic;
 }
 
 #rpoResults {
@@ -592,7 +604,7 @@ img {
 }
 
 /* Mobile Styles */
-@media (max-width: 1150px) {
+@media (max-width: 1265px) {
     /* Universal */
     .custom-container {
         padding: 0 10px;
@@ -620,8 +632,27 @@ img {
     }
 
     #top-scroll-wrapper, #bottom-scroll-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+    }
+
+    #top-scroll-wrapper {
+        width: 100%;
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
+    }
+
+    #top-scroll {
+        display: block;
+        height: 8px;
+        pointer-events: auto;
+        background: transparent;
+        cursor: grab;
+        box-sizing: border-box;
+    }
+
+    #top-scroll:active {
+        cursor: grabbing;
     }
 
     .footer {

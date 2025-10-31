@@ -193,7 +193,7 @@
             <div><a id="snark" style="color: rgb(40, 40, 40);"></a></div>
           </div>
         </div> -->
-        <div class="table-responsive" style="text-align: left; justify-content: flex-start;">
+        <div class="table-responsive" style="text-align: left; justify-content: flex-start; margin-top: 10px;">
           <table class="table-veh table-hover border border shadow" id="rpoTable">
             <thead>
               <tr>
@@ -257,6 +257,9 @@
       document.addEventListener('DOMContentLoaded', () => {
         let rpoDescriptions = {};
         const rpoDescriptionCache = {};
+        const camaroRpo = <%- JSON.stringify(camaroRpo) %>;
+        const corvetteRpo = <%- JSON.stringify(corvetteRpo) %>;
+        const serverModel = <%- JSON.stringify(vin_data && vin_data[0] && vin_data[0].model ? vin_data[0].model.toUpperCase() : '') %>;
 
         function loadRpoDescriptions() {
           const cached = sessionStorage.getItem('rpoCodes');
@@ -284,10 +287,22 @@
         loadRpoDescriptions().then(() => {
           document.querySelectorAll('.rpo-description').forEach(element => {
           const rpoCode = element.getAttribute('data-code');
-          
+
+          // Prefer internal Camaro/Corvette maps for those models
+          if (serverModel === 'CAMARO' && camaroRpo && camaroRpo[rpoCode]) {
+            element.innerHTML = `<div>${camaroRpo[rpoCode]}</div>`;
+            return;
+          }
+          if (serverModel && serverModel.startsWith('CORVETTE') && corvetteRpo && corvetteRpo[rpoCode]) {
+            element.innerHTML = `<div>${corvetteRpo[rpoCode]}</div>`;
+            return;
+          }
+
           if (rpoDescriptions[rpoCode]) {
-            element.innerHTML = `<div>${rpoDescriptions[rpoCode]}</div>`;
+            // Description from outsourced decoderpo static JSON -> italicize
+            element.innerHTML = `<div class="rpo-outsourced">${rpoDescriptions[rpoCode]}</div>`;
           } else {
+            // Fall back to decoderpo API; treat as outsourced and italicize
             fetch(`https://decoderpo.com/api/getRPODescription/${rpoCode}`)
               .then(resp => {
                 if (!resp.ok) throw new Error('Not found');
@@ -296,7 +311,7 @@
               .then(data => {
                 const decoded = atob(data[0]);
                 const lines = JSON.parse(decoded);
-                element.innerHTML = lines.map(line => `<div>${line}</div>`).join('');
+                element.innerHTML = lines.map(line => `<div class="rpo-outsourced">${line}</div>`).join('');
               })
               .catch(() => {
                 element.textContent = 'Not found';

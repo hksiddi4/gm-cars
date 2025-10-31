@@ -13,3 +13,16 @@ ON Vehicles (
     msrp,           -- Used for sorting
     vin             -- Used for identification (in the final result)
 );
+
+CREATE INDEX idx_stats_color 
+ON Vehicles (
+    color_id, 
+    modelYear, 
+    model, 
+    body, 
+    trim, 
+    engine_id, 
+    transmission_id
+);
+
+CREATE INDEX idx_colors_rpo ON Colors (rpo_code);

@@ -56,7 +56,6 @@
         const container = document.getElementById('rpoContainer');
         const modelSelect = document.getElementById('modelSelect');
 
-        // Example RPO data for multiple models
         const allRpos = {
             camaro: <%- JSON.stringify(camaroRpo) %>,
             corvette: <%- JSON.stringify(corvetteRpo) %>,
@@ -119,7 +118,6 @@
 
         modelSelect.addEventListener('change', e => renderRPOs(e.target.value));
 
-        // Initial render
         renderRPOs(modelSelect.value);
     </script>
 </body>

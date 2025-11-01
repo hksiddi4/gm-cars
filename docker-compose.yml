@@ -1,14 +1,14 @@
 version: "3.8"
 services:
   backend:
-    build: bumbleboy92/gm-cars:backend-latest
+    image: bumbleboy92/gm-cars:backend-latest
     networks:
       - app-network
     env_file: ./.env
     restart: always
 
   frontend:
-    build: bumbleboy92/gm-cars:frontend-latest
+    image: bumbleboy92/gm-cars:frontend-latest
     networks:
       - app-network
     restart: always

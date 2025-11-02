@@ -1,15 +1,25 @@
-import sql
-import flask
-from flask import request, jsonify
+from flask import Flask, request, jsonify
 from flask_cors import CORS
-import requests
-from sql import create_connection, execute_read_query, close_connection, Creds
+import logging
+from sql import Creds
+from database import init_pool, DatabasePool
 
-app = flask.Flask(__name__)
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+app = Flask(__name__)
 app.config["DEBUG"] = False
 CORS(app)
 
-myCreds = sql.Creds()
+# Initialize database pool
+myCreds = Creds()
+db_pool = init_pool(
+    host=myCreds.conString,
+    user=myCreds.userName,
+    password=myCreds.password,
+    database=myCreds.dbName
+)
 
 #========================= View Pages #=========================
 

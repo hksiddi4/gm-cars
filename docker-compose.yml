@@ -16,8 +16,8 @@ services:
   nginx:
     image: nginx:stable
     networks:
-      #front-macvlan:
-        #ipv4_address: 192.168.1.50
+      front-macvlan:
+        ipv4_address: 192.168.1.50
       app-network: {}
     volumes:
       - /mnt/HKS/Apps/GM-Vehicles/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
@@ -42,5 +42,5 @@ services:
 networks:
   app-network:
     driver: bridge
-  #front-macvlan:
-    #external: true
+  front-macvlan:
+    external: true

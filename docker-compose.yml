@@ -18,6 +18,7 @@ services:
     networks:
       front-macvlan:
         ipv4_address: 192.168.1.50
+        ipv6_address: 2600:1700:4c60:7bff::50
       app-network: {}
     volumes:
       - /mnt/HKS/Apps/GM-Vehicles/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro

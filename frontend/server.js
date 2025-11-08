@@ -39,7 +39,11 @@ function formatCurrency(number) {
 }
 
 app.get('/', function(req, res) {
-    res.render('pages/index', { req: req });
+    res.render('pages/index', {
+        req: req,
+        canonicalPath: '/',
+        pagePath: '/'
+    });
 });
 
 app.get('/vehicles', function(req, res) {
@@ -99,6 +103,11 @@ app.get('/vehicles', function(req, res) {
             selectedModels = selectedModels ? (Array.isArray(selectedModels) ? selectedModels : [selectedModels]) : [];
             const elapsedTime = ((Date.now() - startTime) / 1000).toFixed(2);
 
+            const queryParams = new URLSearchParams(req.query);
+            queryParams.delete('page');
+            queryParams.delete('limit');
+            const canonicalPath = `/vehicles${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+
             res.render('pages/vehicles', {
                 vehicle_data: vehicle_data,
                 years: years,
@@ -124,7 +133,9 @@ app.get('/vehicles', function(req, res) {
                 selectedTrans: selectedTrans,
                 selectedCountry: selectedCountry,
                 selectedModels: selectedModels,
-                selectedOrder: order
+                selectedOrder: order,
+                canonicalPath: canonicalPath,
+                pagePath: '/vehicles'
             });
         })
         .catch((error) => {
@@ -136,14 +147,22 @@ app.get('/vehicles', function(req, res) {
 app.get('/search', function(req, res) {
     var vin = req.query.vin.trim();
     if (!vin || vin.length !== 17) {
-        return res.status(400).render('pages/errors/400', { req: req });
+        return res.status(400).render('pages/errors/400', {
+            req: req, 
+            canonicalPath: '/search', 
+            pagePath: '/search' 
+        });
     }
     axiosInstance.get(`${baseURL}/search?vin=${encodeURIComponent(vin)}`)
     .then((response)=>{
         var vin_data = response.data;
 
         if (!vin_data || vin_data.length === 0) {
-            res.status(400).render('pages/errors/400', { req: req });
+            res.status(400).render('pages/errors/400', {
+                req: req, 
+                canonicalPath: '/search', 
+                pagePath: '/search' 
+            });
         } else {
             vin_data.forEach(function(data) {
                 data.msrp = formatCurrency(data.msrp);
@@ -157,10 +176,20 @@ app.get('/search', function(req, res) {
                 seatCode: seatCode,
                 mmc: mmc,
                 camaroRpo: camaroRpo,
-                corvetteRpo: corvetteRpo
+                corvetteRpo: corvetteRpo,
+                canonicalPath: `/search?vin=${vin}`,
+                pagePath: '/search'
             });
         }
     })
+    .catch((error) => {
+        console.error(`Error fetching data: ${error}`);
+        res.status(500).render('pages/errors/500', { 
+            error: error.toJSON ? error.toJSON() : { message: error.message },
+            canonicalPath: '/search', 
+            pagePath: '/search'
+        });
+    });
 });
 
 app.get('/stats', function(req, res) {
@@ -177,6 +206,8 @@ app.get('/stats', function(req, res) {
     if (req.query.model) params.append("model", req.query.model);
 
     url.search = params.toString();
+
+    const canonicalPath = `/stats${params.toString() ? '?' + params.toString() : ''}`;
 
     axiosInstance.get(url.toString())
         .then((response) => {
@@ -200,19 +231,28 @@ app.get('/stats', function(req, res) {
                 selectedBody: req.query.body || '',
                 selectedTrim: req.query.trim || '',
                 selectedEngine: req.query.engine || '',
-                selectedTrans: req.query.trans || ''
+                selectedTrans: req.query.trans || '',
+                canonicalPath: canonicalPath,
+                pagePath: '/stats'
             });
         })
         .catch((error) => {
             console.error(`Error fetching data: ${error}`);
             res.status(500).render('pages/errors/500', {
-                error: error.toJSON ? error.toJSON() : { message: error.message }
+                error: error.toJSON ? error.toJSON() : { message: error.message },
+                canonicalPath: '/stats', 
+                pagePath: '/stats'
             });
         });
 });
 
 app.get('/rpos', function(req, res) {
-    res.render('pages/rpos', { camaroRpo: camaroRpo, corvetteRpo: corvetteRpo });
+    res.render('pages/rpos', { 
+        camaroRpo: camaroRpo, 
+        corvetteRpo: corvetteRpo,
+        canonicalPath: '/rpos',
+        pagePath: '/rpos'
+    });
 });
 
 app.get('/wheels', function(req, res) {
@@ -225,12 +265,16 @@ app.get('/wheels', function(req, res) {
 
             res.render('pages/wheels', {
                 model_list: data.model,
+                canonicalPath: '/wheels',
+                pagePath: '/wheels'
             });
         })
         .catch((error) => {
             console.error(`Error fetching data: ${error}`);
             res.status(500).render('pages/errors/500', {
-                error: error.toJSON ? error.toJSON() : { message: error.message }
+                error: error.toJSON ? error.toJSON() : { message: error.message },
+                canonicalPath: '/wheels',
+                pagePath: '/wheels'
             });
         });
 });
@@ -255,13 +299,19 @@ app.post('/api/rarity', async (req, res) => {
 });
 
 app.use((req, res) => {
-    res.status(404).render('pages/errors/404', { req });
+    res.status(404).render('pages/errors/404', {
+        req,
+        canonicalPath: req.originalUrl,
+        pagePath: '/404'
+    });
 });
 
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).render('pages/errors/500', {
-        error: err.toJSON ? err.toJSON() : { message: err.message }
+        error: err.toJSON ? err.toJSON() : { message: err.message },
+        canonicalPath: req.originalUrl,
+        pagePath: '/500'
     });
 });
 

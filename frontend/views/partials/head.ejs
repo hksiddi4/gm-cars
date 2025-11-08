@@ -3,14 +3,130 @@
 <meta name="theme-color" content="#515151">
 <link rel="icon" href="../../img/gm.png">
 
-<!-- CSS -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-<link rel="stylesheet" href="/css/main.css">
-<!-- JavaScript -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<meta name="description" content="View build counts and statistics for GM vehicles.">
+<meta name="keywords" content="GM, General Motors, build counts, vehicle statistics, Chevrolet, Cadillac, production numbers">
+<meta name="robots" content="index, follow">
 
+<link rel="canonical" href="https://www.gmbuildcounts.com<%= typeof canonicalPath !== 'undefined' ? canonicalPath : '' %>">
 <meta property="og:title" content="GM Build Counts">
 <meta property="og:description" content="View build counts and statistics for GM vehicles.">
 <meta property="og:type" content="website">
+<meta property="og:url" content="https://www.gmbuildcounts.com<%= typeof canonicalPath !== 'undefined' ? canonicalPath : '' %>">
 <meta property="og:image" content="https://www.gmbuildcounts.com/img/gm.png">
+<meta property="og:site_name" content="GM Build Counts">
+
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="GM Build Counts">
+<meta name="twitter:description" content="View build counts and statistics for GM vehicles.">
+<meta name="twitter:image" content="https://www.gmbuildcounts.com/img/gm.png">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "GM Build Counts",
+  "url": "https://www.gmbuildcounts.com",
+  "description": "View build counts and statistics for GM vehicles.",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "https://www.gmbuildcounts.com/search?vin={vin}",
+    "query-input": "required name=vin"
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "url": "https://www.gmbuildcounts.com",
+  "logo": "https://www.gmbuildcounts.com/img/gm.png",
+  "name": "GM Build Counts",
+  "sameAs": [],
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "contactType": "customer support",
+    "url": "https://www.gmbuildcounts.com"
+  }
+}
+</script>
+
+<% if (typeof pagePath !== 'undefined') { %>
+
+  <% 
+    // Custom logic to title-case the path segment (e.g., '/vehicles' -> 'Vehicles')
+    const pathSegment = pagePath.substring(1); 
+    const displayTitle = pathSegment.charAt(0).toUpperCase() + pathSegment.slice(1);
+  %>
+  
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://www.gmbuildcounts.com/"
+      }
+      <% if (pagePath !== '/') { %>
+      ,{
+        "@type": "ListItem",
+        "position": 2,
+        "name": "<%= displayTitle %>",
+        "item": "https://www.gmbuildcounts.com<%= pagePath %>"
+      }
+      <% } %>
+    ]
+  }
+  </script>
+  
+  <% if (pagePath === '/vehicles') { %>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "url": "https://www.gmbuildcounts.com/vehicles",
+    "name": "GM Vehicle Build Counts",
+    "description": "View build counts and statistics for all available GM vehicles, including Chevrolet, Cadillac, and more."
+  }
+  </script>
+  <% } else if (pagePath === '/stats') { %>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "url": "https://www.gmbuildcounts.com/stats",
+    "name": "GM Production Statistics Summary",
+    "description": "Aggregated statistics and charts on GM vehicle production numbers."
+  }
+  </script>
+  <% } else if (pagePath === '/wheels') { %>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "url": "https://www.gmbuildcounts.com/wheels",
+    "name": "GM Wheel Option Codes (RPO ZQ2)",
+    "description": "Detailed build counts for GM vehicles based on factory wheel RPO codes."
+  }
+  </script>
+  <% } else if (pagePath === '/rpos') { %>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "url": "https://www.gmbuildcounts.com/rpos",
+    "name": "GM Regular Production Options (RPOs)",
+    "description": "A comprehensive list and build counts for GM Regular Production Option (RPO) codes."
+  }
+  </script>
+  <% } %>
+
+<% } %>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+<link rel="stylesheet" href="/css/main.css">
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

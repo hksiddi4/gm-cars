@@ -48,19 +48,7 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        var imageURLs = [
-            '../../img/header/camaro_header_1.png',
-            '../../img/header/camaro_header_2.png',
-            '../../img/header/camaro_header_3.png',
-            '../../img/header/camaro_header_4.png',
-            '../../img/header/camaro_header_5.png',
-            '../../img/header/camaro_header_6.png',
-            '../../img/header/camaro_header_7.png',
-            '../../img/header/ct4_header_1.png',
-            '../../img/header/ct4_header_2.png',
-            '../../img/header/ct5_header_1.png',
-            '../../img/header/ct5_header_2.png',
-        ];
+        var imageURLs = <%- JSON.stringify(headerImages) %>;
 
         var randomIndex = Math.floor(Math.random() * imageURLs.length);
 

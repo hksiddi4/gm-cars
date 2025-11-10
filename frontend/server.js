@@ -2,7 +2,10 @@ const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
 const axios = require('axios');
+const fs = require('fs');
+const path = require('path');
 const { colorMap, intColor, seatCode, mmc, camaroRpo, corvetteRpo } = require('./views/partials/modules.js')
+const headerImagesDir = path.join(__dirname, 'public', 'img', 'header');
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -16,6 +19,20 @@ const axiosInstance = axios.create({
 });
 
 let maintenanceMode = false; // Edit this to toggle maintenance mode
+
+function getHeaderImages() {
+    try {
+        const files = fs.readdirSync(headerImagesDir);
+        const imageFiles = files.filter(file => {
+            return /\.(png)$/i.test(file);
+        });
+        const publicImageUrls = imageFiles.map(file => `/img/header/${file}`);
+        return publicImageUrls;
+    } catch (err) {
+        console.error('Error reading header images directory:', err);
+        return [];
+    }
+}
 
 app.use((req, res, next) => {
     if (maintenanceMode && req.path !== '/maintenance') {
@@ -39,8 +56,10 @@ function formatCurrency(number) {
 }
 
 app.get('/', function(req, res) {
+    const imageUrls = getHeaderImages();
     res.render('pages/index', {
         req: req,
+        headerImages: imageUrls,
         canonicalPath: '/',
         pagePath: '/'
     });
@@ -106,6 +125,7 @@ app.get('/vehicles', function(req, res) {
             const queryParams = new URLSearchParams(req.query);
             queryParams.delete('page');
             queryParams.delete('limit');
+            const imageUrls = getHeaderImages();
             const canonicalPath = `/vehicles${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
 
             res.render('pages/vehicles', {
@@ -135,7 +155,8 @@ app.get('/vehicles', function(req, res) {
                 selectedModels: selectedModels,
                 selectedOrder: order,
                 canonicalPath: canonicalPath,
-                pagePath: '/vehicles'
+                pagePath: '/vehicles',
+                headerImages: imageUrls
             });
         })
         .catch((error) => {
@@ -146,9 +167,11 @@ app.get('/vehicles', function(req, res) {
 
 app.get('/search', function(req, res) {
     var vin = req.query.vin.trim();
+    const imageUrls = getHeaderImages();
     if (!vin || vin.length !== 17) {
         return res.status(400).render('pages/errors/400', {
-            req: req, 
+            req: req,
+            headerImages: imageUrls,
             canonicalPath: '/search', 
             pagePath: '/search' 
         });
@@ -159,7 +182,8 @@ app.get('/search', function(req, res) {
 
         if (!vin_data || vin_data.length === 0) {
             res.status(400).render('pages/errors/400', {
-                req: req, 
+                req: req,
+                headerImages: imageUrls,
                 canonicalPath: '/search', 
                 pagePath: '/search' 
             });
@@ -170,6 +194,7 @@ app.get('/search', function(req, res) {
     
             res.render('pages/search', {
                 req: req,
+                headerImages: imageUrls,
                 vin_data: vin_data,
                 colorMap: colorMap,
                 intColor: intColor,
@@ -186,6 +211,7 @@ app.get('/search', function(req, res) {
         console.error(`Error fetching data: ${error}`);
         res.status(500).render('pages/errors/500', { 
             error: error.toJSON ? error.toJSON() : { message: error.message },
+            headerImages: imageUrls,
             canonicalPath: '/search', 
             pagePath: '/search'
         });
@@ -193,6 +219,7 @@ app.get('/search', function(req, res) {
 });
 
 app.get('/stats', function(req, res) {
+    const imageUrls = getHeaderImages();
     const category = req.query.category;
     const url = new URL(`${baseURL}/stats`);
     const params = new URLSearchParams();
@@ -219,6 +246,7 @@ app.get('/stats', function(req, res) {
 
             res.render('pages/stats', {
                 stats_data: data.stats_data,
+                headerImages: imageUrls,
                 category: data.category,
                 year_list: data.year,
                 model_list: data.model,
@@ -240,6 +268,7 @@ app.get('/stats', function(req, res) {
             console.error(`Error fetching data: ${error}`);
             res.status(500).render('pages/errors/500', {
                 error: error.toJSON ? error.toJSON() : { message: error.message },
+                headerImages: imageUrls,
                 canonicalPath: '/stats', 
                 pagePath: '/stats'
             });
@@ -247,8 +276,10 @@ app.get('/stats', function(req, res) {
 });
 
 app.get('/rpos', function(req, res) {
-    res.render('pages/rpos', { 
-        camaroRpo: camaroRpo, 
+    const imageUrls = getHeaderImages();
+    res.render('pages/rpos', {
+        headerImages: imageUrls,
+        camaroRpo: camaroRpo,
         corvetteRpo: corvetteRpo,
         canonicalPath: '/rpos',
         pagePath: '/rpos'
@@ -256,6 +287,7 @@ app.get('/rpos', function(req, res) {
 });
 
 app.get('/wheels', function(req, res) {
+    const imageUrls = getHeaderImages();
     const url = new URL(`${baseURL}/wheels`);
     const params = new URLSearchParams();
 
@@ -265,6 +297,7 @@ app.get('/wheels', function(req, res) {
 
             res.render('pages/wheels', {
                 model_list: data.model,
+                headerImages: imageUrls,
                 canonicalPath: '/wheels',
                 pagePath: '/wheels'
             });
@@ -273,6 +306,7 @@ app.get('/wheels', function(req, res) {
             console.error(`Error fetching data: ${error}`);
             res.status(500).render('pages/errors/500', {
                 error: error.toJSON ? error.toJSON() : { message: error.message },
+                headerImages: imageUrls,
                 canonicalPath: '/wheels',
                 pagePath: '/wheels'
             });
@@ -280,6 +314,7 @@ app.get('/wheels', function(req, res) {
 });
 
 app.post('/api/rarity', async (req, res) => {
+    const imageUrls = getHeaderImages();
     const options = req.body.Options;
 
     try {
@@ -294,22 +329,26 @@ app.post('/api/rarity', async (req, res) => {
         const data = await response.json();
         res.json(data);
     } catch (error) {
-        res.status(500).render('pages/errors/500', { error: error.toJSON ? error.toJSON() : { message: error.message } });
+        res.status(500).render('pages/errors/500', { error: error.toJSON ? error.toJSON() : { message: error.message }, headerImages: imageUrls });
     }
 });
 
 app.use((req, res) => {
+    const imageUrls = getHeaderImages();
     res.status(404).render('pages/errors/404', {
         req,
+        headerImages: imageUrls,
         canonicalPath: req.originalUrl,
         pagePath: '/404'
     });
 });
 
 app.use((err, req, res, next) => {
+    const imageUrls = getHeaderImages();
     console.error(err.stack);
     res.status(500).render('pages/errors/500', {
         error: err.toJSON ? err.toJSON() : { message: err.message },
+        headerImages: imageUrls,
         canonicalPath: req.originalUrl,
         pagePath: '/500'
     });

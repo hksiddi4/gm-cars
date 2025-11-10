@@ -47,6 +47,7 @@
                     <option value="">Select Model</option>
                     <option value="camaro">Camaro</option>
                     <option value="corvette">Corvette</option>
+                    <option value="escaladeiq">Escalade IQ</option>
                 </select>
             </div>
         </div>
@@ -61,6 +62,7 @@
         const allRpos = {
             camaro: <%- JSON.stringify(camaroRpo) %>,
             corvette: <%- JSON.stringify(corvetteRpo) %>,
+            escaladeiq: <%- JSON.stringify(escaladeiqRpo) %>,
         };
 
         function renderRPOs(model) {
@@ -83,7 +85,11 @@
                 img.onerror = function() {
                     if (!this.dataset.fallback) {
                         this.dataset.fallback = 'true';
-                        this.src = `../img/gm-brand-logo.png`;
+                        if (model === 'escaladeiq') {
+                            this.src = `../img/cadillac-brand-logo.png`;
+                        } else {
+                            this.src = `../img/chevrolet-brand-logo.png`;
+                        }
                         missingRpos.push(rpo);
                     }
                 };

@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
-const { colorMap, intColor, seatCode, mmc, camaroRpo, corvetteRpo } = require('./views/partials/modules.js')
+const { colorMap, intColor, seatCode, mmc, camaroRpo, corvetteRpo, escaladeiqRpo } = require('./views/partials/modules.js')
 const headerImagesDir = path.join(__dirname, 'public', 'img', 'header');
 
 app.use(express.urlencoded({ extended: true }));
@@ -202,6 +202,7 @@ app.get('/search', function(req, res) {
                 mmc: mmc,
                 camaroRpo: camaroRpo,
                 corvetteRpo: corvetteRpo,
+                escaladeiqRpo: escaladeiqRpo,
                 canonicalPath: `/search?vin=${vin}`,
                 pagePath: '/search'
             });
@@ -281,6 +282,7 @@ app.get('/rpos', function(req, res) {
         headerImages: imageUrls,
         camaroRpo: camaroRpo,
         corvetteRpo: corvetteRpo,
+        escaladeiqRpo: escaladeiqRpo,
         canonicalPath: '/rpos',
         pagePath: '/rpos'
     });

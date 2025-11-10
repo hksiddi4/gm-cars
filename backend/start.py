@@ -118,6 +118,7 @@ def sort_price():
     offset = (page - 1) * limit
 
     rpo_list = []
+    conditions = []
 
     join_clause = """
             JOIN Engines e ON v.engine_id = e.engine_id 
@@ -133,7 +134,6 @@ def sort_price():
         "MEX": "MEXICO"
         }
 
-    conditions = []
     if year:
         conditions.append(f"modelYear = '{year}'")
     if models:

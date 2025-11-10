@@ -154,6 +154,10 @@ h1, h2, h4, p {
     color: white;
 }
 
+.container {
+    width: 95%;
+}
+
 .custom-container {
     width: 95%;
     margin: auto;
@@ -747,9 +751,10 @@ img {
         overflow-x: auto;
     }
 
-        #vinTable {
+    #vinTable, #rpoTable {
         width: 100% !important;
         max-width: 100% !important;
+        min-width: 100%;
         table-layout: fixed !important;
         word-wrap: break-word;
     }

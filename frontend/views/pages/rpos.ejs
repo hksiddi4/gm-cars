@@ -47,6 +47,8 @@
                     <option value="">Select Model</option>
                     <option value="camaro">Camaro</option>
                     <option value="corvette">Corvette</option>
+                    <option value="ct4">CT4</option>
+                    <option value="ct4v">CT4-V</option>
                     <option value="escaladeiq">Escalade IQ</option>
                 </select>
             </div>
@@ -63,6 +65,8 @@
             camaro: <%- JSON.stringify(camaroRpo) %>,
             corvette: <%- JSON.stringify(corvetteRpo) %>,
             escaladeiq: <%- JSON.stringify(escaladeiqRpo) %>,
+            ct4: <%- JSON.stringify(ct4Rpo) %>,
+            ct4v: <%- JSON.stringify(ct4vRpo) %>,
         };
 
         function renderRPOs(model) {
@@ -85,7 +89,7 @@
                 img.onerror = function() {
                     if (!this.dataset.fallback) {
                         this.dataset.fallback = 'true';
-                        if (model === 'escaladeiq') {
+                        if (model === 'escaladeiq' || model === 'ct4' || model === 'ct4v') {
                             this.src = `../img/cadillac-brand-logo.png`;
                         } else {
                             this.src = `../img/chevrolet-brand-logo.png`;

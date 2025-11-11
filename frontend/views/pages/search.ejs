@@ -265,12 +265,16 @@
         const camaroRpo = <%- JSON.stringify(camaroRpo) %>;
         const corvetteRpo = <%- JSON.stringify(corvetteRpo) %>;
         const escaladeiqRpo = <%- JSON.stringify(escaladeiqRpo) %>;
+        const ct4Rpo = <%- JSON.stringify(ct4Rpo) %>;
+        const ct4vRpo = <%- JSON.stringify(ct4vRpo) %>;
 
         const allRpoDescriptions = {
           ...rpoDescriptions,
           ...camaroRpo,
           ...corvetteRpo,
-          ...escaladeiqRpo
+          ...escaladeiqRpo,
+          ...ct4Rpo,
+          ...ct4vRpo
         };
 
         function loadRpoDescriptions() {
@@ -311,6 +315,8 @@
               imgSrc = `../img/rpos/corvette/${rpoCode}.jpg`;
             } else if (model === 'ESCALADE IQ') {
               imgSrc = `../img/rpos/escaladeiq/${rpoCode}.jpg`;
+            } else if (model === 'CT4' && trim.startsWith('V-SERIES')) {
+                imgSrc = `../img/rpos/ct4v/${rpoCode}.jpg`;
             } else {
               imgSrc = `../img/rpos/${model.toLowerCase()}/${rpoCode}.jpg`;
             }
@@ -330,6 +336,8 @@
                 (model === 'CAMARO' && camaroRpo[rpoCode]) ||
                 (model.startsWith('CORVETTE') && corvetteRpo[rpoCode]) ||
                 (model === 'ESCALADE IQ' && escaladeiqRpo[rpoCode]) ||
+                (model === 'CT4' && ct4Rpo[rpoCode]) ||
+                (model === 'CT4' && trim.startsWith('V-SERIES') && ct4vRpo[rpoCode]) ||
                 rpoDescriptions[rpoCode] ||
                 '';
 
@@ -370,6 +378,16 @@
 
             if (model === 'ESCALADE IQ' && escaladeiqRpo[rpoCode]) {
               element.innerHTML = `<div>${escaladeiqRpo[rpoCode]}</div>`;
+              return;
+            }
+
+            if (model === 'CT4' && ct4Rpo[rpoCode]) {
+              element.innerHTML = `<div>${ct4Rpo[rpoCode]}</div>`;
+              return;
+            }
+
+            if (model === 'CT4' && trim.startsWith('V-SERIES') && ct4vRpo[rpoCode]) {
+              element.innerHTML = `<div>${ct4vRpo[rpoCode]}</div>`;
               return;
             }
 

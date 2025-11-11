@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
-const { colorMap, intColor, seatCode, mmc, camaroRpo, corvetteRpo, escaladeiqRpo } = require('./views/partials/modules.js')
+const { colorMap, intColor, seatCode, mmc, camaroRpo, corvetteRpo, escaladeiqRpo, ct4Rpo, ct4vRpo } = require('./views/partials/modules.js')
 const headerImagesDir = path.join(__dirname, 'public', 'img', 'header');
 
 app.use(express.urlencoded({ extended: true }));
@@ -203,6 +203,8 @@ app.get('/search', function(req, res) {
                 camaroRpo: camaroRpo,
                 corvetteRpo: corvetteRpo,
                 escaladeiqRpo: escaladeiqRpo,
+                ct4Rpo: ct4Rpo,
+                ct4vRpo: ct4vRpo,
                 canonicalPath: `/search?vin=${vin}`,
                 pagePath: '/search'
             });
@@ -283,6 +285,8 @@ app.get('/rpos', function(req, res) {
         camaroRpo: camaroRpo,
         corvetteRpo: corvetteRpo,
         escaladeiqRpo: escaladeiqRpo,
+        ct4Rpo: ct4Rpo,
+        ct4vRpo: ct4vRpo,
         canonicalPath: '/rpos',
         pagePath: '/rpos'
     });

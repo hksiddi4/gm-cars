@@ -258,6 +258,7 @@
         const rpoDescriptionCache = {};
         const camaroRpo = <%- JSON.stringify(camaroRpo) %>;
         const corvetteRpo = <%- JSON.stringify(corvetteRpo) %>;
+        const escaladeiqRpo = <%- JSON.stringify(escaladeiqRpo) %>;
         const serverModel = <%- JSON.stringify(vin_data && vin_data[0] && vin_data[0].model ? vin_data[0].model.toUpperCase() : '') %>;
 
         function loadRpoDescriptions() {
@@ -287,13 +288,17 @@
           document.querySelectorAll('.rpo-description').forEach(element => {
           const rpoCode = element.getAttribute('data-code');
 
-          // Prefer internal Camaro/Corvette maps for those models
+          // Prefer internal RPO maps for completed models
           if (serverModel === 'CAMARO' && camaroRpo && camaroRpo[rpoCode]) {
             element.innerHTML = `<div>${camaroRpo[rpoCode]}</div>`;
             return;
           }
           if (serverModel && serverModel.startsWith('CORVETTE') && corvetteRpo && corvetteRpo[rpoCode]) {
             element.innerHTML = `<div>${corvetteRpo[rpoCode]}</div>`;
+            return;
+          }
+          if (serverModel === 'ESCALADE IQ' && escaladeiqRpo && escaladeiqRpo[rpoCode]) {
+            element.innerHTML = `<div>${escaladeiqRpo[rpoCode]}</div>`;
             return;
           }
 

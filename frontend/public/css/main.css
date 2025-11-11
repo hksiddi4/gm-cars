@@ -20,6 +20,45 @@
     background-color: #555;
 }
 
+.rpo-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: center;
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+.rpo-card {
+    padding: 8px;
+    width: 250px;
+    text-align: center;
+    color: white;
+    background-color: #333;
+    border-radius: 8px;
+}
+.rpo-card img {
+    width: 100%;
+    height: auto;
+    border-radius: 4px;
+}
+.rpo-description {
+    text-align: center;
+    font-size: 0.9em;
+    padding-top: 5px;
+}
+.rpo-card-link {
+    text-decoration: none;
+    display: block;
+}
+.rpo-card-link:hover .rpo-card {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+.rpo-outsourced {
+    font-style: italic;
+}
+
 .shimmer {
     animation: shimmer 1.5s infinite linear;
     background: linear-gradient(to left, #444 8%, #555 18%, #444 33%);

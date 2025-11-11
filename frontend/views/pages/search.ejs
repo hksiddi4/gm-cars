@@ -192,6 +192,7 @@
             <div><a id="snark" style="color: rgb(40, 40, 40);"></a></div>
           </div>
         </div> -->
+        <div class="rpo-container" id="rpoImageContainer"></div>
         <div class="table-responsive no-mobile-scroll" style="text-align: left; justify-content: flex-start; margin-top: 10px;">
           <table class="table-veh table-hover border border shadow" id="rpoTable">
             <thead>
@@ -256,10 +257,21 @@
       document.addEventListener('DOMContentLoaded', () => {
         let rpoDescriptions = {};
         const rpoDescriptionCache = {};
+
+        const vin_data = <%- JSON.stringify(vin_data) %>;
+        const vin = vin_data[0];
+        const model = vin.model?.toUpperCase() || '';
+
         const camaroRpo = <%- JSON.stringify(camaroRpo) %>;
         const corvetteRpo = <%- JSON.stringify(corvetteRpo) %>;
         const escaladeiqRpo = <%- JSON.stringify(escaladeiqRpo) %>;
-        const serverModel = <%- JSON.stringify(vin_data && vin_data[0] && vin_data[0].model ? vin_data[0].model.toUpperCase() : '') %>;
+
+        const allRpoDescriptions = {
+          ...rpoDescriptions,
+          ...camaroRpo,
+          ...corvetteRpo,
+          ...escaladeiqRpo
+        };
 
         function loadRpoDescriptions() {
           const cached = sessionStorage.getItem('rpoCodes');
@@ -278,50 +290,102 @@
                   rpoDescriptions[code] = desc;
                 });
               })
-              .catch(err => {
-                console.error('Failed to load RPO data:', err);
-              });
+              .catch(err => console.error('Failed to load RPO data:', err));
           }
         }
 
+        function renderRpoCards(vin, model, rpoDescriptions) {
+          const container = document.getElementById('rpoImageContainer');
+          container.innerHTML = '';
+
+          if (!vin?.rpo_codes?.length) {
+            container.innerHTML = '<h4>No RPO codes found for this VIN.</h4>';
+            return;
+          }
+
+          let found = false;
+          vin.rpo_codes.forEach(rpoCode => {
+            const img = new Image();
+            let imgSrc;
+            if (model.startsWith('CORVETTE')) {
+              imgSrc = `../img/rpos/corvette/${rpoCode}.jpg`;
+            } else if (model === 'ESCALADE IQ') {
+              imgSrc = `../img/rpos/escaladeiq/${rpoCode}.jpg`;
+            } else {
+              imgSrc = `../img/rpos/${model.toLowerCase()}/${rpoCode}.jpg`;
+            }
+
+            img.src = imgSrc;
+            img.alt = rpoCode;
+
+            img.onload = () => {
+              const cardLink = document.createElement('a');
+              cardLink.href = `/vehicles?model=${encodeURIComponent(model)}&rpo=${encodeURIComponent(rpoCode)}`;
+              cardLink.className = 'rpo-card-link';
+
+              const card = document.createElement('div');
+              card.className = 'rpo-card';
+
+              const desc =
+                (model === 'CAMARO' && camaroRpo[rpoCode]) ||
+                (model.startsWith('CORVETTE') && corvetteRpo[rpoCode]) ||
+                (model === 'ESCALADE IQ' && escaladeiqRpo[rpoCode]) ||
+                rpoDescriptions[rpoCode] ||
+                '';
+
+              card.innerHTML = `
+                <img src="${img.src}" alt="${rpoCode}">
+                <p>${rpoCode}</p>
+                <div class="rpo-description">${desc}</div>
+              `;
+
+              cardLink.appendChild(card);
+              container.appendChild(cardLink);
+              found = true;
+            };
+          });
+
+          setTimeout(() => {
+            if (!found) container.innerHTML = '<h4>No specific RPO images found for this vehicle.</h4>';
+          }, 800);
+        }
+
         loadRpoDescriptions().then(() => {
+          if (vin.model) {
+            renderRpoCards(vin, vin.model, rpoDescriptions);
+          }
+
           document.querySelectorAll('.rpo-description').forEach(element => {
-          const rpoCode = element.getAttribute('data-code');
+            const rpoCode = element.getAttribute('data-code');
 
-          // Prefer internal RPO maps for completed models
-          if (serverModel === 'CAMARO' && camaroRpo && camaroRpo[rpoCode]) {
-            element.innerHTML = `<div>${camaroRpo[rpoCode]}</div>`;
-            return;
-          }
-          if (serverModel && serverModel.startsWith('CORVETTE') && corvetteRpo && corvetteRpo[rpoCode]) {
-            element.innerHTML = `<div>${corvetteRpo[rpoCode]}</div>`;
-            return;
-          }
-          if (serverModel === 'ESCALADE IQ' && escaladeiqRpo && escaladeiqRpo[rpoCode]) {
-            element.innerHTML = `<div>${escaladeiqRpo[rpoCode]}</div>`;
-            return;
-          }
+            if (model === 'CAMARO' && camaroRpo[rpoCode]) {
+              element.innerHTML = `<div>${camaroRpo[rpoCode]}</div>`;
+              return;
+            }
 
-          if (rpoDescriptions[rpoCode]) {
-            // Description from outsourced decoderpo static JSON -> italicize
-            element.innerHTML = `<div class="rpo-outsourced">${rpoDescriptions[rpoCode]}</div>`;
-          } else {
-            // Fall back to decoderpo API; treat as outsourced and italicize
-            fetch(`https://decoderpo.com/api/getRPODescription/${rpoCode}`)
-              .then(resp => {
-                if (!resp.ok) throw new Error('Not found');
-                return resp.json();
-              })
-              .then(data => {
-                const decoded = atob(data[0]);
-                const lines = JSON.parse(decoded);
-                element.innerHTML = lines.map(line => `<div class="rpo-outsourced">${line}</div>`).join('');
-              })
-              .catch(() => {
-                element.textContent = 'Not found';
-              });
-          }
-        });
+            if (model.startsWith('CORVETTE') && corvetteRpo[rpoCode]) {
+              element.innerHTML = `<div>${corvetteRpo[rpoCode]}</div>`;
+              return;
+            }
+
+            if (model === 'ESCALADE IQ' && escaladeiqRpo[rpoCode]) {
+              element.innerHTML = `<div>${escaladeiqRpo[rpoCode]}</div>`;
+              return;
+            }
+
+            if (rpoDescriptions[rpoCode]) {
+              element.innerHTML = `<div class="rpo-outsourced">${rpoDescriptions[rpoCode]}</div>`;
+            } else {
+              fetch(`https://decoderpo.com/api/getRPODescription/${rpoCode}`)
+                .then(resp => resp.ok ? resp.json() : Promise.reject())
+                .then(data => {
+                  const decoded = atob(data[0]);
+                  const lines = JSON.parse(decoded);
+                  element.innerHTML = lines.map(line => `<div class="rpo-outsourced">${line}</div>`).join('');
+                })
+                .catch(() => (element.textContent = 'Not found'));
+            }
+          });
         });
 
         const carouselImage = document.getElementById('carousel-image');
@@ -332,8 +396,6 @@
         const mmc = <%- JSON.stringify(mmc) %>;
         const colorMap = <%- JSON.stringify(colorMap) %>;
         let intColor = <%- JSON.stringify(intColor) %>;
-        const vin_data = <%- JSON.stringify(vin_data) %>;
-        const model = vin_data[0].model?.toUpperCase() || '';
         const ghostImg = '../../img/ghost-chevrolet-car-alt.png';
         
         if (model === 'CAMARO') fallbackImg = '../../img/vehicleLogos/camaro.png';

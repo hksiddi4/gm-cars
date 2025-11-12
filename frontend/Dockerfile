@@ -4,6 +4,8 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
+RUN chmod +x /app/node_modules/.bin/pm2-runtime
+
 COPY . .
 
 ENV NODE_ENV=production

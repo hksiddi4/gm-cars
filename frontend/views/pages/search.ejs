@@ -167,7 +167,7 @@
         </div>
     </div>
     <div class="custom-container">
-        <div style="display: flex; gap: 5px;">
+        <div style="display: flex;">
             <!-- Window Sticker -->
             <div id="sticker-container" style="flex: 1;">
               <% if (vin.country === 'MEXICO' || vin.dealer_name === 'N/A') { %>
@@ -176,7 +176,7 @@
                 </div>
               <% } else { %>
                 <div style="display: flex; justify-content: center; overflow-x: auto;">
-                  <embed src="https://cws.gm.com/vs-cws/vehshop/v2/vehicle/windowsticker?vin=<%= vin.vin %>" type="application/pdf" width="85%" height="800px"/>
+                  <embed class="window-sticker" src="https://cws.gm.com/vs-cws/vehshop/v2/vehicle/windowsticker?vin=<%= vin.vin %>" type="application/pdf" width="100%"/>
                 </div>
               <% } %>
             </div>
@@ -329,6 +329,8 @@
             img.alt = rpoCode;
 
             img.onload = () => {
+              const cardWrapper = document.createElement('div');
+              cardWrapper.className = 'rpo-wrapper';
               const cardLink = document.createElement('a');
               cardLink.href = `/vehicles?model=${encodeURIComponent(model)}&rpo=${encodeURIComponent(rpoCode)}`;
               cardLink.className = 'rpo-card-link';
@@ -354,7 +356,8 @@
               `;
 
               cardLink.appendChild(card);
-              container.appendChild(cardLink);
+              cardWrapper.appendChild(cardLink);
+              container.appendChild(cardWrapper);
               found = true;
             };
           });

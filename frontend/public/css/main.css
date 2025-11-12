@@ -20,46 +20,56 @@
     background-color: #555;
 }
 
+#wheelTable .rpo-description {
+    text-align: left;
+}
+
+.rpo-wrapper {
+    width: 250px;
+}
+
 .rpo-container {
     display: flex;
     flex-wrap: wrap;
-    gap: 16px;
+    gap: 8px;
     justify-content: center;
-    padding-top: 20px;
-    padding-bottom: 20px;
+    padding-top: 10px;
+    padding-bottom: 10px;
 }
+
 .rpo-card {
-    padding: 8px;
-    width: 250px;
+    padding: 5px;
+    width: 100%;
     text-align: center;
     color: white;
     background-color: #333;
-    border-radius: 8px;
+    border-radius: 5px;
 }
+
 .rpo-card img {
     width: 100%;
     height: auto;
     border-radius: 4px;
 }
+
 .rpo-description {
     text-align: center;
     font-size: 0.9em;
-    padding-top: 5px;
-}
-
-#wheelTable .rpo-description {
-    text-align: left;
 }
 
 .rpo-card-link {
+    display: inline-block;
     text-decoration: none;
-    display: block;
+    width: 100%;
+    height: auto;
 }
+
 .rpo-card-link:hover .rpo-card {
     transform: translateY(-5px);
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
+
 .rpo-outsourced {
     font-style: italic;
 }
@@ -609,6 +619,11 @@ img {
     font-size: x-large;
 }
 
+.window-sticker {
+    height: 80vh;
+    min-height: 800px;
+}
+
 #vinTable, #rpoTable {
     max-width: 80%;
     margin: 0 auto;
@@ -701,6 +716,33 @@ img {
 
     #top-scroll:active {
         cursor: grabbing;
+    }
+
+    .rpo-container {
+        gap: 4px;
+    }
+
+    .rpo-wrapper {
+        width: 130px;
+    }
+
+    .rpo-card {
+        width: 100%;
+        padding: 3px;
+    }
+
+    .rpo-card img {
+        width: 100%;
+    }
+
+    .rpo-card p {
+        font-size: 0.9em; 
+        margin-bottom: 0;
+        font-weight: bold;
+    }
+    
+    .rpo-description {
+        font-size: 0.75em;
     }
 
     .footer {
@@ -842,6 +884,10 @@ img {
 
     .flex-row-wrap {
         flex-direction: column;
+    }
+
+    .window-sticker {
+        height: 20vh;
     }
 
     /* Stats */

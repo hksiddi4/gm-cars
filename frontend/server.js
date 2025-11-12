@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
-const { colorMap, intColor, seatCode, mmc, camaroRpo, corvetteRpo, escaladeiqRpo, ct4Rpo, ct4vRpo, ct5Rpo, ct5vRpo } = require('./views/partials/modules.js')
+const { colorMap, intColor, seatCode, mmc, camaroRpo, corvetteRpo, escaladeiqRpo, ct4Rpo, ct4vRpo, ct5Rpo, ct5vRpo, hummerRpo, hummersuvRpo } = require('./views/partials/modules.js')
 const headerImagesDir = path.join(__dirname, 'public', 'img', 'header');
 const rpoWheelsDir = path.join(__dirname, 'public', 'img', 'rpos');
 
@@ -240,6 +240,8 @@ app.get('/search', function(req, res) {
                 ct4vRpo: ct4vRpo,
                 ct5Rpo: ct5Rpo,
                 ct5vRpo: ct5vRpo,
+                hummerRpo: hummerRpo,
+                hummersuvRpo: hummersuvRpo,
                 canonicalPath: `/search?vin=${vin}`,
                 pagePath: '/search'
             });
@@ -324,6 +326,8 @@ app.get('/rpos', function(req, res) {
         ct4vRpo: ct4vRpo,
         ct5Rpo: ct5Rpo,
         ct5vRpo: ct5vRpo,
+        hummerRpo: hummerRpo,
+        hummersuvRpo: hummersuvRpo,
         canonicalPath: '/rpos',
         pagePath: '/rpos'
     });
@@ -347,6 +351,8 @@ app.get('/wheels', function(req, res) {
                 ct4vRpo: ct4vRpo,
                 ct5Rpo: ct5Rpo,
                 ct5vRpo: ct5vRpo,
+                hummerRpo: hummerRpo,
+                hummersuvRpo: hummersuvRpo,
                 localRpoImageMap: localRpoImageMap, 
                 canonicalPath: '/wheels',
                 pagePath: '/wheels'

@@ -269,6 +269,8 @@
         const ct4vRpo = <%- JSON.stringify(ct4vRpo) %>;
         const ct5Rpo = <%- JSON.stringify(ct5Rpo) %>;
         const ct5vRpo = <%- JSON.stringify(ct5vRpo) %>;
+        const hummerRpo = <%- JSON.stringify(hummerRpo) %>;
+        const hummersuvRpo = <%- JSON.stringify(hummersuvRpo) %>;
 
         const allRpoDescriptions = {
           ...rpoDescriptions,
@@ -279,6 +281,8 @@
           ...ct4vRpo,
           ...ct5Rpo,
           ...ct5vRpo,
+          ...hummerRpo,
+          ...hummersuvRpo
         };
 
         function loadRpoDescriptions() {
@@ -346,6 +350,8 @@
                 (model === 'CT4' && trim.startsWith('V-SERIES') && ct4vRpo[rpoCode]) ||
                 (model === 'CT5' && ct5Rpo[rpoCode]) ||
                 (model === 'CT5' && trim.startsWith('V-SERIES') && ct5vRpo[rpoCode]) ||
+                (model === 'HUMMER EV PICKUP' && hummerRpo[rpoCode]) ||
+                (model === 'HUMMER EV SUV' && hummersuvRpo[rpoCode]) ||
                 rpoDescriptions[rpoCode] ||
                 '';
 
@@ -407,6 +413,16 @@
 
             if (model === 'CT5' && trim.startsWith('V-SERIES') && ct5vRpo[rpoCode]) {
               element.innerHTML = `<div>${ct5vRpo[rpoCode]}</div>`;
+              return;
+            }
+
+            if (model === 'HUMMER EV PICKUP' && hummerRpo[rpoCode]) {
+              element.innerHTML = `<div>${hummerRpo[rpoCode]}</div>`;
+              return;
+            }
+
+            if (model === 'HUMMER EV SUV' && hummersuvRpo[rpoCode]) {
+              element.innerHTML = `<div>${hummersuvRpo[rpoCode]}</div>`;
               return;
             }
 

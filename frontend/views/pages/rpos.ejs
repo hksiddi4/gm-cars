@@ -24,6 +24,8 @@
                     <option value="ct5">CT5</option>
                     <option value="ct5v">CT5-V</option>
                     <option value="escaladeiq">Escalade IQ</option>
+                    <option value="hummer">Hummer EV Pickup</option>
+                    <option value="hummersuv">Hummer EV SUV</option>
                 </select>
             </div>
         </div>
@@ -43,6 +45,8 @@
             ct4v: <%- JSON.stringify(ct4vRpo) %>,
             ct5: <%- JSON.stringify(ct5Rpo) %>,
             ct5v: <%- JSON.stringify(ct5vRpo) %>,
+            hummer: <%- JSON.stringify(hummerRpo) %>,
+            hummersuv: <%- JSON.stringify(hummersuvRpo) %>,
         };
 
         function renderRPOs(model) {
@@ -69,11 +73,14 @@
                     if (!this.dataset.fallback) {
                         this.dataset.fallback = 'true';
                         const cadillacModels = ['escaladeiq', 'ct4', 'ct4v', 'ct5', 'ct5v'];
-                        let imagePath = '../img/';
+                        const gmcModels = ['hummer ev pickup', 'hummer ev suv'];
+                        let imagePath = '../img/brand-logos/';
                         if (cadillacModels.includes(model)) {
-                            imagePath += 'cadillac-brand-logo.png';
+                            imagePath += 'cadillac.png';
+                        } else if (gmcModels.includes(model)) {
+                            imagePath += 'gmc.png';
                         } else {
-                            imagePath += 'chevrolet-brand-logo.png';
+                            imagePath += 'chevrolet.png';
                         }
                         this.src = imagePath;
                         missingRpos.push(rpo);

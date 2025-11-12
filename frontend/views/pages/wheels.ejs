@@ -48,6 +48,15 @@
     </div>
     <%- include('../partials/footer'); %>
     <script>
+        const camaroRpo = <%- JSON.stringify(camaroRpo) %>;
+        const corvetteRpo = <%- JSON.stringify(corvetteRpo) %>;
+        const escaladeiqRpo = <%- JSON.stringify(escaladeiqRpo) %>;
+        const ct4Rpo = <%- JSON.stringify(ct4Rpo) %>;
+        const ct4vRpo = <%- JSON.stringify(ct4vRpo) %>;
+        const ct5Rpo = <%- JSON.stringify(ct5Rpo) %>;
+        const ct5vRpo = <%- JSON.stringify(ct5vRpo) %>;
+        const localRpoImageMap = <%- JSON.stringify(localRpoImageMap) %>;
+
         let rpoDescriptions = {};
         const rpoDescriptionCache = {};
 
@@ -64,7 +73,8 @@
             'CORVETTE ZR1': ['SOJ', 'SOG', 'SOF', 'SOH', 'SU1'],
             'CORVETTE Z06': ['SOE', 'SOA', 'SRK', 'SRN', 'STE', 'STX', '5DK', '5DH', 'ROY', 'ROZ', 'STZ', '5DH'],
             'CORVETTE E-RAY': ['ROU', 'SON', 'ROX', 'SOM', 'ROY', 'ROZ', 'STZ'],
-            'CORVETTE STINGRAY': ['5DG', '5DO', 'Q8P', 'Q8Q', 'Q9Y', 'Q9O', 'Q99', 'Q9I', 'Q9A', '5DG', 'QE5']
+            'CORVETTE STINGRAY': ['5DG', '5DO', 'Q8P', 'Q8Q', 'Q9Y', 'Q9O', 'Q99', 'Q9I', 'Q9A', '5DG', 'QE5'],
+            'CORVETTE (ALL)': ['Q9A', '5DG', 'Q9Y', '5DO', 'Q9O', 'Q9I', 'Q99', 'Q8Q', 'Q8P', 'QE5', 'Q7Q', 'Q7Z', 'Q8W', 'Q8X', 'Q8P', 'Q8Q', 'Q9Y', 'Q9O', 'Q99', 'Q9I', 'Q9A', '5DG', 'QE5', 'ROU', 'SON', 'ROX', 'SOM', 'ROY', 'ROZ', 'STZ', 'SOE', 'SOA', 'SRK', 'SRN', 'STE', 'STX', '5DK', '5DH', 'STZ', 'SOJ', 'SOG', 'SOF', 'SOH', 'SU1']
         };
 
         function loadRpoDescriptions() {
@@ -90,6 +100,34 @@
             }
         }
 
+        const getLocalRpoDescription = (rpoCode, model) => {
+            switch (model) {
+                case 'CT4':
+                    if (ct4Rpo[rpoCode]) return ct4Rpo[rpoCode];
+                    if (ct4vRpo[rpoCode]) return ct4vRpo[rpoCode];
+                    return null;
+                case 'CT5':
+                    if (ct5Rpo[rpoCode]) return ct5Rpo[rpoCode];
+                    if (ct5vRpo[rpoCode]) return ct5vRpo[rpoCode];
+                    return null;
+                case 'CAMARO':
+                    return camaroRpo[rpoCode];
+                case 'ESCALADE IQ':
+                    return escaladeiqRpo[rpoCode];
+                default:
+                    if (model.startsWith('CORVETTE')) return corvetteRpo[rpoCode];
+                    return null;
+            }
+        };
+        
+        const getWheelImageUrl = (rpoCode, outsourcedUrl) => {
+            if (localRpoImageMap[rpoCode]) {
+                return localRpoImageMap[rpoCode]; 
+            }
+            
+            return outsourcedUrl; 
+        };
+
         document.addEventListener('DOMContentLoaded', function () {
             const modelSelect = document.getElementById('filterModel');
             const table = document.getElementById('wheelTable');
@@ -97,41 +135,53 @@
             const url = new URL(window.location.href);
 
             modelSelect.addEventListener('change', function () {
-                const selected = this.value?.toUpperCase();
+                const selectedModel = this.value?.toUpperCase();
                 tableBody.innerHTML = '';
 
-                if (selected) url.searchParams.set('model', selected);
+                if (selectedModel) url.searchParams.set('model', selectedModel);
                 else url.searchParams.delete('model');
                 history.replaceState(null, '', url.toString());
 
-                if (selected && modelRpoMap[selected]) {
-                    let modelLower = selected.toLowerCase().replace(/ /g, '-').replace('e-ray', 'eray');
-                    if (selected === 'CORVETTE STINGRAY') modelLower = 'corvette';
+                if (selectedModel && modelRpoMap[selectedModel]) {
+                    let modelLower = selectedModel.toLowerCase().replace(/ /g, '-').replace('e-ray', 'eray');
+                    if (selectedModel === 'CORVETTE STINGRAY' || selectedModel === 'CORVETTE (ALL)') modelLower = 'corvette';
                     const category = modelLower.startsWith('corvette') ? 'corvette' : modelLower;
-                    const year = (selected === 'CAMARO') ? '2024' : '2025';
-                    const cadillacModels = ['ESCALADE IQ', 'CT4', 'CT5', 'CT6'];
-                    const manufacturer = cadillacModels.includes(selected) ? 'cadillac' : 'chevrolet';
+                    const year = (selectedModel === 'CAMARO') ? '2024' : '2025';
+                    const cadillacModels = ['ESCALADE IQ', 'CT4', 'CT5', 'CT6', 'CT4V', 'CT5V'];
+                    const manufacturer = cadillacModels.includes(selectedModel) || selectedModel.startsWith('CT') || selectedModel.startsWith('ESCALADE') ? 'cadillac' : 'chevrolet';
 
-                    modelRpoMap[selected].forEach(rpo => {
+                    const rposToRender = selectedModel === 'CORVETTE (ALL)' 
+                        ? [...new Set(modelRpoMap['CORVETTE ZR1'].concat(modelRpoMap['CORVETTE Z06'], modelRpoMap['CORVETTE E-RAY'], modelRpoMap['CORVETTE STINGRAY']))]
+                        : modelRpoMap[selectedModel];
+
+
+                    rposToRender.forEach(rpo => {
                         const row = document.createElement('tr');
                         let imgRpo = rpo;
                         if (rpo === '5K9') imgRpo = '57V';
                         if (rpo === '5JW') imgRpo = 'WR1';
+                        const outsourcedUrl = `https://www.${manufacturer}.com/bypass/master_tools/ddp/gmna/assets/US/${manufacturer}/${year}/${category}/${modelLower}/small_byo3/${imgRpo}.jpg`;
+                        const finalImageUrl = getWheelImageUrl(imgRpo, outsourcedUrl);
                         row.innerHTML = `
                             <td>
                                 <img 
                                     class="wheel-image"
                                     data-rpo="${imgRpo}"
-                                    data-year="${year}"
-                                    src="https://www.${manufacturer}.com/bypass/master_tools/ddp/gmna/assets/US/${manufacturer}/${year}/${category}/${modelLower}/small_byo3/${imgRpo}.jpg"
-                                    onerror="
-                                        if (!this.dataset.fallback) {
-                                            this.dataset.fallback = 'true';
-                                            this.src = this.src.replace('/${year}/', '/2024/');
-                                        }
-                                    "
+                                    src="${finalImageUrl}"
                                     alt="Wheel Image"
                                     style="height: 200px; width: auto;"
+                                    onerror="
+                                        // Outsourced URL fallback for year (if present)
+                                        if (this.src.includes('bypass/master_tools') && !this.dataset.fallback) {
+                                            this.dataset.fallback = 'true';
+                                            this.src = this.src.replace('/${year}/', '/2024/');
+                                        } 
+                                        // Final fallback to generic placeholder
+                                        else if (!this.dataset.placeholder) {
+                                            this.dataset.placeholder = 'true';
+                                            this.src = '/img/placeholder-wheel.png'; 
+                                        }
+                                    "
                                 />
                             </td>
                             <td style="text-align: left;">
@@ -146,18 +196,20 @@
 
                     document.querySelectorAll('.rpo-description').forEach(element => {
                         const rpoCode = element.getAttribute('data-code');
+                        const model = modelSelect.value?.toUpperCase();
+
                         if (rpoDescriptionCache[rpoCode]) {
                             element.innerHTML = rpoDescriptionCache[rpoCode];
                             return;
                         }
 
-                        const applyFormatting = (desc) => {
+                        const applyFormatting = (desc, isLocal = false) => {
                             let lines = Array.isArray(desc) ? desc : [desc];
                             const formattedLines = lines.map(line =>
                                 line.replace(/forged/gi, '<strong>forged</strong>')
                                     .replace(/carbon fiber/gi, '<strong>carbon fiber</strong>')
                             );
-                            const html = formattedLines.map(line => `<div class="rpo-outsourced">${line}</div>`).join('');
+                            const html = formattedLines.map(line => `<div class="rpo-${isLocal ? 'local' : 'outsourced'}">${line}</div>`).join('');
                             element.innerHTML = html;
                             rpoDescriptionCache[rpoCode] = html;
 
@@ -167,8 +219,15 @@
                             if (descText.includes('carbon')) row.style.border = '4px solid #242424';
                         };
 
+                        const localDescription = getLocalRpoDescription(rpoCode, model);
+                        
+                        if (localDescription) {
+                            applyFormatting(localDescription, true);
+                            return;
+                        }
+
                         if (rpoDescriptions[rpoCode]) {
-                            applyFormatting(rpoDescriptions[rpoCode]);
+                            applyFormatting(rpoDescriptions[rpoCode], false);
                         } else {
                             fetch(`https://decoderpo.com/api/getRPODescription/${rpoCode}`)
                                 .then(resp => {
@@ -178,7 +237,7 @@
                                 .then(data => {
                                     const decoded = atob(data[0]);
                                     const lines = JSON.parse(decoded);
-                                    applyFormatting(lines);
+                                    applyFormatting(lines, false);
                                 })
                                 .catch(() => {
                                     element.textContent = 'Not found';

@@ -4,8 +4,9 @@ const bodyParser = require('body-parser');
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
-const { colorMap, intColor, seatCode, mmc, camaroRpo, corvetteRpo, escaladeiqRpo, ct4Rpo, ct4vRpo } = require('./views/partials/modules.js')
+const { colorMap, intColor, seatCode, mmc, camaroRpo, corvetteRpo, escaladeiqRpo, ct4Rpo, ct4vRpo, ct5Rpo, ct5vRpo } = require('./views/partials/modules.js')
 const headerImagesDir = path.join(__dirname, 'public', 'img', 'header');
+const rpoWheelsDir = path.join(__dirname, 'public', 'img', 'rpos');
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -33,6 +34,32 @@ function getHeaderImages() {
         return [];
     }
 }
+
+function getLocalImageRPOs() {
+    const localRpoImages = {};
+    try {
+        const modelDirs = fs.readdirSync(rpoWheelsDir, { withFileTypes: true })
+            .filter(dirent => dirent.isDirectory())
+            .map(dirent => dirent.name);
+
+        modelDirs.forEach(modelDir => {
+            const modelPath = path.join(rpoWheelsDir, modelDir);
+            const imageFiles = fs.readdirSync(modelPath)
+                .filter(file => /\.(jpg|jpeg|png|webp)$/i.test(file));
+            
+            imageFiles.forEach(file => {
+                const rpoCode = path.parse(file).name.toUpperCase();
+                localRpoImages[rpoCode] = `/img/rpos/${modelDir}/${file}`; // The final public URL
+            });
+        });
+
+    } catch (error) {
+        console.warn(`Warning: Could not read RPO wheel image directory: ${error.message}`);
+    }
+    return localRpoImages;
+}
+const localRpoImageMap = getLocalImageRPOs();
+
 
 app.use((req, res, next) => {
     if (maintenanceMode && req.path !== '/maintenance') {
@@ -205,6 +232,8 @@ app.get('/search', function(req, res) {
                 escaladeiqRpo: escaladeiqRpo,
                 ct4Rpo: ct4Rpo,
                 ct4vRpo: ct4vRpo,
+                ct5Rpo: ct5Rpo,
+                ct5vRpo: ct5vRpo,
                 canonicalPath: `/search?vin=${vin}`,
                 pagePath: '/search'
             });
@@ -287,6 +316,8 @@ app.get('/rpos', function(req, res) {
         escaladeiqRpo: escaladeiqRpo,
         ct4Rpo: ct4Rpo,
         ct4vRpo: ct4vRpo,
+        ct5Rpo: ct5Rpo,
+        ct5vRpo: ct5vRpo,
         canonicalPath: '/rpos',
         pagePath: '/rpos'
     });
@@ -295,7 +326,6 @@ app.get('/rpos', function(req, res) {
 app.get('/wheels', function(req, res) {
     const imageUrls = getHeaderImages();
     const url = new URL(`${baseURL}/wheels`);
-    const params = new URLSearchParams();
 
     axiosInstance.get(url.toString())
         .then((response) => {
@@ -304,6 +334,16 @@ app.get('/wheels', function(req, res) {
             res.render('pages/wheels', {
                 model_list: data.model,
                 headerImages: imageUrls,
+                // Passing the individual RPO objects, now used for priority check logic in EJS
+                camaroRpo: camaroRpo, 
+                corvetteRpo: corvetteRpo,
+                escaladeiqRpo: escaladeiqRpo,
+                ct4Rpo: ct4Rpo,
+                ct4vRpo: ct4vRpo,
+                ct5Rpo: ct5Rpo,
+                ct5vRpo: ct5vRpo,
+                localRpoImageMap: localRpoImageMap, 
+                
                 canonicalPath: '/wheels',
                 pagePath: '/wheels'
             });

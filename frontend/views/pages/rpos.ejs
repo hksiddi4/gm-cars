@@ -51,10 +51,13 @@
             const missingRpos = [];
 
             Object.keys(rpos).forEach(rpo => {
+                const cardWrapper = document.createElement('div');
+                cardWrapper.className = 'rpo-wrapper';
                 const link = document.createElement('a');
                 link.href = `/vehicles?model=${model}&rpo=${rpo}`;
                 link.style.textDecoration = 'none';
-                link.style.display = 'block';
+
+                link.className = 'rpo-card-link';
 
                 const card = document.createElement('div');
                 card.className = 'rpo-card';
@@ -90,7 +93,8 @@
                 card.appendChild(title);
                 card.appendChild(descDiv);
                 link.appendChild(card);
-                container.appendChild(link);
+                cardWrapper.appendChild(link);
+                container.appendChild(cardWrapper);
             });
 
             setTimeout(() => {

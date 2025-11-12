@@ -5,13 +5,13 @@ services:
     networks:
       - app-network
     env_file: ./.env
-    restart: "no"
+    restart: always
 
   frontend:
     build: ./frontend
     networks:
       - app-network
-    restart: "no"
+    restart: always
 
   nginx:
     image: nginx:stable

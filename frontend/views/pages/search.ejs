@@ -267,6 +267,8 @@
         const escaladeiqRpo = <%- JSON.stringify(escaladeiqRpo) %>;
         const ct4Rpo = <%- JSON.stringify(ct4Rpo) %>;
         const ct4vRpo = <%- JSON.stringify(ct4vRpo) %>;
+        const ct5Rpo = <%- JSON.stringify(ct5Rpo) %>;
+        const ct5vRpo = <%- JSON.stringify(ct5vRpo) %>;
 
         const allRpoDescriptions = {
           ...rpoDescriptions,
@@ -274,7 +276,9 @@
           ...corvetteRpo,
           ...escaladeiqRpo,
           ...ct4Rpo,
-          ...ct4vRpo
+          ...ct4vRpo,
+          ...ct5Rpo,
+          ...ct5vRpo,
         };
 
         function loadRpoDescriptions() {
@@ -338,6 +342,8 @@
                 (model === 'ESCALADE IQ' && escaladeiqRpo[rpoCode]) ||
                 (model === 'CT4' && ct4Rpo[rpoCode]) ||
                 (model === 'CT4' && trim.startsWith('V-SERIES') && ct4vRpo[rpoCode]) ||
+                (model === 'CT5' && ct5Rpo[rpoCode]) ||
+                (model === 'CT5' && trim.startsWith('V-SERIES') && ct5vRpo[rpoCode]) ||
                 rpoDescriptions[rpoCode] ||
                 '';
 
@@ -388,6 +394,16 @@
 
             if (model === 'CT4' && trim.startsWith('V-SERIES') && ct4vRpo[rpoCode]) {
               element.innerHTML = `<div>${ct4vRpo[rpoCode]}</div>`;
+              return;
+            }
+
+            if (model === 'CT5' && ct5Rpo[rpoCode]) {
+              element.innerHTML = `<div>${ct5Rpo[rpoCode]}</div>`;
+              return;
+            }
+
+            if (model === 'CT5' && trim.startsWith('V-SERIES') && ct5vRpo[rpoCode]) {
+              element.innerHTML = `<div>${ct5vRpo[rpoCode]}</div>`;
               return;
             }
 

@@ -4,34 +4,6 @@
     <%- include('../partials/head'); %>
     <title>RPOs</title>
     <%- include('../partials/analytics'); %>
-    <style>
-        .rpo-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 16px;
-            justify-content: start;
-        }
-        .rpo-card {
-            padding: 8px;
-            width: 400px;
-            text-align: center;
-            color: white;
-        }
-        .rpo-card img {
-            width: 100%;
-            height: auto;
-        }
-        .rpo-description {
-            text-align: center;
-        }
-        .rpo-card {
-            transition: transform 0.2s ease-in-out;
-        }
-        .rpo-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-    </style>
 </head>
 <body>
     <%- include('../partials/header'); %>
@@ -49,6 +21,8 @@
                     <option value="corvette">Corvette</option>
                     <option value="ct4">CT4</option>
                     <option value="ct4v">CT4-V</option>
+                    <option value="ct5">CT5</option>
+                    <option value="ct5v">CT5-V</option>
                     <option value="escaladeiq">Escalade IQ</option>
                 </select>
             </div>
@@ -67,6 +41,8 @@
             escaladeiq: <%- JSON.stringify(escaladeiqRpo) %>,
             ct4: <%- JSON.stringify(ct4Rpo) %>,
             ct4v: <%- JSON.stringify(ct4vRpo) %>,
+            ct5: <%- JSON.stringify(ct5Rpo) %>,
+            ct5v: <%- JSON.stringify(ct5vRpo) %>,
         };
 
         function renderRPOs(model) {
@@ -89,11 +65,14 @@
                 img.onerror = function() {
                     if (!this.dataset.fallback) {
                         this.dataset.fallback = 'true';
-                        if (model === 'escaladeiq' || model === 'ct4' || model === 'ct4v') {
-                            this.src = `../img/cadillac-brand-logo.png`;
+                        const cadillacModels = ['escaladeiq', 'ct4', 'ct4v', 'ct5', 'ct5v'];
+                        let imagePath = '../img/';
+                        if (cadillacModels.includes(model)) {
+                            imagePath += 'cadillac-brand-logo.png';
                         } else {
-                            this.src = `../img/chevrolet-brand-logo.png`;
+                            imagePath += 'chevrolet-brand-logo.png';
                         }
+                        this.src = imagePath;
                         missingRpos.push(rpo);
                     }
                 };

@@ -120,12 +120,11 @@
             }
         };
         
-        const getWheelImageUrl = (rpoCode, outsourcedUrl) => {
-            if (localRpoImageMap[rpoCode]) {
-                return localRpoImageMap[rpoCode]; 
-            }
-            
-            return outsourcedUrl; 
+        const getWheelImageUrl = (rpoCode, outsourcedUrl, model) => {
+            const key = `${model}-${rpoCode}`;
+            if (localRpoImageMap[key]) return localRpoImageMap[key];
+            if (localRpoImageMap[rpoCode]) return localRpoImageMap[rpoCode]; // fallback
+            return outsourcedUrl;
         };
 
         document.addEventListener('DOMContentLoaded', function () {
@@ -161,7 +160,7 @@
                         if (rpo === '5K9') imgRpo = '57V';
                         if (rpo === '5JW') imgRpo = 'WR1';
                         const outsourcedUrl = `https://www.${manufacturer}.com/bypass/master_tools/ddp/gmna/assets/US/${manufacturer}/${year}/${category}/${modelLower}/small_byo3/${imgRpo}.jpg`;
-                        const finalImageUrl = getWheelImageUrl(imgRpo, outsourcedUrl);
+                        const finalImageUrl = getWheelImageUrl(imgRpo, outsourcedUrl, selectedModel);
                         row.innerHTML = `
                             <td>
                                 <img 

@@ -49,7 +49,14 @@ function getLocalImageRPOs() {
             
             imageFiles.forEach(file => {
                 const rpoCode = path.parse(file).name.toUpperCase();
-                localRpoImages[rpoCode] = `/img/rpos/${modelDir}/${file}`; // The final public URL
+                const modelKey = `${modelDir.toUpperCase()}-${rpoCode}`;
+                const imagePath = `/img/rpos/${modelDir}/${file}`;
+
+                localRpoImages[modelKey] = imagePath;
+
+                if (!localRpoImages[rpoCode]) {
+                    localRpoImages[rpoCode] = imagePath;
+                }
             });
         });
 

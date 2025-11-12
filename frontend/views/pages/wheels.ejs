@@ -4,18 +4,6 @@
     <%- include('../partials/head'); %>
     <title>Wheels</title>
     <%- include('../partials/analytics'); %>
-    <style>
-        /* Optional: Add CSS to distinguish local descriptions */
-        .rpo-local {
-            font-weight: bold;
-            color: #387085; /* A color to denote local/custom data */
-            margin-top: 4px;
-        }
-        .rpo-outsourced {
-            color: #6c757d; /* Standard muted color for external data */
-            margin-top: 4px;
-        }
-    </style>
 </head>
 <body>
     <%- include('../partials/header'); %>
@@ -60,8 +48,6 @@
     </div>
     <%- include('../partials/footer'); %>
     <script>
-        // 1. Capture Server-Built Data
-        // Descriptions: Individual RPO objects, used for model-specific priority checks
         const camaroRpo = <%- JSON.stringify(camaroRpo) %>;
         const corvetteRpo = <%- JSON.stringify(corvetteRpo) %>;
         const escaladeiqRpo = <%- JSON.stringify(escaladeiqRpo) %>;
@@ -69,12 +55,10 @@
         const ct4vRpo = <%- JSON.stringify(ct4vRpo) %>;
         const ct5Rpo = <%- JSON.stringify(ct5Rpo) %>;
         const ct5vRpo = <%- JSON.stringify(ct5vRpo) %>;
-        // Image Map: Built by scanning the /public/img/rpos/ directory
         const localRpoImageMap = <%- JSON.stringify(localRpoImageMap) %>;
-        
-        // Caches for outsourced data
-        let rpoDescriptions = {}; // Global/outsourced RPO data cache
-        const rpoDescriptionCache = {}; // HTML cache for rendered descriptions
+
+        let rpoDescriptions = {};
+        const rpoDescriptionCache = {};
 
         const modelRpoMap = {
             'CAMARO': [
@@ -90,7 +74,7 @@
             'CORVETTE Z06': ['SOE', 'SOA', 'SRK', 'SRN', 'STE', 'STX', '5DK', '5DH', 'ROY', 'ROZ', 'STZ', '5DH'],
             'CORVETTE E-RAY': ['ROU', 'SON', 'ROX', 'SOM', 'ROY', 'ROZ', 'STZ'],
             'CORVETTE STINGRAY': ['5DG', '5DO', 'Q8P', 'Q8Q', 'Q9Y', 'Q9O', 'Q99', 'Q9I', 'Q9A', '5DG', 'QE5'],
-            'CORVETTE (ALL)': ['Q9A', '5DG', 'Q9Y', '5DO', 'Q9O', 'Q9I', 'Q99', 'Q8Q', 'Q8P', 'QE5', 'Q7Q', 'Q7Z', 'Q8W', 'Q8X', 'Q8P', 'Q8Q', 'Q9Y', 'Q9O', 'Q99', 'Q9I', 'Q9A', '5DG', 'QE5', 'ROU', 'SON', 'ROX', 'SOM', 'ROY', 'ROZ', 'STZ', 'SOE', 'SOA', 'SRK', 'SRN', 'STE', 'STX', '5DK', '5DH', 'STZ', 'SOJ', 'SOG', 'SOF', 'SOH', 'SU1'] // Combined list for the general filter
+            'CORVETTE (ALL)': ['Q9A', '5DG', 'Q9Y', '5DO', 'Q9O', 'Q9I', 'Q99', 'Q8Q', 'Q8P', 'QE5', 'Q7Q', 'Q7Z', 'Q8W', 'Q8X', 'Q8P', 'Q8Q', 'Q9Y', 'Q9O', 'Q99', 'Q9I', 'Q9A', '5DG', 'QE5', 'ROU', 'SON', 'ROX', 'SOM', 'ROY', 'ROZ', 'STZ', 'SOE', 'SOA', 'SRK', 'SRN', 'STE', 'STX', '5DK', '5DH', 'STZ', 'SOJ', 'SOG', 'SOF', 'SOH', 'SU1']
         };
 
         function loadRpoDescriptions() {
@@ -116,21 +100,14 @@
             }
         }
 
-        /**
-         * Finds the correct local RPO description using model-specific priority.
-         */
         const getLocalRpoDescription = (rpoCode, model) => {
             switch (model) {
                 case 'CT4':
-                    // Priority 1: Check standard CT4 RPOs
                     if (ct4Rpo[rpoCode]) return ct4Rpo[rpoCode];
-                    // Priority 2: Check CT4-V RPOs
                     if (ct4vRpo[rpoCode]) return ct4vRpo[rpoCode];
                     return null;
                 case 'CT5':
-                    // Priority 1: Check standard CT5 RPOs
                     if (ct5Rpo[rpoCode]) return ct5Rpo[rpoCode];
-                    // Priority 2: Check CT5-V RPOs
                     if (ct5vRpo[rpoCode]) return ct5vRpo[rpoCode];
                     return null;
                 case 'CAMARO':
@@ -138,26 +115,18 @@
                 case 'ESCALADE IQ':
                     return escaladeiqRpo[rpoCode];
                 default:
-                    // All Corvette models and the CORVETTE (ALL) filter use the same base corvetteRpo map
                     if (model.startsWith('CORVETTE')) return corvetteRpo[rpoCode];
                     return null;
             }
         };
         
-        /**
-         * Determines the correct image URL with priority: Local Image Map -> Outsourced URL
-         */
         const getWheelImageUrl = (rpoCode, outsourcedUrl) => {
-            // 1. Check Local Image Map (Highest Priority)
             if (localRpoImageMap[rpoCode]) {
                 return localRpoImageMap[rpoCode]; 
             }
             
-            // 2. Fallback to Outsourced URL
             return outsourcedUrl; 
         };
-
-        // --- DOCUMENT READY LOGIC ---
 
         document.addEventListener('DOMContentLoaded', function () {
             const modelSelect = document.getElementById('filterModel');
@@ -174,7 +143,6 @@
                 history.replaceState(null, '', url.toString());
 
                 if (selectedModel && modelRpoMap[selectedModel]) {
-                    // Logic to build the manufacturer/category URL parts
                     let modelLower = selectedModel.toLowerCase().replace(/ /g, '-').replace('e-ray', 'eray');
                     if (selectedModel === 'CORVETTE STINGRAY' || selectedModel === 'CORVETTE (ALL)') modelLower = 'corvette';
                     const category = modelLower.startsWith('corvette') ? 'corvette' : modelLower;
@@ -192,13 +160,8 @@
                         let imgRpo = rpo;
                         if (rpo === '5K9') imgRpo = '57V';
                         if (rpo === '5JW') imgRpo = 'WR1';
-
-                        // 1. Construct the Outsourced URL (This will be the fallback)
                         const outsourcedUrl = `https://www.${manufacturer}.com/bypass/master_tools/ddp/gmna/assets/US/${manufacturer}/${year}/${category}/${modelLower}/small_byo3/${imgRpo}.jpg`;
-                        
-                        // 2. Get the FINAL Image URL using the priority function (Local first)
                         const finalImageUrl = getWheelImageUrl(imgRpo, outsourcedUrl);
-                        
                         row.innerHTML = `
                             <td>
                                 <img 
@@ -233,7 +196,7 @@
 
                     document.querySelectorAll('.rpo-description').forEach(element => {
                         const rpoCode = element.getAttribute('data-code');
-                        const model = modelSelect.value?.toUpperCase(); // Get the selected model for priority lookup
+                        const model = modelSelect.value?.toUpperCase();
 
                         if (rpoDescriptionCache[rpoCode]) {
                             element.innerHTML = rpoDescriptionCache[rpoCode];
@@ -248,7 +211,7 @@
                             );
                             const html = formattedLines.map(line => `<div class="rpo-${isLocal ? 'local' : 'outsourced'}">${line}</div>`).join('');
                             element.innerHTML = html;
-                            rpoDescriptionCache[rpoCode] = html; 
+                            rpoDescriptionCache[rpoCode] = html;
 
                             const row = element.closest('tr');
                             const descText = lines.join(' ').toLowerCase();
@@ -256,19 +219,16 @@
                             if (descText.includes('carbon')) row.style.border = '4px solid #242424';
                         };
 
-                        // --- DESCRIPTION PRIORITY CHECK ---
                         const localDescription = getLocalRpoDescription(rpoCode, model);
                         
                         if (localDescription) {
-                            applyFormatting(localDescription, true); // Use local description
+                            applyFormatting(localDescription, true);
                             return;
                         }
-                        // --- END PRIORITY CHECK ---
 
                         if (rpoDescriptions[rpoCode]) {
-                            applyFormatting(rpoDescriptions[rpoCode], false); // Use cached outsourced description
+                            applyFormatting(rpoDescriptions[rpoCode], false);
                         } else {
-                            // Fallback to fetch from external API
                             fetch(`https://decoderpo.com/api/getRPODescription/${rpoCode}`)
                                 .then(resp => {
                                     if (!resp.ok) throw new Error('Not found');
@@ -294,7 +254,6 @@
                 const initialModel = url.searchParams.get('model')?.toUpperCase();
                 if (initialModel && modelRpoMap[initialModel]) {
                     modelSelect.value = initialModel;
-                    // Trigger the change event to load and process data
                     modelSelect.dispatchEvent(new Event('change'));
                 }
             });

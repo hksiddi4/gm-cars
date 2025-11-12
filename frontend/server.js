@@ -1,5 +1,6 @@
 const express = require('express');
 const app = express();
+const bodyParser = require('body-parser');
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
@@ -58,7 +59,6 @@ function getLocalImageRPOs() {
     return localRpoImages;
 }
 const localRpoImageMap = getLocalImageRPOs();
-
 
 app.use((req, res, next) => {
     if (maintenanceMode && req.path !== '/maintenance') {
@@ -333,7 +333,6 @@ app.get('/wheels', function(req, res) {
             res.render('pages/wheels', {
                 model_list: data.model,
                 headerImages: imageUrls,
-                // Passing the individual RPO objects, now used for priority check logic in EJS
                 camaroRpo: camaroRpo, 
                 corvetteRpo: corvetteRpo,
                 escaladeiqRpo: escaladeiqRpo,
@@ -342,7 +341,6 @@ app.get('/wheels', function(req, res) {
                 ct5Rpo: ct5Rpo,
                 ct5vRpo: ct5vRpo,
                 localRpoImageMap: localRpoImageMap, 
-                
                 canonicalPath: '/wheels',
                 pagePath: '/wheels'
             });

@@ -10,4 +10,4 @@ RUN npm install --omit=dev
 COPY . .
 
 EXPOSE 80
-CMD ["/app/node_modules/.bin/pm2-runtime", "start", "server.js", "-i", "0"]
+CMD ["node", "server.js"]

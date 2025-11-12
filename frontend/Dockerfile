@@ -11,4 +11,4 @@ COPY . .
 ENV NODE_ENV=production
 
 EXPOSE 80
-CMD /app/node_modules/.bin/pm2-runtime start server.js -i 0
+CMD ["/app/node_modules/.bin/pm2-runtime", "start", "server.js", "-i", "0"]

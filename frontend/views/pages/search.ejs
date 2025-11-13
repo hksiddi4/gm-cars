@@ -323,8 +323,14 @@
               imgSrc = `../img/rpos/corvette/${rpoCode}.jpg`;
             } else if (model === 'ESCALADE IQ') {
               imgSrc = `../img/rpos/escaladeiq/${rpoCode}.jpg`;
-            } else if (model === 'CT4' && trim.startsWith('V-SERIES')) {
+            } else if (model === 'CT4' && vehicleTrim.startsWith('V-SERIES')) {
                 imgSrc = `../img/rpos/ct4v/${rpoCode}.jpg`;
+            } else if (model === 'CT5' && vehicleTrim.startsWith('V-SERIES')) {
+                imgSrc = `../img/rpos/ct5v/${rpoCode}.jpg`;
+            } else if (model === 'HUMMER EV PICKUP') {
+              imgSrc = `../img/rpos/hummer/${rpoCode}.jpg`;
+            } else if (model === 'HUMMER EV SUV') {
+              imgSrc = `../img/rpos/hummersuv/${rpoCode}.jpg`;
             } else {
               imgSrc = `../img/rpos/${model.toLowerCase()}/${rpoCode}.jpg`;
             }
@@ -347,9 +353,9 @@
                 (model.startsWith('CORVETTE') && corvetteRpo[rpoCode]) ||
                 (model === 'ESCALADE IQ' && escaladeiqRpo[rpoCode]) ||
                 (model === 'CT4' && ct4Rpo[rpoCode]) ||
-                (model === 'CT4' && trim.startsWith('V-SERIES') && ct4vRpo[rpoCode]) ||
+                (model === 'CT4' && vehicleTrim.startsWith('V-SERIES') && ct4vRpo[rpoCode]) ||
                 (model === 'CT5' && ct5Rpo[rpoCode]) ||
-                (model === 'CT5' && trim.startsWith('V-SERIES') && ct5vRpo[rpoCode]) ||
+                (model === 'CT5' && vehicleTrim.startsWith('V-SERIES') && ct5vRpo[rpoCode]) ||
                 (model === 'HUMMER EV PICKUP' && hummerRpo[rpoCode]) ||
                 (model === 'HUMMER EV SUV' && hummersuvRpo[rpoCode]) ||
                 rpoDescriptions[rpoCode] ||
@@ -401,7 +407,7 @@
               return;
             }
 
-            if (model === 'CT4' && trim.startsWith('V-SERIES') && ct4vRpo[rpoCode]) {
+            if (model === 'CT4' && vehicleTrim.startsWith('V-SERIES') && ct4vRpo[rpoCode]) {
               element.innerHTML = `<div>${ct4vRpo[rpoCode]}</div>`;
               return;
             }
@@ -411,7 +417,7 @@
               return;
             }
 
-            if (model === 'CT5' && trim.startsWith('V-SERIES') && ct5vRpo[rpoCode]) {
+            if (model === 'CT5' && vehicleTrim.startsWith('V-SERIES') && ct5vRpo[rpoCode]) {
               element.innerHTML = `<div>${ct5vRpo[rpoCode]}</div>`;
               return;
             }

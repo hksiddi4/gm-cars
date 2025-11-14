@@ -38,17 +38,17 @@
         </div>
         <div class="flex-row-wrap">
             <!-- Photo Carousel -->
-            <div id="image-warning" style="color: white;"></div>
+            <div id="image-warning"></div>
             <div id="carousel-container">
               <div id="loading-animation" class="shimmer">
-                <div class="shimmer-box" style="width: 100%; height: 675px; border-radius: 8px;"></div>
+                <div class="shimmer-box"></div>
               </div>
-              <img id="carousel-image" alt="Vehicle Image" style="width: 100%; display: none;">
+              <img id="carousel-image" alt="Vehicle Image">
               <button id="prev" style="display: none;">&#10094;</button>
               <button id="next" style="display: none;">&#10095;</button>
               <div style="display: flex; justify-content: center;">
-                <div id="image-gallery-shimmer" style="display:flex; gap:5px; overflow:hidden; width:100%; padding: 10px 0;"></div>
-                <div id="image-gallery" style="display:none;"></div>
+                <div id="image-gallery-shimmer"></div>
+                <div id="image-gallery"></div>
               </div>
             </div>
             <!-- vinTable -->
@@ -555,7 +555,6 @@
           const box = document.createElement('div');
           box.classList.add('shimmer-box', 'shimmer');
           box.style.width = '100px';
-          box.style.height = '60px';
           box.style.borderRadius = '4px';
           shimmerContainer.appendChild(box);
         }

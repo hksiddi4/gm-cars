@@ -74,6 +74,12 @@
     font-style: italic;
 }
 
+#loading-animation {
+  position: relative;
+  width: 100%;
+  border-radius: 8px;
+}
+
 .shimmer {
     animation: shimmer 1.5s infinite linear;
     background: linear-gradient(to left, #444 8%, #555 18%, #444 33%);
@@ -83,9 +89,11 @@
 }
 
 .shimmer-box {
-    width: 100px;
-    height: 60px;
-    border-radius: 4px;
+    width: 100%;
+    border-radius: 8px;
+    padding-top: 56.25%;
+    height: 0;
+    position: relative;
 }
 
 @keyframes shimmer {
@@ -596,6 +604,7 @@ img {
 
 /* Search */
 #image-warning {
+    color: white;
     width: 100%;
     margin-bottom: 2px;
 }
@@ -628,7 +637,7 @@ img {
 
 #image-gallery {
     scroll-snap-type: x mandatory;
-    display: flex;
+    display: none;
     align-items: center;
     overflow-x: auto;
     overflow-y: hidden;
@@ -656,6 +665,7 @@ img {
 #image-gallery-shimmer .shimmer-box {
   width: 100px;
   height: 60px;
+  padding-top: 0;
   border-radius: 4px;
   animation: shimmer 2s infinite linear;
   background: linear-gradient(to left, #444 8%, #555 18%, #444 33%);
@@ -666,8 +676,7 @@ img {
 
 #carousel-container {
     box-sizing: border-box;
-    flex-basis: 100%;
-    flex: 1;
+    flex: 2;
     margin-left: auto;
     margin-right: auto;
     max-width: 100%;
@@ -678,6 +687,8 @@ img {
 
 #carousel-image {
     opacity: 1;
+    width: 100%;
+    display: none;
     transition: opacity 0.2s ease-in-out;
 }
 

@@ -481,7 +481,7 @@
                 function updateTopInnerWidth() {
                     const table = document.querySelector('.table-veh');
                     if (table && topInner) {
-                        const width = table.scrollWidth;
+                        const width = table.scrollWidth + 20;
                         if (width && topInner.style.width !== width + 'px') {
                             topInner.style.width = width + 'px';
                         }

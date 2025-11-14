@@ -797,13 +797,12 @@ img {
     }
 
     #top-scroll-wrapper, #bottom-scroll-wrapper {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     #top-scroll-wrapper {
         width: 100%;
-        overflow-x: auto;
         -webkit-overflow-scrolling: touch;
     }
 

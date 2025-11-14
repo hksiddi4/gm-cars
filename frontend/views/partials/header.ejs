@@ -1,9 +1,13 @@
-<header style="background-color: transparent; height: 70px;">
+<header id="main-header" style="background-color: transparent;">
     <div class="header-background"></div>
     <div class="container-fluid" style="height: 100%; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);">
         <div class="d-flex align-items-center" style="height: 100%;">
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar" aria-controls="sidebar" aria-expanded="false" aria-label="Toggle navigation" style="border: none; background: transparent; color: white; font-weight: bold;">
-                ☰
+                <span class="hamburger-icon">
+                    <span class="bar top-bar"></span>
+                    <span class="bar middle-bar"></span>
+                    <span class="bar bottom-bar"></span>
+                </span>
             </button>
             <h1 id="site-title" class="text-white mb-0">
                 <a href="/" class="text-white" style="text-decoration: none;">GM 2020+ Build Counts</a>
@@ -64,5 +68,45 @@
                 link.classList.remove('active');
             }
         });
+
+        const header = document.getElementById('main-header');
+        const sidebar = document.getElementById('sidebar');
+        const scrollThreshold = 70;
+        let lastScrollTop = 0;
+
+        function handleHeaderScroll() {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            
+            if (scrollTop > scrollThreshold) {
+                header.classList.add('header-minimized');
+                if (sidebar) {
+                    sidebar.classList.add('header-minimized');
+                }
+            } else {
+                header.classList.remove('header-minimized');
+                if (sidebar) {
+                    sidebar.classList.remove('header-minimized');
+                }
+            }
+            
+            lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+        }
+
+        window.addEventListener('scroll', handleHeaderScroll);
+        
+        header.addEventListener('click', function(event) {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            
+            if (header.classList.contains('header-minimized') && scrollTop > 0) {
+                if (!event.target.closest('.navbar-toggler') && !event.target.closest('#sidebar')) {
+                    window.scrollTo({
+                        top: 0,
+                        behavior: 'smooth'
+                    });
+                }
+            }
+        });
+
+        handleHeaderScroll();
     });
 </script>

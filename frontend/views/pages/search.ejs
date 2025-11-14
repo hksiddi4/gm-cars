@@ -204,7 +204,10 @@
             <tbody>
               <% vin_data.forEach(function(data) { %>
                 <% if (data.rpo_codes) { %>
-                  <% data.rpo_codes.forEach(function(rpo) { %>
+                  <% 
+                  const sortedRpoCodes = [...data.rpo_codes].sort(); 
+                  sortedRpoCodes.forEach(function(rpo) { 
+                  %>
                     <% if (rpo) { %>
                       <tr style="cursor: pointer;" onmousedown="handleMouseDown(event);" data-url="/vehicles?rpo=<%= rpo %>">
                         <td class="<%= rpo.includes('OAR') ? 'highlight' : '' %>"><%= rpo %></td>

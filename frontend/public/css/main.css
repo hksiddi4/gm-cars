@@ -310,7 +310,6 @@ h1, h2, h4, p {
 }
 
 .custom-container {
-    overflow-x: hidden;
     width: 95%;
     margin: auto;
     flex: 1;
@@ -948,6 +947,10 @@ img {
     .table-responsive {
         margin: 0 auto;
         overflow-x: auto;
+    }
+
+    .table-responsive, #top-scroll-wrapper {
+        -webkit-overflow-scrolling: touch;
     }
 
     #vinTable, #rpoTable {

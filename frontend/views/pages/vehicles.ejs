@@ -489,11 +489,15 @@
                 }
 
                 requestAnimationFrame(updateTopInnerWidth);
+                setTimeout(updateTopInnerWidth, 100);
                 window.addEventListener('resize', () => requestAnimationFrame(updateTopInnerWidth));
 
                 const tableEl = document.querySelector('.table-veh');
                 if (tableEl && window.MutationObserver) {
-                    const mo = new MutationObserver(() => requestAnimationFrame(updateTopInnerWidth));
+                    const mo = new MutationObserver(() => {
+                        requestAnimationFrame(updateTopInnerWidth)
+                        setTimeout(updateTopInnerWidth, 100);
+                    });
                     mo.observe(tableEl, { childList: true, subtree: true, attributes: true });
                 }
             })();

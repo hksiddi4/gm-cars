@@ -1,6 +1,5 @@
 const express = require('express');
 const app = express();
-const bodyParser = require('body-parser');
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
@@ -27,8 +26,8 @@ function getHeaderImages() {
         const imageFiles = files.filter(file => {
             return /\.(png)$/i.test(file);
         });
-        const publicImageUrls = imageFiles.map(file => `/img/header/${file}`);
-        return publicImageUrls;
+        const cachedHeaderImages = imageFiles.map(file => `/img/header/${file}`);
+        return cachedHeaderImages;
     } catch (err) {
         console.error('Error reading header images directory:', err);
         return [];
@@ -65,7 +64,9 @@ function getLocalImageRPOs() {
     }
     return localRpoImages;
 }
+
 const localRpoImageMap = getLocalImageRPOs();
+const cachedHeaderImages = getHeaderImages = getHeaderImages();
 
 app.use((req, res, next) => {
     if (maintenanceMode && req.path !== '/maintenance') {
@@ -89,7 +90,7 @@ function formatCurrency(number) {
 }
 
 app.get('/', function(req, res) {
-    const imageUrls = getHeaderImages();
+    const imageUrls = cachedHeaderImages;
     res.render('pages/index', {
         req: req,
         headerImages: imageUrls,
@@ -158,7 +159,7 @@ app.get('/vehicles', function(req, res) {
             const queryParams = new URLSearchParams(req.query);
             queryParams.delete('page');
             queryParams.delete('limit');
-            const imageUrls = getHeaderImages();
+            const imageUrls = cachedHeaderImages;
             const canonicalPath = `/vehicles${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
 
             res.render('pages/vehicles', {
@@ -200,7 +201,7 @@ app.get('/vehicles', function(req, res) {
 
 app.get('/search', function(req, res) {
     var vin = req.query.vin.trim();
-    const imageUrls = getHeaderImages();
+    const imageUrls = cachedHeaderImages;
     if (!vin || vin.length !== 17) {
         return res.status(400).render('pages/errors/400', {
             req: req,
@@ -259,7 +260,7 @@ app.get('/search', function(req, res) {
 });
 
 app.get('/stats', function(req, res) {
-    const imageUrls = getHeaderImages();
+    const imageUrls = cachedHeaderImages;
     const category = req.query.category;
     const url = new URL(`${baseURL}/stats`);
     const params = new URLSearchParams();
@@ -316,7 +317,7 @@ app.get('/stats', function(req, res) {
 });
 
 app.get('/rpos', function(req, res) {
-    const imageUrls = getHeaderImages();
+    const imageUrls = cachedHeaderImages;
     res.render('pages/rpos', {
         headerImages: imageUrls,
         camaroRpo: camaroRpo,
@@ -334,7 +335,7 @@ app.get('/rpos', function(req, res) {
 });
 
 app.get('/wheels', function(req, res) {
-    const imageUrls = getHeaderImages();
+    const imageUrls = cachedHeaderImages;
     const url = new URL(`${baseURL}/wheels`);
 
     axiosInstance.get(url.toString())
@@ -370,7 +371,7 @@ app.get('/wheels', function(req, res) {
 });
 
 app.post('/api/rarity', async (req, res) => {
-    const imageUrls = getHeaderImages();
+    const imageUrls = cachedHeaderImages;
     const options = req.body.Options;
 
     try {
@@ -390,7 +391,7 @@ app.post('/api/rarity', async (req, res) => {
 });
 
 app.use((req, res) => {
-    const imageUrls = getHeaderImages();
+    const imageUrls = cachedHeaderImages;
     res.status(404).render('pages/errors/404', {
         req,
         headerImages: imageUrls,
@@ -400,7 +401,7 @@ app.use((req, res) => {
 });
 
 app.use((err, req, res, next) => {
-    const imageUrls = getHeaderImages();
+    const imageUrls = cachedHeaderImages;
     console.error(err.stack);
     res.status(500).render('pages/errors/500', {
         error: err.toJSON ? err.toJSON() : { message: err.message },

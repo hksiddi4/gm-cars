@@ -310,6 +310,7 @@ h1, h2, h4, p {
 }
 
 .custom-container {
+    overflow-x: hidden;
     width: 95%;
     margin: auto;
     flex: 1;
@@ -780,7 +781,7 @@ img {
 }
 
 /* Mobile Styles */
-@media (max-width: 1265px) {
+@media (max-width: 1410px) {
     /* Universal */
     .custom-container {
         padding: 0 10px;

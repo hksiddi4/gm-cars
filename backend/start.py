@@ -247,7 +247,7 @@ def sort_price():
             {rpo_clause}
         """
         conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
-        results = execute_read_query(conn, sqlStatement)
+        results = execute_read_query(conn, sqlStatement, params)
         close_connection(conn)
         distinct_values = {col: set() for col in columns}
         for result in results:

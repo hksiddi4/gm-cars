@@ -12,7 +12,7 @@ app.use(express.json());
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
 
-const baseURL = 'http://backend:5000'
+const baseURL = 'http://192.168.1.122:5000'
 
 const axiosInstance = axios.create({
     timeout: 30000
@@ -195,7 +195,10 @@ app.get('/vehicles', function(req, res) {
         })
         .catch((error) => {
             console.error(`Error fetching data: ${error}`);
-            res.status(500).render('pages/errors/500', { error: error.toJSON ? error.toJSON() : { message: error.message } });
+            res.status(500).render('pages/errors/500', {
+                error: error.toJSON ? error.toJSON() : { message: error.message },
+                headerImages: imageUrls,
+            });
         });
 });
 

@@ -1,5 +1,7 @@
 const express = require('express');
+const helmet = require('helmet');
 const app = express();
+app.use(helmet());
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');

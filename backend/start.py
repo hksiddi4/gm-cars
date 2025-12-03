@@ -115,7 +115,15 @@ def sort_price():
     order = request.args.get('order')
     page = int(request.args.get('page', 1))
     limit = int(request.args.get('limit', 100))
-    offset = (page - 1) * limit
+    # Validate limit and offset first
+    try:
+        page = int(page)
+        limit = int(limit)
+        offset = (page - 1) * limit
+    except (ValueError, TypeError):
+        page = 1
+        limit = 100
+        offset = 0
 
     rpo_list = []
     conditions = []
@@ -266,14 +274,6 @@ def sort_price():
         order_clause = "ORDER BY SUBSTRING(vin, -6)"
     elif order in ["ASC", "DESC"]:
         order_clause = f"ORDER BY msrp {'ASC' if order == 'ASC' else 'DESC'}"
-    # Validate limit and offset
-    try:
-        limit = int(limit)
-        offset = int(offset)
-    except (ValueError, TypeError):
-        limit = 100
-        offset = 0
-
     elif order in ["vinASC", "vinDESC"]:
         order_clause = f"ORDER BY SUBSTRING(vin, -6) {'DESC' if order == 'vinDESC' else 'ASC'}, modelYear ASC"
     else: order_clause = ""
@@ -295,13 +295,13 @@ def sort_price():
     """
     query_params = params + [limit, offset]
     viewTable = execute_read_query(conn, select, query_params)
-        # params reused for count query, without limit/offset
-        total_items = execute_read_query(conn, totalSql, params)[0]['total']
     if where_clause:
         totalSql = f"SELECT COUNT(*) AS total FROM (\n        SELECT v.vehicle_id FROM Vehicles v {join_clause} \n        {where_clause} \n        GROUP BY v.vehicle_id \n        {rpo_clause}\n) AS filtered_vehicles"
+        total_items = execute_read_query(conn, totalSql, params)[0]['total']
     else:
         totalSql = f"SELECT COUNT(vehicle_id) AS total FROM Vehicles"
         total_items = execute_read_query(conn, totalSql)[0]['total']
+    
     close_connection(conn)
 
     return jsonify({

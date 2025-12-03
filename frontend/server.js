@@ -12,7 +12,7 @@ app.use(express.json());
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
 
-const baseURL = 'http://192.168.1.122:5000'
+const baseURL = 'http://backend:5000'
 
 const axiosInstance = axios.create({
     timeout: 30000

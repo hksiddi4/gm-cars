@@ -115,7 +115,15 @@ def sort_price():
     order = request.args.get('order')
     page = int(request.args.get('page', 1))
     limit = int(request.args.get('limit', 100))
-    offset = (page - 1) * limit
+    # Validate limit and offset first
+    try:
+        page = int(page)
+        limit = int(limit)
+        offset = (page - 1) * limit
+    except (ValueError, TypeError):
+        page = 1
+        limit = 100
+        offset = 0
 
     rpo_list = []
     conditions = []
@@ -134,16 +142,21 @@ def sort_price():
         "MEX": "MEXICO"
         }
 
+    params = []
     if year:
-        conditions.append(f"modelYear = '{year}'")
+        conditions.append("modelYear = %s")
+        params.append(year)
     if models:
-        models = [model.strip() for model in models.split(',')]
-        models = "', '".join(models)
-        conditions.append(f"model IN ('{models}')")
+        models_list = [model.strip() for model in models.split(',')]
+        placeholders = ', '.join(['%s'] * len(models_list))
+        conditions.append(f"model IN ({placeholders})")
+        params.extend(models_list)
     if body:
-        conditions.append(f"body = '{body}'")
+        conditions.append("body = %s")
+        params.append(body)
     if trim:
-        conditions.append(f"trim = '{trim}'")
+        conditions.append("trim = %s")
+        params.append(trim)
     if engine:
         conditions.append(f"engine_type = '{engine}'")
     if trans:
@@ -278,14 +291,17 @@ def sort_price():
                 c.color_name, v.msrp, o.country 
         {rpo_clause}
         {order_clause}
-        LIMIT {limit} OFFSET {offset}
+        LIMIT %s OFFSET %s
     """
-    viewTable = execute_read_query(conn, select)
+    query_params = params + [limit, offset]
+    viewTable = execute_read_query(conn, select, query_params)
     if where_clause:
         totalSql = f"SELECT COUNT(*) AS total FROM (\n        SELECT v.vehicle_id FROM Vehicles v {join_clause} \n        {where_clause} \n        GROUP BY v.vehicle_id \n        {rpo_clause}\n) AS filtered_vehicles"
+        total_items = execute_read_query(conn, totalSql, params)[0]['total']
     else:
         totalSql = f"SELECT COUNT(vehicle_id) AS total FROM Vehicles"
-    total_items = execute_read_query(conn, totalSql)[0]['total']
+        total_items = execute_read_query(conn, totalSql)[0]['total']
+    
     close_connection(conn)
 
     return jsonify({

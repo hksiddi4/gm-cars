@@ -780,7 +780,7 @@ img {
 }
 
 /* Mobile Styles */
-@media (max-width: 1410px) {
+@media (max-width: 1521px) {
     /* Universal */
     .custom-container {
         padding: 0 10px;

@@ -435,71 +435,51 @@
             selectedOrder = currentOrder;
             updateIcons(selectedOrder);
 
-            // SCROLL SYNC
+            // SCROLL SYNC (rAF Throttle)
             (function() {
                 const topWrapper = document.getElementById('top-scroll-wrapper');
-                const topInner = document.getElementById('top-scroll');
                 const bottomWrapper = document.getElementById('bottom-scroll-wrapper');
+                const topInner = document.getElementById('top-scroll');
+                const tableEl = document.querySelector('.table-veh');
 
-                if (!topWrapper || !topInner || !bottomWrapper) return;
-
-                // Helper to find the actual scrollable element inside a container
-                function findScrollable(el) {
-                    if (!el) return null;
-                    if (el.scrollWidth > el.clientWidth) return el;
-                    // search children
-                    const walker = document.createTreeWalker(el, NodeFilter.SHOW_ELEMENT, null);
-                    let node;
-                    while ((node = walker.nextNode())) {
-                        if (node.scrollWidth > node.clientWidth) return node;
-                    }
-                    return el; // fallback
-                }
-
-                const topScrollable = findScrollable(topWrapper);
-                const bottomScrollable = findScrollable(bottomWrapper);
-
-                let isSyncingFromTop = false;
-                let isSyncingFromBottom = false;
-
-                function mirrorScroll(source, target, stateFlagSetter, stateFlagChecker) {
-                    source.addEventListener('scroll', () => {
-                        if (stateFlagChecker()) return; // avoid recursion
-                        stateFlagSetter(true);
-                        try {
-                            target.scrollLeft = source.scrollLeft;
-                        } finally {
-                            // small timeout to allow the other handler to run
-                            requestAnimationFrame(() => stateFlagSetter(false));
-                        }
-                    });
-                }
-
-                mirrorScroll(topScrollable, bottomScrollable, (v) => isSyncingFromTop = v, () => isSyncingFromBottom);
-                mirrorScroll(bottomScrollable, topScrollable, (v) => isSyncingFromBottom = v, () => isSyncingFromTop);
+                if (!topWrapper || !topInner || !bottomWrapper || !tableEl) return;
+                
+                let resizeTimer;
+                let isTicking = false;
+                let sourceWrapper = null; 
 
                 function updateTopInnerWidth() {
-                    const table = document.querySelector('.table-veh');
-                    if (table && topInner) {
-                        const width = table.scrollWidth;
-                        if (width && topInner.style.width !== width + 'px') {
-                            topInner.style.width = width + 'px';
-                        }
+                    const width = tableEl.scrollWidth; 
+                    if (width && topInner.style.width !== width + 'px') {
+                        topInner.style.width = width + 'px';
                     }
+                }
+
+                function syncScroll(source, target) {
+                    sourceWrapper = source;
+                    
+                    if (!isTicking) {
+                        window.requestAnimationFrame(() => {
+                            const targetWrapper = sourceWrapper === topWrapper ? bottomWrapper : topWrapper;
+                            targetWrapper.scrollLeft = sourceWrapper.scrollLeft;
+                            
+                            isTicking = false;
+                            sourceWrapper = null;
+                        });
+                        isTicking = true;
+                    }
+                }
+                topWrapper.addEventListener('scroll', () => syncScroll(topWrapper, bottomWrapper), { passive: true });
+                bottomWrapper.addEventListener('scroll', () => syncScroll(bottomWrapper, topWrapper), { passive: true });
+
+                function debouncedResizeUpdate() {
+                    clearTimeout(resizeTimer);
+                    resizeTimer = setTimeout(updateTopInnerWidth, 50);
                 }
 
                 requestAnimationFrame(updateTopInnerWidth);
-                setTimeout(updateTopInnerWidth, 100);
-                window.addEventListener('resize', () => requestAnimationFrame(updateTopInnerWidth));
-
-                const tableEl = document.querySelector('.table-veh');
-                if (tableEl && window.MutationObserver) {
-                    const mo = new MutationObserver(() => {
-                        requestAnimationFrame(updateTopInnerWidth)
-                        setTimeout(updateTopInnerWidth, 100);
-                    });
-                    mo.observe(tableEl, { childList: true, subtree: true, attributes: true });
-                }
+                setTimeout(updateTopInnerWidth, 200); 
+                window.addEventListener('resize', debouncedResizeUpdate); 
             })();
 
             const rpoSearchInput = document.getElementById('rpoSearchInput');

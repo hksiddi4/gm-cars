@@ -803,6 +803,7 @@ img {
     }
 
     #top-scroll {
+        display: block;
         height: 8px;
         pointer-events: auto;
     }
@@ -929,14 +930,9 @@ img {
 
     .table-veh {
         display: block;
-        overflow-x: auto;
         font-size: 0.65rem;
-        width: 100%;
-        min-width: 500px;
-    }
-
-    .table-veh thead, .table-veh tbody, .table-veh tr {
-        width: 100%;
+        width: max-content;
+        table-layout: auto !important;
     }
 
     .table-veh td, .table-veh th {
@@ -947,6 +943,7 @@ img {
     .table-responsive {
         margin: 0 auto;
         overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     .table-responsive, #top-scroll-wrapper {

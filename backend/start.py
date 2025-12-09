@@ -196,7 +196,6 @@ def sort_price():
             "ZLZ": ["modelYear = '2025'", "model IN ('CT4', 'CT5')", "trim = 'V-SERIES BLACKWING'", "color_name = 'MAGNUS METAL FROST'"],
             "ABQ": ["modelYear = '2023'", "model = 'CT5'", "trim = 'V-SERIES BLACKWING'", "msrp > '118000'"],
             "ZLT": ["modelYear = '2024'", "model = 'CT5'", "trim = 'V-SERIES BLACKWING'", "opt.option_code IN ('ZLT', 'ZLV')"],
-            # ZLZ
             "Z6X": ["model IN ('HUMMER EV SUV', 'HUMMER EV PICKUP')"],
             "WFP": ["modelYear = '2024'", "model = 'HUMMER EV SUV'", "trim = '3X'", "color_name = 'NEPTUNE BLUE MATTE'"],
         }
@@ -237,34 +236,40 @@ def sort_price():
         rpo_clause = f"HAVING COUNT(DISTINCT opt.option_code) = {rpo_n}"
 
     def get_all_distinct_values():
-        columns = ['modelYear', 'body', 'trim', 'engine_type', 'transmission_type', 'model', 'color_name', 'country']
+        columns = ['modelYear', 'body', 'trim', 'transmission_type', 'model', 'color_name', 'country']
         sqlStatement = f"""
-            SELECT DISTINCT v.modelYear, v.model, v.body, v.trim, e.engine_type, t.transmission_type, c.color_name, o.country 
+            SELECT DISTINCT v.modelYear, v.model, v.body, v.trim, e.engine_type, e.engine_rpo, t.transmission_type, c.color_name, o.country 
             FROM Vehicles v 
             {join_clause}
             {where_clause}
-            GROUP BY v.modelYear, v.model, v.body, v.trim, e.engine_type, t.transmission_type, c.color_name, o.country
+            GROUP BY v.modelYear, v.model, v.body, v.trim, e.engine_type, e.engine_rpo, t.transmission_type, c.color_name, o.country
             {rpo_clause}
         """
         conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
         results = execute_read_query(conn, sqlStatement, params)
         close_connection(conn)
         distinct_values = {col: set() for col in columns}
+        distinct_engines = set()
         for result in results:
             for col in columns:
                 if result[col] is not None:
                     distinct_values[col].add(result[col])
+            if result['engine_type'] is not None:
+                distinct_engines.add((result['engine_rpo'], result['engine_type']))
         sorted_values = {
             'modelYear': sorted(list(distinct_values['modelYear']), reverse=True),
             **{col: sorted(list(distinct_values[col])) for col in columns if col != 'modelYear'}
         }
-        return sorted_values
-    distinct_values = get_all_distinct_values()
+        sorted_engines = [
+            {'rpo': rpo, 'name': name} 
+            for rpo, name in sorted(list(distinct_engines), key=lambda x: x[0] or "")
+        ]
+        return sorted_values, sorted_engines
+    distinct_values, engine_list = get_all_distinct_values()
 
     year_list = distinct_values['modelYear']
     body_list = distinct_values['body']
     trim_list = distinct_values['trim']
-    engine_list = distinct_values['engine_type']
     trans_list = distinct_values['transmission_type']
     model_list = distinct_values['model']
     color_list = distinct_values['color_name']
@@ -303,6 +308,8 @@ def sort_price():
         total_items = execute_read_query(conn, totalSql)[0]['total']
     
     close_connection(conn)
+
+    print(engine_list)
 
     return jsonify({
         'data': viewTable,

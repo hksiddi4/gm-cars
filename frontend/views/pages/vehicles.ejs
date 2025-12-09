@@ -32,7 +32,9 @@
                             </div>
                         <% }) %>
                         <button type="submit" class="btn btn-primary mt-2">Apply Filters</button>
-                        <button type="button" id="clearFilters" class="btn btn-secondary mt-2">Clear All</button>
+                        <% if (selectedModels.length > 0 || selectedRPO || selectedTrim || selectedEngine || selectedTrans || selectedYear || selectedBody || selectedColor || selectedCountry || limit != 100 || selectedOrder) { %>
+                            <button type="button" id="clearFilters" class="btn btn-secondary mt-2">Clear All</button>
+                        <% } %>
                     </form>
                 </div>
             </div>
@@ -142,7 +144,7 @@
                                     <select id="engineSelect" class="form-select small-dropdown <%= selectedEngine ? 'active-filter' : '' %>">
                                         <option value="">Engine</option>
                                         <% engine.forEach(function(engine) { %>
-                                            <option value="<%= engine %>" <% if (selectedEngine === engine) { %>selected<% } %>><%= engine %></option>
+                                            <option value="<%= engine.name %>" <% if (selectedEngine === engine.name) { %>selected<% } %>><%= engine.rpo ? engine.rpo + ' - ' : '' %><%= engine.name %></option>
                                         <% }) %>
                                     </select>
                                 </div>
@@ -535,9 +537,12 @@
                 }
             });
 
-            clearFilters.addEventListener('click', function() {
-                window.location.href = '/vehicles';
-            });
+            const clearFiltersButton = document.getElementById('clearFilters');
+            if (clearFiltersButton) {
+                clearFiltersButton.addEventListener('click', function() {
+                    window.location.href = '/vehicles';
+                });
+            }
 
             const rpoSelectElement = document.getElementById('rpoSelect');
             if (rpoSelectElement) {

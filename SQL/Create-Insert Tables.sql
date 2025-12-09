@@ -198,7 +198,7 @@ SELECT v.vin, v.modelYear, v.model, v.body, v.trim,
 
 -- Insert Options with error handling
 SET GLOBAL innodb_buffer_pool_size = 10 * 1024 * 1024 * 1024;  -- 10GB in bytes
-INSERT IGNORE INTO Options (vehicle_id, option_code)
+INSERT IGNORE INTO Options (v	ehicle_id, option_code)
 SELECT 
     v.vehicle_id,
     opt.option_value
@@ -269,6 +269,8 @@ UPDATE SpecialEditions se
 JOIN OrderedEditions oe ON se.vehicle_id = oe.vehicle_id
 SET se.special_desc = CONCAT('Garage 56 Special Edition #', LPAD(oe.row_num, 2, '0'));
 
+
+SELECT * FROM Colors;
 -- Update Stats for new colors (after doing all new inserts)
 UPDATE Colors SET rpo_code = 'G4Z' WHERE color_name = 'ROSWELL GREEN METALLIC';
 UPDATE Colors SET rpo_code = 'GD0' WHERE color_name = 'ACCELERATE YELLOW METALLIC';
@@ -378,5 +380,8 @@ UPDATE Colors SET rpo_code = 'GAG' WHERE color_name = 'MONARCH ORANGE';
 UPDATE Colors SET rpo_code = 'GBL' WHERE color_name = 'MAGNUS METAL FROST';
 UPDATE Colors SET rpo_code = 'GNO' WHERE color_name = 'LUNA METALLIC';
 UPDATE Colors SET rpo_code = 'GNR' WHERE color_name = 'ADOBE FROST';
-UPDATE Colors SET rpo_code = 'GAI' WHERE color_name = 'DEEP SPACE METALLIC';
-UPDATE Colors SET rpo_code = 'N/A' WHERE color_name = 'BAEGE METALLIC';
+UPDATE Colors SET rpo_code = 'GAI' WHERE color_name = 'GRAPHITE BLUE METALLIC';
+UPDATE Colors SET rpo_code = 'GAG' WHERE color_name = 'SOLAR ORANGE';
+
+select * from Engines;
+update Engines SET engine_rpo = "E" WHERE engine_id = 15;

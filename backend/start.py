@@ -126,6 +126,7 @@ def sort_price():
         offset = 0
 
     rpo_list = []
+    rpo_list_for_filtering = []
     conditions = []
 
     join_clause = """
@@ -168,11 +169,13 @@ def sort_price():
     if rpo:
         rpo_list = rpo.split(',') if ',' in rpo else [rpo]
         h40_selected = 'H40' in rpo_list
-        zlz_selected = 'ZLZ' in rpo_list # Come back to this later
-        rpo_n = len(rpo_list)
+        # NOTE: rpo_n is calculated AFTER substitutions/removals later
+        
         join_clause += "\n            JOIN Options opt ON v.vehicle_id = opt.vehicle_id"
         rpo_conditions = {
-            "Z4B": ["modelYear = '2024'", "model = 'CAMARO'", "color_name IN ('PANTHER BLACK MATTE', 'PANTHER BLACK METALLIC')"],
+            # --- RPO Conditions (restored) ---
+            "Z4B": ["modelYear = '2024'", "model = 'CAMARO'", "color_name IN ('PANTHER BLACK MATTE', 'PANTHER BLACK METALLIC TINTCOAT')"],
+            "ZL4B": ["modelYear = '2024'", "model = 'CAMARO'", "trim = 'ZL1'", "color_name = 'PANTHER BLACK MATTE'"],
             "X56": ["modelYear = '2024'", "model = 'CAMARO'", "body = 'COUPE'", "trim = 'ZL1'", "transmission_type = 'M6'", "color_name = 'RIPTIDE BLUE METALLIC'", "msrp = '89185'"],
             "A1Z": ["model = 'CAMARO'", "body = 'COUPE'", "trim = 'ZL1'"],
             "A1Y": ["model = 'CAMARO'", "body = 'COUPE'", "trim IN ('1SS', '2SS')"],
@@ -193,7 +196,8 @@ def sort_price():
             "ZLK": ["modelYear = '2024'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "color_name = 'MERCURY SILVER METALLIC'"],
             "ZLJ": ["modelYear = '2024'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "color_name = 'BLACK RAVEN'"],
             "ZLR": ["modelYear = '2024'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "color_name = 'VELOCITY RED'"],
-            "ZLZ": ["modelYear = '2025'", "model IN ('CT4', 'CT5')", "trim = 'V-SERIES BLACKWING'", "color_name = 'MAGNUS METAL FROST'"],
+            "ZLZ4": ["modelYear = '2025'", "model ='CT4'", "trim = 'V-SERIES BLACKWING'", "color_name = 'MAGNUS METAL FROST'"],
+            "ZLZ5": ["modelYear = '2025'", "model ='CT5'", "trim = 'V-SERIES BLACKWING'", "color_name = 'MAGNUS METAL FROST'"],
             "ABQ": ["modelYear = '2023'", "model = 'CT5'", "trim = 'V-SERIES BLACKWING'", "msrp > '118000'"],
             "ZLT": ["modelYear = '2024'", "model = 'CT5'", "trim = 'V-SERIES BLACKWING'", "opt.option_code IN ('ZLT', 'ZLV')"],
             "Z6X": ["model IN ('HUMMER EV SUV', 'HUMMER EV PICKUP')"],
@@ -213,24 +217,41 @@ def sort_price():
                 f"OR (v.vin IN ('1G1FK1R65R0117449','1G1FK3D62R0118478'){vin_extra}))"
             ]
 
+        # 1. Apply all specific RPO conditions to the WHERE clause
         for rpo in rpo_list:
             if rpo in rpo_conditions:
                 conditions.extend(rpo_conditions[rpo])
 
-        for code_to_remove in ['H40', 'ZLT']:
-            if code_to_remove in rpo_list:
-                rpo_list = [code for code in rpo_list if code != code_to_remove]
-                rpo_n = len(rpo_list)
+        # 2. Define the RPO codes that need substitution for the opt.option_code filter
+        substitution_map = {
+            'ZL4B': 'Z4B',
+            'ZLZ4': 'ZLZ',
+            'ZLZ5': 'ZLZ'
+        }
+        
+        # 3. Handle substitutions and special exclusions (H40 and ZLT are NOT option codes)
+        for code in rpo_list:
+            if code in substitution_map:
+                # Replace the code for the SQL filter
+                rpo_list_for_filtering.append(substitution_map[code])
+            elif code not in ['H40', 'ZLT']:
+                # Keep regular RPOs for the SQL filter
+                rpo_list_for_filtering.append(code)
+            # Codes H40 and ZLT are effectively removed from the final list
+        
+        # Remove duplicates from the list generated for SQL filtering (in case ZLZ4 and ZLZ5 were both requested)
+        rpo_list_for_filtering = list(set(rpo_list_for_filtering))
+        rpo_n = len(rpo_list_for_filtering)
 
-        if len(rpo_list) > 1:
-            rpo_placeholders = "', '".join(rpo_list)
+        if len(rpo_list_for_filtering) > 1:
+            rpo_placeholders = "', '".join(rpo_list_for_filtering)
             conditions.append(f"opt.option_code IN ('{rpo_placeholders}')")
-        elif len(rpo_list) == 1:
-            conditions.append(f"opt.option_code = '{rpo_list[0]}'")
+        elif len(rpo_list_for_filtering) == 1:
+            conditions.append(f"opt.option_code = '{rpo_list_for_filtering[0]}'")
 
     where_clause = "WHERE " + " AND ".join(conditions) if conditions else ""
 
-    if not rpo_list or 'H40' in rpo_list:
+    if not rpo_list_for_filtering or 'H40' in rpo_list: # H40 is checked against the original list to determine if the JOIN/GROUP BY should be used
         rpo_clause = ""
     else:
         rpo_clause = f"HAVING COUNT(DISTINCT opt.option_code) = {rpo_n}"
@@ -275,7 +296,7 @@ def sort_price():
     color_list = distinct_values['color_name']
     country_list = distinct_values['country']
 
-    if rpo in ["Z4B", "X56", "PEH"] and order not in ["ASC", "DESC"]:
+    if rpo in ["ZL4B", "X56", "PEH"] and order not in ["ASC", "DESC"]:
         order_clause = "ORDER BY SUBSTRING(vin, -6)"
     elif order in ["ASC", "DESC"]:
         order_clause = f"ORDER BY msrp {'ASC' if order == 'ASC' else 'DESC'}"
@@ -292,12 +313,13 @@ def sort_price():
         FROM Vehicles v {join_clause}
         {where_clause}
         GROUP BY v.vin, v.modelYear, v.model, v.body, v.trim, 
-                e.engine_type, t.transmission_type, d.drivetrain_type, 
-                c.color_name, v.msrp, o.country 
+                 e.engine_type, t.transmission_type, d.drivetrain_type, 
+                 c.color_name, v.msrp, o.country 
         {rpo_clause}
         {order_clause}
         LIMIT %s OFFSET %s
     """
+    print(select)
     query_params = params + [limit, offset]
     viewTable = execute_read_query(conn, select, query_params)
     if where_clause:
@@ -308,8 +330,6 @@ def sort_price():
         total_items = execute_read_query(conn, totalSql)[0]['total']
     
     close_connection(conn)
-
-    print(engine_list)
 
     return jsonify({
         'data': viewTable,

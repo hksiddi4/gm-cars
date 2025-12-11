@@ -579,6 +579,13 @@
         let unsupportedInts = null;
         const colorName = vin_data[0].color_name;
 
+        // Force 2025 + 1SV + GBL → GXD
+        if (modelYear === 2025 && trim === '1SV' && color === 'GBL') {
+          unsupportedColors = 'GBL';
+          color = 'GXD';
+          rpos = rpos.replace(/GBL/g, 'GXD');
+        }
+
         if (color === 'GKA') {
           unsupportedColors = color;
           color = 'GXD';
@@ -611,11 +618,27 @@
           unsupportedInts = colorInt;
           colorInt = 'HBF';
         }
+        if (['EG1'].includes(colorInt) && model === 'CT5' && trim === '1SV') {
+          unsupportedInts = colorInt;
+          colorInt = 'HJD';
+        }
+        if (['E54'].includes(colorInt) && model === 'CT5' && trim === '1SV') {
+          unsupportedInts = colorInt;
+          colorInt = 'HMR';
+        }
+        if (['EG1'].includes(colorInt) && model === 'CT4' && trim === '1SP') {
+          unsupportedInts = colorInt;
+          colorInt = 'HEB';
+        }
+        if (['E54'].includes(colorInt) && model === 'CT4' && trim === '1SP') {
+          unsupportedInts = colorInt;
+          colorInt = 'HEA';
+        }
 
         if (unsupportedColors || unsupportedInts) {
           let msg = 'Image generation does not support the following: ';
           if (unsupportedColors) {
-            msg += `Color <i>${unsupportedColors}</i>`;
+            msg += `Ext. Color <i>${unsupportedColors}</i>`;
             const extCell = document.getElementById('extColorCell');
             if (extCell) extCell.style.cssText = 'color:#e57373;';
           }
@@ -623,7 +646,7 @@
             msg += ', ';
           }
           if (unsupportedInts) {
-            msg += `Interior color <i>${unsupportedInts}</i>`;
+            msg += `Int. color <i>${unsupportedInts}</i>`;
             const intCell = document.getElementById('intColorCell');
             if (intCell) intCell.style.cssText = 'color:#e57373;';
           }

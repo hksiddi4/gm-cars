@@ -1807,6 +1807,8 @@ const ct4vRpo = {
   "KEM": "Air Ionizer",
   "PRB": "OnStar 12 additional months of the OnStar Connected Vehicle package",
   "PRD": "OnStar 24 additional months of the OnStar Connected Vehicle package",
+  "E54": "Jet Black w/ Phantom Blue Accents Leather w/ Mini-Perforated Custom Quilted Inserts And Sueded Front Seatbacks",
+  "EG1": "Sky Cool Gray w/ Santorini Blue Accents Leather w/ Mini-Perforated Custom Quilted Inserts And Sueded Front Seatbacks",
 }
 
 const ct5Rpo = {
@@ -2410,6 +2412,8 @@ const ct5vRpo = {
   "YF5": "Emissions, California state requirements",
   "ZLZ": "Le Monstre Special Edition",
   "ZRG": "Platinum Package",
+  "E54": "Jet Black w/ Phantom Blue Accents Leather w/ Mini-Perforated Custom Quilted Inserts And Sueded Front Seatbacks",
+  "EG1": "Sky Cool Gray w/ Santorini Blue Accents Leather w/ Mini-Perforated Custom Quilted Inserts And Sueded Front Seatbacks",
 }
 
 const hummerRpo = {

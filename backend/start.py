@@ -319,7 +319,6 @@ def sort_price():
         {order_clause}
         LIMIT %s OFFSET %s
     """
-    print(select)
     query_params = params + [limit, offset]
     viewTable = execute_read_query(conn, select, query_params)
     if where_clause:

@@ -198,7 +198,7 @@ SELECT v.vin, v.modelYear, v.model, v.body, v.trim,
 
 -- Insert Options with error handling
 SET GLOBAL innodb_buffer_pool_size = 10 * 1024 * 1024 * 1024;  -- 10GB in bytes
-INSERT IGNORE INTO Options (v	ehicle_id, option_code)
+INSERT IGNORE INTO Options (vehicle_id, option_code)
 SELECT 
     v.vehicle_id,
     opt.option_value
@@ -245,6 +245,30 @@ WHERE NOT EXISTS (
     WHERE se.vehicle_id = v.vehicle_id 
     AND se.special_desc = special_map.special_desc
 );
+
+-- Add ZLZ dual-meaning special edition logic
+INSERT IGNORE INTO SpecialEditions (vehicle_id, special_desc)
+SELECT 
+    v.vehicle_id,
+    CASE
+        WHEN v.model = 'CT4' AND opt.option_code = 'ZLZ' THEN 'Petit Pataud Special Edition'
+        WHEN v.model = 'CT5' AND opt.option_code = 'ZLZ' THEN 'Le Monstre Special Edition'
+    END AS special_desc
+FROM Vehicles v
+JOIN Options opt ON v.vehicle_id = opt.vehicle_id
+WHERE opt.option_code = 'ZLZ'
+  AND v.model IN ('CT4','CT5')
+  AND NOT EXISTS (
+        SELECT 1
+        FROM SpecialEditions se
+        WHERE se.vehicle_id = v.vehicle_id
+          AND se.special_desc = 
+                CASE
+                    WHEN v.model = 'CT4' THEN 'Petit Pataud Special Edition'
+                    ELSE 'Le Monstre Special Edition'
+                END
+    );
+
 select * from SpecialEditions;
 
 WITH OrderedEditions AS (
@@ -269,8 +293,6 @@ UPDATE SpecialEditions se
 JOIN OrderedEditions oe ON se.vehicle_id = oe.vehicle_id
 SET se.special_desc = CONCAT('Garage 56 Special Edition #', LPAD(oe.row_num, 2, '0'));
 
-
-SELECT * FROM Colors;
 -- Update Stats for new colors (after doing all new inserts)
 UPDATE Colors SET rpo_code = 'G4Z' WHERE color_name = 'ROSWELL GREEN METALLIC';
 UPDATE Colors SET rpo_code = 'GD0' WHERE color_name = 'ACCELERATE YELLOW METALLIC';
@@ -370,7 +392,6 @@ UPDATE Colors SET rpo_code = 'GBA' WHERE color_name = 'ONYX BLACK';
 UPDATE Colors SET rpo_code = 'GAI' WHERE color_name = 'DEEP OCEAN METALLIC';
 UPDATE Colors SET rpo_code = 'GAB' WHERE color_name = 'DARK EMBER TINTCOAT';
 UPDATE Colors SET rpo_code = 'GLG' WHERE color_name = 'MOONLIGHT MATTE';
--- NEW
 UPDATE Colors SET rpo_code = 'GSJ' WHERE color_name = 'FLARE METALLIC';
 UPDATE Colors SET rpo_code = 'GAB' WHERE color_name = 'BLACK CHERRY TINTCOAT';
 UPDATE Colors SET rpo_code = 'GLG' WHERE color_name = 'MIDNIGHT STEEL FROST';
@@ -382,6 +403,13 @@ UPDATE Colors SET rpo_code = 'GNO' WHERE color_name = 'LUNA METALLIC';
 UPDATE Colors SET rpo_code = 'GNR' WHERE color_name = 'ADOBE FROST';
 UPDATE Colors SET rpo_code = 'GAI' WHERE color_name = 'GRAPHITE BLUE METALLIC';
 UPDATE Colors SET rpo_code = 'GAG' WHERE color_name = 'SOLAR ORANGE';
+UPDATE Colors SET rpo_code = 'GBW' WHERE color_name = 'TYPHOON METALLIC';
+UPDATE Colors SET rpo_code = 'GAE' WHERE color_name = 'DRIFT METALLIC';
+UPDATE Colors SET rpo_code = 'GBL' WHERE color_name = 'MAGNUS METAL FROST';
 
+UPDATE Colors SET rpo_code = 'G' WHERE color_name = '';
+SELECT * FROM Colors;
+
+-- Set Engine RPO
 select * from Engines;
 update Engines SET engine_rpo = "E" WHERE engine_id = 15;

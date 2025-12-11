@@ -614,25 +614,24 @@
             rpos = rpos.replace(new RegExp(unsupportedColors, 'g'), color);
           }
         }
-        if (['E2B', 'E2D', 'E2G'].includes(colorInt)) {
+        const replacementMap = {
+          'CT5-1SV': 'HMR', // E2D, E2B, E2G, E54
+          'CT4-1SP': 'HEA', // E2D, E2B, E2G, E54
+          'EG1-CT5-1SV': 'HJD',
+          'EG1-CT4-1SP': 'HEB',
+        };
+
+        const key = `${colorInt}-${model}-${trim}`;
+        if (replacementMap[key]) {
           unsupportedInts = colorInt;
-          colorInt = 'HBF';
-        }
-        if (['EG1'].includes(colorInt) && model === 'CT5' && trim === '1SV') {
-          unsupportedInts = colorInt;
-          colorInt = 'HJD';
-        }
-        if (['E54'].includes(colorInt) && model === 'CT5' && trim === '1SV') {
-          unsupportedInts = colorInt;
-          colorInt = 'HMR';
-        }
-        if (['EG1'].includes(colorInt) && model === 'CT4' && trim === '1SP') {
-          unsupportedInts = colorInt;
-          colorInt = 'HEB';
-        }
-        if (['E54'].includes(colorInt) && model === 'CT4' && trim === '1SP') {
-          unsupportedInts = colorInt;
-          colorInt = 'HEA';
+          colorInt = replacementMap[key];
+        } else {
+          // Check generic pattern for CT5/CT4
+          const patternKey = key.split('-').slice(1).join('-');
+          if (replacementMap[patternKey]) {
+            unsupportedInts = colorInt;
+            colorInt = replacementMap[patternKey];
+          }
         }
 
         if (unsupportedColors || unsupportedInts) {

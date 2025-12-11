@@ -294,7 +294,6 @@
     <script>
         let startX;
         let selectedOrder = '';
-
         let rpoDescriptions = {};
 
         const cachedRPO = sessionStorage.getItem('rpoCodes');
@@ -572,6 +571,11 @@
                 event.preventDefault();
 
                 const params = new URLSearchParams();
+
+                const currentRpo = new URLSearchParams(window.location.search).get('rpo');
+                if (currentRpo) {
+                    params.set('rpo', currentRpo);
+                }
 
                 const checkboxes = filterForm.querySelectorAll('input[type="checkbox"]');
                 checkboxes.forEach(cb => {

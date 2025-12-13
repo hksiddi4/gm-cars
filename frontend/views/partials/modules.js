@@ -192,6 +192,14 @@ const intColor = {
   "HZP": "CUSTOM ADRENALINE RED W/ JET BLACK ACCENTS NAPA LEATHER W/ PERFORATED SUEDED MICROFIBER INSERTS",
   "HU0": "CUSTOM JET BLACK W/ ADRENALINE RED ACCENTS NAPA LEATHER W/ PERFORATED INSERTS",
   "HXO": "CUSTOM JET BLACK W/ ADRENALINE RED ACCENTS NAPA LEATHER W/ PERFORATED SUEDED MICROFIBER INSERTS",
+  "H8T": "Santorini Blue Napa Leather w/ Perforated Inserts",
+  "HMT": "Sky Cool / Medium Ash Gray / Habanero Accents Napa Leather w/ Perforated Inserts",
+  "EJH": "Very Dark Atmosphere Napa Leather w/ Perforated Inserts",
+  "HUC": "Ultimate Suede Jet Black Napa Leather w/ Perforated Inserts",
+  "HVC": "Asymmetrical Adrenaline Red / Jet Black Napa Leather w/ Perforated Inserts",
+  "EPX": "Very Dark Atmosphere Napa Leather w/ Perforated Sueded Microfiber Inserts",
+  "HUB": "Ultimate Suede Jet Black Napa Leather w/ Perforated Sueded Microfiber Inserts",
+  "HVZ": "Asymmetrical Adrenaline Red / Jet Black Napa Leather w/ Perforated Inserts",
   // Camaro
   "H01": "Kalahari Leather",
   "H0W": "Jet Black Leather W/ Red accents",
@@ -269,6 +277,7 @@ const seatCode = {
   "AQ9": "GT1 buckets",
   "AE4": "Competition buckets",
   "AH2": "GT2 / Competition buckets",
+  "AUP": "Driver Competition and Passenger GT2 buckets",
   // Cadillac
   "": "",
   // Silverado EV

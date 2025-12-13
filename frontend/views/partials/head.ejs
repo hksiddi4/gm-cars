@@ -1,15 +1,28 @@
+<% 
+  let customDescription = "View build counts and statistics for GM vehicles.";
+
+  if (typeof vin_data !== 'undefined' && vin_data && vin_data.length > 0) {
+      const v = vin_data[0];
+      const year = v.modelYear ? v.modelYear : '';
+      const model = v.model ? v.model : '';
+      const trim = v.trim ? v.trim : '';
+      
+      customDescription = `View build counts and statistics for ${year} ${model} ${trim}`.trim() + ".";
+  }
+%>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#515151">
 <link rel="icon" href="../../img/gm.png">
 
-<meta name="description" content="View build counts and statistics for GM vehicles.">
+<meta name="description" content="<%= customDescription %>">
 <meta name="keywords" content="GM, General Motors, build counts, vehicle statistics, Chevrolet, Cadillac, production numbers">
 <meta name="robots" content="index, follow">
 
 <link rel="canonical" href="https://www.gmbuildcounts.com<%= typeof canonicalPath !== 'undefined' ? canonicalPath : '' %>">
 <meta property="og:title" content="GM Build Counts">
-<meta property="og:description" content="View build counts and statistics for GM vehicles.">
+<meta property="og:description" content="<%= customDescription %>">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://www.gmbuildcounts.com<%= typeof canonicalPath !== 'undefined' ? canonicalPath : '' %>">
 <meta property="og:image" content="https://www.gmbuildcounts.com/img/gm.png">
@@ -17,7 +30,7 @@
 
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="GM Build Counts">
-<meta name="twitter:description" content="View build counts and statistics for GM vehicles.">
+<meta name="twitter:description" content="<%= customDescription %>">
 <meta name="twitter:image" content="https://www.gmbuildcounts.com/img/gm.png">
 
 <script type="application/ld+json">
@@ -26,7 +39,7 @@
   "@type": "WebSite",
   "name": "GM Build Counts",
   "url": "https://www.gmbuildcounts.com",
-  "description": "View build counts and statistics for GM vehicles.",
+  "description": "<%= customDescription %>",
   "potentialAction": {
     "@type": "SearchAction",
     "target": "https://www.gmbuildcounts.com/search?vin={vin}",
@@ -53,7 +66,6 @@
 <% if (typeof pagePath !== 'undefined') { %>
 
   <% 
-    // Custom logic to title-case the path segment (e.g., '/vehicles' -> 'Vehicles')
     const pathSegment = pagePath.substring(1); 
     const displayTitle = pathSegment.charAt(0).toUpperCase() + pathSegment.slice(1);
   %>
@@ -107,7 +119,7 @@
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "url": "https://www.gmbuildcounts.com/wheels",
-    "name": "GM Wheel Option Codes (RPO ZQ2)",
+    "name": "GM Wheel Option Codes",
     "description": "Detailed build counts for GM vehicles based on factory wheel RPO codes."
   }
   </script>

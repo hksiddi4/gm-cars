@@ -392,13 +392,22 @@ def color_stats():
         sqlStatement = f"""
             WITH ColorCounts AS (
                 SELECT
-                    CASE WHEN c.rpo_code = 'N/A' THEN c.color_name ELSE c.rpo_code END AS rpo_code,
+                    CASE 
+                        WHEN c.color_name = 'BLADE SILVER METALLIC' AND v.modelYear >= '2026' THEN 'GKA'
+                        WHEN c.rpo_code = 'N/A' THEN c.color_name 
+                        ELSE c.rpo_code 
+                    END AS rpo_code,
                     COUNT(*) AS total_count,
                     GROUP_CONCAT(DISTINCT c.color_name ORDER BY c.color_name SEPARATOR ', ') AS color_names
                 FROM Vehicles v
                 {join_clause}
                 {where_clause}
-                GROUP BY CASE WHEN c.rpo_code = 'N/A' THEN c.color_name ELSE c.rpo_code END
+                GROUP BY
+                    CASE 
+                        WHEN c.color_name = 'BLADE SILVER METALLIC' AND v.modelYear >= '2026' THEN 'GKA'
+                        WHEN c.rpo_code = 'N/A' THEN c.color_name 
+                        ELSE c.rpo_code 
+                    END
             ),
             Ranked AS (
                 SELECT

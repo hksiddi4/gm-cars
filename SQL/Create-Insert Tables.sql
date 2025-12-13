@@ -406,6 +406,7 @@ UPDATE Colors SET rpo_code = 'GAG' WHERE color_name = 'SOLAR ORANGE';
 UPDATE Colors SET rpo_code = 'GBW' WHERE color_name = 'TYPHOON METALLIC';
 UPDATE Colors SET rpo_code = 'GAE' WHERE color_name = 'DRIFT METALLIC';
 UPDATE Colors SET rpo_code = 'GBL' WHERE color_name = 'MAGNUS METAL FROST';
+UPDATE Colors SET rpo_code = 'G4Z' WHERE color_name = 'ROSWELL GREEN METALLIC';
 
 UPDATE Colors SET rpo_code = 'G' WHERE color_name = '';
 SELECT * FROM Colors;

@@ -247,7 +247,24 @@
                                 <td scope="row"><%= data.transmission_type %></td>
                                 <td scope="row"><%= data.drivetrain_type %></td>
                                 <td scope="row" style="text-align: left; align-items: center;">
-                                    <img id="sample" src="../../img/extColors/<%= colorMap[data.color_name] || '../extColors/default' %>.png" alt="Color Code: <%= colorMap[data.color_name] %>" width="20" height="20">
+                                    <% 
+                                        // Determine the RPO code for the image source
+                                        let imageRpoCode = colorMap[data.color_name];
+
+                                        if (data.color_name === 'BLADE SILVER METALLIC' && data.model === 'CORVETTE ZR1X') {
+                                            imageRpoCode = 'GKA';
+                                        }
+
+                                        // Use the determined RPO code, falling back to 'default' if the code is undefined/null
+                                        const finalImageSrcRPO = imageRpoCode || 'default';
+                                    %>
+                                    <img 
+                                        id="sample" 
+                                        src="../../img/extColors/<%= finalImageSrcRPO %>.png" 
+                                        alt="Color Code: <%= finalImageSrcRPO %>" 
+                                        width="20" 
+                                        height="20"
+                                    >
                                     <%= data.color_name %>
                                 </td>
                                 <td scope="row" class="accounting-format">
@@ -267,7 +284,7 @@
                                         <img src="../../img/flags/canada_flag.png" alt="Canada Flag" width="20">
                                     <% } else { %>
                                         <img src="../../img/flags/mexico_flag.png" alt="Mexico Flag" width="20">
-                                    <% } %>                                    
+                                    <% } %>
                                 </td>
                                 <!-- <td scope="row" style="text-align: left;"><%= data.dealer_name || 'N/A' %></td> -->
                             </tr>

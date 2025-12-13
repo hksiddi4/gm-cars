@@ -193,7 +193,7 @@ const intColor = {
   "HU0": "CUSTOM JET BLACK W/ ADRENALINE RED ACCENTS NAPA LEATHER W/ PERFORATED INSERTS",
   "HXO": "CUSTOM JET BLACK W/ ADRENALINE RED ACCENTS NAPA LEATHER W/ PERFORATED SUEDED MICROFIBER INSERTS",
   "H8T": "Santorini Blue Napa Leather w/ Perforated Inserts",
-  "HMT": "Sky Cool / Medium Ash Gray / Habanero Accents Napa Leather w/ Perforated Inserts",
+  "EMT": "Sky Cool / Medium Ash Gray / Habanero Accents Napa Leather w/ Perforated Inserts",
   "EJH": "Very Dark Atmosphere Napa Leather w/ Perforated Inserts",
   "HUC": "Ultimate Suede Jet Black Napa Leather w/ Perforated Inserts",
   "HVC": "Asymmetrical Adrenaline Red / Jet Black Napa Leather w/ Perforated Inserts",

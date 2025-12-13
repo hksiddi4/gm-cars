@@ -579,6 +579,12 @@
         let unsupportedInts = null;
         const colorName = vin_data[0].color_name;
 
+        if (colorName === 'BLADE SILVER METALLIC' && modelYear >= 2026) {
+          if (color === 'GAN') {
+            color = 'GKA';
+          }
+        }
+
         // Force 2025 + 1SV + GBL → GXD
         if (modelYear === 2025 && trim === '1SV' && color === 'GBL') {
           unsupportedColors = 'GBL';
@@ -586,7 +592,7 @@
           rpos = rpos.replace(/GBL/g, 'GXD');
         }
 
-        if (color === 'GKA') {
+        if (color === 'GKA' && modelUpper === 'CT4' && modelYear >= 2024) {
           unsupportedColors = color;
           color = 'GXD';
         } else if (color === 'GBA') {
@@ -657,7 +663,7 @@
 
         // Troubleshooting imgGen
         //console.log(`Model Year: ${modelYear}, MMC Code: ${mmc_code}, Trim: ${trim}, Color: ${color}, Interior Color: ${colorInt}`);
-        //console.log(`https://cgi.chevrolet.com/mmgprod-us/dynres/prove/image.gen?i=${modelYear}/${mmc_code}/${mmc_code}__${trim}/${color}_${rpos}gmds10.png&v=deg01&std=true&country=US&send404=true&transparentBackgroundPng=true`);
+        console.log(`https://cgi.chevrolet.com/mmgprod-us/dynres/prove/image.gen?i=${modelYear}/${mmc_code}/${mmc_code}__${trim}/${color}_${rpos}gmds10.png&v=deg01&std=true&country=US&send404=true&transparentBackgroundPng=true`);
 
         if ((['3WT', '4WT'].includes(vehicleTrim)) && modelYear === 2024) {
           warningDiv.innerHTML = 'Image generation does not support 2024 Silverado EV WT.';

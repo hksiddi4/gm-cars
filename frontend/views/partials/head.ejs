@@ -6,8 +6,11 @@
       const year = v.modelYear ? v.modelYear : '';
       const model = v.model ? v.model : '';
       const trim = v.trim ? v.trim : '';
+      const specialDesc = (v.special_descs && v.special_descs !== 'NA') 
+        ? v.special_descs.split(', ').join(', ') 
+        : '';
       
-      customDescription = `View build counts and statistics for ${year} ${model} ${trim}`.trim() + ".";
+      customDescription = `${year} ${model} ${trim} ${specialDesc}`.trim();
   }
 %>
 

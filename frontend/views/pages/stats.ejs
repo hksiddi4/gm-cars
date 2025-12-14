@@ -95,7 +95,7 @@
                 <div id="top-scroll"></div>
             </div>
             <div class="table-responsive" id="bottom-scroll-wrapper">
-                <table class="table-veh table-hover border shadow" id="colorTable">
+                <table class="table-stats-veh table-hover border shadow" id="colorTable">
                     <thead>
                         <tr>
                             <th scope="col">
@@ -135,7 +135,7 @@
                                         if (isGKA && trimmedName === 'BLADE SILVER METALLIC') {
                                             // Specific link for BLADE SILVER METALLIC when RPO is GKA
                                             // Note: The URL is URL-encoded here to be safe, especially for spaces.
-                                            linkHref = "/vehicles?color=" + encodeURIComponent(trimmedName) + "&model=" + encodeURIComponent("CORVETTE ZR1X");
+                                            linkHref = "/vehicles?color=" + encodeURIComponent(trimmedName) + "&rpo=" + encodeURIComponent(data.rpo_code);
                                         } else {
                                             // Default link for all other colors/RPO codes
                                             linkHref = "/vehicles?color=" + encodeURIComponent(trimmedName);

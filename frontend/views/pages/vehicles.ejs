@@ -251,7 +251,7 @@
                                         // Determine the RPO code for the image source
                                         let imageRpoCode = colorMap[data.color_name];
 
-                                        if (data.color_name === 'BLADE SILVER METALLIC' && data.model === 'CORVETTE ZR1X') {
+                                        if (data.color_name === 'BLADE SILVER METALLIC' && Number(data.modelYear) >= 2026) {
                                             imageRpoCode = 'GKA';
                                         }
 

@@ -534,6 +534,48 @@ img {
     background-color: #cacaca;
 }
 
+.table-stats-veh {
+    font-size: 0.75rem;
+    table-layout: auto;
+    width: 100%;
+}
+
+.table-stats-veh thead th {
+    background-color: #2e2e2e;
+    color: #fff;
+    border-bottom: 2px solid #000;
+    padding: 10px;
+}
+
+.table-stats-veh td, .table-stats-veh th {
+    border: 1px solid #dee2e6;
+    vertical-align: middle;
+    text-align: center;
+    padding: 5px;
+    white-space: nowrap;
+}
+
+.table-stats-veh th .dropdown-container {
+    display: block;
+    width: 100%;
+}
+
+.table-stats-veh tbody tr {
+    transition: background-color 0.3s ease;
+}
+
+.table-stats-veh tbody tr:nth-child(odd) {
+    background-color: #ececec;
+}
+
+.table-stats-veh tbody tr:nth-child(even) {
+    background-color: #ffffff;
+}
+
+.table-stats-veh tbody tr:hover {
+    background-color: #cacaca;
+}
+
 .sortable {
     transition: color 0.2s ease, background-color 0.2s ease;
 }

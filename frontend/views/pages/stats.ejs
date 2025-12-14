@@ -127,21 +127,10 @@
                                 <td scope="row"><%= data.total_count %></td>
                                 <td scope="row" style="text-align: left;">
                                 <% 
-                                    const isGKA = data.rpo_code === 'GKA';
-                                    data.color_names.split(',').forEach((name, i) => { 
-                                        const trimmedName = name.trim();
-                                        let linkHref = "";
-
-                                        if (isGKA && trimmedName === 'BLADE SILVER METALLIC') {
-                                            // Specific link for BLADE SILVER METALLIC when RPO is GKA
-                                            // Note: The URL is URL-encoded here to be safe, especially for spaces.
-                                            linkHref = "/vehicles?color=" + encodeURIComponent(trimmedName) + "&rpo=" + encodeURIComponent(data.rpo_code);
-                                        } else {
-                                            // Default link for all other colors/RPO codes
-                                            linkHref = "/vehicles?color=" + encodeURIComponent(trimmedName);
-                                        }
+                                    data.color_names.split(',').forEach((name, i) => {
+                                        let linkHref = "/vehicles?color=" + encodeURIComponent(name) + "&rpo=" + encodeURIComponent(data.rpo_code);
                                 %>
-                                    <a class="color-link" href="<%= linkHref %>"><%= trimmedName %></a><%= i < data.color_names.split(',').length - 1 ? ', ' : '' %>
+                                    <a class="color-link" href="<%= linkHref %>"><%= name %></a><%= i < data.color_names.split(',').length - 1 ? ', ' : '' %>
                                 <% }) %>
                                 </td>
                                 <td scope="row"><%= data.percent %>%</td>

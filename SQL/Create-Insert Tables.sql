@@ -414,3 +414,19 @@ SELECT * FROM Colors;
 -- Set Engine RPO
 select * from Engines;
 update Engines SET engine_rpo = "E" WHERE engine_id = 15;
+
+select * from Vehicles;
+
+SELECT
+    v.vin,
+    v.modelYear,
+    v.model,
+    v.trim,
+    v.body,
+    o.option_code
+FROM
+    Vehicles AS v
+JOIN
+    Options AS o ON v.vehicle_id = o.vehicle_id
+WHERE
+    o.option_code = 'CFC';

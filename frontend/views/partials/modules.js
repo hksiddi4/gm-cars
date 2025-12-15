@@ -121,6 +121,7 @@ const colorMap = {
   "ADOBE FROST": "GNR",
   "FLARE METALLIC": "GSJ",
   "MIDNIGHT STEEL FROST": "GLG",
+  "BLADE SILVER MATTE": "",
 };
 
 const intColor = {

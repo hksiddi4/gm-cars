@@ -407,26 +407,13 @@ UPDATE Colors SET rpo_code = 'GBW' WHERE color_name = 'TYPHOON METALLIC';
 UPDATE Colors SET rpo_code = 'GAE' WHERE color_name = 'DRIFT METALLIC';
 UPDATE Colors SET rpo_code = 'GBL' WHERE color_name = 'MAGNUS METAL FROST';
 UPDATE Colors SET rpo_code = 'G4Z' WHERE color_name = 'ROSWELL GREEN METALLIC';
+UPDATE Colors SET rpo_code = 'GMU' WHERE color_name = 'BRONZE DUNE METALLIC';
 
 UPDATE Colors SET rpo_code = 'G' WHERE color_name = '';
 SELECT * FROM Colors;
 
 -- Set Engine RPO
 select * from Engines;
-update Engines SET engine_rpo = "E" WHERE engine_id = 15;
+update Engines SET engine_rpo = "LTA" WHERE engine_id = 18;
 
 select * from Vehicles;
-
-SELECT
-    v.vin,
-    v.modelYear,
-    v.model,
-    v.trim,
-    v.body,
-    o.option_code
-FROM
-    Vehicles AS v
-JOIN
-    Options AS o ON v.vehicle_id = o.vehicle_id
-WHERE
-    o.option_code = 'CFC';

@@ -126,6 +126,16 @@
     "description": "Detailed build counts for GM vehicles based on factory wheel RPO codes."
   }
   </script>
+  <% } else if (pagePath === '/about') { %>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "url": "https://www.gmbuildcounts.com/about",
+    "name": "About GM Build Counts",
+    "description": "Last updated per vehicle."
+  }
+  </script>
   <% } else if (pagePath === '/rpos') { %>
   <script type="application/ld+json">
   {

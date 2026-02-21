@@ -12,7 +12,7 @@ app.use(express.json());
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
 
-const baseURL = 'http://192.168.1.121:5000'
+const baseURL = 'http://backend:5000'
 
 const axiosInstance = axios.create({
     timeout: 30000
@@ -92,6 +92,16 @@ function formatCurrency(number) {
 app.get('/', function(req, res) {
     const imageUrls = cachedHeaderImages;
     res.render('pages/index', {
+        req: req,
+        headerImages: imageUrls,
+        canonicalPath: '/',
+        pagePath: '/'
+    });
+});
+
+app.get('/about', function(req, res) {
+    const imageUrls = cachedHeaderImages;
+    res.render('pages/about', {
         req: req,
         headerImages: imageUrls,
         canonicalPath: '/',

@@ -19,7 +19,7 @@
                 <select id="selectedStats" class="form-select small-dropdown <%= category ? 'active-filter' : '' %>">
                     <option value="">Category</option>
                     <option value="color" <% if (category === 'color') { %> selected <% } %>>Color</option>
-                    <!-- <option value="msrp" <% if (category === 'msrp') { %> selected <% } %>>MSRP</option> -->
+                    <option value="engine" <% if (category === 'engine') { %> selected <% } %>>Engine</option>
                 </select>
             </div>
             <% if (category === 'color') { %>
@@ -79,6 +79,55 @@
                 </div>
             </div>
             <% } %>
+            <% if (category === 'engine') { %>
+            <div class="d-flex flex-wrap gap-2 mb-3 w-100">
+                <div class="statsDropdown">
+                    <select id="filterYear" class="form-select small-dropdown <%= selectedYear ? 'active-filter' : '' %>">
+                        <option value="">Year</option>
+                        <% year_list.forEach(y => { %>
+                        <option value="<%= y %>" <%= selectedYear == y ? 'selected' : '' %>><%= y %></option>
+                        <% }) %>
+                    </select>
+                </div>
+                <%
+                    const hasCorvette = model_list.some(m => m.startsWith('CORVETTE'));
+                    const combinedModels = hasCorvette ? ['CORVETTE (ALL)', ...model_list] : model_list;
+                    combinedModels.sort((a, b) => a.localeCompare(b));
+                %>
+                <div class="statsDropdown">
+                    <select id="filterModel" class="form-select small-dropdown <%= selectedModel ? 'active-filter' : '' %>">
+                        <option value="">Model</option>
+                        <% combinedModels.forEach(m => { %>
+                            <option value="<%= m %>" <%= selectedModel === m ? 'selected' : '' %>><%= m %></option>
+                        <% }) %>
+                    </select>
+                </div>
+                <div class="statsDropdown">
+                    <select id="filterBody" class="form-select small-dropdown <%= selectedBody ? 'active-filter' : '' %>">
+                        <option value="">Body</option>
+                        <% body_list.forEach(y => { %>
+                        <option value="<%= y %>" <%= selectedBody == y ? 'selected' : '' %>><%= y %></option>
+                        <% }) %>
+                    </select>
+                </div>
+                <div class="statsDropdown">
+                    <select id="filterTrim" class="form-select small-dropdown <%= selectedTrim ? 'active-filter' : '' %>">
+                        <option value="">Trim</option>
+                        <% trim_list.forEach(m => { %>
+                        <option value="<%= m %>" <%= selectedTrim == m ? 'selected' : '' %>><%= m %></option>
+                        <% }) %>
+                    </select>
+                </div>
+                <div class="statsDropdown">
+                    <select id="filterTrans" class="form-select small-dropdown <%= selectedTrans ? 'active-filter' : '' %>">
+                        <option value="">Trans</option>
+                        <% trans_list.forEach(m => { %>
+                        <option value="<%= m %>" <%= selectedTrans == m ? 'selected' : '' %>><%= m %></option>
+                        <% }) %>
+                    </select>
+                </div>
+            </div>
+            <% } %>
         </div>
         <% if (selectedYear === '2019') { %>
             <div style="color: #cc6666; margin-bottom: 15px;">
@@ -98,21 +147,15 @@
                 <table class="table-stats-veh table-hover border shadow" id="colorTable">
                     <thead>
                         <tr>
+                            <th scope="col">Rank</th>
                             <th scope="col">
-                                Rank
+                                <%= category === 'engine' ? 'Engine' : 'RPO' %>
                             </th>
-                            <th scope="col">
-                                RPO
-                            </th>
-                            <th scope="col">
-                                Count
-                            </th>
-                            <th scope="col">
-                                Names
-                            </th>
-                            <th scope="col">
-                                % of Total
-                            </th>
+                            <th scope="col">Count</th>
+                            <% if (category === 'color') { %>
+                                <th scope="col">Names</th>
+                            <% } %>
+                            <th scope="col">% of Total</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -120,19 +163,32 @@
                             <tr>
                                 <td scope="row"><%= data.rank %></td>
                                 <td scope="row" style="white-space: nowrap; text-align: left;">
-                                    <!-- Apply color RPO on SQL to Fix grouped colors -->
-                                    <img id="sample" src="../../img/extColors/<%= data.rpo_code ? data.rpo_code : 'default' %>.png" alt="Color Code: <%= data.rpo_code %>" width="20" height="20" style="margin-right: 8px; border-radius: 50%;" onerror="this.onerror=null; this.src='../../img/extColors/default.png';">
-                                    <%= data.rpo_code %>
+                                    <% if (category === 'color') { %>
+                                        <img src="../../img/extColors/<%= data.rpo_code %>.png" 
+                                            onerror="this.src='../../img/extColors/default.png';" 
+                                            width="20" height="20" style="margin-right: 8px; border-radius: 50%;">
+                                        <%= data.label %>
+                                    <% } else if (category === 'engine') { %>
+                                        <a class="color-link" href="/vehicles?engine=<%= encodeURIComponent(data.engine_type) %>">
+                                            <% if (data.engine_rpo) { %>
+                                                <strong><%= data.engine_rpo %></strong> - 
+                                            <% } %>
+                                            <%= data.engine_type %>
+                                        </a>
+                                    <% } %>
                                 </td>
                                 <td scope="row"><%= data.total_count %></td>
-                                <td scope="row" style="text-align: left;">
-                                <% 
-                                    data.color_names.split(',').forEach((name, i) => {
-                                        let linkHref = "/vehicles?color=" + encodeURIComponent(name) + "&rpo=" + encodeURIComponent(data.rpo_code);
-                                %>
-                                    <a class="color-link" href="<%= linkHref %>"><%= name %></a><%= i < data.color_names.split(',').length - 1 ? ', ' : '' %>
-                                <% }) %>
-                                </td>
+                                <% if (category === 'color') { %>
+                                    <td scope="row" style="text-align: left;">
+                                    <% if (data.color_names) { %>
+                                        <% data.color_names.split(',').forEach((name, i) => { 
+                                            let linkHref = "/vehicles?color=" + encodeURIComponent(name.trim()) + "&rpo=" + encodeURIComponent(data.rpo_code);
+                                        %>
+                                            <a class="color-link" href="<%= linkHref %>"><%= name.trim() %></a><%= i < data.color_names.split(',').length - 1 ? ', ' : '' %>
+                                        <% }) %>
+                                    <% } %>
+                                    </td>
+                                <% } %>
                                 <td scope="row"><%= data.percent %>%</td>
                             </tr>
                         <% }) %>
@@ -194,7 +250,7 @@
                 });
 
                 const totalCount = stats_data.reduce((sum, item) => {
-                    const count = Number(item.total_count.replace(/,/g, ''));
+                    const count = Number(String(item.total_count).replace(/,/g, '')) || 0;
                     return sum + (isNaN(count) ? 0 : count);
                 }, 0);
                 const totalCountText = document.getElementById('totalCount');
@@ -224,7 +280,7 @@
                         isSyncingBottom = false;
                     });
 
-                    const table = document.querySelector('.table-veh');
+                    const table = document.querySelector('.table-stats-veh');
                     if (table) {
                         requestAnimationFrame(() => {
                             document.getElementById('top-scroll').style.width = table.scrollWidth + 'px';
@@ -232,8 +288,10 @@
                     }
                 }
 
+                const currentCategory = '<%= category %>';
+
                 let rawData = stats_data.map(data => ({
-                    label: data.rpo_code || '',
+                    label: data.label || '',
                     count: Number(String(data.total_count).replace(/,/g, '')) || 0,
                     color_names: data.color_names || ''
                 }));
@@ -264,48 +322,57 @@
                         }]
                     },
                     options: {
+                        layout: {
+                            padding: { right: 40 }
+                        },
                         maintainAspectRatio: false,
                         responsive: true,
                         indexAxis: 'y',
                         scales: {
-                        y: {
-                            type: 'category',
-                            reverse: true,
-                            ticks: {
-                                autoSkip: false,
-                                color: '#ffffff',
-                                font: { size: 10 }
-                            }
-                        },
-                        x: {
-                            beginAtZero: true,
-                            ticks: {
-                                color: '#ffffff',
-                                callback: function (value) {
-                                    if (value >= 1e6) return (value / 1e6).toFixed(1) + 'M';
-                                    if (value >= 1e3) return (value / 1e3).toFixed(1) + 'k';
-                                    return value;
+                            y: {
+                                type: 'category',
+                                reverse: true,
+                                ticks: {
+                                    autoSkip: false,
+                                    color: '#ffffff',
+                                    font: { size: 10 },
+                                    padding: 10
+                                }
+                            },
+                            x: {
+                                beginAtZero: true,
+                                grace: '10%',
+                                ticks: {
+                                    color: '#ffffff',
+                                    callback: function (value) {
+                                        if (value >= 1e6) return (value / 1e6).toFixed(1) + 'M';
+                                        if (value >= 1e3) return (value / 1e3).toFixed(1) + 'k';
+                                        return value;
+                                    }
                                 }
                             }
-                        }
                         },
                         plugins: {
                             title: {
                                 display: true,
-                                text: 'Top <%= Math.min(20, stats_data.length) %> Rarest Colors',
+                                text: `Top <%= Math.min(20, stats_data.length) %> Rarest ${currentCategory === "engine" ? "Engines" : "Colors"}`,
                                 color: '#ffffff',
                                 font: { size: 20 }
                             },
                             datalabels: {
                                 color: '#ffffff',
+                                anchor: 'end',
+                                align: 'end',
+                                offset: 4,
                                 formatter: (value) => value.toLocaleString(),
                             },
                             tooltip: {
+                                enabled: currentCategory !== 'engine',
                                 callbacks: {
                                     title: () => '',
                                     label: (context) => {
                                         const index = context.dataIndex;
-                                        return rawData[index].color_names;
+                                        return currentCategory === 'color' ? rawData[index].color_names : `Total: ${rawData[index].count}`;
                                     }
                                 },
                                 displayColors: false

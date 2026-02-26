@@ -503,6 +503,8 @@
             trim = options.find(opt => ["5SD", "5SB", "5SC", "3SB", "3SC", "4SC", "4SD"].includes(opt)) || trim;
           } else if (["6T35726"].includes(mmc_code)) {
             trim = options.find(opt => ["1SC", "1SF", "1SD", "1SG"].includes(opt)) || trim;
+          } else if (["6C10706", "6K10706"].includes(mmc_code)) {
+            trim = options.find(opt => ["1SA", "1SB", "1SC", "1SG", "1SH", "1SD"].includes(opt)) || trim;
           }
         }
 
@@ -545,6 +547,9 @@
         } else if (['HUMMER EV PICKUP', 'HUMMER EV SUV'].includes(modelUpper)) {
           intMax = 2;
           extMax = modelYear >= 2023 ? 5 : 4;
+        } else if (modelUpper === 'ESCALADE') {
+          intMax = 4;
+          extMax = modelYear >= 2026 ? 17 : 7;
         }
 
         const shimmerContainer = document.getElementById('image-gallery-shimmer');
@@ -663,7 +668,7 @@
 
         // Troubleshooting imgGen
         //console.log(`Model Year: ${modelYear}, MMC Code: ${mmc_code}, Trim: ${trim}, Color: ${color}, Interior Color: ${colorInt}`);
-        console.log(`https://cgi.chevrolet.com/mmgprod-us/dynres/prove/image.gen?i=${modelYear}/${mmc_code}/${mmc_code}__${trim}/${color}_${rpos}gmds10.png&v=deg01&std=true&country=US&send404=true&transparentBackgroundPng=true`);
+        //console.log(`https://cgi.chevrolet.com/mmgprod-us/dynres/prove/image.gen?i=${modelYear}/${mmc_code}/${mmc_code}__${trim}/${color}_${rpos}gmds10.png&v=deg01&std=true&country=US&send404=true&transparentBackgroundPng=true`);
 
         if ((['3WT', '4WT'].includes(vehicleTrim)) && modelYear === 2024) {
           warningDiv.innerHTML = 'Image generation does not support 2024 Silverado EV WT.';

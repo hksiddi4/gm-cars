@@ -122,6 +122,10 @@ const colorMap = {
   "FLARE METALLIC": "GSJ",
   "MIDNIGHT STEEL FROST": "GLG",
   "BLADE SILVER MATTE": "",
+  "GALACTIC GRAY METALLIC": "G6M",
+  "AEGEAN STONE": "GBD",
+  "DEEP SEA METALLIC": "GXP",
+  "LATTE METALLIC": "G5D",
 };
 
 const intColor = {
@@ -247,6 +251,13 @@ const intColor = {
   "E54": "Jet Black W/ Phantom Blue Accents Leather W/ Mini-Perforated Custom Quilted Inserts and Sueded Front Seatbacks",
   "H9F": "Jet Black Evotex",
   "EMX": "Black Evotex",
+  // ESCALADE
+  "H2U": "Jet Black Leather Seating Surfaces w/ Precision Perforated Inserts",
+  "HGF": "Whiper Beige w/ Jet Black Accents Leather Seating Surfaces w/ Precision Perforated Inserts",
+  "H0D": "Whiper Beige w/ Gideon Accents Full Semi-Aniline Leather Seats with Mini-Chevron Perforated Inserts",
+  "EE4": "Brandy w/ Very Dark Atmosphere Accents Leather Seating Surfaces w/ Precision Perforated Inserts",
+  "EH3": "Renaissance Red w/ Jet Black Accents Leather Seating Surfaces w/ Faceted Quilting",
+  "EH5": "Sheer Gray w/ Jet Black Accents Full Semi-Aniline Leather Seats w/ Faceted Quilting",
   // ESCALADE IQ
   "ENB": "SHEER GRAY W/ DARK MEDIUM CINDER ACCENTS INTELUXE W/ FJORD (CHEVRON) QUILTING PATTERN",
   "EMY": "CAMELIA W/ BACKEN BLACK ACCENTS NOUVEAULUXE W/ EVREN (BACK INSERTS) AND CYGUS (SEAT CUSHION) PERFORATED PATTERN",

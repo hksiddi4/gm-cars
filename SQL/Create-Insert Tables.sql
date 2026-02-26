@@ -408,12 +408,16 @@ UPDATE Colors SET rpo_code = 'GAE' WHERE color_name = 'DRIFT METALLIC';
 UPDATE Colors SET rpo_code = 'GBL' WHERE color_name = 'MAGNUS METAL FROST';
 UPDATE Colors SET rpo_code = 'G4Z' WHERE color_name = 'ROSWELL GREEN METALLIC';
 UPDATE Colors SET rpo_code = 'GMU' WHERE color_name = 'BRONZE DUNE METALLIC';
+UPDATE Colors SET rpo_code = 'G6M' WHERE color_name = 'GALACTIC GRAY METALLIC';
+UPDATE Colors SET rpo_code = 'GBD' WHERE color_name = 'AEGEAN STONE';
+UPDATE Colors SET rpo_code = 'GXP' WHERE color_name = 'DEEP SEA METALLIC';
+UPDATE Colors SET rpo_code = 'G5D' WHERE color_name = 'LATTE METALLIC';
 
 UPDATE Colors SET rpo_code = 'G' WHERE color_name = '';
 SELECT * FROM Colors;
 
 -- Set Engine RPO
 select * from Engines;
-update Engines SET engine_rpo = "LTA" WHERE engine_id = 18;
+update Engines SET engine_rpo = "L87" WHERE engine_id = 20;
 
 select * from Vehicles;

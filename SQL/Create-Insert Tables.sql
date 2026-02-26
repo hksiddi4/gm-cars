@@ -24,7 +24,8 @@ CREATE TABLE IF NOT EXISTS staging_allGM (
 -- Engines Table
 CREATE TABLE Engines (
     engine_id SERIAL PRIMARY KEY,
-    engine_type VARCHAR(48) UNIQUE
+    engine_type VARCHAR(48) UNIQUE,
+    engine_rpo VARCHAR(3) UNIQUE
 );
 
 -- Transmissions Table
@@ -421,3 +422,16 @@ select * from Engines;
 update Engines SET engine_rpo = "L87" WHERE engine_id = 20;
 
 select * from Vehicles;
+
+-- Find RPO codes by model
+SELECT DISTINCT
+    o.option_code AS rpo_code
+FROM 
+    Options o
+JOIN 
+    Vehicles v ON o.vehicle_id = v.vehicle_id
+WHERE 
+    v.model = 'CAMARO'
+ORDER BY 
+    o.option_code;
+    

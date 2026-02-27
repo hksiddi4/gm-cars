@@ -9,76 +9,153 @@
     <%- include('../partials/header'); %>
     <div class="custom-container">
         <div class="content">
-            <div class="container-fluid">
-                <p>Last updated: February 20, 2026</p>
-                
+            <div class="container-fluid">                
+                <style>
+                    .table-veh th, .table-veh td {
+                        text-align: center;
+                        vertical-align: middle;
+                        font-size: 0.85rem;
+                        padding: 8px 4px;
+                    }
+                    .table-veh th:first-child, .table-veh td:first-child {
+                        text-align: left;
+                        font-weight: bold;
+                        padding-left: 15px;
+                    }
+
+                    .cell-green { background-color: #28a745 !important; color: white; }
+                    .cell-yellow { background-color: #ffc107 !important; color: black; }
+
+                    .cell-pattern-gray-dense {
+                        background-image: repeating-linear-gradient(135deg, #adb5bd 0, #adb5bd 1px, transparent 1px, transparent 2.5px) !important;
+                        background-size: 2.5px 2.5px !important;
+                    }
+
+                    .cell-split65-crossed-only {
+                        background: repeating-linear-gradient(135deg, #adb5bd 0, #adb5bd 1px, transparent 1px, transparent 2.5px) !important;
+                        -webkit-mask-image: linear-gradient(to right, black 65%, transparent 65%);
+                        mask-image: linear-gradient(to right, black 65%, transparent 65%);
+                    }
+
+                    .cell-split5-crossed-only {
+                        background: repeating-linear-gradient(135deg, #adb5bd 0, #adb5bd 1px, transparent 1px, transparent 2.5px) !important;
+                        -webkit-mask-image: linear-gradient(to right, black 5%, transparent 5%);
+                        mask-image: linear-gradient(to right, black 5%, transparent 5%);
+                    }
+
+                    .cell-split65-green-crossed {
+                        background: 
+                            linear-gradient(to right, transparent 65%, #28a745 65%),
+                            repeating-linear-gradient(135deg, #adb5bd 0, #adb5bd 1px, transparent 1px, transparent 2.5px) !important;
+                    }
+
+                    .cell-split5-green-crossed {
+                        background: 
+                            linear-gradient(to right, transparent 5%, #28a745 5%),
+                            repeating-linear-gradient(135deg, #adb5bd 0, #adb5bd 1px, transparent 1px, transparent 2.5px) !important;
+                    }
+
+                    .legend-container { display: flex; align-items: center; padding: 5px 0 0 0; }
+                    .legend-item { display: flex; align-items: center; }
+                    .legend-box { display: inline-block; width: 18px; height: 18px; margin-right: 8px; border-radius: 3px; border: 1px solid #dee2e6; }
+                    .legend-label { font-size: 0.9rem; font-weight: 500; color: #ffffff; }
+                </style>
+
+                <div class="legend-container d-flex mb-1">
+                    <div class="legend-item me-4">
+                        <span class="legend-box cell-green"></span>
+                        <span class="legend-label">Complete</span>
+                    </div>
+                    <div class="legend-item me-4">
+                        <span class="legend-box cell-yellow"></span>
+                        <span class="legend-label">In Progress</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-box cell-pattern-gray-dense"></span>
+                        <span class="legend-label">Unavailable*</span>
+                    </div>
+                </div>
+
                 <div class="table-responsive">
-                    <table class="table-veh table-hover border border shadow">
-                        <thead>
+                    <table class="table-veh table-hover border shadow table-bordered">
+                        <thead class="table-light">
                             <tr>
                                 <th>Model</th>
-                                <th>Years Available</th>
+                                <th>2019*</th>
+                                <th>2020</th>
+                                <th>2021</th>
+                                <th>2022</th>
+                                <th>2023</th>
+                                <th>2024</th>
+                                <th>2025</th>
+                                <th>2026</th>
+                                <th>2027</th>
                                 <th>Last Updated</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
                                 <td>Camaro</td>
-                                <td>2019* - 2024</td>
-                                <td>-</td>
+                                <td class="cell-split65-green-crossed"></td>
+                                <td class="cell-split5-green-crossed"></td>
+                                <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td></td> <td></td> <td></td> <td>-</td>
                             </tr>
                             <tr>
                                 <td>Corvette</td>
-                                <td>2019* - 2026^</td>
-                                <td>February 20, 2026</td>
+                                <td class="cell-split65-green-crossed"></td>
+                                <td class="cell-split5-green-crossed"></td>
+                                <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-yellow"></td> <td></td> <td>Feb 20, 2026</td>
                             </tr>
                             <tr>
                                 <td>CT4</td>
-                                <td>2020 - 2025</td>
-                                <td>-</td>
+                                <td class="cell-split65-crossed-only"></td> <td class="cell-split5-green-crossed"></td>
+                                <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td></td> <td></td> <td>-</td>
                             </tr>
                             <tr>
                                 <td>CT5</td>
-                                <td>2020 - 2025</td>
-                                <td>-</td>
+                                <td class="cell-split65-crossed-only"></td> <td class="cell-split5-green-crossed"></td>
+                                <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td></td> <td></td> <td>-</td>
                             </tr>
                             <tr>
                                 <td>CT6</td>
-                                <td>2019* - 2020</td>
-                                <td>-</td>
+                                <td class="cell-split65-green-crossed"></td>
+                                <td class="cell-split5-green-crossed"></td>
+                                <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td>-</td>
                             </tr>
                             <tr>
                                 <td>ESCALADE</td>
-                                <td>2025</td>
-                                <td>In Progress</td>
+                                <td class="cell-split65-crossed-only"></td>
+                                <td class="cell-split5-crossed-only"></td>
+                                <td></td> <td></td> <td></td> <td></td> <td class="cell-yellow"></td> <td></td> <td></td> <td>In Progress</td>
                             </tr>
                             <tr>
                                 <td>ESCALADE IQ</td>
-                                <td>2025</td>
-                                <td>-</td>
+                                <td class="cell-split65-crossed-only"></td>
+                                <td class="cell-split5-crossed-only"></td>
+                                <td></td> <td></td> <td></td> <td></td> <td class="cell-green"></td> <td></td> <td></td> <td>-</td>
                             </tr>
                             <tr>
                                 <td>HUMMER EV</td>
-                                <td>2022 - 2025</td>
-                                <td>-</td>
+                                <td class="cell-split65-crossed-only"></td>
+                                <td class="cell-split5-crossed-only"></td>
+                                <td></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td></td> <td></td> <td>-</td>
                             </tr>
                             <tr>
                                 <td>SIERRA EV</td>
-                                <td>2024 - 2025</td>
-                                <td>-</td>
+                                <td class="cell-split65-crossed-only"></td>
+                                <td class="cell-split5-crossed-only"></td>
+                                <td></td> <td></td> <td></td> <td class="cell-green"></td> <td class="cell-green"></td> <td></td> <td></td> <td>-</td>
                             </tr>
                             <tr>
                                 <td>SILVERADO EV</td>
-                                <td>2024 - 2025</td>
-                                <td>-</td>
+                                <td class="cell-split65-crossed-only"></td>
+                                <td class="cell-split5-crossed-only"></td>
+                                <td></td> <td></td> <td></td> <td class="cell-green"></td> <td class="cell-green"></td> <td></td> <td></td> <td>-</td>
                             </tr>
                         </tbody>
                     </table>
-                    <p style="font-size: 0.55rem;">
-                        *Window stickers uploaded mid-May 2019 onward are included.
-                        <br>^Current production.
-                    </p>
                 </div>
+                <p style="font-size: 0.65rem;">*Window stickers were uploaded starting mid-May 2019, making data incomplete for most of 2019/early 2020 model years.</p>
             </div>
         </div>
     </div>

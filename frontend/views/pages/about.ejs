@@ -14,51 +14,76 @@
                     .table-veh th, .table-veh td {
                         text-align: center;
                         vertical-align: middle;
-                        font-size: 0.85rem;
+                        font-size: 0.7rem;
                         padding: 8px 4px;
                     }
                     .table-veh th:first-child, .table-veh td:first-child {
                         text-align: left;
                         font-weight: bold;
-                        padding-left: 15px;
                     }
 
+                    /* Base Colors */
                     .cell-green { background-color: #28a745 !important; color: white; }
                     .cell-yellow { background-color: #ffc107 !important; color: black; }
-
+                    .cell-na { background-color: #5e5e5e !important; color: #6c757d; }
                     .cell-pattern-gray-dense {
                         background-image: repeating-linear-gradient(135deg, #adb5bd 0, #adb5bd 1px, transparent 1px, transparent 2.5px) !important;
                         background-size: 2.5px 2.5px !important;
                     }
 
+                    /* Split Styles: Crossed Only (Used for 2019 w/ no progress) */
                     .cell-split65-crossed-only {
                         background: repeating-linear-gradient(135deg, #adb5bd 0, #adb5bd 1px, transparent 1px, transparent 2.5px) !important;
                         -webkit-mask-image: linear-gradient(to right, black 65%, transparent 65%);
                         mask-image: linear-gradient(to right, black 65%, transparent 65%);
                     }
 
-                    .cell-split5-crossed-only {
-                        background: repeating-linear-gradient(135deg, #adb5bd 0, #adb5bd 1px, transparent 1px, transparent 2.5px) !important;
-                        -webkit-mask-image: linear-gradient(to right, black 5%, transparent 5%);
-                        mask-image: linear-gradient(to right, black 5%, transparent 5%);
-                    }
-
+                    /* Split Styles: 65% Green/Crossed (Used for 2019 completed) */
                     .cell-split65-green-crossed {
                         background: 
                             linear-gradient(to right, transparent 65%, #28a745 65%),
                             repeating-linear-gradient(135deg, #adb5bd 0, #adb5bd 1px, transparent 1px, transparent 2.5px) !important;
                     }
 
+                    /* Split Styles: 5% Green/Crossed (Used for 2020 completed) */
                     .cell-split5-green-crossed {
                         background: 
                             linear-gradient(to right, transparent 5%, #28a745 5%),
                             repeating-linear-gradient(135deg, #adb5bd 0, #adb5bd 1px, transparent 1px, transparent 2.5px) !important;
                     }
 
+                    /* Split Styles: 65% Yellow/Crossed (Used for 2019 in progress) */
+                    .cell-split65-yellow-crossed {
+                        background: 
+                            linear-gradient(to right, transparent 65%, #ffc107 65%),
+                            repeating-linear-gradient(135deg, #adb5bd 0, #adb5bd 1px, transparent 1px, transparent 2.5px) !important;
+                    }
+
+                    /* Split Styles: 5% Yellow/Crossed (Used for 2020 in progress) */
+                    .cell-split5-yellow-crossed {
+                        background: 
+                            linear-gradient(to right, transparent 5%, #ffc107 5%),
+                            repeating-linear-gradient(135deg, #adb5bd 0, #adb5bd 1px, transparent 1px, transparent 2.5px) !important;
+                    }
+
+                    /* Split Styles: 65% Crossed/NA (Used 2019 N/A) */
+                    .cell-split65-crossed-na {
+                        background: 
+                            linear-gradient(to right, transparent 65%, #5e5e5e 65%),
+                            repeating-linear-gradient(135deg, #adb5bd 0, #adb5bd 1px, transparent 1px, transparent 2.5px) !important;
+                    }
+                    
+                    /* Split Styles: 5% Crossed/NA (Used 2020 N/A) */
+                    .cell-split5-crossed-na {
+                        background: 
+                            linear-gradient(to right, transparent 5%, #5e5e5e 5%),
+                            repeating-linear-gradient(135deg, #adb5bd 0, #adb5bd 1px, transparent 1px, transparent 2.5px) !important;
+                    }
+
                     .legend-container { display: flex; align-items: center; padding: 5px 0 0 0; }
                     .legend-item { display: flex; align-items: center; }
-                    .legend-box { display: inline-block; width: 18px; height: 18px; margin-right: 8px; border-radius: 3px; border: 1px solid #dee2e6; }
-                    .legend-label { font-size: 0.9rem; font-weight: 500; color: #ffffff; }
+                    .legend-box { display: inline-block; width: 15px; height: 15px; margin-right: 5px; border-radius: 3px; border: 1px solid #dee2e6; }
+                    .legend-label { font-size: 0.8rem; font-weight: 500; color: #ffffff; }
                 </style>
 
                 <div class="legend-container d-flex mb-1">
@@ -69,6 +94,10 @@
                     <div class="legend-item me-4">
                         <span class="legend-box cell-yellow"></span>
                         <span class="legend-label">In Progress</span>
+                    </div>
+                    <div class="legend-item me-4">
+                        <span class="legend-box cell-na"></span>
+                        <span class="legend-label">N/A</span>
                     </div>
                     <div class="legend-item">
                         <span class="legend-box cell-pattern-gray-dense"></span>
@@ -81,7 +110,7 @@
                         <thead class="table-light">
                             <tr>
                                 <th>Model</th>
-                                <th>2019*</th>
+                                <th>2019</th>
                                 <th>2020</th>
                                 <th>2021</th>
                                 <th>2022</th>
@@ -98,7 +127,8 @@
                                 <td>Camaro</td>
                                 <td class="cell-split65-green-crossed"></td>
                                 <td class="cell-split5-green-crossed"></td>
-                                <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td></td> <td></td> <td></td> <td>-</td>
+                                <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td>
+                                <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td>-</td>
                             </tr>
                             <tr>
                                 <td>Corvette</td>
@@ -109,7 +139,7 @@
                             <tr>
                                 <td>CT4</td>
                                 <td class="cell-split65-crossed-only"></td> <td class="cell-split5-green-crossed"></td>
-                                <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td></td> <td></td> <td>-</td>
+                                <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td></td> <td class="cell-na"></td> <td>-</td>
                             </tr>
                             <tr>
                                 <td>CT5</td>
@@ -120,42 +150,41 @@
                                 <td>CT6</td>
                                 <td class="cell-split65-green-crossed"></td>
                                 <td class="cell-split5-green-crossed"></td>
-                                <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td></td> <td>-</td>
+                                <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td>-</td>
                             </tr>
                             <tr>
                                 <td>ESCALADE</td>
                                 <td class="cell-split65-crossed-only"></td>
-                                <td class="cell-split5-crossed-only"></td>
-                                <td></td> <td></td> <td></td> <td></td> <td class="cell-yellow"></td> <td></td> <td></td> <td>In Progress</td>
+                                <td class="cell-split5-crossed-only"></td> <td></td> <td></td> <td></td> <td></td> <td class="cell-yellow"></td> <td></td> <td></td> <td>In Progress</td>
                             </tr>
                             <tr>
                                 <td>ESCALADE IQ</td>
-                                <td class="cell-split65-crossed-only"></td>
-                                <td class="cell-split5-crossed-only"></td>
-                                <td></td> <td></td> <td></td> <td></td> <td class="cell-green"></td> <td></td> <td></td> <td>-</td>
+                                <td class="cell-split65-crossed-na"></td>
+                                <td class="cell-split5-crossed-na"></td>
+                                <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-green"></td> <td></td> <td></td> <td>-</td>
                             </tr>
                             <tr>
                                 <td>HUMMER EV</td>
-                                <td class="cell-split65-crossed-only"></td>
-                                <td class="cell-split5-crossed-only"></td>
-                                <td></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td></td> <td></td> <td>-</td>
+                                <td class="cell-split65-crossed-na"></td>
+                                <td class="cell-split5-crossed-na"></td>
+                                <td class="cell-na"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td></td> <td></td> <td>-</td>
                             </tr>
                             <tr>
                                 <td>SIERRA EV</td>
-                                <td class="cell-split65-crossed-only"></td>
-                                <td class="cell-split5-crossed-only"></td>
-                                <td></td> <td></td> <td></td> <td class="cell-green"></td> <td class="cell-green"></td> <td></td> <td></td> <td>-</td>
+                                <td class="cell-split65-crossed-na"></td>
+                                <td class="cell-split5-crossed-na"></td>
+                                <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td></td> <td></td> <td>-</td>
                             </tr>
                             <tr>
                                 <td>SILVERADO EV</td>
-                                <td class="cell-split65-crossed-only"></td>
-                                <td class="cell-split5-crossed-only"></td>
-                                <td></td> <td></td> <td></td> <td class="cell-green"></td> <td class="cell-green"></td> <td></td> <td></td> <td>-</td>
+                                <td class="cell-split65-crossed-na"></td>
+                                <td class="cell-split5-crossed-na"></td>
+                                <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td></td> <td></td> <td>-</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
-                <p style="font-size: 0.65rem;">*Window stickers were uploaded starting mid-May 2019, making data incomplete for most of 2019/early 2020 model years.</p>
+                <p style="font-size: 0.65rem; margin-top: 0.5rem;">*Window stickers were uploaded starting mid-May 2019, making data incomplete for most of 2019/early 2020 model years.</p>
             </div>
         </div>
     </div>

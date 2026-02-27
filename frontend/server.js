@@ -3,7 +3,7 @@ const app = express();
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
-const { colorMap, intColor, seatCode, mmc, camaroRpo, corvetteRpo, escaladeiqRpo, ct4Rpo, ct4vRpo, ct5Rpo, ct5vRpo, hummerRpo, hummersuvRpo } = require('./views/partials/modules.js')
+const { colorMap, intColor, seatCode, mmc, camaroRpo, corvetteRpo, escaladeRpo, escaladeiqRpo, ct4Rpo, ct4vRpo, ct5Rpo, ct5vRpo, hummerRpo, hummersuvRpo } = require('./views/partials/modules.js')
 const headerImagesDir = path.join(__dirname, 'public', 'img', 'header');
 const rpoWheelsDir = path.join(__dirname, 'public', 'img', 'rpos');
 
@@ -249,6 +249,7 @@ app.get('/search', function(req, res) {
                 mmc: mmc,
                 camaroRpo: camaroRpo,
                 corvetteRpo: corvetteRpo,
+                escaladeRpo: escaladeRpo,
                 escaladeiqRpo: escaladeiqRpo,
                 ct4Rpo: ct4Rpo,
                 ct4vRpo: ct4vRpo,
@@ -361,6 +362,7 @@ app.get('/wheels', function(req, res) {
                 headerImages: imageUrls,
                 camaroRpo: camaroRpo, 
                 corvetteRpo: corvetteRpo,
+                escaladeRpo: escaladeRpo,
                 escaladeiqRpo: escaladeiqRpo,
                 ct4Rpo: ct4Rpo,
                 ct4vRpo: ct4vRpo,

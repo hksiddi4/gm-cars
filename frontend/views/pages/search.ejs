@@ -267,6 +267,7 @@
 
         const camaroRpo = <%- JSON.stringify(camaroRpo) %>;
         const corvetteRpo = <%- JSON.stringify(corvetteRpo) %>;
+        const escaladeRpo = <%- JSON.stringify(escaladeRpo) %>;
         const escaladeiqRpo = <%- JSON.stringify(escaladeiqRpo) %>;
         const ct4Rpo = <%- JSON.stringify(ct4Rpo) %>;
         const ct4vRpo = <%- JSON.stringify(ct4vRpo) %>;
@@ -279,6 +280,7 @@
           ...rpoDescriptions,
           ...camaroRpo,
           ...corvetteRpo,
+          ...escaladeRpo,
           ...escaladeiqRpo,
           ...ct4Rpo,
           ...ct4vRpo,
@@ -354,6 +356,7 @@
               const desc =
                 (model === 'CAMARO' && camaroRpo[rpoCode]) ||
                 (model.startsWith('CORVETTE') && corvetteRpo[rpoCode]) ||
+                (model === 'ESCALADE' && escaladeRpo[rpoCode]) ||
                 (model === 'ESCALADE IQ' && escaladeiqRpo[rpoCode]) ||
                 (model === 'CT4' && ct4Rpo[rpoCode]) ||
                 (model === 'CT4' && vehicleTrim.startsWith('V-SERIES') && ct4vRpo[rpoCode]) ||
@@ -397,6 +400,11 @@
 
             if (model.startsWith('CORVETTE') && corvetteRpo[rpoCode]) {
               element.innerHTML = `<div>${corvetteRpo[rpoCode]}</div>`;
+              return;
+            }
+
+            if (model === 'ESCALADE' && escaladeRpo[rpoCode]) {
+              element.innerHTML = `<div>${escaladeRpo[rpoCode]}</div>`;
               return;
             }
 

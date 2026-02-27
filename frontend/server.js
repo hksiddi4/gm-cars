@@ -335,6 +335,7 @@ app.get('/rpos', function(req, res) {
         headerImages: imageUrls,
         camaroRpo: camaroRpo,
         corvetteRpo: corvetteRpo,
+        escaladeRpo: escaladeRpo,
         escaladeiqRpo: escaladeiqRpo,
         ct4Rpo: ct4Rpo,
         ct4vRpo: ct4vRpo,

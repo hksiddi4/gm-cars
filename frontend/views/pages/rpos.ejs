@@ -23,6 +23,7 @@
                     <option value="ct4v">CT4-V</option>
                     <option value="ct5">CT5</option>
                     <option value="ct5v">CT5-V</option>
+                    <option value="escalade">Escalade</option>
                     <option value="escaladeiq">Escalade IQ</option>
                     <option value="hummer">Hummer EV Pickup</option>
                     <option value="hummersuv">Hummer EV SUV</option>
@@ -40,6 +41,7 @@
         const allRpos = {
             camaro: <%- JSON.stringify(camaroRpo) %>,
             corvette: <%- JSON.stringify(corvetteRpo) %>,
+            escalade: <%- JSON.stringify(escaladeRpo) %>,
             escaladeiq: <%- JSON.stringify(escaladeiqRpo) %>,
             ct4: <%- JSON.stringify(ct4Rpo) %>,
             ct4v: <%- JSON.stringify(ct4vRpo) %>,
@@ -72,7 +74,7 @@
                 img.onerror = function() {
                     if (!this.dataset.fallback) {
                         this.dataset.fallback = 'true';
-                        const cadillacModels = ['escaladeiq', 'ct4', 'ct4v', 'ct5', 'ct5v'];
+                        const cadillacModels = ['escalade', 'escaladeiq', 'ct4', 'ct4v', 'ct5', 'ct5v'];
                         const gmcModels = ['hummer', 'hummersuv'];
                         let imagePath = '../img/brand-logos/';
                         if (cadillacModels.includes(model)) {

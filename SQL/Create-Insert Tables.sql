@@ -52,7 +52,7 @@ CREATE TABLE Dealers (
     dealer_id SERIAL PRIMARY KEY,
     dealer_name VARCHAR(64),
     location VARCHAR(64),
-    sitedealer_code VARCHAR(5)
+    sitedealer_code VARCHAR(5),
     UNIQUE KEY idx_dealer_unique (dealer_name, location, sitedealer_code)
 );
 
@@ -138,6 +138,7 @@ SELECT DISTINCT
     location, 
     JSON_UNQUOTE(JSON_EXTRACT(allJson, '$.sitedealer_code')) AS sitedealer_code
 FROM staging_allGM;
+SELECT * FROM Dealers;
 
 -- Insert MMC Codes
 INSERT IGNORE INTO MMC_Codes (mmc_code)
@@ -179,23 +180,6 @@ SELECT vin, modelYear, model, body, trim,
     (SELECT order_id FROM Orders WHERE order_number = ordernum) AS order_id
 FROM staging_allGM
 WHERE vin NOT IN (SELECT vin FROM Vehicles);
-
-select * from Vehicles where vin = '1G1F91R68R0100043';
-SELECT v.vin, v.modelYear, v.model, v.body, v.trim,
-            e.engine_type, t.transmission_type, d.drivetrain_type,
-            c.color_name, v.msrp, o.country,
-            GROUP_CONCAT(DISTINCT se.special_desc ORDER BY se.special_desc ASC SEPARATOR ', ') AS special_desc
-        FROM Vehicles v
-            JOIN Engines e ON v.engine_id = e.engine_id
-            JOIN Transmissions t ON v.transmission_id = t.transmission_id
-            JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id
-            JOIN Colors c ON v.color_id = c.color_id
-            JOIN Orders o ON v.order_id = o.order_id
-            LEFT JOIN SpecialEditions se ON v.vehicle_id = se.vehicle_id
-        where vin = '1G1F91R68R0100043'
-        GROUP BY v.vin, v.modelYear, v.model, v.body, v.trim,
-                e.engine_type, t.transmission_type, d.drivetrain_type,
-                c.color_name, v.msrp, o.country;
 
 -- Insert Options with error handling
 SET GLOBAL innodb_buffer_pool_size = 10 * 1024 * 1024 * 1024;  -- 10GB in bytes

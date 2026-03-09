@@ -302,17 +302,17 @@ def sort_price():
         order_clause = f"ORDER BY msrp {'ASC' if order == 'ASC' else 'DESC'}"
     elif order in ["vinASC", "vinDESC"]:
         order_clause = f"ORDER BY SUBSTRING(vin, -6) {'DESC' if order == 'vinDESC' else 'ASC'}, modelYear ASC"
-    else: order_clause = ""
+    else: order_clause = "ORDER BY v.vehicle_id DESC"
 
     conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
     select = f"""
-        SELECT v.vin, v.modelYear, v.model, v.body, v.trim, 
+        SELECT v.vehicle_id, v.vin, v.modelYear, v.model, v.body, v.trim, 
             e.engine_type, t.transmission_type, d.drivetrain_type, 
             c.color_name, v.msrp, o.country, 
             GROUP_CONCAT(DISTINCT se.special_desc ORDER BY se.special_desc ASC SEPARATOR ', ') AS special_desc
         FROM Vehicles v {join_clause}
         {where_clause}
-        GROUP BY v.vin, v.modelYear, v.model, v.body, v.trim, 
+        GROUP BY v.vehicle_id, v.vin, v.modelYear, v.model, v.body, v.trim, 
                  e.engine_type, t.transmission_type, d.drivetrain_type, 
                  c.color_name, v.msrp, o.country 
         {rpo_clause}

@@ -104,7 +104,7 @@ CREATE TABLE SpecialEditions (
     special_desc VARCHAR(64)
 );
 
--- INSERT DATA INTO TABLES --
+-- INSERT DATA INTO TABLES ------------------------------------------------------------------------------------------------------------------
 
 -- Insert Engine Types
 INSERT INTO Engines (engine_type)
@@ -407,7 +407,7 @@ update Engines SET engine_rpo = "L87" WHERE engine_id = 20;
 
 select * from Vehicles;
 
--- Find RPO codes by model
+-- Find RPO codes by model for gm-rpo-images script
 SELECT DISTINCT
     o.option_code AS rpo_code
 FROM 
@@ -419,3 +419,31 @@ WHERE
 ORDER BY 
     o.option_code;
     
+SELECT 
+    v.vehicle_id,
+    v.vin,
+    v.modelYear,
+    v.model,
+    v.trim,
+    e.engine_type,
+    t.transmission_type,
+    d.drivetrain_type,
+    c.color_name,
+    v.msrp,
+    dl.dealer_name,
+    o.order_number
+FROM Vehicles v
+LEFT JOIN Engines e ON v.engine_id = e.engine_id
+LEFT JOIN Transmissions t ON v.transmission_id = t.transmission_id
+LEFT JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id
+LEFT JOIN Colors c ON v.color_id = c.color_id
+LEFT JOIN Dealers dl ON v.dealer_id = dl.dealer_id
+LEFT JOIN Orders o ON v.order_id = o.order_id
+ORDER BY v.vehicle_id ASC
+LIMIT 20;
+
+SELECT v.model, COUNT(*) as added_count
+FROM Vehicles v
+JOIN Orders o ON v.order_id = o.order_id
+WHERE o.creation_date = (SELECT MAX(creation_date) FROM Orders)
+GROUP BY v.model;

@@ -180,6 +180,7 @@ SELECT vin, modelYear, model, body, trim,
     (SELECT order_id FROM Orders WHERE order_number = ordernum) AS order_id
 FROM staging_allGM
 WHERE vin NOT IN (SELECT vin FROM Vehicles);
+Select * from Vehicles;
 
 -- Insert Options with error handling
 SET GLOBAL innodb_buffer_pool_size = 10 * 1024 * 1024 * 1024;  -- 10GB in bytes
@@ -403,7 +404,7 @@ SELECT * FROM Colors;
 
 -- Set Engine RPO
 select * from Engines;
-update Engines SET engine_rpo = "L87" WHERE engine_id = 20;
+update Engines SET engine_rpo = "ETI" WHERE engine_id = 15;
 
 select * from Vehicles;
 

@@ -7,7 +7,7 @@
 </head>
 <body>
     <%- include('../partials/header'); %>
-    <div class="custom-container">
+    <div class="custom-container about-page">
         <div class="content">
             <div class="container-fluid">                
                 <style>
@@ -20,6 +20,15 @@
                     .table-veh th:first-child, .table-veh td:first-child {
                         text-align: left;
                         font-weight: bold;
+                    }
+
+                    .table-secondary-tag {
+                        color: white;
+                        text-align: left;
+                        font-weight: bold;
+                        background-color: #696969;
+                        font-size: 0.8rem !important;
+                        padding: 3px !important;
                     }
 
                     /* Base Colors */
@@ -148,18 +157,30 @@
                             </tr>
                         </thead>
                         <tbody>
+                            <tr class="table-secondary">
+                                <td colspan="11" class="table-secondary-tag">Chevrolet</td>
+                            </tr>
                             <tr>
                                 <td>Camaro</td>
                                 <td class="cell-split65-green-crossed"></td>
                                 <td class="cell-split5-green-crossed"></td>
                                 <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td>
-                                <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td>-</td>
+                                <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td>March 10, 2026</td>
                             </tr>
                             <tr>
                                 <td>Corvette</td>
                                 <td class="cell-split65-green-crossed"></td>
                                 <td class="cell-split5-green-crossed"></td>
                                 <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-yellow"></td> <td></td> <td>March 8, 2026</td>
+                            </tr>
+                            <tr>
+                                <td>Silverado EV</td>
+                                <td class="cell-split65-crossed-na"></td>
+                                <td class="cell-split5-crossed-na"></td>
+                                <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td></td> <td></td> <td>-</td>
+                            </tr>
+                            <tr class="table-secondary">
+                                <td colspan="11" class="table-secondary-tag">Cadillac</td>
                             </tr>
                             <tr>
                                 <td>CT4</td>
@@ -178,30 +199,27 @@
                                 <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td>-</td>
                             </tr>
                             <tr>
-                                <td>ESCALADE</td>
+                                <td>Escalade</td>
                                 <td class="cell-split65-crossed-only"></td>
-                                <td class="cell-split5-crossed-only"></td> <td></td> <td></td> <td></td> <td></td> <td class="cell-yellow"></td> <td></td> <td></td> <td>In Progress</td>
+                                <td class="cell-split5-crossed-only"></td> <td></td> <td></td> <td></td> <td></td> <td class="cell-yellow"></td> <td></td> <td></td> <td>March 9, 2026</td>
                             </tr>
                             <tr>
-                                <td>ESCALADE IQ</td>
+                                <td>Escalade IQ</td>
                                 <td class="cell-split65-crossed-na"></td>
                                 <td class="cell-split5-crossed-na"></td>
                                 <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-green"></td> <td></td> <td></td> <td>-</td>
                             </tr>
+                            <tr class="table-secondary">
+                                <td colspan="11" class="table-secondary-tag">GMC</td>
+                            </tr>
                             <tr>
-                                <td>HUMMER EV</td>
+                                <td>Hummer EV</td>
                                 <td class="cell-split65-crossed-na"></td>
                                 <td class="cell-split5-crossed-na"></td>
                                 <td class="cell-na"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td></td> <td></td> <td>-</td>
                             </tr>
                             <tr>
-                                <td>SIERRA EV</td>
-                                <td class="cell-split65-crossed-na"></td>
-                                <td class="cell-split5-crossed-na"></td>
-                                <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td></td> <td></td> <td>-</td>
-                            </tr>
-                            <tr>
-                                <td>SILVERADO EV</td>
+                                <td>Sierra EV</td>
                                 <td class="cell-split65-crossed-na"></td>
                                 <td class="cell-split5-crossed-na"></td>
                                 <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td></td> <td></td> <td>-</td>

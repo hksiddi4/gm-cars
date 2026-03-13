@@ -11,29 +11,57 @@
         <div class="row" style="padding-top: 20px;">
             <!-- Filters -->
             <div class="col-md-6">
-                <div id="filterToggle" class="d-inline-flex align-items-center">
+                <div id="filterToggle" class="d-inline-flex align-items-center" style="cursor: pointer;">
                     <h4 class="mb-0">Filter</h4>
-                    <i class="bi bi-chevron-down fs-9" id="filterIcon"></i>
+                    <i class="bi bi-chevron-down fs-9 ms-2" id="filterIcon"></i>
                 </div>
                 <div id="filterContent" class="collapse">
                     <form id="filterForm">
-                        <% models.forEach(function(model) { %>
-                            <div class="form-check">
-                                <input 
-                                    class="form-check-input" 
-                                    type="checkbox" 
-                                    id="model_<%= model %>" 
-                                    value="<%= model %>"
-                                    <%= selectedModels.includes(model) ? 'checked' : '' %>
-                                >
-                                <label class="form-check-label" for="model_<%= model %>">
-                                    <%= model %>
-                                </label>
-                            </div>
-                        <% }) %>
-                        <button type="submit" class="btn btn-primary mt-2">Apply Filters</button>
+                        <% 
+                            const chevroletStatic = ['CAMARO', 'SILVERADO EV'];
+                            const gmcStatic = ['SIERRA EV'];
+                            const cadillacStatic = ['CT4', 'CT5', 'CT6', 'ESCALADE', 'ESCALADE IQ'];
+                            const buickStatic = [];
+
+                            const brandGroups = {
+                                'Chevrolet': models.filter(m => m.startsWith('CORVETTE') || chevroletStatic.includes(m)),
+                                'GMC': models.filter(m => m.startsWith('HUMMER') || gmcStatic.includes(m)),
+                                'Cadillac': models.filter(m => cadillacStatic.includes(m)),
+                                'Buick': models.filter(m => buickStatic.includes(m))
+                            };
+
+                            const categorizedList = Object.values(brandGroups).flat();
+                            const otherModels = models.filter(m => !categorizedList.includes(m));
+                            if (otherModels.length > 0) {
+                                brandGroups['Other Brands'] = otherModels;
+                            }
+                        %>
+
+                        <% Object.entries(brandGroups).forEach(function([brand, availableModels]) { 
+                            if (availableModels.length > 0) { %>
+                                <div class="brand-group mt-3">
+                                    <h6 class="border-bottom pb-1 text-uppercase small fw-bold text-light"><%= brand %></h6>
+                                    <% availableModels.forEach(function(model) { %>
+                                        <div class="form-check d-flex align-items-center">
+                                            <input 
+                                                class="form-check-input mt-0" 
+                                                type="checkbox" 
+                                                id="model_<%= model %>" 
+                                                value="<%= model %>"
+                                                <%= selectedModels.includes(model) ? 'checked' : '' %>
+                                            >
+                                            <label class="form-check-label ms-2" for="model_<%= model %>">
+                                                <%= model %>
+                                            </label>
+                                        </div>
+                                    <% }) %>
+                                </div>
+                            <% } 
+                        }) %>
+
+                        <button type="submit" class="btn btn-primary mt-3 w-100">Apply Filters</button>
                         <% if (selectedModels.length > 0 || selectedRPO || selectedTrim || selectedEngine || selectedTrans || selectedYear || selectedBody || selectedColor || selectedCountry || limit != 100 || selectedOrder) { %>
-                            <button type="button" id="clearFilters" class="btn btn-secondary mt-2">Clear All</button>
+                            <button type="button" id="clearFilters" class="btn btn-secondary mt-2 w-100">Clear All</button>
                         <% } %>
                     </form>
                 </div>

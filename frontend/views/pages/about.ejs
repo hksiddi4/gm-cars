@@ -31,6 +31,23 @@
                         padding: 3px !important;
                     }
 
+                    /* Clickable Cells */
+                    .table-veh th.clickable-header,
+                    .table-veh td.clickable-model,
+                    .table-veh td[class*="green"],
+                    .table-veh td[class*="yellow"] {
+                        cursor: pointer !important;
+                    }
+
+                    /* Hover Effects */
+                    .table-veh th.clickable-header:hover,
+                    .table-veh td.clickable-model:hover,
+                    .table-veh td[class*="green"]:hover,
+                    .table-veh td[class*="yellow"]:hover {
+                        filter: brightness(0.9);
+                        background-color: rgba(0,0,0,0.05);
+                    }
+
                     /* Base Colors */
                     .cell-green { background-color: #28a745 !important; color: white; }
                     .cell-yellow { background-color: #ffc107 !important; color: black; }
@@ -160,20 +177,20 @@
                             <tr class="table-secondary">
                                 <td colspan="11" class="table-secondary-tag">Chevrolet</td>
                             </tr>
-                            <tr>
+                            <tr data-model="CAMARO">
                                 <td>Camaro</td>
                                 <td class="cell-split65-green-crossed"></td>
                                 <td class="cell-split5-green-crossed"></td>
                                 <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td>
                                 <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td>March 12, 2026</td>
                             </tr>
-                            <tr>
+                            <tr data-model="CORVETTE" data-multi-model="true">
                                 <td>Corvette</td>
                                 <td class="cell-split65-green-crossed"></td>
                                 <td class="cell-split5-green-crossed"></td>
                                 <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-yellow"></td> <td></td> <td>March 12, 2026</td>
                             </tr>
-                            <tr>
+                            <tr data-model="SILVERADO EV">
                                 <td>Silverado EV</td>
                                 <td class="cell-split65-crossed-na"></td>
                                 <td class="cell-split5-crossed-na"></td>
@@ -182,28 +199,28 @@
                             <tr class="table-secondary">
                                 <td colspan="11" class="table-secondary-tag">Cadillac</td>
                             </tr>
-                            <tr>
+                            <tr data-model="CT4">
                                 <td>CT4</td>
                                 <td class="cell-split65-crossed-na"></td> <td class="cell-split5-green-crossed"></td>
                                 <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td></td> <td class="cell-na"></td> <td>-</td>
                             </tr>
-                            <tr>
+                            <tr data-model="CT5">
                                 <td>CT5</td>
                                 <td class="cell-split65-crossed-na"></td> <td class="cell-split5-green-crossed"></td>
                                 <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td></td> <td></td> <td>-</td>
                             </tr>
-                            <tr>
+                            <tr data-model="CT6">
                                 <td>CT6</td>
                                 <td class="cell-split65-green-crossed"></td>
                                 <td class="cell-split5-green-crossed"></td>
                                 <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td>-</td>
                             </tr>
-                            <tr>
+                            <tr data-model="ESCALADE">
                                 <td>Escalade</td>
                                 <td class="cell-split65-crossed-only"></td>
                                 <td class="cell-split5-crossed-only"></td> <td></td> <td></td> <td></td> <td></td> <td class="cell-yellow"></td> <td></td> <td></td> <td>March 12, 2026</td>
                             </tr>
-                            <tr>
+                            <tr data-model="ESCALADE IQ">
                                 <td>Escalade IQ</td>
                                 <td class="cell-split65-crossed-na"></td>
                                 <td class="cell-split5-crossed-na"></td>
@@ -212,13 +229,13 @@
                             <tr class="table-secondary">
                                 <td colspan="11" class="table-secondary-tag">GMC</td>
                             </tr>
-                            <tr>
+                            <tr data-model="HUMMER EV" data-multi-model="true">
                                 <td>Hummer EV</td>
                                 <td class="cell-split65-crossed-na"></td>
                                 <td class="cell-split5-crossed-na"></td>
                                 <td class="cell-na"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td></td> <td></td> <td>-</td>
                             </tr>
-                            <tr>
+                            <tr data-model="SIERRA EV">
                                 <td>Sierra EV</td>
                                 <td class="cell-split65-crossed-na"></td>
                                 <td class="cell-split5-crossed-na"></td>
@@ -232,5 +249,85 @@
         </div>
     </div>
     <%- include('../partials/footer'); %>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const table = document.querySelector('.table-veh');
+        const tbodyRows = Array.from(table.querySelectorAll('tbody tr:not(.table-secondary)'));
+        const headers = table.querySelectorAll('thead th');
+        const headerTexts = Array.from(headers).map(th => th.innerText.trim());
+
+        tbodyRows.forEach(row => {
+            const hasData = !!row.querySelector('td[class*="green"], td[class*="yellow"]');
+            if (hasData) {
+                row.cells[0].classList.add('clickable-model');
+            }
+        });
+
+        for (let colIndex = 1; colIndex <= 9; colIndex++) {
+            let colHasData = false;
+            for (let row of tbodyRows) {
+                const cell = row.cells[colIndex];
+                if (cell && (cell.className.includes('green') || cell.className.includes('yellow'))) {
+                    colHasData = true;
+                    break;
+                }
+            }
+            if (colHasData) {
+                headers[colIndex].classList.add('clickable-header');
+            }
+        }
+
+        table.addEventListener('click', function(e) {
+            const cell = e.target.closest('td, th');
+            const row = e.target.closest('tr');
+            if (!cell) return;
+
+            const isHeader = cell.tagName === 'TH';
+            const isFirstColumn = cell.cellIndex === 0;
+            const className = cell.className;
+            const year = headerTexts[cell.cellIndex];
+
+            const isStatusCell = className.includes('green') || className.includes('yellow');
+            const isExcluded = cell.cellIndex === 10 || cell.hasAttribute('colspan');
+
+            if (isHeader && !cell.classList.contains('clickable-header')) return;
+            if (isFirstColumn && !cell.classList.contains('clickable-model')) return;
+
+            if (!isHeader && !isFirstColumn && !isStatusCell) return;
+            if (isExcluded) return;
+
+            if (isHeader) {
+                if (/^\d{4}$/.test(year)) window.location.href = `/vehicles?year=${year}`;
+                return;
+            }
+
+            const model = row.getAttribute('data-model');
+            const isMulti = row.getAttribute('data-multi-model') === 'true';
+            let params = [];
+
+            if (model === "CORVETTE" && isMulti) {
+                if (year === "2019") {
+                    params.push('model=CORVETTE+GRAND+SPORT', 'model=CORVETTE+STINGRAY', 'model=CORVETTE+STINGRAY+W%2F+Z51', 'model=CORVETTE+Z06', 'model=CORVETTE+ZR1');
+                } else {
+                    params.push('model=CORVETTE+E-RAY', 'model=CORVETTE+STINGRAY', 'model=CORVETTE+Z06', 'model=CORVETTE+ZR1', 'model=CORVETTE+ZR1X');
+                }
+            } 
+            else if (model === "HUMMER EV" && isMulti) {
+                params.push('model=HUMMER+EV+PICKUP', 'model=HUMMER+EV+SUV');
+            } 
+            else if (model) {
+                params.push(`model=${encodeURIComponent(model)}`);
+            }
+
+            if (!isFirstColumn && /^\d{4}$/.test(year)) {
+                params.push(`year=${year}`);
+            }
+
+            if (params.length > 0) {
+                window.location.href = '/vehicles?' + params.join('&');
+            }
+        });
+    });
+    </script>
 </body>
 </html>

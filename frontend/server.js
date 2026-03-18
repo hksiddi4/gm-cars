@@ -101,12 +101,17 @@ app.get('/', function(req, res) {
 
 app.get('/about', function(req, res) {
     const imageUrls = cachedHeaderImages;
-    res.render('pages/about', {
-        req: req,
-        headerImages: imageUrls,
-        canonicalPath: '/',
-        pagePath: '/'
-    });
+    axiosInstance.get(`${baseURL}/about`)
+        .then((response) => {
+            const stats = response.data || {};
+            res.render('pages/about', {
+                req: req,
+                headerImages: imageUrls,
+                canonicalPath: '/',
+                pagePath: '/about',
+                stats: stats
+            });
+        })
 });
 
 app.get('/vehicles', function(req, res) {

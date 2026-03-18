@@ -492,6 +492,28 @@ def wheel_stats():
         'model': model_list,
     })
 
+@app.route('/about', methods=['GET'])
+def about_stats():
+    distinct_sql = """
+        SELECT 
+            CASE 
+                WHEN v.model LIKE 'CORVETTE%' THEN 'CORVETTE'
+                WHEN v.model LIKE 'HUMMER EV%' THEN 'HUMMER EV'
+                ELSE v.model 
+            END AS model_group,
+            DATE_FORMAT(MAX(o.creation_date), '%M %e, %Y') AS latest_date
+        FROM Vehicles v
+        JOIN Orders o ON v.order_id = o.order_id
+        GROUP BY model_group
+    """
+
+    conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
+    results = execute_read_query(conn, distinct_sql)
+    close_connection(conn)
+
+    stats_map = {r['model_group'].replace(' ', '_'): r['latest_date'] for r in results}
+    return jsonify(stats_map)
+
 #========================= View Pages #=========================
 
 if __name__ == "__main__":

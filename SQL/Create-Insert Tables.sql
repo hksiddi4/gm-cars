@@ -224,6 +224,8 @@ CROSS JOIN (
     UNION ALL SELECT 'ZTK', 'ZTK Track Performance Package'
     UNION ALL SELECT 'Z6X', 'Extreme Off-Road Package'
     UNION ALL SELECT 'WFP', 'Omega Edition'
+		UNION ALL SELECT 'ZRA', 'Quail Silver Limited Edition'
+		UNION ALL SELECT 'USA', 'Stars & Steel Limited Edition'
 ) AS special_map ON opt.option_code = special_map.rpo_code
 WHERE NOT EXISTS (
     SELECT 1

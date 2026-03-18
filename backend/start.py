@@ -344,7 +344,7 @@ def sort_price():
     })
 
 @app.route('/stats', methods=['GET'])
-def color_stats():
+def stats():
     category = request.args.get('category', '').strip() or None
     year = request.args.get('year', '').strip() or None
     body = request.args.get('body', '').strip() or None
@@ -352,6 +352,7 @@ def color_stats():
     engine = request.args.get('engine', '').strip() or None
     trans = request.args.get('trans', '').strip() or None
     model = request.args.get('model', '').strip() or None
+    target_year = year if year and year.strip() != "" else "2026"
 
     conditions = []
     if year:
@@ -401,10 +402,10 @@ def color_stats():
             Ranked AS (
                 SELECT
                     DENSE_RANK() OVER (ORDER BY total_count DESC) AS `rank`,
-                    rpo_code AS label,       -- Generic label for the chart/table
-                    rpo_code,               -- Keep for image lookup
+                    rpo_code AS label,
+                    rpo_code,
                     total_count,
-                    color_names,            -- Keep for color-specific lists
+                    color_names,
                     ROUND(100.0 * total_count / SUM(total_count) OVER (), 5) AS percent
                 FROM ColorCounts
             )
@@ -435,29 +436,42 @@ def color_stats():
             )
             SELECT * FROM Ranked;
         """
+    elif category == 'production':
+        date_filter = f"o.creation_date >= '{target_year}-01-01' AND o.creation_date <= '{target_year}-12-31'"
+        full_where = f"{where_clause} AND {date_filter}" if where_clause else f"WHERE {date_filter}"
+
+        sqlStatement = f"""
+            SELECT 
+                DATE_FORMAT(o.creation_date, '%Y-%m-%d') AS label,
+                COUNT(*) AS total_count
+            FROM Vehicles v
+            JOIN Orders o ON v.order_id = o.order_id
+            {full_where}
+            GROUP BY o.creation_date
+            ORDER BY o.creation_date ASC;
+        """
     else:
         close_connection(conn)
         return jsonify([])
 
-    distinct_sql = f"""
-        SELECT DISTINCT v.modelYear, v.model, v.body, v.trim, e.engine_type, t.transmission_type
-        FROM Vehicles v
-        {join_clause}
-        {where_clause}
-    """
-    
+    distinct_sql = f"SELECT DISTINCT v.modelYear, v.model, v.body, v.trim, e.engine_type, t.transmission_type FROM Vehicles v {join_clause} {where_clause}"
     distinct_results = execute_read_query(conn, distinct_sql)
+    
+    all_years_raw = execute_read_query(conn, "SELECT DISTINCT modelYear FROM Vehicles ORDER BY modelYear DESC")
+    all_years = [r['modelYear'] for r in all_years_raw if r.get('modelYear')]
+
     viewTable = execute_read_query(conn, sqlStatement)
     close_connection(conn)
 
     return jsonify({
         'stats_data': viewTable,
-        'year': sorted(set(r['modelYear'] for r in distinct_results if r['modelYear']), reverse=True),
-        'model': sorted(set(r['model'] for r in distinct_results if r['model'])),
-        'body': sorted(set(r['body'] for r in distinct_results if r['body'])),
-        'trim': sorted(set(r['trim'] for r in distinct_results if r['trim'])),
-        'engine': sorted(set(r['engine_type'] for r in distinct_results if r['engine_type'])),
-        'trans': sorted(set(r['transmission_type'] for r in distinct_results if r['transmission_type'])),
+        'year': all_years,
+        'selectedYear': target_year,
+        'model': sorted(set(r['model'] for r in distinct_results if r.get('model'))),
+        'body': sorted(set(r['body'] for r in distinct_results if r.get('body'))),
+        'trim': sorted(set(r['trim'] for r in distinct_results if r.get('trim'))),
+        'engine': sorted(set(r['engine_type'] for r in distinct_results if r.get('engine_type'))),
+        'trans': sorted(set(r['transmission_type'] for r in distinct_results if r.get('transmission_type'))),
         'category': category
     })
     

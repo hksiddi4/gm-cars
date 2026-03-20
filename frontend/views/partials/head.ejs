@@ -1,4 +1,5 @@
 <% 
+  let pageTitle = "GM Build Counts | Production & Statistics";
   let customDescription = "View build counts and statistics for GM vehicles.";
 
   if (typeof vin_data !== 'undefined' && vin_data && vin_data.length > 0) {
@@ -9,8 +10,19 @@
       const specialDesc = (v.special_descs && v.special_descs !== 'NA') 
         ? v.special_descs.split(', ').join(', ') 
         : '';
+      pageTitle = `${year} ${model} ${trim} Build Counts | GM Build Counts`.trim();
+      customDescription = `Production data and RPO specifications for the ${year} ${model} ${trim}. ${specialDesc}`.trim();
+  }
+  else if (typeof pagePath !== 'undefined' && pagePath !== '/') {
+      const pathSegment = pagePath.substring(1); 
+      const displayTitle = pathSegment.charAt(0).toUpperCase() + pathSegment.slice(1);
+      pageTitle = `${displayTitle} | GM Build Counts`;
       
-      customDescription = `${year} ${model} ${trim} ${specialDesc}`.trim();
+      // Optional: Set specific descriptions for sub-pages here
+      if (pagePath === '/stats') customDescription = "Statistics and charts for GM vehicles.";
+      else if (pagePath === '/wheels') customDescription = "GM wheel RPO codes with images.";
+      else if (pagePath === '/about') customDescription = "Per-Model Progress.";
+      else if (pagePath === '/rpos') customDescription = "Model RPO Codes with images.";
   }
 %>
 
@@ -24,7 +36,7 @@
 <meta name="robots" content="index, follow">
 
 <link rel="canonical" href="https://www.gmbuildcounts.com<%= typeof canonicalPath !== 'undefined' ? canonicalPath : '' %>">
-<meta property="og:title" content="GM Build Counts">
+<meta property="og:title" content="<%= pageTitle %>">
 <meta property="og:description" content="<%= customDescription %>">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://www.gmbuildcounts.com<%= typeof canonicalPath !== 'undefined' ? canonicalPath : '' %>">
@@ -32,7 +44,7 @@
 <meta property="og:site_name" content="GM Build Counts">
 
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="GM Build Counts">
+<meta name="twitter:title" content="<%= pageTitle %>">
 <meta name="twitter:description" content="<%= customDescription %>">
 <meta name="twitter:image" content="https://www.gmbuildcounts.com/img/gm.png">
 

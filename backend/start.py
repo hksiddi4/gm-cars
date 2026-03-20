@@ -191,7 +191,7 @@ def sort_price():
             "Z51": ["model = 'CORVETTE STINGRAY'"],
             "Y70": ["model IN ('CORVETTE STINGRAY', 'CORVETTE Z06')", "modelYear = '2023'", "trim IN ('3LT', '3LZ')", "(color_name = 'WHITE PEARL METALLIC TRICOAT' OR color_name = 'CARBON FLASH METALLIC')"],
             "USA": ["model IN ('CORVETTE STINGRAY', 'CORVETTE Z06', 'CORVETTE E-RAY', 'CORVETTE ZR1', 'CORVETTE ZR1X')", "modelYear = '2026'", "trim IN ('3LT', '3LZ')", "(color_name = 'ARCTIC WHITE' OR color_name = 'BLACK')"],
-            "ZRA": ["model IN ('CORVETTE ZR1', 'CORVETTE ZR1X')", "modelYear = '2026'", "trim = '3LZ'", "color_name = 'BLADE SILVER MATTE'"],
+            "ZRA": ["model = 'CORVETTE ZR1X'", "modelYear = '2026'", "trim = '3LZ'", "color_name = 'BLADE SILVER MATTE'"],
             "ZLE": ["modelYear = '2023'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "color_name = 'ELECTRIC BLUE'"],
             "ZLD": ["modelYear = '2023'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "color_name = 'MAVERICK NOIR FROST'"],
             "ZLG": ["modelYear = '2023'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "color_name = 'RIFT METALLIC'"],

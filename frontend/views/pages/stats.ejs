@@ -197,9 +197,13 @@
                                         <td scope="row" style="text-align: left;">
                                         <% if (data.color_names) { %>
                                             <% data.color_names.split(',').forEach((name, i) => { 
-                                                let linkHref = "/vehicles?color=" + encodeURIComponent(name.trim()) + "&rpo=" + encodeURIComponent(data.rpo_code);
+                                                const trimmedName = name.trim();
+                                                let linkHref = "/vehicles?color=" + encodeURIComponent(trimmedName);
+                                                if (data.rpo_code && data.rpo_code !== trimmedName) {
+                                                    linkHref += "&rpo=" + encodeURIComponent(data.rpo_code);
+                                                }
                                             %>
-                                                <a class="color-link" href="<%= linkHref %>"><%= name.trim() %></a><%= i < data.color_names.split(',').length - 1 ? ', ' : '' %>
+                                                <a class="color-link" href="<%= linkHref %>"><%= trimmedName %></a><%= i < data.color_names.split(',').length - 1 ? ', ' : '' %>
                                             <% }) %>
                                         <% } %>
                                         </td>

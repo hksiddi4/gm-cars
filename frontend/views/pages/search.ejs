@@ -175,8 +175,21 @@
                   <h2>No window sticker available</h2>
                 </div>
               <% } else { %>
-                <div style="display: flex; justify-content: center; overflow-x: auto;">
-                  <embed class="window-sticker" src="https://cws.gm.com/vs-cws/vehshop/v2/vehicle/windowsticker?vin=<%= vin.vin %>" type="application/pdf" width="100%"/>
+                <div style="display: flex; flex-direction: column; align-items: center;">
+                  <div style="margin-bottom: 10px;">
+                    <a href="https://cws.gm.com/vs-cws/vehshop/v2/vehicle/windowsticker?vin=<%= vin.vin %>" 
+                      target="_blank" class="btn btn-sm btn-outline-secondary">
+                      Open Window Sticker in New Tab
+                    </a>
+                  </div>
+                  <div style="width: 100%; overflow-x: auto; height: 800px;">
+                    <iframe id="window-sticker-frame" 
+                            data-src="https://cws.gm.com/vs-cws/vehshop/v2/vehicle/windowsticker?vin=<%= vin.vin %>" 
+                            width="100%" 
+                            height="100%" 
+                            style="border: none;">
+                    </iframe>
+                  </div>
                 </div>
               <% } %>
             </div>
@@ -264,6 +277,7 @@
         const vin_data = <%- JSON.stringify(vin_data) %>;
         const vin = vin_data[0];
         const model = vin.model?.toUpperCase() || '';
+        const vehicleTrim = vin.trim || '';
 
         const camaroRpo = <%- JSON.stringify(camaroRpo) %>;
         const corvetteRpo = <%- JSON.stringify(corvetteRpo) %>;
@@ -458,6 +472,14 @@
           });
         });
 
+        setTimeout(() => {
+          const stickerFrame = document.getElementById('window-sticker-frame');
+          if (stickerFrame) {
+              const pdfUrl = stickerFrame.getAttribute('data-src');
+              stickerFrame.src = pdfUrl;
+          }
+        }, 800);
+
         const carouselImage = document.getElementById('carousel-image');
         const loadingAnimation = document.getElementById('loading-animation');
         loadingAnimation.style.display = 'block';
@@ -478,7 +500,6 @@
         const modelYear = vin_data[0].modelYear;
         const mmc_code = vin_data[0].mmc_code;
         let options = vin_data[0].rpo_codes || [];
-        let vehicleTrim = vin_data[0].trim;
 
         let trim = mmc[mmc_code] || '';
 
@@ -794,6 +815,59 @@
           row.addEventListener('mousedown', handleMouseDown);
           row.addEventListener('click', (event) => handleRowClick(url, event));
         });
+
+        document.addEventListener('keydown', (event) => {
+          if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') return;
+
+          if (event.key === 'ArrowLeft') {
+            let prevIndex = currentIndex;
+            do {
+              prevIndex = (prevIndex === 0) ? urls.length - 1 : prevIndex - 1;
+            } while (urls[prevIndex] === null && prevIndex !== currentIndex);
+            showImage(prevIndex);
+          } else if (event.key === 'ArrowRight') {
+            let nextIndex = currentIndex;
+            do {
+              nextIndex = (nextIndex === urls.length - 1) ? 0 : nextIndex + 1;
+            } while (urls[nextIndex] === null && nextIndex !== currentIndex);
+            showImage(nextIndex);
+          }
+        });
+
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        const handleSwipe = () => {
+          const swipeThreshold = 50; // Minimum pixels to count as a swipe
+          const swipeDistance = touchEndX - touchStartX;
+
+          if (Math.abs(swipeDistance) > swipeThreshold) {
+            if (swipeDistance < 0) {
+              // Swiped Left -> Next Image
+              let nextIndex = currentIndex;
+              do {
+                nextIndex = (nextIndex === urls.length - 1) ? 0 : nextIndex + 1;
+              } while (urls[nextIndex] === null && nextIndex !== currentIndex);
+              showImage(nextIndex);
+            } else {
+              // Swiped Right -> Previous Image
+              let prevIndex = currentIndex;
+              do {
+                prevIndex = (prevIndex === 0) ? urls.length - 1 : prevIndex - 1;
+              } while (urls[prevIndex] === null && prevIndex !== currentIndex);
+              showImage(prevIndex);
+            }
+          }
+        };
+
+        carouselImage.addEventListener('touchstart', e => {
+          touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        carouselImage.addEventListener('touchend', e => {
+          touchEndX = e.changedTouches[0].screenX;
+          handleSwipe();
+        }, { passive: true });
       });
     </script>
 </body>

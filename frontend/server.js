@@ -12,13 +12,13 @@ app.use(express.json());
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
 
-const baseURL = 'http://backend:5000'
+const baseURL = 'http://192.168.1.121:5000'
 
 const axiosInstance = axios.create({
     timeout: 30000
 });
 
-let maintenanceMode = true; // Edit this to toggle maintenance mode
+let maintenanceMode = false; // Edit this to toggle maintenance mode
 
 function getHeaderImages() {
     try {
@@ -79,8 +79,11 @@ app.use((req, res, next) => {
 });
 
 app.get('/maintenance', (req, res) => {
-    const imageUrls = cachedHeaderImages;
-    res.render('pages/errors/maintenance', { headerImages: imageUrls });
+    res.render('pages/errors/maintenance', {
+        headerImages: cachedHeaderImages,
+        pagePath: '/maintenance',
+        canonicalPath: '/maintenance'
+    });
 });
 
 function formatCurrency(number) {
@@ -91,23 +94,21 @@ function formatCurrency(number) {
 }
 
 app.get('/', function(req, res) {
-    const imageUrls = cachedHeaderImages;
     res.render('pages/index', {
         req: req,
-        headerImages: imageUrls,
+        headerImages: cachedHeaderImages,
         canonicalPath: '/',
         pagePath: '/'
     });
 });
 
 app.get('/about', function(req, res) {
-    const imageUrls = cachedHeaderImages;
     axiosInstance.get(`${baseURL}/about`)
         .then((response) => {
             const stats = response.data || {};
             res.render('pages/about', {
                 req: req,
-                headerImages: imageUrls,
+                headerImages: cachedHeaderImages,
                 canonicalPath: '/',
                 pagePath: '/about',
                 stats: stats
@@ -175,7 +176,6 @@ app.get('/vehicles', function(req, res) {
             const queryParams = new URLSearchParams(req.query);
             queryParams.delete('page');
             queryParams.delete('limit');
-            const imageUrls = cachedHeaderImages;
             const canonicalPath = `/vehicles${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
 
             res.render('pages/vehicles', {
@@ -206,25 +206,24 @@ app.get('/vehicles', function(req, res) {
                 selectedOrder: order,
                 canonicalPath: canonicalPath,
                 pagePath: '/vehicles',
-                headerImages: imageUrls
+                headerImages: cachedHeaderImages
             });
         })
         .catch((error) => {
             console.error(`Error fetching data: ${error}`);
             res.status(500).render('pages/errors/500', {
                 error: error.toJSON ? error.toJSON() : { message: error.message },
-                headerImages: imageUrls,
+                headerImages: cachedHeaderImages,
             });
         });
 });
 
 app.get('/search', function(req, res) {
     var vin = req.query.vin.trim();
-    const imageUrls = cachedHeaderImages;
     if (!vin || vin.length !== 17) {
         return res.status(400).render('pages/errors/400', {
             req: req,
-            headerImages: imageUrls,
+            headerImages: cachedHeaderImages,
             canonicalPath: '/search', 
             pagePath: '/search' 
         });
@@ -236,7 +235,7 @@ app.get('/search', function(req, res) {
         if (!vin_data || vin_data.length === 0) {
             res.status(400).render('pages/errors/400', {
                 req: req,
-                headerImages: imageUrls,
+                headerImages: cachedHeaderImages,
                 canonicalPath: '/search', 
                 pagePath: '/search' 
             });
@@ -247,7 +246,7 @@ app.get('/search', function(req, res) {
     
             res.render('pages/search', {
                 req: req,
-                headerImages: imageUrls,
+                headerImages: cachedHeaderImages,
                 vin_data: vin_data,
                 colorMap: colorMap,
                 intColor: intColor,
@@ -272,7 +271,7 @@ app.get('/search', function(req, res) {
         console.error(`Error fetching data: ${error}`);
         res.status(500).render('pages/errors/500', { 
             error: error.toJSON ? error.toJSON() : { message: error.message },
-            headerImages: imageUrls,
+            headerImages: cachedHeaderImages,
             canonicalPath: '/search', 
             pagePath: '/search'
         });
@@ -280,7 +279,6 @@ app.get('/search', function(req, res) {
 });
 
 app.get('/stats', function(req, res) {
-    const imageUrls = cachedHeaderImages;
     const category = req.query.category;
     const url = new URL(`${baseURL}/stats`);
     const params = new URLSearchParams();
@@ -307,7 +305,7 @@ app.get('/stats', function(req, res) {
 
             res.render('pages/stats', {
                 stats_data: data.stats_data,
-                headerImages: imageUrls,
+                headerImages: cachedHeaderImages,
                 category: data.category,
                 year_list: data.year,
                 model_list: data.model,
@@ -329,7 +327,7 @@ app.get('/stats', function(req, res) {
             console.error(`Error fetching data: ${error}`);
             res.status(500).render('pages/errors/500', {
                 error: error.toJSON ? error.toJSON() : { message: error.message },
-                headerImages: imageUrls,
+                headerImages: cachedHeaderImages,
                 canonicalPath: '/stats', 
                 pagePath: '/stats'
             });
@@ -337,9 +335,8 @@ app.get('/stats', function(req, res) {
 });
 
 app.get('/rpos', function(req, res) {
-    const imageUrls = cachedHeaderImages;
     res.render('pages/rpos', {
-        headerImages: imageUrls,
+        headerImages: cachedHeaderImages,
         camaroRpo: camaroRpo,
         corvetteRpo: corvetteRpo,
         escaladeRpo: escaladeRpo,
@@ -356,7 +353,6 @@ app.get('/rpos', function(req, res) {
 });
 
 app.get('/wheels', function(req, res) {
-    const imageUrls = cachedHeaderImages;
     const url = new URL(`${baseURL}/wheels`);
 
     axiosInstance.get(url.toString())
@@ -365,7 +361,7 @@ app.get('/wheels', function(req, res) {
 
             res.render('pages/wheels', {
                 model_list: data.model,
-                headerImages: imageUrls,
+                headerImages: cachedHeaderImages,
                 camaroRpo: camaroRpo, 
                 corvetteRpo: corvetteRpo,
                 escaladeRpo: escaladeRpo,
@@ -385,7 +381,7 @@ app.get('/wheels', function(req, res) {
             console.error(`Error fetching data: ${error}`);
             res.status(500).render('pages/errors/500', {
                 error: error.toJSON ? error.toJSON() : { message: error.message },
-                headerImages: imageUrls,
+                headerImages: cachedHeaderImages,
                 canonicalPath: '/wheels',
                 pagePath: '/wheels'
             });
@@ -393,7 +389,6 @@ app.get('/wheels', function(req, res) {
 });
 
 app.post('/api/rarity', async (req, res) => {
-    const imageUrls = cachedHeaderImages;
     const options = req.body.Options;
 
     try {
@@ -408,26 +403,24 @@ app.post('/api/rarity', async (req, res) => {
         const data = await response.json();
         res.json(data);
     } catch (error) {
-        res.status(500).render('pages/errors/500', { error: error.toJSON ? error.toJSON() : { message: error.message }, headerImages: imageUrls });
+        res.status(500).render('pages/errors/500', { error: error.toJSON ? error.toJSON() : { message: error.message }, headerImages: cachedHeaderImages });
     }
 });
 
 app.use((req, res) => {
-    const imageUrls = cachedHeaderImages;
     res.status(404).render('pages/errors/404', {
         req,
-        headerImages: imageUrls,
+        headerImages: cachedHeaderImages,
         canonicalPath: req.originalUrl,
         pagePath: '/404'
     });
 });
 
 app.use((err, req, res, next) => {
-    const imageUrls = cachedHeaderImages;
     console.error(err.stack);
     res.status(500).render('pages/errors/500', {
         error: err.toJSON ? err.toJSON() : { message: err.message },
-        headerImages: imageUrls,
+        headerImages: cachedHeaderImages,
         canonicalPath: req.originalUrl,
         pagePath: '/500'
     });

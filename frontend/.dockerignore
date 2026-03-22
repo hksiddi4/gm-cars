@@ -1,5 +1,3 @@
 **/node_modules
-**/__pycache__
 .git
-SQL/
-.env
+GM CGI Image Generator Notes.txt

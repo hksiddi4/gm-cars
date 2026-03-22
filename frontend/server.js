@@ -9,7 +9,8 @@ const modules = require('./views/partials/modules.js');
 
 const headerImagesDir = path.join(__dirname, 'public', 'img', 'header');
 const rpoWheelsDir = path.join(__dirname, 'public', 'img', 'rpos');
-const baseURL = 'http://192.168.1.121:5000';
+
+const baseURL = 'http://backend:5000';
 
 // Axios instance with default timeout
 const axiosInstance = axios.create({ timeout: 30000 });

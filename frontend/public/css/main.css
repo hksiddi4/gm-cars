@@ -562,19 +562,7 @@ img {
     vertical-align: middle;
     text-align: center;
     padding: 5px;
-    white-space: normal;
-    word-break: break-word
-}
-
-.table-stats-veh td:first-child {
-    width: 120px;
-    min-width: 120px;
-}
-
-.table-stats-veh .rpo-description {
-    text-align: left;
-    line-height: 1.2;
-    margin-top: 5px;
+    white-space: nowrap;
 }
 
 .table-stats-veh th .dropdown-container {
@@ -843,21 +831,11 @@ img {
     width: 75%;
 }
 
-/* Wheels */
-.wheel-image {
-    height: 200px;
-    width: auto;
-}
-
 /* Mobile Styles */
 @media (min-width: 768px) and (max-width: 1521px) {
     .about-page .table-veh {
         display: table !important;
         width: 100% !important;
-    }
-
-    .wheel-image {
-        height: 120px;
     }
 }
 
@@ -1009,10 +987,10 @@ img {
         flex-shrink: 0;
     }
 
-    .table-veh, .table-stats-veh {
+    .table-veh {
         display: block;
         font-size: 0.65rem;
-        width: 100% !important;
+        width: max-content;
         table-layout: auto !important;
     }
 

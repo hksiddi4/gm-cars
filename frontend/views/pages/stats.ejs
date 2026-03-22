@@ -311,60 +311,60 @@
                 let config;
 
                 if (currentCategory === 'production') {
-                    // --- PRODUCTION LINE CHART ---
-                    const allDaysInYear = [];
-                    const yearInt = parseInt(displayYear);
-                    const startDate = new Date(yearInt, 0, 1);
-                    const endDate = new Date(yearInt, 11, 31);
-                    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-                        const dateStr = d.toISOString().split('T')[0];
-                        allDaysInYear.push(dateStr);
-                    }
-                    const productionMap = new Map(stats_data.map(item => [item.label, item.total_count]));
-                    const finalLabels = allDaysInYear;
-                    const finalData = allDaysInYear.map(day => productionMap.get(day) || 0);
-                    const sortedData = [...stats_data].sort((a, b) => new Date(a.label) - new Date(b.label));
+                    // 1. Find the first and last production days in the returned data
+                    const sortedData = stats_data.filter(item => item.label !== null).sort((a, b) => new Date(a.label) - new Date(b.label));
                     
-                    config = {
-                        type: 'line',
-                        data: {
-                            labels: finalLabels,
-                            datasets: [{
-                                label: 'Units Produced',
-                                data: finalData,
-                                borderColor: '#3498db',
-                                backgroundColor: 'rgba(52, 152, 219, 0.1)',
-                                borderWidth: 2,
-                                fill: true,
-                                tension: 0.3,
-                                pointRadius: 0,
-                                pointHoverRadius: 6
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: { display: false },
-                                title: { display: true, text: `${displayYear} Production Timeline`, color: '#ffffff', font: { size: 20 } },
-                                datalabels: { display: false }
+                    if (sortedData.length > 0) {
+                        const startDate = new Date(sortedData[0].label + 'T00:00:00');
+                        const endDate = new Date(sortedData[sortedData.length - 1].label + 'T00:00:00');
+                        console.log('Start Date:', startDate);
+                        
+                        // 2. Generate the labels for every day in that specific production window
+                        const allDaysInRange = [];
+                        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+                            allDaysInRange.push(d.toISOString().split('T')[0]);
+                        }
+
+                        const productionMap = new Map(stats_data.map(item => [item.label, item.total_count]));
+                        const finalData = allDaysInRange.map(day => productionMap.get(day) || 0);
+
+                        config = {
+                            type: 'line',
+                            data: {
+                                labels: allDaysInRange,
+                                datasets: [{
+                                    label: 'Stickers Produced',
+                                    data: finalData,
+                                    borderColor: '#3498db',
+                                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                                    borderWidth: 2,
+                                    fill: true,
+                                    tension: 0.3,
+                                    pointRadius: 0
+                                }]
                             },
-                            scales: {
-                                x: { 
-                                    min: allDaysInYear[0],
-                                    max: allDaysInYear[allDaysInYear.length - 1],
-                                    ticks: { 
-                                        color: '#fff', 
-                                        maxTicksLimit: 12
-                                    } 
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                scales: {
+                                    x: {
+                                        // Force the chart to start/end exactly on the first/last date
+                                        min: allDaysInRange[0],
+                                        max: allDaysInRange[allDaysInRange.length - 1],
+                                        ticks: { color: '#fff', maxTicksLimit: 12 }
+                                    },
+                                    y: { beginAtZero: true, ticks: { color: '#fff' } }
                                 },
-                                y: { 
-                                    beginAtZero: true, 
-                                    ticks: { color: '#fff' } 
+                                plugins: {
+                                    title: {
+                                        display: true,
+                                        text: `${displayYear} Window Sticker Creation Date (${allDaysInRange[0]} to ${allDaysInRange[allDaysInRange.length-1]})`,
+                                        color: '#ffffff'
+                                    }
                                 }
                             }
-                        }
-                    };
+                        };
+                    }
                 } else {
                     // --- COLOR/ENGINE RANKING CHART ---
                     Chart.register(ChartDataLabels);

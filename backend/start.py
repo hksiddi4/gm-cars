@@ -439,8 +439,10 @@ def stats():
             SELECT * FROM Ranked;
         """
     elif category == 'production':
-        date_filter = f"o.creation_date >= '{target_year}-01-01' AND o.creation_date <= '{target_year}-12-31'"
-        full_where = f"{where_clause} AND {date_filter}" if where_clause else f"WHERE {date_filter}"
+        if not any("v.modelYear" in c for c in conditions):
+            conditions.append(f"v.modelYear = '{target_year}'")
+        
+        full_where = f"WHERE {' AND '.join(conditions)}"
 
         sqlStatement = f"""
             SELECT 
@@ -449,8 +451,8 @@ def stats():
             FROM Vehicles v
             JOIN Orders o ON v.order_id = o.order_id
             {full_where}
-            GROUP BY o.creation_date
-            ORDER BY o.creation_date ASC;
+            GROUP BY label -- Group by the DATE string, not the TIMESTAMP
+            ORDER BY label ASC;
         """
     else:
         close_connection(conn)

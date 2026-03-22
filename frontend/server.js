@@ -79,7 +79,8 @@ app.use((req, res, next) => {
 });
 
 app.get('/maintenance', (req, res) => {
-    res.render('pages/errors/maintenance');
+    const imageUrls = cachedHeaderImages;
+    res.render('pages/errors/maintenance', { headerImages: imageUrls });
 });
 
 function formatCurrency(number) {

@@ -831,11 +831,21 @@ img {
     width: 75%;
 }
 
+/* Wheels */
+.wheel-image {
+    height: 200px;
+    width: auto;
+}
+
 /* Mobile Styles */
 @media (min-width: 768px) and (max-width: 1521px) {
     .about-page .table-veh {
         display: table !important;
         width: 100% !important;
+    }
+
+    .wheel-image {
+        height: 120px;
     }
 }
 

@@ -18,7 +18,7 @@ const axiosInstance = axios.create({
     timeout: 30000
 });
 
-let maintenanceMode = false; // Edit this to toggle maintenance mode
+let maintenanceMode = true; // Edit this to toggle maintenance mode
 
 function getHeaderImages() {
     try {

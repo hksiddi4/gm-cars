@@ -562,7 +562,19 @@ img {
     vertical-align: middle;
     text-align: center;
     padding: 5px;
-    white-space: nowrap;
+    white-space: normal;
+    word-break: break-word
+}
+
+.table-stats-veh td:first-child {
+    width: 120px;
+    min-width: 120px;
+}
+
+.table-stats-veh .rpo-description {
+    text-align: left;
+    line-height: 1.2;
+    margin-top: 5px;
 }
 
 .table-stats-veh th .dropdown-container {
@@ -997,10 +1009,10 @@ img {
         flex-shrink: 0;
     }
 
-    .table-veh {
+    .table-veh, .table-stats-veh {
         display: block;
         font-size: 0.65rem;
-        width: max-content;
+        width: 100% !important;
         table-layout: auto !important;
     }
 

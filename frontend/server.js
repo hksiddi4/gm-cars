@@ -3,33 +3,33 @@ const app = express();
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
-const { colorMap, intColor, seatCode, mmc, camaroRpo, corvetteRpo, escaladeRpo, escaladeiqRpo, ct4Rpo, ct4vRpo, ct5Rpo, ct5vRpo, hummerRpo, hummersuvRpo } = require('./views/partials/modules.js')
+
+// Import all RPO constants as a single object
+const modules = require('./views/partials/modules.js');
+
 const headerImagesDir = path.join(__dirname, 'public', 'img', 'header');
 const rpoWheelsDir = path.join(__dirname, 'public', 'img', 'rpos');
+const baseURL = 'http://192.168.1.121:5000';
 
+// Axios instance with default timeout
+const axiosInstance = axios.create({ timeout: 30000 });
+
+// App Configuration
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
 
-const baseURL = 'http://192.168.1.121:5000'
+let maintenanceMode = false; // Toggle this to true to lock the site
 
-const axiosInstance = axios.create({
-    timeout: 30000
-});
-
-let maintenanceMode = false; // Edit this to toggle maintenance mode
+// --- Helper Functions ---
 
 function getHeaderImages() {
     try {
         const files = fs.readdirSync(headerImagesDir);
-        const imageFiles = files.filter(file => {
-            return /\.(png)$/i.test(file);
-        });
-        const cachedHeaderImages = imageFiles.map(file => `/img/header/${file}`);
-        return cachedHeaderImages;
+        return files.filter(file => /\.(png)$/i.test(file)).map(file => `/img/header/${file}`);
     } catch (err) {
-        console.error('Error reading header images directory:', err);
+        console.error('Error reading header images:', err);
         return [];
     }
 }
@@ -48,385 +48,225 @@ function getLocalImageRPOs() {
             
             imageFiles.forEach(file => {
                 const rpoCode = path.parse(file).name.toUpperCase();
-                const modelKey = `${modelDir.toUpperCase()}-${rpoCode}`;
                 const imagePath = `/img/rpos/${modelDir}/${file}`;
-
-                localRpoImages[modelKey] = imagePath;
-
-                if (!localRpoImages[rpoCode]) {
-                    localRpoImages[rpoCode] = imagePath;
-                }
+                localRpoImages[`${modelDir.toUpperCase()}-${rpoCode}`] = imagePath;
+                if (!localRpoImages[rpoCode]) localRpoImages[rpoCode] = imagePath;
             });
         });
-
     } catch (error) {
         console.warn(`Warning: Could not read RPO wheel image directory: ${error.message}`);
     }
     return localRpoImages;
 }
 
-const localRpoImageMap = getLocalImageRPOs();
-const cachedHeaderImages = getHeaderImages = getHeaderImages();
+function formatCurrency(number) {
+    if (number === null || number === undefined) return 'N/A';
+    return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
 
+// Initial Data Caching
+const cachedHeaderImages = getHeaderImages();
+const localRpoImageMap = getLocalImageRPOs();
+
+// --- GLOBAL MIDDLEWARE ---
+// This handles maintenance and makes common variables available to ALL templates
 app.use((req, res, next) => {
-    if (maintenanceMode && req.path !== '/maintenance') {
+    // 1. Maintenance Logic
+    if (maintenanceMode && req.path !== '/maintenance' && !req.path.startsWith('/css') && !req.path.startsWith('/img')) {
         return res.redirect('/maintenance');
     }
     if (!maintenanceMode && req.path === '/maintenance') {
         return res.redirect('/');
     }
+
+    // 2. Global View Variables (res.locals)
+    res.locals.req = req;
+    res.locals.headerImages = cachedHeaderImages;
+    res.locals.localRpoImageMap = localRpoImageMap;
+    res.locals.formatCurrency = formatCurrency;
+    
+    // 3. Inject all RPO modules (camaroRpo, corvetteRpo, etc.)
+    Object.assign(res.locals, modules);
+    
     next();
 });
 
+// --- ROUTES ---
+
 app.get('/maintenance', (req, res) => {
     res.render('pages/errors/maintenance', {
-        headerImages: cachedHeaderImages,
         pagePath: '/maintenance',
         canonicalPath: '/maintenance'
     });
 });
 
-function formatCurrency(number) {
-    if (number === null) {
-        return 'N/A';
-    }
-    return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-}
-
-app.get('/', function(req, res) {
+app.get('/', (req, res) => {
     res.render('pages/index', {
-        req: req,
-        headerImages: cachedHeaderImages,
         canonicalPath: '/',
         pagePath: '/'
     });
 });
 
-app.get('/about', function(req, res) {
-    axiosInstance.get(`${baseURL}/about`)
-        .then((response) => {
-            const stats = response.data || {};
-            res.render('pages/about', {
-                req: req,
-                headerImages: cachedHeaderImages,
-                canonicalPath: '/',
-                pagePath: '/about',
-                stats: stats
-            });
-        })
+app.get('/about', async (req, res) => {
+    try {
+        const response = await axiosInstance.get(`${baseURL}/about`);
+        res.render('pages/about', {
+            stats: response.data || {},
+            canonicalPath: '/about',
+            pagePath: '/about'
+        });
+    } catch (err) {
+        res.status(500).render('pages/errors/500', { error: err });
+    }
 });
 
-app.get('/vehicles', function(req, res) {
+app.get('/vehicles', async (req, res) => {
     const startTime = Date.now();
-    var year = req.query.year;
-    var body = req.query.body;
-    var trim = req.query.trim;
-    var engine = req.query.engine;
-    var trans = req.query.trans;
-    var selectedModels = req.query.model;
-    var rpos = req.query.rpo;
-    var color = req.query.color;
-    var country = req.query.country;
-    var order = req.query.order;
-    var page = parseInt(req.query.page) || 1;
-    var limit = Math.min(parseInt(req.query.limit) || 100, 250);
+    try {
+        // Axios 'params' automatically converts req.query into a URL string
+        const response = await axiosInstance.get(`${baseURL}/vehicles`, { params: req.query });
+        const data = response.data;
+        
+        const limit = Math.min(parseInt(req.query.limit) || 100, 250);
+        const page = parseInt(req.query.page) || 1;
 
-    if (typeof rpos === 'string') {
-        rpos = rpos.split(',');
-    }
+        // Clean up MSRP formatting
+        const vehicle_data = Array.isArray(data.data) ? data.data : [];
+        vehicle_data.forEach(v => v.msrp = formatCurrency(v.msrp));
 
-    let url = `${baseURL}/vehicles?limit=${limit}&page=${page}`;
-    if (year) url += `&year=${year}`;
-    if (body) url += `&body=${body}`;
-    if (trim) url += `&trim=${trim}`;
-    if (engine) url += `&engine=${engine}`;
-    if (trans) url += `&trans=${trans}`;
-    if (selectedModels) url += `&model=${Array.isArray(selectedModels) ? selectedModels.join(',') : selectedModels}`;
-    if (rpos && (!Array.isArray(rpos) || rpos.length > 0)) url += `&rpo=${Array.isArray(rpos) ? rpos.join(',') : rpos}`;
-    if (color) url += `&color=${color}`;
-    if (country) url += `&country=${country}`;
-    if (order) url += `&order=${order}`;
-
-    axiosInstance.get(url)
-        .then((response) => {
-            var vehicle_data = Array.isArray(response.data.data) ? response.data.data : [];
-            vehicle_data.forEach(function(data) {
-                data.msrp = formatCurrency(data.msrp);
-            });
-            var totalItems = response.data.total;
-            var totalPages = Math.ceil(totalItems / limit);
-            var years = response.data.year
-            var selectedYear = req.query.year;
-            var bodys = response.data.body
-            var selectedBody = req.query.body;
-            var trim = response.data.trim;
-            var selectedTrim = req.query.trim;
-            var engine = response.data.engine;
-            var selectedEngine = req.query.engine;
-            var trans = response.data.trans;
-            var selectedTrans = req.query.trans;
-            var colors = response.data.color;
-            var selectedColor = req.query.color;
-            var country = response.data.country;
-            var selectedCountry = req.query.country;
-            var models = response.data.model;
-            selectedModels = selectedModels ? (Array.isArray(selectedModels) ? selectedModels : [selectedModels]) : [];
-            const elapsedTime = ((Date.now() - startTime) / 1000).toFixed(2);
-
-            const queryParams = new URLSearchParams(req.query);
-            queryParams.delete('page');
-            queryParams.delete('limit');
-            const canonicalPath = `/vehicles${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
-
-            res.render('pages/vehicles', {
-                vehicle_data: vehicle_data,
-                years: years,
-                bodys: bodys,
-                engine: engine,
-                trim: trim,
-                trans: trans,
-                models: models,
-                colors: colors,
-                country: country,
-                colorMap: colorMap,
-                currentPage: page,
-                totalPages: totalPages,
-                limit: limit,
-                totalItems: totalItems,
-                elapsedTime: elapsedTime,
-                selectedRPO: rpos,
-                selectedColor: selectedColor,
-                selectedYear: selectedYear,
-                selectedBody: selectedBody,
-                selectedTrim: selectedTrim,
-                selectedEngine: selectedEngine,
-                selectedTrans: selectedTrans,
-                selectedCountry: selectedCountry,
-                selectedModels: selectedModels,
-                selectedOrder: order,
-                canonicalPath: canonicalPath,
-                pagePath: '/vehicles',
-                headerImages: cachedHeaderImages
-            });
-        })
-        .catch((error) => {
-            console.error(`Error fetching data: ${error}`);
-            res.status(500).render('pages/errors/500', {
-                error: error.toJSON ? error.toJSON() : { message: error.message },
-                headerImages: cachedHeaderImages,
-            });
+        res.render('pages/vehicles', {
+            vehicle_data,
+            years: data.year,
+            bodys: data.body,
+            trim: data.trim,
+            engine: data.engine,
+            trans: data.trans,
+            colors: data.color,
+            country: data.country,
+            models: data.model,
+            currentPage: page,
+            totalPages: Math.ceil(data.total / limit),
+            totalItems: data.total,
+            limit: limit,
+            elapsedTime: ((Date.now() - startTime) / 1000).toFixed(2),
+            selectedYear: req.query.year,
+            selectedBody: req.query.body,
+            selectedTrim: req.query.trim,
+            selectedEngine: req.query.engine,
+            selectedTrans: req.query.trans,
+            selectedColor: req.query.color,
+            selectedCountry: req.query.country,
+            selectedOrder: req.query.order,
+            selectedRPO: typeof req.query.rpo === 'string' ? req.query.rpo.split(',') : (req.query.rpo || []),
+            selectedModels: Array.isArray(req.query.model) ? req.query.model : (req.query.model ? [req.query.model] : []),
+            pagePath: '/vehicles',
+            canonicalPath: req.originalUrl
         });
+    } catch (error) {
+        res.status(500).render('pages/errors/500', { error });
+    }
 });
 
-app.get('/search', function(req, res) {
-    var vin = req.query.vin.trim();
+app.get('/search', async (req, res) => {
+    const vin = req.query.vin?.trim();
     if (!vin || vin.length !== 17) {
-        return res.status(400).render('pages/errors/400', {
-            req: req,
-            headerImages: cachedHeaderImages,
-            canonicalPath: '/search', 
-            pagePath: '/search' 
-        });
+        return res.status(400).render('pages/errors/400', { pagePath: '/search', canonicalPath: '/search' });
     }
-    axiosInstance.get(`${baseURL}/search?vin=${encodeURIComponent(vin)}`)
-    .then((response)=>{
-        var vin_data = response.data;
 
-        if (!vin_data || vin_data.length === 0) {
-            res.status(400).render('pages/errors/400', {
-                req: req,
-                headerImages: cachedHeaderImages,
-                canonicalPath: '/search', 
-                pagePath: '/search' 
-            });
-        } else {
-            vin_data.forEach(function(data) {
-                data.msrp = formatCurrency(data.msrp);
-            });
-    
-            res.render('pages/search', {
-                req: req,
-                headerImages: cachedHeaderImages,
-                vin_data: vin_data,
-                colorMap: colorMap,
-                intColor: intColor,
-                seatCode: seatCode,
-                mmc: mmc,
-                camaroRpo: camaroRpo,
-                corvetteRpo: corvetteRpo,
-                escaladeRpo: escaladeRpo,
-                escaladeiqRpo: escaladeiqRpo,
-                ct4Rpo: ct4Rpo,
-                ct4vRpo: ct4vRpo,
-                ct5Rpo: ct5Rpo,
-                ct5vRpo: ct5vRpo,
-                hummerRpo: hummerRpo,
-                hummersuvRpo: hummersuvRpo,
-                canonicalPath: `/search?vin=${vin}`,
-                pagePath: '/search'
-            });
-        }
-    })
-    .catch((error) => {
-        console.error(`Error fetching data: ${error}`);
-        res.status(500).render('pages/errors/500', { 
-            error: error.toJSON ? error.toJSON() : { message: error.message },
-            headerImages: cachedHeaderImages,
-            canonicalPath: '/search', 
-            pagePath: '/search'
+    try {
+        const response = await axiosInstance.get(`${baseURL}/search`, { params: { vin } });
+        const vin_data = response.data;
+
+        if (!vin_data || vin_data.length === 0) throw new Error('VIN not found');
+
+        vin_data.forEach(v => v.msrp = formatCurrency(v.msrp));
+
+        res.render('pages/search', {
+            vin_data,
+            pagePath: '/search',
+            canonicalPath: `/search?vin=${vin}`
         });
-    });
+    } catch (error) {
+        res.status(400).render('pages/errors/400', { pagePath: '/search', canonicalPath: '/search' });
+    }
 });
 
-app.get('/stats', function(req, res) {
-    const category = req.query.category;
-    const url = new URL(`${baseURL}/stats`);
-    const params = new URLSearchParams();
+app.get('/stats', async (req, res) => {
+    try {
+        const response = await axiosInstance.get(`${baseURL}/stats`, { params: req.query });
+        const data = response.data;
+        
+        const stats_data = Array.isArray(data.stats_data) ? data.stats_data : [];
+        stats_data.forEach(item => item.total_count = formatCurrency(item.total_count));
 
-    if (category) params.append("category", category);
-    if (req.query.year) params.append("year", req.query.year);
-    if (req.query.body) params.append("body", req.query.body);
-    if (req.query.trim) params.append("trim", req.query.trim);
-    if (req.query.engine) params.append("engine", req.query.engine);
-    if (req.query.trans) params.append("trans", req.query.trans);
-    if (req.query.model) params.append("model", req.query.model);
-
-    url.search = params.toString();
-
-    const canonicalPath = `/stats${params.toString() ? '?' + params.toString() : ''}`;
-
-    axiosInstance.get(url.toString())
-        .then((response) => {
-            const data = response.data;
-            var stats_data = Array.isArray(response.data.stats_data) ? response.data.stats_data : [];
-            stats_data.forEach((item) => {
-                item.total_count = formatCurrency(item.total_count);
-            });
-
-            res.render('pages/stats', {
-                stats_data: data.stats_data,
-                headerImages: cachedHeaderImages,
-                category: data.category,
-                year_list: data.year,
-                model_list: data.model,
-                body_list: data.body,
-                trim_list: data.trim,
-                engine_list: data.engine,
-                trans_list: data.trans,
-                selectedYear: req.query.year || '',
-                selectedModel: req.query.model || '',
-                selectedBody: req.query.body || '',
-                selectedTrim: req.query.trim || '',
-                selectedEngine: req.query.engine || '',
-                selectedTrans: req.query.trans || '',
-                canonicalPath: canonicalPath,
-                pagePath: '/stats'
-            });
-        })
-        .catch((error) => {
-            console.error(`Error fetching data: ${error}`);
-            res.status(500).render('pages/errors/500', {
-                error: error.toJSON ? error.toJSON() : { message: error.message },
-                headerImages: cachedHeaderImages,
-                canonicalPath: '/stats', 
-                pagePath: '/stats'
-            });
+        res.render('pages/stats', {
+            stats_data,
+            category: data.category,
+            year_list: data.year,
+            model_list: data.model,
+            body_list: data.body,
+            trim_list: data.trim,
+            engine_list: data.engine,
+            trans_list: data.trans,
+            selectedYear: req.query.year || '',
+            selectedModel: req.query.model || '',
+            selectedBody: req.query.body || '',
+            selectedTrim: req.query.trim || '',
+            selectedEngine: req.query.engine || '',
+            selectedTrans: req.query.trans || '',
+            pagePath: '/stats',
+            canonicalPath: req.originalUrl
         });
+    } catch (error) {
+        res.status(500).render('pages/errors/500', { error });
+    }
 });
 
-app.get('/rpos', function(req, res) {
-    res.render('pages/rpos', {
-        headerImages: cachedHeaderImages,
-        camaroRpo: camaroRpo,
-        corvetteRpo: corvetteRpo,
-        escaladeRpo: escaladeRpo,
-        escaladeiqRpo: escaladeiqRpo,
-        ct4Rpo: ct4Rpo,
-        ct4vRpo: ct4vRpo,
-        ct5Rpo: ct5Rpo,
-        ct5vRpo: ct5vRpo,
-        hummerRpo: hummerRpo,
-        hummersuvRpo: hummersuvRpo,
-        canonicalPath: '/rpos',
-        pagePath: '/rpos'
-    });
+app.get('/rpos', (req, res) => {
+    res.render('pages/rpos', { pagePath: '/rpos', canonicalPath: '/rpos' });
 });
 
-app.get('/wheels', function(req, res) {
-    const url = new URL(`${baseURL}/wheels`);
-
-    axiosInstance.get(url.toString())
-        .then((response) => {
-            const data = response.data;
-
-            res.render('pages/wheels', {
-                model_list: data.model,
-                headerImages: cachedHeaderImages,
-                camaroRpo: camaroRpo, 
-                corvetteRpo: corvetteRpo,
-                escaladeRpo: escaladeRpo,
-                escaladeiqRpo: escaladeiqRpo,
-                ct4Rpo: ct4Rpo,
-                ct4vRpo: ct4vRpo,
-                ct5Rpo: ct5Rpo,
-                ct5vRpo: ct5vRpo,
-                hummerRpo: hummerRpo,
-                hummersuvRpo: hummersuvRpo,
-                localRpoImageMap: localRpoImageMap, 
-                canonicalPath: '/wheels',
-                pagePath: '/wheels'
-            });
-        })
-        .catch((error) => {
-            console.error(`Error fetching data: ${error}`);
-            res.status(500).render('pages/errors/500', {
-                error: error.toJSON ? error.toJSON() : { message: error.message },
-                headerImages: cachedHeaderImages,
-                canonicalPath: '/wheels',
-                pagePath: '/wheels'
-            });
+app.get('/wheels', async (req, res) => {
+    try {
+        const response = await axiosInstance.get(`${baseURL}/wheels`);
+        res.render('pages/wheels', {
+            model_list: response.data.model,
+            pagePath: '/wheels',
+            canonicalPath: '/wheels'
         });
+    } catch (error) {
+        res.status(500).render('pages/errors/500', { error });
+    }
 });
 
 app.post('/api/rarity', async (req, res) => {
-    const options = req.body.Options;
-
     try {
-        const response = await fetch(`${baseURL}/api/rarity`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ Options: options })
-        });
-
-        const data = await response.json();
-        res.json(data);
+        const response = await axiosInstance.post(`${baseURL}/api/rarity`, { Options: req.body.Options });
+        res.json(response.data);
     } catch (error) {
-        res.status(500).render('pages/errors/500', { error: error.toJSON ? error.toJSON() : { message: error.message }, headerImages: cachedHeaderImages });
+        res.status(500).json({ error: 'Rarity fetch failed' });
     }
 });
 
+// --- ERROR HANDLING ---
+
 app.use((req, res) => {
     res.status(404).render('pages/errors/404', {
-        req,
-        headerImages: cachedHeaderImages,
-        canonicalPath: req.originalUrl,
-        pagePath: '/404'
+        pagePath: '/404',
+        canonicalPath: req.originalUrl
     });
 });
 
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).render('pages/errors/500', {
-        error: err.toJSON ? err.toJSON() : { message: err.message },
-        headerImages: cachedHeaderImages,
-        canonicalPath: req.originalUrl,
-        pagePath: '/500'
+        error: err.message || err,
+        pagePath: '/500',
+        canonicalPath: req.originalUrl
     });
 });
 
 const port = 80;
-app.listen(port, "0.0.0.0",() => {
-    // console.log(`Frontend is running on port ${port}`);
+app.listen(port, "0.0.0.0", () => {
+    console.log(`Server running on port ${port}`);
 });

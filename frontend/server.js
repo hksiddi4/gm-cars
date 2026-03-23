@@ -260,8 +260,10 @@ app.use((req, res) => {
 
 app.use((err, req, res, next) => {
     console.error(err.stack);
+    const isDev = process.env.NODE_ENV === 'development';
     res.status(500).render('pages/errors/500', {
-        error: err.message || err,
+        error: isDev ? err.stack : "Internal Server Error",
+        showDetails: isDev,
         pagePath: '/500',
         canonicalPath: req.originalUrl
     });

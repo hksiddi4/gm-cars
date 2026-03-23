@@ -12,7 +12,15 @@
             <div class="custom-container">
                 <div class="row">
                     <h1 class="pagetitle">Server Error: 500</h1>
-                    <h4><%= JSON.stringify(error, null, 2) %></h4>
+                    
+                    <% if (showDetails) { %>
+                        <div style="text-align: left; background: #1a1a1a; padding: 20px; border-radius: 8px; margin-top: 20px; border: 1px solid #ff4444;">
+                            <h4 style="color: #ff4444;">Debug Information:</h4>
+                            <pre style="color: #ccc; white-space: pre-wrap; font-size: 0.85rem;"><%= error %></pre>
+                        </div>
+                    <% } else { %>
+                        <h4>Something went wrong on our end. Please try again later.</h4>
+                    <% } %>
                 </div>
             </div>
         </div>

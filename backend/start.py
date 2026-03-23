@@ -2,7 +2,6 @@ import sql
 import flask
 from flask import request, jsonify
 from flask_cors import CORS
-import requests
 from sql import create_connection, execute_read_query, close_connection, Creds
 
 app = flask.Flask(__name__)
@@ -115,7 +114,6 @@ def sort_price():
     order = request.args.get('order')
     page = int(request.args.get('page', 1))
     limit = int(request.args.get('limit', 100))
-    # Validate limit and offset first
     try:
         page = int(page)
         limit = int(limit)
@@ -173,7 +171,6 @@ def sort_price():
         
         join_clause += "\n            JOIN Options opt ON v.vehicle_id = opt.vehicle_id"
         rpo_conditions = {
-            # --- RPO Conditions (restored) ---
             "Z4B": ["modelYear = '2024'", "model = 'CAMARO'", "color_name IN ('PANTHER BLACK MATTE', 'PANTHER BLACK METALLIC TINTCOAT')"],
             "ZL4B": ["modelYear = '2024'", "model = 'CAMARO'", "trim = 'ZL1'", "color_name = 'PANTHER BLACK MATTE'"],
             "X56": ["modelYear = '2024'", "model = 'CAMARO'", "body = 'COUPE'", "trim = 'ZL1'", "transmission_type = 'M6'", "color_name = 'RIPTIDE BLUE METALLIC'", "msrp = '89185'"],
@@ -258,37 +255,64 @@ def sort_price():
     else:
         rpo_clause = f"HAVING COUNT(DISTINCT opt.option_code) = {rpo_n}"
 
-    def get_all_distinct_values():
-        columns = ['modelYear', 'body', 'trim', 'transmission_type', 'model', 'color_name', 'country']
-        sqlStatement = f"""
-            SELECT DISTINCT v.modelYear, v.model, v.body, v.trim, e.engine_type, e.engine_rpo, t.transmission_type, c.color_name, o.country 
-            FROM Vehicles v 
-            {join_clause}
-            {where_clause}
-            GROUP BY v.modelYear, v.model, v.body, v.trim, e.engine_type, e.engine_rpo, t.transmission_type, c.color_name, o.country
-            {rpo_clause}
-        """
+    def get_all_distinct_values(current_where, current_params):
         conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
-        results = execute_read_query(conn, sqlStatement, params)
-        close_connection(conn)
-        distinct_values = {col: set() for col in columns}
-        distinct_engines = set()
-        for result in results:
-            for col in columns:
-                if result[col] is not None:
-                    distinct_values[col].add(result[col])
-            if result['engine_type'] is not None:
-                distinct_engines.add((result['engine_rpo'], result['engine_type']))
-        sorted_values = {
-            'modelYear': sorted(list(distinct_values['modelYear']), reverse=True),
-            **{col: sorted(list(distinct_values[col])) for col in columns if col != 'modelYear'}
-        }
-        sorted_engines = [
-            {'rpo': rpo, 'name': name} 
-            for rpo, name in sorted(list(distinct_engines), key=lambda x: x[0] or "")
-        ]
-        return sorted_values, sorted_engines
-    distinct_values, engine_list = get_all_distinct_values()
+        
+        if not current_where:
+            years = execute_read_query(conn, "SELECT DISTINCT modelYear FROM Vehicles ORDER BY modelYear DESC")
+            models = execute_read_query(conn, "SELECT DISTINCT model FROM Vehicles ORDER BY model ASC")
+            bodies = execute_read_query(conn, "SELECT DISTINCT body FROM Vehicles ORDER BY body ASC")
+            trims = execute_read_query(conn, "SELECT DISTINCT trim FROM Vehicles ORDER BY trim ASC")
+            engines = execute_read_query(conn, "SELECT engine_rpo AS rpo, engine_type AS name FROM Engines ORDER BY engine_rpo ASC")
+            trans = execute_read_query(conn, "SELECT DISTINCT transmission_type FROM Transmissions ORDER BY transmission_type ASC")
+            colors = execute_read_query(conn, "SELECT DISTINCT color_name FROM Colors ORDER BY color_name ASC")
+            countries = execute_read_query(conn, "SELECT DISTINCT country FROM Orders ORDER BY country ASC")
+            close_connection(conn)
+            
+            return {
+                'modelYear': [r['modelYear'] for r in years],
+                'model': [r['model'] for r in models],
+                'body': [r['body'] for r in bodies],
+                'trim': [r['trim'] for r in trims],
+                'transmission_type': [r['transmission_type'] for r in trans],
+                'color_name': [r['color_name'] for r in colors],
+                'country': [r['country'] for r in countries]
+            }, engines
+        
+        else:
+            columns = ['modelYear', 'body', 'trim', 'transmission_type', 'model', 'color_name', 'country']
+            sqlStatement = f"""
+                SELECT v.modelYear, v.model, v.body, v.trim, e.engine_type, e.engine_rpo, 
+                       t.transmission_type, c.color_name, o.country 
+                FROM Vehicles v 
+                {join_clause}
+                {current_where}
+                GROUP BY v.modelYear, v.model, v.body, v.trim, e.engine_type, e.engine_rpo, 
+                         t.transmission_type, c.color_name, o.country
+                {rpo_clause}
+            """
+            results = execute_read_query(conn, sqlStatement, current_params)
+            close_connection(conn)
+
+            distinct_values = {col: set() for col in columns}
+            distinct_engines = set()
+            for result in results:
+                for col in columns:
+                    if result[col] is not None:
+                        distinct_values[col].add(result[col])
+                if result['engine_type'] is not None:
+                    distinct_engines.add((result['engine_rpo'], result['engine_type']))
+            
+            sorted_values = {
+                'modelYear': sorted(list(distinct_values['modelYear']), reverse=True),
+                **{col: sorted(list(distinct_values[col])) for col in columns if col != 'modelYear'}
+            }
+            sorted_engines = [
+                {'rpo': rpo, 'name': name} 
+                for rpo, name in sorted(list(distinct_engines), key=lambda x: x[0] or "")
+            ]
+            return sorted_values, sorted_engines
+    distinct_values, engine_list = get_all_distinct_values(where_clause, params)
 
     year_list = distinct_values['modelYear']
     body_list = distinct_values['body']
@@ -324,11 +348,15 @@ def sort_price():
     query_params = params + [limit, offset]
     viewTable = execute_read_query(conn, select, query_params)
     if where_clause:
-        totalSql = f"SELECT COUNT(*) AS total FROM (\n        SELECT v.vehicle_id FROM Vehicles v {join_clause} \n        {where_clause} \n        GROUP BY v.vehicle_id \n        {rpo_clause}\n) AS filtered_vehicles"
+        totalSql = f"""
+            SELECT COUNT(*) AS total FROM (
+                SELECT v.vehicle_id FROM Vehicles v {join_clause} 
+                {where_clause} 
+                GROUP BY v.vehicle_id {rpo_clause}
+            ) AS filtered_vehicles"""
         total_items = execute_read_query(conn, totalSql, params)[0]['total']
     else:
-        totalSql = f"SELECT COUNT(vehicle_id) AS total FROM Vehicles"
-        total_items = execute_read_query(conn, totalSql)[0]['total']
+        total_items = execute_read_query(conn, "SELECT COUNT(vehicle_id) AS total FROM Vehicles")[0]['total']
     
     close_connection(conn)
 

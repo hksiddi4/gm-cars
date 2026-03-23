@@ -81,25 +81,6 @@ def search_inv():
 
     return jsonify([vehicle])
 
-# Replace with better implementation
-# @app.route('/api/rarity', methods=['POST'])
-# def unique():
-#     data = request.json
-#     options = data.get('Options')
-
-#     if options is not None:
-#         formatted_options = json.dumps(options)
-#         try:
-#             sqlStatement = f"SELECT COUNT(*) AS Count FROM gm WHERE JSON_UNQUOTE(JSON_EXTRACT(allJson, '$.Options')) = '{formatted_options}'"
-#             conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
-#             response = execute_read_query(conn, sqlStatement)
-#             close_connection(conn)
-#             return response
-#         except ValueError:
-#             return jsonify({'error': 'Invalid value'}), 400
-#     else:
-#         return jsonify({'error': 'No value provided'}), 400
-
 @app.route('/vehicles', methods=['GET'])
 def sort_price():
     year = request.args.get('year')
@@ -107,7 +88,7 @@ def sort_price():
     trim = request.args.get('trim')
     engine = request.args.get('engine')
     trans = request.args.get('trans')
-    models = request.args.get('model')
+    models_list = request.args.getlist('model') or request.args.getlist('model[]')
     rpo = request.args.get('rpo')
     color = request.args.get('color')
     country = request.args.get('country')
@@ -143,18 +124,17 @@ def sort_price():
 
     params = []
     if year:
-        conditions.append("modelYear = %s")
+        conditions.append("v.modelYear = %s")
         params.append(year)
-    if models:
-        models_list = [model.strip() for model in models.split(',')]
+    if models_list:
         placeholders = ', '.join(['%s'] * len(models_list))
-        conditions.append(f"model IN ({placeholders})")
+        conditions.append(f"v.model IN ({placeholders})")
         params.extend(models_list)
     if body:
-        conditions.append("body = %s")
+        conditions.append("v.body = %s")
         params.append(body)
     if trim:
-        conditions.append("trim = %s")
+        conditions.append("v.trim = %s")
         params.append(trim)
     if engine:
         conditions.append("e.engine_type = %s")
@@ -175,48 +155,48 @@ def sort_price():
         
         join_clause += "\n            JOIN Options opt ON v.vehicle_id = opt.vehicle_id"
         rpo_conditions = {
-            "Z4B": ["modelYear = '2024'", "model = 'CAMARO'", "color_name IN ('PANTHER BLACK MATTE', 'PANTHER BLACK METALLIC TINTCOAT')"],
-            "ZL4B": ["modelYear = '2024'", "model = 'CAMARO'", "trim = 'ZL1'", "color_name = 'PANTHER BLACK MATTE'"],
-            "X56": ["modelYear = '2024'", "model = 'CAMARO'", "body = 'COUPE'", "trim = 'ZL1'", "transmission_type = 'M6'", "color_name = 'RIPTIDE BLUE METALLIC'", "msrp = '89185'"],
-            "A1Z": ["model = 'CAMARO'", "body = 'COUPE'", "trim = 'ZL1'"],
-            "A1Y": ["model = 'CAMARO'", "body = 'COUPE'", "trim IN ('1SS', '2SS')"],
-            "A1X": ["modelYear IN ('2019', '2020', '2021')", "model = 'CAMARO'", "body = 'COUPE'", "trim IN ('1LT', '2LT', '3LT')"],
-            "H40": ["(modelYear = '2024' AND model = 'CAMARO' AND trim = '2SS' AND color_name = 'RADIANT RED TINTCOAT' AND opt.option_code = 'SL1') OR v.vin IN ('1G1FK1R65R0117449', '1G1FK3D62R0118478')"],
-            "PEH": ["modelYear = '2020'", "model = 'CAMARO'", "body = 'COUPE'", "trim IN ('2SS', 'ZL1')", "transmission_type = 'A10'", "color_name = 'BLACK'"],
-            "Z4Z": ["model = 'CAMARO'", "body = 'CONVERTIBLE'", "trim = '2SS'", "color_name IN ('WILD CHERRY TINTCOAT', 'SUMMIT WHITE', 'SHARKSKIN METALLIC', 'SATIN STEEL GRAY METALLIC')"],
-            "WBL": ["model = 'CAMARO'", "trim NOT IN ('ZL1', '1LS')", "color_name IN ('BLACK', 'SUMMIT WHITE', 'SHARKSKIN METALLIC', 'SATIN STEEL GRAY METALLIC')"],
-            "B2E": ["model = 'CAMARO'", "trim IN ('2LT', '2SS', '3LT')", "modelYear != '2024'", "color_name IN ('BLACK', 'SUMMIT WHITE', 'RAPID BLUE', 'SHARKSKIN METALLIC', 'SATIN STEEL GRAY METALLIC', 'SHOCK')"],
-            "ZCR": ["model = 'CORVETTE STINGRAY'", "modelYear = '2022'", "trim = '3LT'", "(color_name = 'HYPERSONIC GRAY METALLIC' OR color_name = 'ACCELERATE YELLOW METALLIC')"],
-            "ZTK": ["model = 'CORVETTE ZR1'"],
-            "Z07": ["model = 'CORVETTE Z06'"],
-            "Z51": ["model = 'CORVETTE STINGRAY'"],
-            "Y70": ["model IN ('CORVETTE STINGRAY', 'CORVETTE Z06')", "modelYear = '2023'", "trim IN ('3LT', '3LZ')", "(color_name = 'WHITE PEARL METALLIC TRICOAT' OR color_name = 'CARBON FLASH METALLIC')"],
-            "USA": ["model IN ('CORVETTE STINGRAY', 'CORVETTE Z06', 'CORVETTE E-RAY', 'CORVETTE ZR1', 'CORVETTE ZR1X')", "modelYear = '2026'", "trim IN ('3LT', '3LZ')", "(color_name = 'ARCTIC WHITE' OR color_name = 'BLACK')"],
-            "ZRA": ["model = 'CORVETTE ZR1X'", "modelYear = '2026'", "trim = '3LZ'", "color_name = 'BLADE SILVER MATTE'"],
-            "ZLE": ["modelYear = '2023'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "color_name = 'ELECTRIC BLUE'"],
-            "ZLD": ["modelYear = '2023'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "color_name = 'MAVERICK NOIR FROST'"],
-            "ZLG": ["modelYear = '2023'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "color_name = 'RIFT METALLIC'"],
-            "ZLK": ["modelYear = '2024'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "color_name = 'MERCURY SILVER METALLIC'"],
-            "ZLJ": ["modelYear = '2024'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "color_name = 'BLACK RAVEN'"],
-            "ZLR": ["modelYear = '2024'", "model = 'CT4'", "trim = 'V-SERIES BLACKWING'", "color_name = 'VELOCITY RED'"],
-            "ZLZ4": ["modelYear = '2025'", "model ='CT4'", "trim = 'V-SERIES BLACKWING'", "color_name = 'MAGNUS METAL FROST'"],
-            "ZLZ5": ["modelYear = '2025'", "model ='CT5'", "trim = 'V-SERIES BLACKWING'", "color_name = 'MAGNUS METAL FROST'"],
-            "ABQ": ["modelYear = '2023'", "model = 'CT5'", "trim = 'V-SERIES BLACKWING'", "msrp > '118000'"],
-            "ZLT": ["modelYear = '2024'", "model = 'CT5'", "trim = 'V-SERIES BLACKWING'", "opt.option_code IN ('ZLT', 'ZLV')"],
-            "Z6X": ["model IN ('HUMMER EV SUV', 'HUMMER EV PICKUP')"],
-            "WFP": ["modelYear = '2024'", "model = 'HUMMER EV SUV'", "trim = '3X'", "color_name = 'NEPTUNE BLUE MATTE'"],
+            "Z4B": ["v.modelYear = '2024'", "v.model = 'CAMARO'", "c.color_name IN ('PANTHER BLACK MATTE', 'PANTHER BLACK METALLIC TINTCOAT')"],
+            "ZL4B": ["v.modelYear = '2024'", "v.model = 'CAMARO'", "v.trim = 'ZL1'", "c.color_name = 'PANTHER BLACK MATTE'"],
+            "X56": ["v.modelYear = '2024'", "v.model = 'CAMARO'", "v.body = 'COUPE'", "v.trim = 'ZL1'", "t.transmission_type = 'M6'", "c.color_name = 'RIPTIDE BLUE METALLIC'", "v.msrp = '89185'"],
+            "A1Z": ["v.model = 'CAMARO'", "v.body = 'COUPE'", "v.trim = 'ZL1'"],
+            "A1Y": ["v.model = 'CAMARO'", "v.body = 'COUPE'", "v.trim IN ('1SS', '2SS')"],
+            "A1X": ["v.modelYear IN ('2019', '2020', '2021')", "v.model = 'CAMARO'", "v.body = 'COUPE'", "v.trim IN ('1LT', '2LT', '3LT')"],
+            "H40": [f"(v.modelYear = '2024' AND v.model = 'CAMARO' AND v.trim = '2SS' AND c.color_name = 'RADIANT RED TINTCOAT' AND opt.option_code = 'SL1') OR v.vin IN ('1G1FK1R65R0117449', '1G1FK3D62R0118478')"],
+            "PEH": ["v.modelYear = '2020'", "v.model = 'CAMARO'", "v.body = 'COUPE'", "v.trim IN ('2SS', 'ZL1')", "t.transmission_type = 'A10'", "c.color_name = 'BLACK'"],
+            "Z4Z": ["v.model = 'CAMARO'", "v.body = 'CONVERTIBLE'", "v.trim = '2SS'", "c.color_name IN ('WILD CHERRY TINTCOAT', 'SUMMIT WHITE', 'SHARKSKIN METALLIC', 'SATIN STEEL GRAY METALLIC')"],
+            "WBL": ["v.model = 'CAMARO'", "v.trim NOT IN ('ZL1', '1LS')", "c.color_name IN ('BLACK', 'SUMMIT WHITE', 'SHARKSKIN METALLIC', 'SATIN STEEL GRAY METALLIC')"],
+            "B2E": ["v.model = 'CAMARO'", "v.trim IN ('2LT', '2SS', '3LT')", "v.modelYear != '2024'", "c.color_name IN ('BLACK', 'SUMMIT WHITE', 'RAPID BLUE', 'SHARKSKIN METALLIC', 'SATIN STEEL GRAY METALLIC', 'SHOCK')"],
+            "ZCR": ["v.model = 'CORVETTE STINGRAY'", "v.modelYear = '2022'", "v.trim = '3LT'", "(c.color_name = 'HYPERSONIC GRAY METALLIC' OR c.color_name = 'ACCELERATE YELLOW METALLIC')"],
+            "ZTK": ["v.model = 'CORVETTE ZR1'"],
+            "Z07": ["v.model = 'CORVETTE Z06'"],
+            "Z51": ["v.model = 'CORVETTE STINGRAY'"],
+            "Y70": ["v.model IN ('CORVETTE STINGRAY', 'CORVETTE Z06')", "v.modelYear = '2023'", "v.trim IN ('3LT', '3LZ')", "(c.color_name = 'WHITE PEARL METALLIC TRICOAT' OR c.color_name = 'CARBON FLASH METALLIC')"],
+            "USA": ["v.model IN ('CORVETTE STINGRAY', 'CORVETTE Z06', 'CORVETTE E-RAY', 'CORVETTE ZR1', 'CORVETTE ZR1X')", "v.modelYear = '2026'", "v.trim IN ('3LT', '3LZ')", "(c.color_name = 'ARCTIC WHITE' OR c.color_name = 'BLACK')"],
+            "ZRA": ["v.model = 'CORVETTE ZR1X'", "v.modelYear = '2026'", "v.trim = '3LZ'", "c.color_name = 'BLADE SILVER MATTE'"],
+            "ZLE": ["v.modelYear = '2023'", "v.model = 'CT4'", "v.trim = 'V-SERIES BLACKWING'", "c.color_name = 'ELECTRIC BLUE'"],
+            "ZLD": ["v.modelYear = '2023'", "v.model = 'CT4'", "v.trim = 'V-SERIES BLACKWING'", "c.color_name = 'MAVERICK NOIR FROST'"],
+            "ZLG": ["v.modelYear = '2023'", "v.model = 'CT4'", "v.trim = 'V-SERIES BLACKWING'", "c.color_name = 'RIFT METALLIC'"],
+            "ZLK": ["v.modelYear = '2024'", "v.model = 'CT4'", "v.trim = 'V-SERIES BLACKWING'", "c.color_name = 'MERCURY SILVER METALLIC'"],
+            "ZLJ": ["v.modelYear = '2024'", "v.model = 'CT4'", "v.trim = 'V-SERIES BLACKWING'", "c.color_name = 'BLACK RAVEN'"],
+            "ZLR": ["v.modelYear = '2024'", "v.model = 'CT4'", "v.trim = 'V-SERIES BLACKWING'", "c.color_name = 'VELOCITY RED'"],
+            "ZLZ4": ["v.modelYear = '2025'", "v.model ='CT4'", "v.trim = 'V-SERIES BLACKWING'", "c.color_name = 'MAGNUS METAL FROST'"],
+            "ZLZ5": ["v.modelYear = '2025'", "v.model ='CT5'", "v.trim = 'V-SERIES BLACKWING'", "c.color_name = 'MAGNUS METAL FROST'"],
+            "ABQ": ["v.modelYear = '2023'", "v.model = 'CT5'", "v.trim = 'V-SERIES BLACKWING'", "v.msrp > '118000'"],
+            "ZLT": ["v.modelYear = '2024'", "v.model = 'CT5'", "v.trim = 'V-SERIES BLACKWING'", "opt.option_code IN ('ZLT', 'ZLV')"],
+            "Z6X": ["v.model IN ('HUMMER EV SUV', 'HUMMER EV PICKUP')"],
+            "WFP": ["v.modelYear = '2024'", "v.model = 'HUMMER EV SUV'", "v.trim = '3X'", "c.color_name = 'NEPTUNE BLUE MATTE'"],
         }
 
         if h40_selected:
             vin_filters = []
             if trim:
-                vin_filters.append(f"trim = '{trim}'")
+                vin_filters.append(f"v.trim = '{trim}'")
             if color:
-                vin_filters.append(f"color_name = '{color}'")
+                vin_filters.append(f"c.color_name = '{color}'")
             vin_extra = " AND " + " AND ".join(vin_filters) if vin_filters else ""
             rpo_conditions["H40"] = [
-                f"((modelYear = '2024' AND model = 'CAMARO' AND trim = '2SS' "
-                f"AND color_name = 'RADIANT RED TINTCOAT' AND opt.option_code = 'SL1') "
+                f"((v.modelYear = '2024' AND v.model = 'CAMARO' AND v.trim = '2SS' "
+                f"AND c.color_name = 'RADIANT RED TINTCOAT' AND opt.option_code = 'SL1') "
                 f"OR (v.vin IN ('1G1FK1R65R0117449','1G1FK3D62R0118478'){vin_extra}))"
             ]
 
@@ -326,13 +306,14 @@ def sort_price():
     color_list = distinct_values['color_name']
     country_list = distinct_values['country']
 
-    if rpo in ["ZL4B", "X56", "PEH"] and order not in ["ASC", "DESC"]:
-        order_clause = "ORDER BY SUBSTRING(vin, -6)"
+    if any(code in ["ZL4B", "X56", "PEH"] for code in rpo_list) and order not in ["ASC", "DESC"]:
+        order_clause = "ORDER BY SUBSTRING(v.vin, -6)"
     elif order in ["ASC", "DESC"]:
-        order_clause = f"ORDER BY msrp {'ASC' if order == 'ASC' else 'DESC'}"
+        order_clause = f"ORDER BY v.msrp {'ASC' if order == 'ASC' else 'DESC'}"
     elif order in ["vinASC", "vinDESC"]:
-        order_clause = f"ORDER BY SUBSTRING(vin, -6) {'DESC' if order == 'vinDESC' else 'ASC'}, modelYear ASC"
-    else: order_clause = "ORDER BY v.vehicle_id DESC"
+        order_clause = f"ORDER BY SUBSTRING(v.vin, -6) {'DESC' if order == 'vinDESC' else 'ASC'}, v.modelYear ASC"
+    else: 
+        order_clause = "ORDER BY v.vehicle_id DESC"
 
     conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
     select = f"""
@@ -563,6 +544,25 @@ def about_stats():
 
     stats_map = {r['model_group'].replace(' ', '_'): r['latest_date'] for r in results}
     return jsonify(stats_map)
+
+# Replace with better implementation
+# @app.route('/api/rarity', methods=['POST'])
+# def unique():
+#     data = request.json
+#     options = data.get('Options')
+
+#     if options is not None:
+#         formatted_options = json.dumps(options)
+#         try:
+#             sqlStatement = f"SELECT COUNT(*) AS Count FROM gm WHERE JSON_UNQUOTE(JSON_EXTRACT(allJson, '$.Options')) = '{formatted_options}'"
+#             conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
+#             response = execute_read_query(conn, sqlStatement)
+#             close_connection(conn)
+#             return response
+#         except ValueError:
+#             return jsonify({'error': 'Invalid value'}), 400
+#     else:
+#         return jsonify({'error': 'No value provided'}), 400
 
 #========================= View Pages #=========================
 

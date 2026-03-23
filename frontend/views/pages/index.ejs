@@ -2,8 +2,6 @@
 <html lang="en">
 <head>
     <%- include('../partials/head'); %>
-    <meta property="og:url" content="https://www.gmbuildcounts.com/">
-    <link rel="canonical" href="https://gmbuildcounts.com/">
     <title>GM Build Counts</title>
     <%- include('../partials/analytics'); %>
 </head>
@@ -12,34 +10,47 @@
     <div class="custom-container">
         <div class="content">
             <div class="container-fluid">
-                <h2 class="pt-4" id="i-link"><a href="/vehicles"><i class="bi bi-car-front-fill me-1"></i>Vehicles</a></h2>
+                <h1 class="pt-4">GM Build Counts & Statistics Database</h1>
+                <p class="lead">Production & Statistics extracted from Window Stickers with vehicle image generation through VIN based RPO codes.</p>
+                <hr>
+                <h2 class="i-link"><a href="/vehicles"><i class="bi bi-car-front-fill me-1"></i>Vehicles</a></h2>
                 <p>
-                    Some filters may take some time to complete, wait for one filter to finish before selecting the next.
-                    <br>Search for RPO codes to filter at the top of the table.
+                    Search for RPO codes to filter at the top of the table.
                     <br>VIN and MSRP column headers will sort in either direction.
-                    <br>Highlighted VIN's are Pre-Production vehicles with RPO code <span class="highlight">OAR</span>.
-                    <br>Window Stickers are only available after May 17, 2019. The majority of 2019 are unavailable, with a few 2020 not appearing.
+                    <br>Highlighted VINs are Pre-Production vehicles with RPO code <span class="highlight">OAR</span>.
+                    <br>Window Stickers are only available typically after May 16, 2019. The majority of 2019 are unavailable, with a few early 2020 not appearing.
                 </p>
-                <h4>Individual Vehicle's</h2>
-                <p>Select a vehicle row to view further information.</p>
+                <h4>Individual Vehicles</h2>
+                <p>Select a vehicle to view further information.</p>
                 <img src="../../img/index/vehicleTable.png" class="img-fluid mb-2" alt="Vehicle Table">
                 <img src="../../img/index/individualVeh.png" class="img-fluid" alt="Individual Vehicle">
-                <p class="pt-3">Click a RPO on the table to search for all vehicles with that RPO.</p>
-                <h2 id="i-link"><a href="/stats"><i class="bi bi-list-ol me-1"></i>Stats</a></h2>
-                <p>Statistics regarding vehicle data.</p>
-                <h2 id="i-link"><a href="/wheels"><i class="bi bi-fan me-1"></i>Wheels</a></h2>
+                <p class="pt-3">
+                    Images are generated based on the vehicle's RPO codes.
+                    <br>Click a RPO on the cards or table to return all vehicles with that RPO code.
+                </p>
+                <hr>
+                <h2 class="i-link"><a href="/stats"><i class="bi bi-list-ol me-1"></i>Stats</a></h2>
+                <p>Statistics and charts on vehicle data.</p>
+                <hr>
+                <h2 class="i-link"><a href="/wheels"><i class="bi bi-fan me-1"></i>Wheels</a></h2>
                 <p>
                     Images & Descriptions of wheels for a given model.
                     <br>Some models are being worked on.
                 </p>
-                <h2 id="i-link"><a href="/rpos"><i class="bi bi-database-fill me-1"></i>RPOs</a></h2>
+                <hr>
+                <h2 class="i-link"><a href="/rpos"><i class="bi bi-database-fill me-1"></i>RPOs</a></h2>
                 <p>
                     Images & Descriptions of RPOs for a given model. Only RPOs with official images are listed.
                     <br>Models are being worked on.
                 </p>
+                <hr>
+                <h2 class="i-link"><a href="/about"><i class="bi bi-info-lg me-1"></i>About</a></h2>
+                <p>
+                    Progress & last window sticker creation date for each model/year.
+                </p>
             </div>
         </div>
-        <%- include('../partials/footer'); %>
     </div>
+    <%- include('../partials/footer'); %>
 </body>
 </html>

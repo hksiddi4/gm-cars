@@ -24,7 +24,8 @@ CREATE TABLE IF NOT EXISTS staging_allGM (
 -- Engines Table
 CREATE TABLE Engines (
     engine_id SERIAL PRIMARY KEY,
-    engine_type VARCHAR(48) UNIQUE
+    engine_type VARCHAR(48) UNIQUE,
+    engine_rpo VARCHAR(3) UNIQUE
 );
 
 -- Transmissions Table
@@ -51,7 +52,7 @@ CREATE TABLE Dealers (
     dealer_id SERIAL PRIMARY KEY,
     dealer_name VARCHAR(64),
     location VARCHAR(64),
-    sitedealer_code VARCHAR(5)
+    sitedealer_code VARCHAR(5),
     UNIQUE KEY idx_dealer_unique (dealer_name, location, sitedealer_code)
 );
 
@@ -103,7 +104,7 @@ CREATE TABLE SpecialEditions (
     special_desc VARCHAR(64)
 );
 
--- INSERT DATA INTO TABLES --
+-- INSERT DATA INTO TABLES ------------------------------------------------------------------------------------------------------------------
 
 -- Insert Engine Types
 INSERT INTO Engines (engine_type)
@@ -137,6 +138,7 @@ SELECT DISTINCT
     location, 
     JSON_UNQUOTE(JSON_EXTRACT(allJson, '$.sitedealer_code')) AS sitedealer_code
 FROM staging_allGM;
+SELECT * FROM Dealers;
 
 -- Insert MMC Codes
 INSERT IGNORE INTO MMC_Codes (mmc_code)
@@ -178,23 +180,7 @@ SELECT vin, modelYear, model, body, trim,
     (SELECT order_id FROM Orders WHERE order_number = ordernum) AS order_id
 FROM staging_allGM
 WHERE vin NOT IN (SELECT vin FROM Vehicles);
-
-select * from Vehicles where vin = '1G1F91R68R0100043';
-SELECT v.vin, v.modelYear, v.model, v.body, v.trim,
-            e.engine_type, t.transmission_type, d.drivetrain_type,
-            c.color_name, v.msrp, o.country,
-            GROUP_CONCAT(DISTINCT se.special_desc ORDER BY se.special_desc ASC SEPARATOR ', ') AS special_desc
-        FROM Vehicles v
-            JOIN Engines e ON v.engine_id = e.engine_id
-            JOIN Transmissions t ON v.transmission_id = t.transmission_id
-            JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id
-            JOIN Colors c ON v.color_id = c.color_id
-            JOIN Orders o ON v.order_id = o.order_id
-            LEFT JOIN SpecialEditions se ON v.vehicle_id = se.vehicle_id
-        where vin = '1G1F91R68R0100043'
-        GROUP BY v.vin, v.modelYear, v.model, v.body, v.trim,
-                e.engine_type, t.transmission_type, d.drivetrain_type,
-                c.color_name, v.msrp, o.country;
+Select * from Vehicles;
 
 -- Insert Options with error handling
 SET GLOBAL innodb_buffer_pool_size = 10 * 1024 * 1024 * 1024;  -- 10GB in bytes
@@ -238,6 +224,8 @@ CROSS JOIN (
     UNION ALL SELECT 'ZTK', 'ZTK Track Performance Package'
     UNION ALL SELECT 'Z6X', 'Extreme Off-Road Package'
     UNION ALL SELECT 'WFP', 'Omega Edition'
+	UNION ALL SELECT 'ZRA', 'Quail Silver Limited Edition'
+	UNION ALL SELECT 'USA', 'Stars & Steel Limited Edition'
 ) AS special_map ON opt.option_code = special_map.rpo_code
 WHERE NOT EXISTS (
     SELECT 1
@@ -245,6 +233,30 @@ WHERE NOT EXISTS (
     WHERE se.vehicle_id = v.vehicle_id 
     AND se.special_desc = special_map.special_desc
 );
+
+-- Add ZLZ dual-meaning special edition logic
+INSERT IGNORE INTO SpecialEditions (vehicle_id, special_desc)
+SELECT 
+    v.vehicle_id,
+    CASE
+        WHEN v.model = 'CT4' AND opt.option_code = 'ZLZ' THEN 'Petit Pataud Special Edition'
+        WHEN v.model = 'CT5' AND opt.option_code = 'ZLZ' THEN 'Le Monstre Special Edition'
+    END AS special_desc
+FROM Vehicles v
+JOIN Options opt ON v.vehicle_id = opt.vehicle_id
+WHERE opt.option_code = 'ZLZ'
+  AND v.model IN ('CT4','CT5')
+  AND NOT EXISTS (
+        SELECT 1
+        FROM SpecialEditions se
+        WHERE se.vehicle_id = v.vehicle_id
+          AND se.special_desc = 
+                CASE
+                    WHEN v.model = 'CT4' THEN 'Petit Pataud Special Edition'
+                    ELSE 'Le Monstre Special Edition'
+                END
+    );
+
 select * from SpecialEditions;
 
 WITH OrderedEditions AS (
@@ -368,7 +380,6 @@ UPDATE Colors SET rpo_code = 'GBA' WHERE color_name = 'ONYX BLACK';
 UPDATE Colors SET rpo_code = 'GAI' WHERE color_name = 'DEEP OCEAN METALLIC';
 UPDATE Colors SET rpo_code = 'GAB' WHERE color_name = 'DARK EMBER TINTCOAT';
 UPDATE Colors SET rpo_code = 'GLG' WHERE color_name = 'MOONLIGHT MATTE';
--- NEW
 UPDATE Colors SET rpo_code = 'GSJ' WHERE color_name = 'FLARE METALLIC';
 UPDATE Colors SET rpo_code = 'GAB' WHERE color_name = 'BLACK CHERRY TINTCOAT';
 UPDATE Colors SET rpo_code = 'GLG' WHERE color_name = 'MIDNIGHT STEEL FROST';
@@ -378,5 +389,66 @@ UPDATE Colors SET rpo_code = 'GAG' WHERE color_name = 'MONARCH ORANGE';
 UPDATE Colors SET rpo_code = 'GBL' WHERE color_name = 'MAGNUS METAL FROST';
 UPDATE Colors SET rpo_code = 'GNO' WHERE color_name = 'LUNA METALLIC';
 UPDATE Colors SET rpo_code = 'GNR' WHERE color_name = 'ADOBE FROST';
-UPDATE Colors SET rpo_code = 'GAI' WHERE color_name = 'DEEP SPACE METALLIC';
-UPDATE Colors SET rpo_code = 'N/A' WHERE color_name = 'BAEGE METALLIC';
+UPDATE Colors SET rpo_code = 'GAI' WHERE color_name = 'GRAPHITE BLUE METALLIC';
+UPDATE Colors SET rpo_code = 'GAG' WHERE color_name = 'SOLAR ORANGE';
+UPDATE Colors SET rpo_code = 'GBW' WHERE color_name = 'TYPHOON METALLIC';
+UPDATE Colors SET rpo_code = 'GAE' WHERE color_name = 'DRIFT METALLIC';
+UPDATE Colors SET rpo_code = 'GBL' WHERE color_name = 'MAGNUS METAL FROST';
+UPDATE Colors SET rpo_code = 'G4Z' WHERE color_name = 'ROSWELL GREEN METALLIC';
+UPDATE Colors SET rpo_code = 'GMU' WHERE color_name = 'BRONZE DUNE METALLIC';
+UPDATE Colors SET rpo_code = 'G6M' WHERE color_name = 'GALACTIC GRAY METALLIC';
+UPDATE Colors SET rpo_code = 'GBD' WHERE color_name = 'AEGEAN STONE';
+UPDATE Colors SET rpo_code = 'GXP' WHERE color_name = 'DEEP SEA METALLIC';
+UPDATE Colors SET rpo_code = 'G5D' WHERE color_name = 'LATTE METALLIC';
+
+UPDATE Colors SET rpo_code = 'GRF' WHERE color_name = 'BLADE SILVER MATTE';
+
+UPDATE Colors SET rpo_code = 'G' WHERE color_name = '';
+SELECT * FROM Colors;
+
+-- Set Engine RPO
+select * from Engines;
+update Engines SET engine_rpo = "ETI" WHERE engine_id = 15;
+
+select * from Vehicles;
+
+-- Find RPO codes by model for gm-rpo-images script
+SELECT DISTINCT
+    o.option_code AS rpo_code
+FROM 
+    Options o
+JOIN 
+    Vehicles v ON o.vehicle_id = v.vehicle_id
+WHERE 
+    v.model = 'CAMARO'
+ORDER BY 
+    o.option_code;
+    
+SELECT 
+    v.vehicle_id,
+    v.vin,
+    v.modelYear,
+    v.model,
+    v.trim,
+    e.engine_type,
+    t.transmission_type,
+    d.drivetrain_type,
+    c.color_name,
+    v.msrp,
+    dl.dealer_name,
+    o.order_number
+FROM Vehicles v
+LEFT JOIN Engines e ON v.engine_id = e.engine_id
+LEFT JOIN Transmissions t ON v.transmission_id = t.transmission_id
+LEFT JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id
+LEFT JOIN Colors c ON v.color_id = c.color_id
+LEFT JOIN Dealers dl ON v.dealer_id = dl.dealer_id
+LEFT JOIN Orders o ON v.order_id = o.order_id
+ORDER BY v.vehicle_id ASC
+LIMIT 20;
+
+SELECT v.model, COUNT(*) as added_count
+FROM Vehicles v
+JOIN Orders o ON v.order_id = o.order_id
+WHERE o.creation_date = (SELECT MAX(creation_date) FROM Orders)
+GROUP BY v.model;

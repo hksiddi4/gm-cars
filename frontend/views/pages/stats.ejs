@@ -3,13 +3,12 @@
 <head>
     <%- include('../partials/head'); %>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="canonical" href="https://gmbuildcounts.com/stats">
     <title>Stats</title>
     <%- include('../partials/analytics'); %>
 </head>
 <body>
     <%- include('../partials/header'); %>
-    <div class="container" style="max-width: 75%;">
+    <div class="container">
         <div class="row pt-4">
             <div class="col">
                 <h1 style="font-weight: bold;">Statistics</h1>
@@ -20,7 +19,8 @@
                 <select id="selectedStats" class="form-select small-dropdown <%= category ? 'active-filter' : '' %>">
                     <option value="">Category</option>
                     <option value="color" <% if (category === 'color') { %> selected <% } %>>Color</option>
-                    <!-- <option value="msrp" <% if (category === 'msrp') { %> selected <% } %>>MSRP</option> -->
+                    <option value="engine" <% if (category === 'engine') { %> selected <% } %>>Engine</option>
+                    <option value="production" <% if (category === 'production') { %> selected <% } %>>Production</option>
                 </select>
             </div>
             <% if (category === 'color') { %>
@@ -80,6 +80,67 @@
                 </div>
             </div>
             <% } %>
+            <% if (category === 'engine') { %>
+            <div class="d-flex flex-wrap gap-2 mb-3 w-100">
+                <div class="statsDropdown">
+                    <select id="filterYear" class="form-select small-dropdown <%= selectedYear ? 'active-filter' : '' %>">
+                        <option value="">Year</option>
+                        <% year_list.forEach(y => { %>
+                        <option value="<%= y %>" <%= selectedYear == y ? 'selected' : '' %>><%= y %></option>
+                        <% }) %>
+                    </select>
+                </div>
+                <%
+                    const hasCorvette = model_list.some(m => m.startsWith('CORVETTE'));
+                    const combinedModels = hasCorvette ? ['CORVETTE (ALL)', ...model_list] : model_list;
+                    combinedModels.sort((a, b) => a.localeCompare(b));
+                %>
+                <div class="statsDropdown">
+                    <select id="filterModel" class="form-select small-dropdown <%= selectedModel ? 'active-filter' : '' %>">
+                        <option value="">Model</option>
+                        <% combinedModels.forEach(m => { %>
+                            <option value="<%= m %>" <%= selectedModel === m ? 'selected' : '' %>><%= m %></option>
+                        <% }) %>
+                    </select>
+                </div>
+                <div class="statsDropdown">
+                    <select id="filterBody" class="form-select small-dropdown <%= selectedBody ? 'active-filter' : '' %>">
+                        <option value="">Body</option>
+                        <% body_list.forEach(y => { %>
+                        <option value="<%= y %>" <%= selectedBody == y ? 'selected' : '' %>><%= y %></option>
+                        <% }) %>
+                    </select>
+                </div>
+                <div class="statsDropdown">
+                    <select id="filterTrim" class="form-select small-dropdown <%= selectedTrim ? 'active-filter' : '' %>">
+                        <option value="">Trim</option>
+                        <% trim_list.forEach(m => { %>
+                        <option value="<%= m %>" <%= selectedTrim == m ? 'selected' : '' %>><%= m %></option>
+                        <% }) %>
+                    </select>
+                </div>
+                <div class="statsDropdown">
+                    <select id="filterTrans" class="form-select small-dropdown <%= selectedTrans ? 'active-filter' : '' %>">
+                        <option value="">Trans</option>
+                        <% trans_list.forEach(m => { %>
+                        <option value="<%= m %>" <%= selectedTrans == m ? 'selected' : '' %>><%= m %></option>
+                        <% }) %>
+                    </select>
+                </div>
+            </div>
+            <% } %>
+            <% if (category === 'production') { %>
+            <div class="d-flex flex-wrap gap-2 mb-3 w-100">
+                <div class="statsDropdown">
+                    <select id="filterYear" class="form-select small-dropdown <%= selectedYear ? 'active-filter' : '' %>">
+                        <option value="" disabled>Year</option>
+                        <% year_list.forEach(y => { %>
+                        <option value="<%= y %>" <%= selectedYear == y ? 'selected' : '' %>><%= y %></option>
+                        <% }) %>
+                    </select>
+                </div>
+            </div>
+            <% } %>
         </div>
         <% if (selectedYear === '2019') { %>
             <div style="color: #cc6666; margin-bottom: 15px;">
@@ -92,54 +153,71 @@
                 <canvas id="barChart"></canvas>
             </div>
             <p id="totalCount"></p>
-            <div id="top-scroll-wrapper">
-                <div id="top-scroll"></div>
-            </div>
-            <div class="table-responsive" id="bottom-scroll-wrapper">
-                <table class="table-veh table-hover border shadow" id="colorTable">
-                    <thead>
-                        <tr>
-                            <th scope="col">
-                                Rank
-                            </th>
-                            <th scope="col">
-                                RPO
-                            </th>
-                            <th scope="col">
-                                Count
-                            </th>
-                            <th scope="col">
-                                Names
-                            </th>
-                            <th scope="col">
-                                % of Total
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% stats_data.forEach(function(data) { %>
+
+            <% if (category !== 'production') { %>
+                <div id="top-scroll-wrapper">
+                    <div id="top-scroll"></div>
+                </div>
+                <div class="table-responsive" id="bottom-scroll-wrapper">
+                    <table class="table-stats-veh table-hover border shadow" id="colorTable">
+                        <thead>
                             <tr>
-                                <td scope="row"><%= data.rank %></td>
-                                <td scope="row" style="white-space: nowrap; text-align: left;">
-                                    <!-- Apply color RPO on SQL to Fix grouped colors -->
-                                    <img id="sample" src="../../img/extColors/<%= data.rpo_code ? data.rpo_code : 'default' %>.png" alt="Color Code: <%= data.rpo_code %>" width="20" height="20" style="margin-right: 8px; border-radius: 50%;" onerror="this.onerror=null; this.src='../../img/extColors/default.png';">
-                                    <%= data.rpo_code %>
-                                </td>
-                                <td scope="row"><%= data.total_count %></td>
-                                <td scope="row" style="text-align: left;">
-                                <% data.color_names.split(',').forEach((name, i) => { %>
-                                    <a class="color-link" href="/vehicles?color=<%= encodeURIComponent(name.trim()) %>"><%= name.trim() %></a><%= i < data.color_names.split(',').length - 1 ? ', ' : '' %>
-                                <% }) %>
-                                </td>
-                                <td scope="row"><%= data.percent %>%</td>
+                                <th scope="col">Rank</th>
+                                <th scope="col">
+                                    <%= category === 'engine' ? 'Engine' : 'RPO' %>
+                                </th>
+                                <th scope="col">Count</th>
+                                <% if (category === 'color') { %>
+                                    <th scope="col">Names</th>
+                                <% } %>
+                                <th scope="col">% of Total</th>
                             </tr>
-                        <% }) %>
-                    </tbody>
-                </table>
-            </div>
+                        </thead>
+                        <tbody>
+                            <% stats_data.forEach(function(data) { %>
+                                <tr>
+                                    <td scope="row"><%= data.rank %></td>
+                                    <td scope="row" style="white-space: nowrap; text-align: left;">
+                                        <% if (category === 'color') { %>
+                                            <img src="../../img/extColors/<%= data.rpo_code %>.png" 
+                                                onerror="this.src='../../img/extColors/default.png';" 
+                                                width="20" height="20" style="margin-right: 8px; border-radius: 50%;">
+                                            <%= data.label %>
+                                        <% } else if (category === 'engine') { %>
+                                            <a class="color-link" href="/vehicles?engine=<%= encodeURIComponent(data.engine_type) %>">
+                                                <% if (data.engine_rpo) { %>
+                                                    <strong><%= data.engine_rpo %></strong> - 
+                                                <% } %>
+                                                <%= data.engine_type %>
+                                            </a>
+                                        <% } %>
+                                    </td>
+                                    <td scope="row"><%= data.total_count %></td>
+                                    <% if (category === 'color') { %>
+                                        <td scope="row" style="text-align: left;">
+                                        <% if (data.color_names) { %>
+                                            <% data.color_names.split(',').forEach((name, i) => { 
+                                                const trimmedName = name.trim();
+                                                let linkHref = "/vehicles?color=" + encodeURIComponent(trimmedName);
+                                                if (data.rpo_code && data.rpo_code !== trimmedName) {
+                                                    linkHref += "&rpo=" + encodeURIComponent(data.rpo_code);
+                                                }
+                                            %>
+                                                <a class="color-link" href="<%= linkHref %>"><%= trimmedName %></a><%= i < data.color_names.split(',').length - 1 ? ', ' : '' %>
+                                            <% }) %>
+                                        <% } %>
+                                        </td>
+                                    <% } %>
+                                    <td scope="row"><%= data.percent %>%</td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            <% } %>
         <% } %>
-        <%- include('../partials/footer'); %>
     </div>
+    <%- include('../partials/footer'); %>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const statsSelect = document.getElementById('selectedStats');
@@ -156,9 +234,11 @@
         <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
         <script>
             const stats_data = <%- JSON.stringify(stats_data) %>;
-            console.log(stats_data);
-
+            const currentCategory = '<%= category %>';
+            const displayYear = '<%= selectedYear %>' || '2026';
+            
             document.addEventListener('DOMContentLoaded', function () {
+                
                 const filters = ['selectedStats', 'filterYear', 'filterModel', 'filterBody', 'filterTrim', 'filterEngine', 'filterTrans'];
                 const url = new URL(window.location.href);
 
@@ -192,126 +272,157 @@
                 });
 
                 const totalCount = stats_data.reduce((sum, item) => {
-                    const count = Number(item.total_count.replace(/,/g, ''));
-                    return sum + (isNaN(count) ? 0 : count);
+                    const count = Number(String(item.total_count).replace(/,/g, '')) || 0;
+                    return sum + count;
                 }, 0);
-                const totalCountText = document.getElementById('totalCount');
-                totalCountText.textContent = `Retrieved: ${totalCount.toLocaleString()} vehicles`;
-                
-                // SCROLL SYNC
+                const countEl = document.getElementById('totalCount');
+                if (countEl) countEl.textContent = `Retrieved: ${totalCount.toLocaleString()} vehicles`;
+
+                // 4. Scroll Sync Logic (Only if table exists)
                 const topScroll = document.getElementById('top-scroll-wrapper');
                 const bottomScroll = document.getElementById('bottom-scroll-wrapper');
-
                 if (topScroll && bottomScroll) {
                     let isSyncingTop = false;
                     let isSyncingBottom = false;
-
                     topScroll.addEventListener('scroll', () => {
                         if (!isSyncingTop) {
-                        isSyncingBottom = true;
-                        bottomScroll.scrollLeft = topScroll.scrollLeft;
+                            isSyncingBottom = true;
+                            bottomScroll.scrollLeft = topScroll.scrollLeft;
                         }
                         isSyncingTop = false;
                     });
-
                     bottomScroll.addEventListener('scroll', () => {
                         if (!isSyncingBottom) {
-                        isSyncingTop = true;
-                        topScroll.scrollLeft = bottomScroll.scrollLeft;
+                            isSyncingTop = true;
+                            topScroll.scrollLeft = bottomScroll.scrollLeft;
                         }
                         isSyncingBottom = false;
                     });
-
-                    const table = document.querySelector('.table-veh');
+                    const table = document.querySelector('.table-stats-veh');
                     if (table) {
                         requestAnimationFrame(() => {
-                            document.getElementById('top-scroll').style.width = table.scrollWidth + 'px';
+                            const scrollInner = document.getElementById('top-scroll');
+                            if (scrollInner) scrollInner.style.width = table.scrollWidth + 'px';
                         });
                     }
                 }
 
-                let rawData = stats_data.map(data => ({
-                    label: data.rpo_code || '',
-                    count: Number(String(data.total_count).replace(/,/g, '')) || 0,
-                    color_names: data.color_names || ''
-                }));
-
-                rawData.sort((a, b) => a.count - b.count);
-                rawData = rawData.slice(0, 20);
-
-                const labels = rawData.map(d => d.label);
-                const counts = rawData.map(d => d.count);
-
                 const ctx = document.getElementById('barChart').getContext('2d');
+                let config;
 
-                Chart.register(ChartDataLabels);
+                if (currentCategory === 'production') {
+                    // 1. Find the first and last production days in the returned data
+                    const sortedData = stats_data.filter(item => item.label !== null).sort((a, b) => new Date(a.label) - new Date(b.label));
+                    
+                    if (sortedData.length > 0) {
+                        const startDate = new Date(sortedData[0].label + 'T00:00:00');
+                        const endDate = new Date(sortedData[sortedData.length - 1].label + 'T00:00:00');
+                        console.log('Start Date:', startDate);
+                        
+                        // 2. Generate the labels for every day in that specific production window
+                        const allDaysInRange = [];
+                        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+                            allDaysInRange.push(d.toISOString().split('T')[0]);
+                        }
 
-                new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: 'Count',
-                            data: counts,
-                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                            borderColor: 'rgba(75, 192, 192, 1)',
-                            borderWidth: 1,
-                            borderRadius: 2,
-                            barPercentage: 1,
-                            categoryPercentage: 0.8
-                        }]
-                    },
-                    options: {
-                        maintainAspectRatio: false,
-                        responsive: true,
-                        indexAxis: 'y',
-                        scales: {
-                        y: {
-                            type: 'category',
-                            reverse: true,
-                            ticks: {
-                                autoSkip: false,
-                                color: '#ffffff',
-                                font: { size: 10 }
-                            }
-                        },
-                        x: {
-                            beginAtZero: true,
-                            ticks: {
-                                color: '#ffffff',
-                                callback: function (value) {
-                                    if (value >= 1e6) return (value / 1e6).toFixed(1) + 'M';
-                                    if (value >= 1e3) return (value / 1e3).toFixed(1) + 'k';
-                                    return value;
+                        const productionMap = new Map(stats_data.map(item => [item.label, item.total_count]));
+                        const finalData = allDaysInRange.map(day => productionMap.get(day) || 0);
+
+                        config = {
+                            type: 'line',
+                            data: {
+                                labels: allDaysInRange,
+                                datasets: [{
+                                    label: 'Stickers Produced',
+                                    data: finalData,
+                                    borderColor: '#3498db',
+                                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                                    borderWidth: 2,
+                                    fill: true,
+                                    tension: 0.3,
+                                    pointRadius: 0
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                scales: {
+                                    x: {
+                                        // Force the chart to start/end exactly on the first/last date
+                                        min: allDaysInRange[0],
+                                        max: allDaysInRange[allDaysInRange.length - 1],
+                                        ticks: { color: '#fff', maxTicksLimit: 12 }
+                                    },
+                                    y: { beginAtZero: true, ticks: { color: '#fff' } }
+                                },
+                                plugins: {
+                                    title: {
+                                        display: true,
+                                        text: `${displayYear} Window Sticker Creation Date (${allDaysInRange[0]} to ${allDaysInRange[allDaysInRange.length-1]})`,
+                                        color: '#ffffff'
+                                    }
                                 }
                             }
-                        }
-                        },
-                        plugins: {
-                            title: {
-                                display: true,
-                                text: 'Top <%= Math.min(20, stats_data.length) %> Rarest Colors',
-                                color: '#ffffff',
-                                font: { size: 20 }
-                            },
-                            datalabels: {
-                                color: '#ffffff',
-                                formatter: (value) => value.toLocaleString(),
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    title: () => '',
-                                    label: (context) => {
-                                        const index = context.dataIndex;
-                                        return rawData[index].color_names;
-                                    }
-                                },
-                                displayColors: false
-                            },
-                            legend: { display: false }
-                        }
+                        };
                     }
-                });
+                } else {
+                    // --- COLOR/ENGINE RANKING CHART ---
+                    Chart.register(ChartDataLabels);
+                    let rawData = stats_data.map(data => ({
+                        label: data.label || '',
+                        count: Number(String(data.total_count).replace(/,/g, '')) || 0,
+                        color_names: data.color_names || ''
+                    }));
+
+                    rawData.sort((a, b) => a.count - b.count);
+                    const displayData = rawData.slice(0, 20);
+
+                    config = {
+                        type: 'bar',
+                        data: {
+                            labels: displayData.map(d => d.label),
+                            datasets: [{
+                                label: 'Count',
+                                data: displayData.map(d => d.count),
+                                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            indexAxis: 'y',
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false },
+                                title: {
+                                    display: true,
+                                    text: `Top ${Math.min(20, stats_data.length)} Rarest ${currentCategory === "engine" ? "Engines" : "Colors"}`,
+                                    color: '#ffffff', font: { size: 20 }
+                                },
+                                datalabels: {
+                                    color: '#ffffff', anchor: 'end', align: 'end', offset: 4,
+                                    formatter: (val) => val.toLocaleString()
+                                },
+                                tooltip: {
+                                    enabled: true,
+                                    callbacks: {
+                                        label: (context) => {
+                                            const item = displayData[context.dataIndex];
+                                            return currentCategory === 'color' ? item.color_names : `Total: ${item.count}`;
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: { reverse: true, ticks: { color: '#ffffff', font: { size: 10 } } },
+                                x: { beginAtZero: true, grace: '15%', ticks: { color: '#ffffff' } }
+                            }
+                        }
+                    };
+                }
+
+                new Chart(ctx, config);
             });
         </script>
     <% } %>

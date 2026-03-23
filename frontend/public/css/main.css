@@ -20,6 +20,66 @@
     background-color: #555;
 }
 
+#wheelTable .rpo-description {
+    text-align: left;
+}
+
+.rpo-wrapper {
+    width: 250px;
+}
+
+.rpo-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.rpo-card {
+    padding: 5px;
+    width: 100%;
+    text-align: center;
+    color: white;
+    background-color: #333;
+    border-radius: 5px;
+}
+
+.rpo-card img {
+    width: 100%;
+    height: auto;
+    border-radius: 4px;
+}
+
+.rpo-description {
+    text-align: center;
+    font-size: 0.9em;
+}
+
+.rpo-card-link {
+    display: inline-block;
+    text-decoration: none;
+    width: 100%;
+    height: auto;
+}
+
+.rpo-card-link:hover .rpo-card {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.rpo-outsourced {
+    font-style: italic;
+}
+
+#loading-animation {
+  position: relative;
+  width: 100%;
+  border-radius: 8px;
+}
+
 .shimmer {
     animation: shimmer 1.5s infinite linear;
     background: linear-gradient(to left, #444 8%, #555 18%, #444 33%);
@@ -29,9 +89,11 @@
 }
 
 .shimmer-box {
-    width: 100px;
-    height: 60px;
-    border-radius: 4px;
+    width: 100%;
+    border-radius: 8px;
+    padding-top: 56.25%;
+    height: 0;
+    position: relative;
 }
 
 @keyframes shimmer {
@@ -40,8 +102,9 @@
 }
 
 #site-title {
-    transition: text-shadow 0.2s ease-in-out;
+    transition: text-shadow 0.2s ease-in-out, font-size 0.3s ease-in-out; 
     padding-left: 1rem;
+    font-size: 2rem;
 }
 
 #site-title:hover {
@@ -60,6 +123,9 @@ header {
     top: 0;
     width: 100%;
     z-index: 1001;
+    transition: height 0.3s ease-in-out, background-color 0.3s ease-in-out;
+    height: 70px;
+    background-color: transparent;
 }
 
 .header-background {
@@ -67,11 +133,46 @@ header {
     top: 0;
     left: 0;
     width: 100%;
+    transition: height 0.3s ease-in-out;
     height: 70px;
     z-index: -1;
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
+}
+
+header.header-minimized {
+    height: 40px;
+}
+
+header.header-minimized .header-background {
+    height: 40px;
+}
+
+header.header-minimized #site-title {
+    font-size: 1.25rem;
+}
+
+header.header-minimized .navbar-toggler[aria-expanded="true"] .top-bar {
+    transform: rotate(45deg) translate(2px, 4.5px); 
+}
+
+header.header-minimized .navbar-toggler[aria-expanded="true"] .bottom-bar {
+    transform: rotate(-45deg) translate(2px, -4.5px);
+}
+
+header.header-minimized .hamburger-icon {
+    width: 20px;
+    height: 15px;
+}
+
+header.header-minimized .bar {
+    height: 2px;
+}
+
+header .d-flex.align-items-center {
+    transition: height 0.3s ease-in-out;
+    height: 100%;
 }
 
 .header-background::before {
@@ -92,7 +193,7 @@ header {
     width: 300px;
     height: calc(100vh - 70px);
     overflow: hidden;
-    transition: transform 0.2s ease-in-out;
+    transition: transform 0.2s ease-in-out, top 0.3s ease-in-out, height 0.3s ease-in-out;
     transform: translateX(-100%);
     background-color: #333;
     color: white;
@@ -101,6 +202,11 @@ header {
 
 #sidebar.show {
     transform: translateX(0);
+}
+
+#sidebar.header-minimized { 
+    top: 40px;
+    height: calc(100vh - 40px);
 }
 
 .nav-item {
@@ -114,26 +220,73 @@ header {
     transition: color 0.2s ease, background-color 0.2s ease;
     display: flex;
     align-items: center;
+    border-radius: 10px;
+}
+
+.nav-link:focus {
+    color: #787878;
 }
 
 .nav-link.active {
-    color: #ababab;
     background: #404040;
-    border-radius: 10px;
 }
 
 .nav-link:hover {
     color: #787878;
     background: #2b2b2b;
-    border-radius: 10px;
 }
 
 .navbar-toggler {
-    transition: text-shadow 0.2s ease-in-out;
+    transition: text-shadow 0.2s ease-in-out, filter 0.2s ease-in-out;
 }
 
 .navbar-toggler:hover {
-    text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.9);
+    filter: drop-shadow(4px 8px 16px rgba(0, 0, 0, 0.9));
+}
+
+.hamburger-icon {
+    display: inline-block;
+    width: 25px;
+    height: 20px;
+    position: relative;
+    cursor: pointer;
+    transition: width 0.3s ease-in-out, height 0.3s ease-in-out;
+}
+
+.bar {
+    display: block;
+    width: 100%;
+    height: 3px;
+    background-color: white;
+    position: absolute;
+    left: 0;
+    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out, height 0.3s ease-in-out;
+}
+
+.top-bar {
+    top: 2px;
+}
+
+.middle-bar {
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.bottom-bar {
+    bottom: 2px;
+    top: auto;
+}
+
+.navbar-toggler[aria-expanded="true"] .top-bar {
+    transform: rotate(45deg) translate(3px, 6px); 
+}
+
+.navbar-toggler[aria-expanded="true"] .middle-bar {
+    opacity: 0;
+}
+
+.navbar-toggler[aria-expanded="true"] .bottom-bar {
+    transform: rotate(-45deg) translate(3px, -6px);
 }
 
 html, body {
@@ -152,6 +305,37 @@ body {
 
 h1, h2, h4, p {
     color: white;
+}
+
+.i-link a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 24px;
+    border-radius: 10px;
+    
+    background-color: transparent;
+    color: white !important;
+    text-decoration: none !important;
+    
+    transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.i-link a:hover {
+    color: #787878 !important;
+    background-color: #2b2b2b;
+}
+
+/* Ensure it stays white even after being clicked */
+.i-link a:visited, 
+.i-link a:active, 
+.i-link a:hover {
+    color: white;
+    text-decoration: none !important;
+}
+
+.container {
+    width: 95%;
 }
 
 .custom-container {
@@ -201,12 +385,6 @@ h1, h2, h4, p {
 }
 
 /* Index */
-#i-link a {
-    color: white;
-    text-decoration: none;
-    font-weight: bold;
-}
-
 img {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
@@ -366,6 +544,48 @@ img {
     background-color: #cacaca;
 }
 
+.table-stats-veh {
+    font-size: 0.75rem;
+    table-layout: auto;
+    width: 100%;
+}
+
+.table-stats-veh thead th {
+    background-color: #2e2e2e;
+    color: #fff;
+    border-bottom: 2px solid #000;
+    padding: 10px;
+}
+
+.table-stats-veh td, .table-stats-veh th {
+    border: 1px solid #dee2e6;
+    vertical-align: middle;
+    text-align: center;
+    padding: 5px;
+    white-space: nowrap;
+}
+
+.table-stats-veh th .dropdown-container {
+    display: block;
+    width: 100%;
+}
+
+.table-stats-veh tbody tr {
+    transition: background-color 0.3s ease;
+}
+
+.table-stats-veh tbody tr:nth-child(odd) {
+    background-color: #ececec;
+}
+
+.table-stats-veh tbody tr:nth-child(even) {
+    background-color: #ffffff;
+}
+
+.table-stats-veh tbody tr:hover {
+    background-color: #cacaca;
+}
+
 .sortable {
     transition: color 0.2s ease, background-color 0.2s ease;
 }
@@ -436,6 +656,7 @@ img {
 
 /* Search */
 #image-warning {
+    color: white;
     width: 100%;
     margin-bottom: 2px;
 }
@@ -468,7 +689,7 @@ img {
 
 #image-gallery {
     scroll-snap-type: x mandatory;
-    display: flex;
+    display: none;
     align-items: center;
     overflow-x: auto;
     overflow-y: hidden;
@@ -496,6 +717,7 @@ img {
 #image-gallery-shimmer .shimmer-box {
   width: 100px;
   height: 60px;
+  padding-top: 0;
   border-radius: 4px;
   animation: shimmer 2s infinite linear;
   background: linear-gradient(to left, #444 8%, #555 18%, #444 33%);
@@ -506,8 +728,7 @@ img {
 
 #carousel-container {
     box-sizing: border-box;
-    flex-basis: 100%;
-    flex: 1;
+    flex: 2;
     margin-left: auto;
     margin-right: auto;
     max-width: 100%;
@@ -518,6 +739,8 @@ img {
 
 #carousel-image {
     opacity: 1;
+    width: 100%;
+    display: none;
     transition: opacity 0.2s ease-in-out;
 }
 
@@ -559,6 +782,11 @@ img {
     color: white;
     font-weight: bold;
     font-size: x-large;
+}
+
+.window-sticker {
+    height: 80vh;
+    min-height: 800px;
 }
 
 #vinTable, #rpoTable {
@@ -604,7 +832,14 @@ img {
 }
 
 /* Mobile Styles */
-@media (max-width: 1265px) {
+@media (min-width: 768px) and (max-width: 1521px) {
+    .about-page .table-veh {
+        display: table !important;
+        width: 100% !important;
+    }
+}
+
+@media (max-width: 1521px) {
     /* Universal */
     .custom-container {
         padding: 0 10px;
@@ -627,18 +862,18 @@ img {
     }
 
     #top-scroll {
+        display: block;
         height: 8px;
         pointer-events: auto;
     }
 
     #top-scroll-wrapper, #bottom-scroll-wrapper {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     #top-scroll-wrapper {
         width: 100%;
-        overflow-x: auto;
         -webkit-overflow-scrolling: touch;
     }
 
@@ -653,6 +888,33 @@ img {
 
     #top-scroll:active {
         cursor: grabbing;
+    }
+
+    .rpo-container {
+        gap: 4px;
+    }
+
+    .rpo-wrapper {
+        width: 130px;
+    }
+
+    .rpo-card {
+        width: 100%;
+        padding: 3px;
+    }
+
+    .rpo-card img {
+        width: 100%;
+    }
+
+    .rpo-card p {
+        font-size: 0.9em; 
+        margin-bottom: 0;
+        font-weight: bold;
+    }
+    
+    .rpo-description {
+        font-size: 0.75em;
     }
 
     .footer {
@@ -727,14 +989,9 @@ img {
 
     .table-veh {
         display: block;
-        overflow-x: auto;
         font-size: 0.65rem;
-        width: 100%;
-        min-width: 500px;
-    }
-
-    .table-veh thead, .table-veh tbody, .table-veh tr {
-        width: 100%;
+        width: max-content;
+        table-layout: auto !important;
     }
 
     .table-veh td, .table-veh th {
@@ -745,11 +1002,17 @@ img {
     .table-responsive {
         margin: 0 auto;
         overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
-        #vinTable {
+    .table-responsive, #top-scroll-wrapper {
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #vinTable, #rpoTable {
         width: 100% !important;
         max-width: 100% !important;
+        min-width: 100%;
         table-layout: fixed !important;
         word-wrap: break-word;
     }
@@ -793,6 +1056,10 @@ img {
 
     .flex-row-wrap {
         flex-direction: column;
+    }
+
+    .window-sticker {
+        height: 20vh;
     }
 
     /* Stats */

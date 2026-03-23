@@ -3,7 +3,6 @@
 <head>
   <%- include('../partials/head'); %>
   <% const vin = vin_data[0]; %>
-  <link rel="canonical" href="https://gmbuildcounts.com/search">
   <title>
     <%= (vin.modelYear ? "'" + vin.modelYear.toString().slice(-2) : 'N/A') %>
     <%= vin.model || 'N/A' %> 
@@ -39,21 +38,21 @@
         </div>
         <div class="flex-row-wrap">
             <!-- Photo Carousel -->
-            <div id="image-warning" style="color: white;"></div>
+            <div id="image-warning"></div>
             <div id="carousel-container">
               <div id="loading-animation" class="shimmer">
-                <div class="shimmer-box" style="width: 100%; height: 675px; border-radius: 8px;"></div>
+                <div class="shimmer-box"></div>
               </div>
-              <img id="carousel-image" alt="Vehicle Image" style="width: 100%; display: none;">
+              <img id="carousel-image" alt="Vehicle Image">
               <button id="prev" style="display: none;">&#10094;</button>
               <button id="next" style="display: none;">&#10095;</button>
               <div style="display: flex; justify-content: center;">
-                <div id="image-gallery-shimmer" style="display:flex; gap:5px; overflow:hidden; width:100%; padding: 10px 0;"></div>
-                <div id="image-gallery" style="display:none;"></div>
+                <div id="image-gallery-shimmer"></div>
+                <div id="image-gallery"></div>
               </div>
             </div>
             <!-- vinTable -->
-            <div class="table-responsive" style="text-align: left; justify-content: flex-start;">
+            <div class="table-responsive no-mobile-scroll" style="text-align: left; justify-content: flex-start;">
               <table class="table-veh table-hover border shadow" id="vinTable">
                 <tbody>
                     <% vin_data.forEach(function(data) { %>
@@ -168,16 +167,29 @@
         </div>
     </div>
     <div class="custom-container">
-        <div style="display: flex; gap: 5px;">
+        <div style="display: flex;">
             <!-- Window Sticker -->
             <div id="sticker-container" style="flex: 1;">
-              <% if (vin.country === 'MEXICO') { %>
+              <% if (vin.country === 'MEXICO' || vin.dealer_name === 'N/A') { %>
                 <div style="display: flex; justify-content: center; align-items: center;">
                   <h2>No window sticker available</h2>
                 </div>
               <% } else { %>
-                <div style="display: flex; justify-content: center; overflow-x: auto;">
-                  <embed src="https://cws.gm.com/vs-cws/vehshop/v2/vehicle/windowsticker?vin=<%= vin.vin %>" type="application/pdf" width="85%" height="800px"/>
+                <div style="display: flex; flex-direction: column; align-items: center;">
+                  <div style="margin-bottom: 10px;">
+                    <a href="https://cws.gm.com/vs-cws/vehshop/v2/vehicle/windowsticker?vin=<%= vin.vin %>" 
+                      target="_blank" class="btn btn-sm btn-outline-secondary">
+                      Open Window Sticker in New Tab
+                    </a>
+                  </div>
+                  <div style="width: 100%; overflow-x: auto; height: 800px;">
+                    <iframe id="window-sticker-frame" 
+                            data-src="https://cws.gm.com/vs-cws/vehshop/v2/vehicle/windowsticker?vin=<%= vin.vin %>" 
+                            width="100%" 
+                            height="100%" 
+                            style="border: none;">
+                    </iframe>
+                  </div>
                 </div>
               <% } %>
             </div>
@@ -193,7 +205,8 @@
             <div><a id="snark" style="color: rgb(40, 40, 40);"></a></div>
           </div>
         </div> -->
-        <div class="table-responsive" style="text-align: left; justify-content: flex-start; margin-top: 10px;">
+        <div class="rpo-container" id="rpoImageContainer"></div>
+        <div class="table-responsive no-mobile-scroll" style="text-align: left; justify-content: flex-start; margin-top: 10px;">
           <table class="table-veh table-hover border border shadow" id="rpoTable">
             <thead>
               <tr>
@@ -204,7 +217,10 @@
             <tbody>
               <% vin_data.forEach(function(data) { %>
                 <% if (data.rpo_codes) { %>
-                  <% data.rpo_codes.forEach(function(rpo) { %>
+                  <% 
+                  const sortedRpoCodes = [...data.rpo_codes].sort(); 
+                  sortedRpoCodes.forEach(function(rpo) { 
+                  %>
                     <% if (rpo) { %>
                       <tr style="cursor: pointer;" onmousedown="handleMouseDown(event);" data-url="/vehicles?rpo=<%= rpo %>">
                         <td class="<%= rpo.includes('OAR') ? 'highlight' : '' %>"><%= rpo %></td>
@@ -257,9 +273,36 @@
       document.addEventListener('DOMContentLoaded', () => {
         let rpoDescriptions = {};
         const rpoDescriptionCache = {};
+
+        const vin_data = <%- JSON.stringify(vin_data) %>;
+        const vin = vin_data[0];
+        const model = vin.model?.toUpperCase() || '';
+        const vehicleTrim = vin.trim || '';
+
         const camaroRpo = <%- JSON.stringify(camaroRpo) %>;
         const corvetteRpo = <%- JSON.stringify(corvetteRpo) %>;
-        const serverModel = <%- JSON.stringify(vin_data && vin_data[0] && vin_data[0].model ? vin_data[0].model.toUpperCase() : '') %>;
+        const escaladeRpo = <%- JSON.stringify(escaladeRpo) %>;
+        const escaladeiqRpo = <%- JSON.stringify(escaladeiqRpo) %>;
+        const ct4Rpo = <%- JSON.stringify(ct4Rpo) %>;
+        const ct4vRpo = <%- JSON.stringify(ct4vRpo) %>;
+        const ct5Rpo = <%- JSON.stringify(ct5Rpo) %>;
+        const ct5vRpo = <%- JSON.stringify(ct5vRpo) %>;
+        const hummerRpo = <%- JSON.stringify(hummerRpo) %>;
+        const hummersuvRpo = <%- JSON.stringify(hummersuvRpo) %>;
+
+        const allRpoDescriptions = {
+          ...rpoDescriptions,
+          ...camaroRpo,
+          ...corvetteRpo,
+          ...escaladeRpo,
+          ...escaladeiqRpo,
+          ...ct4Rpo,
+          ...ct4vRpo,
+          ...ct5Rpo,
+          ...ct5vRpo,
+          ...hummerRpo,
+          ...hummersuvRpo
+        };
 
         function loadRpoDescriptions() {
           const cached = sessionStorage.getItem('rpoCodes');
@@ -278,47 +321,164 @@
                   rpoDescriptions[code] = desc;
                 });
               })
-              .catch(err => {
-                console.error('Failed to load RPO data:', err);
-              });
+              .catch(err => console.error('Failed to load RPO data:', err));
           }
         }
 
+        function renderRpoCards(vin, model, rpoDescriptions) {
+          const container = document.getElementById('rpoImageContainer');
+          container.innerHTML = '';
+
+          if (!vin?.rpo_codes?.length) {
+            container.innerHTML = '<h4>No RPO codes found for this VIN.</h4>';
+            return;
+          }
+
+          let found = false;
+          vin.rpo_codes.forEach(rpoCode => {
+            const img = new Image();
+            let imgSrc;
+            if (model.startsWith('CORVETTE')) {
+              imgSrc = `../img/rpos/corvette/${rpoCode}.jpg`;
+            } else if (model === 'ESCALADE IQ') {
+              imgSrc = `../img/rpos/escaladeiq/${rpoCode}.jpg`;
+            } else if (model === 'CT4' && vehicleTrim.startsWith('V-SERIES')) {
+                imgSrc = `../img/rpos/ct4v/${rpoCode}.jpg`;
+            } else if (model === 'CT5' && vehicleTrim.startsWith('V-SERIES')) {
+                imgSrc = `../img/rpos/ct5v/${rpoCode}.jpg`;
+            } else if (model === 'HUMMER EV PICKUP') {
+              imgSrc = `../img/rpos/hummer/${rpoCode}.jpg`;
+            } else if (model === 'HUMMER EV SUV') {
+              imgSrc = `../img/rpos/hummersuv/${rpoCode}.jpg`;
+            } else {
+              imgSrc = `../img/rpos/${model.toLowerCase()}/${rpoCode}.jpg`;
+            }
+
+            img.src = imgSrc;
+            img.alt = rpoCode;
+
+            img.onload = () => {
+              const cardWrapper = document.createElement('div');
+              cardWrapper.className = 'rpo-wrapper';
+              const cardLink = document.createElement('a');
+              cardLink.href = `/vehicles?model=${encodeURIComponent(model)}&rpo=${encodeURIComponent(rpoCode)}`;
+              cardLink.className = 'rpo-card-link';
+
+              const card = document.createElement('div');
+              card.className = 'rpo-card';
+
+              const desc =
+                (model === 'CAMARO' && camaroRpo[rpoCode]) ||
+                (model.startsWith('CORVETTE') && corvetteRpo[rpoCode]) ||
+                (model === 'ESCALADE' && escaladeRpo[rpoCode]) ||
+                (model === 'ESCALADE IQ' && escaladeiqRpo[rpoCode]) ||
+                (model === 'CT4' && ct4Rpo[rpoCode]) ||
+                (model === 'CT4' && vehicleTrim.startsWith('V-SERIES') && ct4vRpo[rpoCode]) ||
+                (model === 'CT5' && ct5Rpo[rpoCode]) ||
+                (model === 'CT5' && vehicleTrim.startsWith('V-SERIES') && ct5vRpo[rpoCode]) ||
+                (model === 'HUMMER EV PICKUP' && hummerRpo[rpoCode]) ||
+                (model === 'HUMMER EV SUV' && hummersuvRpo[rpoCode]) ||
+                rpoDescriptions[rpoCode] ||
+                '';
+
+              card.innerHTML = `
+                <img src="${img.src}" alt="${rpoCode}">
+                <p>${rpoCode}</p>
+                <div class="rpo-description">${desc}</div>
+              `;
+
+              cardLink.appendChild(card);
+              cardWrapper.appendChild(cardLink);
+              container.appendChild(cardWrapper);
+              found = true;
+            };
+          });
+
+          setTimeout(() => {
+            if (!found) container.innerHTML = '<h4>No specific RPO images found for this vehicle.</h4>';
+          }, 800);
+        }
+
         loadRpoDescriptions().then(() => {
+          if (vin.model) {
+            renderRpoCards(vin, vin.model, rpoDescriptions);
+          }
+
           document.querySelectorAll('.rpo-description').forEach(element => {
-          const rpoCode = element.getAttribute('data-code');
+            const rpoCode = element.getAttribute('data-code');
 
-          // Prefer internal Camaro/Corvette maps for those models
-          if (serverModel === 'CAMARO' && camaroRpo && camaroRpo[rpoCode]) {
-            element.innerHTML = `<div>${camaroRpo[rpoCode]}</div>`;
-            return;
-          }
-          if (serverModel && serverModel.startsWith('CORVETTE') && corvetteRpo && corvetteRpo[rpoCode]) {
-            element.innerHTML = `<div>${corvetteRpo[rpoCode]}</div>`;
-            return;
-          }
+            if (model === 'CAMARO' && camaroRpo[rpoCode]) {
+              element.innerHTML = `<div>${camaroRpo[rpoCode]}</div>`;
+              return;
+            }
 
-          if (rpoDescriptions[rpoCode]) {
-            // Description from outsourced decoderpo static JSON -> italicize
-            element.innerHTML = `<div class="rpo-outsourced">${rpoDescriptions[rpoCode]}</div>`;
-          } else {
-            // Fall back to decoderpo API; treat as outsourced and italicize
-            fetch(`https://decoderpo.com/api/getRPODescription/${rpoCode}`)
-              .then(resp => {
-                if (!resp.ok) throw new Error('Not found');
-                return resp.json();
-              })
-              .then(data => {
-                const decoded = atob(data[0]);
-                const lines = JSON.parse(decoded);
-                element.innerHTML = lines.map(line => `<div class="rpo-outsourced">${line}</div>`).join('');
-              })
-              .catch(() => {
-                element.textContent = 'Not found';
-              });
+            if (model.startsWith('CORVETTE') && corvetteRpo[rpoCode]) {
+              element.innerHTML = `<div>${corvetteRpo[rpoCode]}</div>`;
+              return;
+            }
+
+            if (model === 'ESCALADE' && escaladeRpo[rpoCode]) {
+              element.innerHTML = `<div>${escaladeRpo[rpoCode]}</div>`;
+              return;
+            }
+
+            if (model === 'ESCALADE IQ' && escaladeiqRpo[rpoCode]) {
+              element.innerHTML = `<div>${escaladeiqRpo[rpoCode]}</div>`;
+              return;
+            }
+
+            if (model === 'CT4' && ct4Rpo[rpoCode]) {
+              element.innerHTML = `<div>${ct4Rpo[rpoCode]}</div>`;
+              return;
+            }
+
+            if (model === 'CT4' && vehicleTrim.startsWith('V-SERIES') && ct4vRpo[rpoCode]) {
+              element.innerHTML = `<div>${ct4vRpo[rpoCode]}</div>`;
+              return;
+            }
+
+            if (model === 'CT5' && ct5Rpo[rpoCode]) {
+              element.innerHTML = `<div>${ct5Rpo[rpoCode]}</div>`;
+              return;
+            }
+
+            if (model === 'CT5' && vehicleTrim.startsWith('V-SERIES') && ct5vRpo[rpoCode]) {
+              element.innerHTML = `<div>${ct5vRpo[rpoCode]}</div>`;
+              return;
+            }
+
+            if (model === 'HUMMER EV PICKUP' && hummerRpo[rpoCode]) {
+              element.innerHTML = `<div>${hummerRpo[rpoCode]}</div>`;
+              return;
+            }
+
+            if (model === 'HUMMER EV SUV' && hummersuvRpo[rpoCode]) {
+              element.innerHTML = `<div>${hummersuvRpo[rpoCode]}</div>`;
+              return;
+            }
+
+            if (rpoDescriptions[rpoCode]) {
+              element.innerHTML = `<div class="rpo-outsourced">${rpoDescriptions[rpoCode]}</div>`;
+            } else {
+              fetch(`https://decoderpo.com/api/getRPODescription/${rpoCode}`)
+                .then(resp => resp.ok ? resp.json() : Promise.reject())
+                .then(data => {
+                  const decoded = atob(data[0]);
+                  const lines = JSON.parse(decoded);
+                  element.innerHTML = lines.map(line => `<div class="rpo-outsourced">${line}</div>`).join('');
+                })
+                .catch(() => (element.textContent = 'Not found'));
+            }
+          });
+        });
+
+        setTimeout(() => {
+          const stickerFrame = document.getElementById('window-sticker-frame');
+          if (stickerFrame) {
+              const pdfUrl = stickerFrame.getAttribute('data-src');
+              stickerFrame.src = pdfUrl;
           }
-        });
-        });
+        }, 800);
 
         const carouselImage = document.getElementById('carousel-image');
         const loadingAnimation = document.getElementById('loading-animation');
@@ -328,8 +488,6 @@
         const mmc = <%- JSON.stringify(mmc) %>;
         const colorMap = <%- JSON.stringify(colorMap) %>;
         let intColor = <%- JSON.stringify(intColor) %>;
-        const vin_data = <%- JSON.stringify(vin_data) %>;
-        const model = vin_data[0].model?.toUpperCase() || '';
         const ghostImg = '../../img/ghost-chevrolet-car-alt.png';
         
         if (model === 'CAMARO') fallbackImg = '../../img/vehicleLogos/camaro.png';
@@ -342,7 +500,6 @@
         const modelYear = vin_data[0].modelYear;
         const mmc_code = vin_data[0].mmc_code;
         let options = vin_data[0].rpo_codes || [];
-        let vehicleTrim = vin_data[0].trim;
 
         let trim = mmc[mmc_code] || '';
 
@@ -359,7 +516,7 @@
         } else {
           if (["1YC07", "1YC67", "1YY07", "1YY67", "1YW07", "1YW67", "1YX07", "1YX67"].includes(mmc_code)) {
             trim = options.find(opt => ["1LT", "2LT", "3LT"].includes(opt)) || trim;
-          } else if (["1YH07", "1YH67", "1YG07", "1YG67", "1YR07", "1YR67", "1YZ07", "1YZ67"].includes(mmc_code)) {
+          } else if (["1YH07", "1YH67", "1YG07", "1YG67", "1YR07", "1YR67", "1YZ07", "1YZ67", "1YS07", "1YS67"].includes(mmc_code)) {
             trim = options.find(opt => ["1LZ", "2LZ", "3LZ"].includes(opt)) || trim;
           } else if (["1YV07", "1YV67"].includes(mmc_code)) {
             trim = options.find(opt => ["1ZR", "3ZR"].includes(opt)) || trim;
@@ -375,6 +532,8 @@
             trim = options.find(opt => ["5SD", "5SB", "5SC", "3SB", "3SC", "4SC", "4SD"].includes(opt)) || trim;
           } else if (["6T35726"].includes(mmc_code)) {
             trim = options.find(opt => ["1SC", "1SF", "1SD", "1SG"].includes(opt)) || trim;
+          } else if (["6C10706", "6K10706"].includes(mmc_code)) {
+            trim = options.find(opt => ["1SA", "1SB", "1SC", "1SG", "1SH", "1SD"].includes(opt)) || trim;
           }
         }
 
@@ -417,6 +576,9 @@
         } else if (['HUMMER EV PICKUP', 'HUMMER EV SUV'].includes(modelUpper)) {
           intMax = 2;
           extMax = modelYear >= 2023 ? 5 : 4;
+        } else if (modelUpper === 'ESCALADE') {
+          intMax = 4;
+          extMax = modelYear >= 2026 ? 17 : 7;
         }
 
         const shimmerContainer = document.getElementById('image-gallery-shimmer');
@@ -427,7 +589,6 @@
           const box = document.createElement('div');
           box.classList.add('shimmer-box', 'shimmer');
           box.style.width = '100px';
-          box.style.height = '60px';
           box.style.borderRadius = '4px';
           shimmerContainer.appendChild(box);
         }
@@ -452,7 +613,20 @@
         let unsupportedInts = null;
         const colorName = vin_data[0].color_name;
 
-        if (color === 'GKA') {
+        if (colorName === 'BLADE SILVER METALLIC' && modelYear >= 2026) {
+          if (color === 'GAN') {
+            color = 'GKA';
+          }
+        }
+
+        // Force 2025 + 1SV + GBL → GXD
+        if (modelYear === 2025 && trim === '1SV' && color === 'GBL') {
+          unsupportedColors = 'GBL';
+          color = 'GXD';
+          rpos = rpos.replace(/GBL/g, 'GXD');
+        }
+
+        if (color === 'GKA' && modelUpper === 'CT4' && modelYear >= 2024) {
           unsupportedColors = color;
           color = 'GXD';
         } else if (color === 'GBA') {
@@ -480,15 +654,30 @@
             rpos = rpos.replace(new RegExp(unsupportedColors, 'g'), color);
           }
         }
-        if (['E2B', 'E2D', 'E2G'].includes(colorInt)) {
+        const replacementMap = {
+          'CT5-1SV': 'HMR', // E2D, E2B, E2G, E54
+          'CT4-1SP': 'HEA', // E2D, E2B, E2G, E54
+          'EG1-CT5-1SV': 'HJD',
+          'EG1-CT4-1SP': 'HEB',
+        };
+
+        const key = `${colorInt}-${model}-${trim}`;
+        if (replacementMap[key]) {
           unsupportedInts = colorInt;
-          colorInt = 'HBF';
+          colorInt = replacementMap[key];
+        } else {
+          // Check generic pattern for CT5/CT4
+          const patternKey = key.split('-').slice(1).join('-');
+          if (replacementMap[patternKey]) {
+            unsupportedInts = colorInt;
+            colorInt = replacementMap[patternKey];
+          }
         }
 
         if (unsupportedColors || unsupportedInts) {
           let msg = 'Image generation does not support the following: ';
           if (unsupportedColors) {
-            msg += `Color <i>${unsupportedColors}</i>`;
+            msg += `Ext. Color <i>${unsupportedColors}</i>`;
             const extCell = document.getElementById('extColorCell');
             if (extCell) extCell.style.cssText = 'color:#e57373;';
           }
@@ -496,7 +685,7 @@
             msg += ', ';
           }
           if (unsupportedInts) {
-            msg += `Interior color <i>${unsupportedInts}</i>`;
+            msg += `Int. color <i>${unsupportedInts}</i>`;
             const intCell = document.getElementById('intColorCell');
             if (intCell) intCell.style.cssText = 'color:#e57373;';
           }
@@ -626,6 +815,59 @@
           row.addEventListener('mousedown', handleMouseDown);
           row.addEventListener('click', (event) => handleRowClick(url, event));
         });
+
+        document.addEventListener('keydown', (event) => {
+          if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') return;
+
+          if (event.key === 'ArrowLeft') {
+            let prevIndex = currentIndex;
+            do {
+              prevIndex = (prevIndex === 0) ? urls.length - 1 : prevIndex - 1;
+            } while (urls[prevIndex] === null && prevIndex !== currentIndex);
+            showImage(prevIndex);
+          } else if (event.key === 'ArrowRight') {
+            let nextIndex = currentIndex;
+            do {
+              nextIndex = (nextIndex === urls.length - 1) ? 0 : nextIndex + 1;
+            } while (urls[nextIndex] === null && nextIndex !== currentIndex);
+            showImage(nextIndex);
+          }
+        });
+
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        const handleSwipe = () => {
+          const swipeThreshold = 50; // Minimum pixels to count as a swipe
+          const swipeDistance = touchEndX - touchStartX;
+
+          if (Math.abs(swipeDistance) > swipeThreshold) {
+            if (swipeDistance < 0) {
+              // Swiped Left -> Next Image
+              let nextIndex = currentIndex;
+              do {
+                nextIndex = (nextIndex === urls.length - 1) ? 0 : nextIndex + 1;
+              } while (urls[nextIndex] === null && nextIndex !== currentIndex);
+              showImage(nextIndex);
+            } else {
+              // Swiped Right -> Previous Image
+              let prevIndex = currentIndex;
+              do {
+                prevIndex = (prevIndex === 0) ? urls.length - 1 : prevIndex - 1;
+              } while (urls[prevIndex] === null && prevIndex !== currentIndex);
+              showImage(prevIndex);
+            }
+          }
+        };
+
+        carouselImage.addEventListener('touchstart', e => {
+          touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        carouselImage.addEventListener('touchend', e => {
+          touchEndX = e.changedTouches[0].screenX;
+          handleSwipe();
+        }, { passive: true });
       });
     </script>
 </body>

@@ -157,13 +157,17 @@ def sort_price():
         conditions.append("trim = %s")
         params.append(trim)
     if engine:
-        conditions.append(f"engine_type = '{engine}'")
+        conditions.append("e.engine_type = %s")
+        params.append(engine)
     if trans:
-        conditions.append(f"transmission_type = '{trans}'")
+        conditions.append("t.transmission_type = %s")
+        params.append(trans)
     if color:
-        conditions.append(f"color_name = '{color}'")
+        conditions.append("c.color_name = %s")
+        params.append(color)
     if country:
-        conditions.append(f"country = '{country_map.get(country, 'USA')}'")
+        conditions.append("o.country = %s")
+        params.append(country_map.get(country, 'USA'))
     if rpo:
         rpo_list = rpo.split(',') if ',' in rpo else [rpo]
         h40_selected = 'H40' in rpo_list

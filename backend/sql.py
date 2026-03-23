@@ -5,10 +5,10 @@ import os
 
 # Create new user in mysql wb, don't use root. Will not work otherwise!
 class Creds:
-    conString = "192.168.1.126"#os.environ.get('DB_HOST')
-    userName = "hussain"#os.environ.get('DB_USER')
-    password = "Hussain92"#os.environ.get('DB_PASS')
-    dbName = "vehicles"#os.environ.get('DB_NAME')
+    conString = os.environ.get('DB_HOST')
+    userName = os.environ.get('DB_USER')
+    password = os.environ.get('DB_PASS')
+    dbName = os.environ.get('DB_NAME')
 
 def create_connection(host_name, user_name, user_password, db_name):
     connection = None

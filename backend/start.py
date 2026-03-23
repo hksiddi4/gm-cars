@@ -266,13 +266,14 @@ def sort_price():
         else:
             columns = ['modelYear', 'body', 'trim', 'transmission_type', 'model', 'color_name', 'country']
             sqlStatement = f"""
-                SELECT v.modelYear, v.model, v.body, v.trim, e.engine_type, e.engine_rpo, 
-                       t.transmission_type, c.color_name, o.country 
+                SELECT DISTINCT v.modelYear, v.model, v.body, v.trim, e.engine_type, e.engine_rpo, 
+                    t.transmission_type, c.color_name, o.country 
                 FROM Vehicles v 
-                {join_clause}
+                JOIN Engines e ON v.engine_id = e.engine_id 
+                JOIN Transmissions t ON v.transmission_id = t.transmission_id 
+                JOIN Colors c ON v.color_id = c.color_id 
+                JOIN Orders o ON v.order_id = o.order_id 
                 {current_where}
-                GROUP BY v.modelYear, v.model, v.body, v.trim, e.engine_type, e.engine_rpo, 
-                         t.transmission_type, c.color_name, o.country
                 {rpo_clause}
             """
             results = execute_read_query(conn, sqlStatement, current_params)
@@ -476,7 +477,7 @@ def stats():
     
     all_years_raw = execute_read_query(conn, "SELECT DISTINCT modelYear FROM Vehicles ORDER BY modelYear DESC")
     all_years = [r['modelYear'] for r in all_years_raw if r.get('modelYear')]
-
+    
     viewTable = execute_read_query(conn, sqlStatement)
     close_connection(conn)
 

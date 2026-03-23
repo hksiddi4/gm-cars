@@ -166,7 +166,8 @@ SELECT
     END AS country
 FROM staging_allGM
 WHERE ordernum IS NOT NULL AND ordernum != '' AND ordernum NOT IN (SELECT order_number FROM Orders);
-SELECT * FROM Orders;
+SELECT * FROM Orders where order_number = 'DRVJDK';
+DELETE FROM Orders where order_number = 'DXVGC5';
 
 -- Insert Vehicles
 INSERT IGNORE INTO Vehicles (vin, modelYear, model, body, trim, engine_id, transmission_id, drivetrain_id, color_id, msrp, dealer_id, order_id)

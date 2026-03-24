@@ -34,8 +34,8 @@
                     </select>
                 </div>
                 <%
-                    const hasCorvette = model_list.some(m => m.startsWith('CORVETTE'));
-                    const combinedModels = hasCorvette ? ['CORVETTE (ALL)', ...model_list] : model_list;
+                    const hasCorvetteC8 = model_list.some(m => m.startsWith('CORVETTE')) && year_list.some(y => parseInt(y) >= 2020);
+                    const combinedModels = hasCorvetteC8 ? ['CORVETTE (C8)', ...model_list] : model_list;
                     combinedModels.sort((a, b) => a.localeCompare(b));
                 %>
                 <div class="statsDropdown">
@@ -91,8 +91,8 @@
                     </select>
                 </div>
                 <%
-                    const hasCorvette = model_list.some(m => m.startsWith('CORVETTE'));
-                    const combinedModels = hasCorvette ? ['CORVETTE (ALL)', ...model_list] : model_list;
+                    const hasCorvetteC8 = model_list.some(m => m.startsWith('CORVETTE')) && year_list.some(y => parseInt(y) >= 2020);
+                    const combinedModels = hasCorvetteC8 ? ['CORVETTE (C8)', ...model_list] : model_list;
                     combinedModels.sort((a, b) => a.localeCompare(b));
                 %>
                 <div class="statsDropdown">
@@ -215,6 +215,16 @@
                     </table>
                 </div>
             <% } %>
+        <% } else if (category) { %>
+            <div class="response-container" style="padding: 40px 0;">
+                <div class="response" role="status">
+                    <p>No results found for the current filters.</p>
+                    <div style="margin-top: 12px; display:flex; gap:10px; justify-content:center;">
+                        <button type="button" class="btn btn-outline-light" onclick="history.back()">Go Back</button>
+                        <button type="button" class="btn btn-secondary" id="clearFiltersBtn" onclick="window.location.href='/stats'">Clear Filters</button>
+                    </div>
+                </div>
+            </div>
         <% } %>
     </div>
     <%- include('../partials/footer'); %>

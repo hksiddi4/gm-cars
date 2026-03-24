@@ -366,29 +366,36 @@ def stats():
     engine = request.args.get('engine', '').strip() or None
     trans = request.args.get('trans', '').strip() or None
     model = request.args.get('model', '').strip() or None
+
+    # 1. CONFLICT RESOLUTION
+    # Reset year if it's incompatible with the C8 model (pre-2020)
+    # Convert year to int to compare with 2020
+    if model == "CORVETTE (C8)" and year and int(year) < 2020:
+        year = None
+        target_year = "2026"
+    else:
+        target_year = year if year and year.strip() != "" else "2026"
+    
     target_year = year if year and year.strip() != "" else "2026"
 
+    # 2. BUILD SQL CONDITIONS
     conditions = []
     if year:
         conditions.append(f"v.modelYear = '{year}'")
+    
     if model:
-        if model == "CORVETTE (ALL)":
-            corvette_models = ["CORVETTE STINGRAY", "CORVETTE STINGRAY W/ Z51", "CORVETTE GRAND SPORT", "CORVETTE E-RAY", "CORVETTE Z06", "CORVETTE ZR1", "CORVETTE ZR1X"]
-            corvette_list = ", ".join(f"'{m}'" for m in corvette_models)
-            conditions.append(f"v.model IN ({corvette_list})")
+        if model == "CORVETTE (C8)":
+            conditions.append("v.model LIKE 'CORVETTE%'")
+            conditions.append("v.modelYear >= '2020'")
         else:
             conditions.append(f"v.model = '{model}'")
-    if body:
-        conditions.append(f"v.body = '{body}'")
-    if trim:
-        conditions.append(f"v.trim = '{trim}'")
-    if engine:
-        conditions.append(f"e.engine_type = '{engine}'")
-    if trans:
-        conditions.append(f"t.transmission_type = '{trans}'")
+            
+    if body: conditions.append(f"v.body = '{body}'")
+    if trim: conditions.append(f"v.trim = '{trim}'")
+    if engine: conditions.append(f"e.engine_type = '{engine}'")
+    if trans: conditions.append(f"t.transmission_type = '{trans}'")
 
     where_clause = f"WHERE {' AND '.join(conditions)}" if conditions else ""
-
     join_clause = """
         JOIN Colors c ON v.color_id = c.color_id
         JOIN Engines e ON v.engine_id = e.engine_id
@@ -397,6 +404,7 @@ def stats():
 
     conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
 
+    # 3. SELECT SQL BASED ON CATEGORY
     if category == 'color':
         sqlStatement = f"""
             WITH ColorCounts AS (
@@ -440,7 +448,6 @@ def stats():
             Ranked AS (
                 SELECT
                     DENSE_RANK() OVER (ORDER BY total_count DESC) AS `rank`,
-                    -- Fix: Handle NULL RPO so the label isn't blank
                     CONCAT(IFNULL(engine_rpo, ''), IF(engine_rpo IS NOT NULL, ' - ', ''), engine_type) AS label, 
                     IFNULL(engine_rpo, '') AS engine_rpo,
                     engine_type,
@@ -451,30 +458,34 @@ def stats():
             SELECT * FROM Ranked;
         """
     elif category == 'production':
-        if not any("v.modelYear" in c for c in conditions):
-            conditions.append(f"v.modelYear = '{target_year}'")
+        prod_conditions = conditions.copy()
+        if not any("v.modelYear" in c for c in prod_conditions):
+            prod_conditions.append(f"v.modelYear = '{target_year}'")
         
-        full_where = f"WHERE {' AND '.join(conditions)}"
-
+        full_where = f"WHERE {' AND '.join(prod_conditions)}"
         sqlStatement = f"""
-            SELECT 
-                DATE_FORMAT(o.creation_date, '%Y-%m-%d') AS label,
-                COUNT(*) AS total_count
+            SELECT DATE_FORMAT(o.creation_date, '%Y-%m-%d') AS label, COUNT(*) AS total_count
             FROM Vehicles v
             JOIN Orders o ON v.order_id = o.order_id
             {full_where}
-            GROUP BY label -- Group by the DATE string, not the TIMESTAMP
-            ORDER BY label ASC;
+            GROUP BY label ORDER BY label ASC;
         """
     else:
         close_connection(conn)
         return jsonify([])
 
+    # 4. EXECUTE AND FILTER RESULTS
     distinct_sql = f"SELECT DISTINCT v.modelYear, v.model, v.body, v.trim, e.engine_type, t.transmission_type FROM Vehicles v {join_clause} {where_clause}"
     distinct_results = execute_read_query(conn, distinct_sql)
     
+    # Get all available years for the dropdown
     all_years_raw = execute_read_query(conn, "SELECT DISTINCT modelYear FROM Vehicles ORDER BY modelYear DESC")
     all_years = [r['modelYear'] for r in all_years_raw if r.get('modelYear')]
+    
+    # --- FILTER THE DROPDOWN LIST ---
+    if model == "CORVETTE (C8)":
+    # Ensure y is treated as an int for the comparison
+        all_years = [y for y in all_years if y is not None and int(y) >= 2020]
     
     viewTable = execute_read_query(conn, sqlStatement)
     close_connection(conn)

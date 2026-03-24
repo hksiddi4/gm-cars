@@ -269,11 +269,9 @@ def sort_price():
                 SELECT DISTINCT v.modelYear, v.model, v.body, v.trim, e.engine_type, e.engine_rpo, 
                     t.transmission_type, c.color_name, o.country 
                 FROM Vehicles v 
-                JOIN Engines e ON v.engine_id = e.engine_id 
-                JOIN Transmissions t ON v.transmission_id = t.transmission_id 
-                JOIN Colors c ON v.color_id = c.color_id 
-                JOIN Orders o ON v.order_id = o.order_id 
+                {join_clause}
                 {current_where}
+                GROUP BY v.vehicle_id
                 {rpo_clause}
             """
             results = execute_read_query(conn, sqlStatement, current_params)

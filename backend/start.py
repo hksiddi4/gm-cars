@@ -361,28 +361,25 @@ def sort_price():
 def stats():
     category = request.args.get('category', '').strip() or None
     year = request.args.get('year', '').strip() or None
+    model = request.args.get('model', '').strip() or None
     body = request.args.get('body', '').strip() or None
     trim = request.args.get('trim', '').strip() or None
     engine = request.args.get('engine', '').strip() or None
     trans = request.args.get('trans', '').strip() or None
-    model = request.args.get('model', '').strip() or None
 
-    # 1. CONFLICT RESOLUTION
-    # Reset year if it's incompatible with the C8 model (pre-2020)
-    # Convert year to int to compare with 2020
+    conditions = []
+    year_cond = None
+    
     if model == "CORVETTE (C8)" and year and int(year) < 2020:
         year = None
         target_year = "2026"
     else:
-        target_year = year if year and year.strip() != "" else "2026"
-    
-    target_year = year if year and year.strip() != "" else "2026"
+        target_year = year if year else "2026"
 
-    # 2. BUILD SQL CONDITIONS
-    conditions = []
     if year:
-        conditions.append(f"v.modelYear = '{year}'")
-    
+        year_cond = f"v.modelYear = '{year}'"
+        conditions.append(year_cond)
+
     if model:
         if model == "CORVETTE (C8)":
             conditions.append("v.model LIKE 'CORVETTE%'")
@@ -404,7 +401,6 @@ def stats():
 
     conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
 
-    # 3. SELECT SQL BASED ON CATEGORY
     if category == 'color':
         sqlStatement = f"""
             WITH ColorCounts AS (
@@ -487,8 +483,32 @@ def stats():
     # Ensure y is treated as an int for the comparison
         all_years = [y for y in all_years if y is not None and int(y) >= 2020]
     
-    viewTable = execute_read_query(conn, sqlStatement)
+    viewTable = execute_read_query(conn, sqlStatement) if category else []
+
+    # 3. DYNAMIC DROPDOWN LOGIC (Like the /vehicles page)
+    # Fetch years agnostic of the current year selection
+    year_agnostic_conds = [c for c in conditions if c != year_cond]
+    year_where = f"WHERE {' AND '.join(year_agnostic_conds)}" if year_agnostic_conds else ""
+    
+    # Query for the Year dropdown
+    year_sql = f"SELECT DISTINCT v.modelYear FROM Vehicles v {join_clause} {year_where} ORDER BY v.modelYear DESC"
+    all_years_raw = execute_read_query(conn, year_sql)
+    all_years = [r['modelYear'] for r in all_years_raw if r.get('modelYear')]
+
+    # Query for all other dropdowns based on FULL filters
+    distinct_sql = f"""
+        SELECT DISTINCT v.model, v.body, v.trim, e.engine_type, t.transmission_type 
+        FROM Vehicles v 
+        {join_clause} 
+        {where_clause}
+    """
+    distinct_results = execute_read_query(conn, distinct_sql)
+    
     close_connection(conn)
+
+    # Final logic for the CORVETTE (C8) year restriction
+    if model == "CORVETTE (C8)":
+        all_years = [y for y in all_years if y and int(y) >= 2020]
 
     return jsonify({
         'stats_data': viewTable,

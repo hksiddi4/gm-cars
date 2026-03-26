@@ -21,7 +21,7 @@ app.use(express.json());
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
 
-let maintenanceMode = false; // Toggle this to true to lock the site
+let maintenanceMode = true; // Toggle this to true to lock the site
 
 // --- Helper Functions ---
 

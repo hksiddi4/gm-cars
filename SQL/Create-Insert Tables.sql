@@ -401,7 +401,6 @@ UPDATE Colors SET rpo_code = 'G6M' WHERE color_name = 'GALACTIC GRAY METALLIC';
 UPDATE Colors SET rpo_code = 'GBD' WHERE color_name = 'AEGEAN STONE';
 UPDATE Colors SET rpo_code = 'GXP' WHERE color_name = 'DEEP SEA METALLIC';
 UPDATE Colors SET rpo_code = 'G5D' WHERE color_name = 'LATTE METALLIC';
-
 UPDATE Colors SET rpo_code = 'GRF' WHERE color_name = 'BLADE SILVER MATTE';
 
 UPDATE Colors SET rpo_code = 'G' WHERE color_name = '';
@@ -453,3 +452,6 @@ FROM Vehicles v
 JOIN Orders o ON v.order_id = o.order_id
 WHERE o.creation_date = (SELECT MAX(creation_date) FROM Orders)
 GROUP BY v.model;
+
+select * from Orders where order_number = 'FRCB2N';
+delete from Vehicles where vin = '1G1YB2D46T5100433';

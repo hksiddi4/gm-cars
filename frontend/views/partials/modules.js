@@ -126,6 +126,9 @@ const colorMap = {
   "AEGEAN STONE": "GBD",
   "DEEP SEA METALLIC": "GXP",
   "LATTE METALLIC": "G5D",
+  "DRIFT METALLIC": "GAE",
+  "BLADE SILVER MATTE": "GRF",
+  "BRONZE DUNE METALLIC": "GMU",
 };
 
 const intColor = {

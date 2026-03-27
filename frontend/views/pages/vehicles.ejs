@@ -204,8 +204,8 @@
                             </th>
                             <th scope="col">
                                 <div class="dropdown-container">
-                                    <select id="rpoSelect" class="form-select small-dropdown <%= selectedRPO ? 'active-filter' : '' %>">
-                                        <% const rpo = Array.isArray(selectedRPO) ? selectedRPO[0] : selectedRPO; %>
+                                    <% const rpo = Array.isArray(selectedRPO) ? selectedRPO[0] : selectedRPO; %>
+                                    <select id="rpoSelect" class="form-select small-dropdown <%= rpo ? 'active-filter' : '' %>">
                                         <option value="" <% if (!rpo) { %>selected<% } %>>Package/Option</option>
                                         <optgroup label="Camaro">
                                             <option value="Z4B" <% if (rpo === 'Z4B') { %>selected<% } %>>Collector's Edition</option>

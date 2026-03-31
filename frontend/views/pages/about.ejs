@@ -315,13 +315,13 @@
 
                 if (model === "CORVETTE" && isMulti) {
                     if (year === "2019") {
-                        params.push('model=CORVETTE+GRAND+SPORT', 'model=CORVETTE+STINGRAY', 'model=CORVETTE+STINGRAY+W%2F+Z51', 'model=CORVETTE+Z06', 'model=CORVETTE+ZR1');
+                        params.push('model=CORVETTE%20GRAND%20SPORT', 'model=CORVETTE%20STINGRAY', 'model=CORVETTE%20STINGRAY%20W%2F%20Z51', 'model=CORVETTE%20Z06', 'model=CORVETTE%20ZR1');
                     } else {
-                        params.push('model=CORVETTE+E-RAY', 'model=CORVETTE+STINGRAY', 'model=CORVETTE+Z06', 'model=CORVETTE+ZR1', 'model=CORVETTE+ZR1X');
+                        params.push('model=CORVETTE%20E-RAY', 'model=CORVETTE%20STINGRAY', 'model=CORVETTE%20Z06', 'model=CORVETTE%20ZR1', 'model=CORVETTE%20ZR1X');
                     }
                 } 
                 else if (model === "HUMMER EV" && isMulti) {
-                    params.push('model=HUMMER+EV+PICKUP', 'model=HUMMER+EV+SUV');
+                    params.push('model=HUMMER%20EV%20PICKUP', 'model=HUMMER%20EV%20SUV');
                 } 
                 else if (model) {
                     params.push(`model=${encodeURIComponent(model)}`);

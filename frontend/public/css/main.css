@@ -393,6 +393,95 @@ img {
     flex-grow: 1;
 }
 
+.text-legacy {
+    color: #535353 !important;
+}
+
+.model-btn.text-legacy {
+    color: #666 !important;
+    border-color: #444 !important;
+}
+
+.model-btn.text-legacy:hover {
+    color: #888 !important;
+    background-color: #2b2b2b;
+}
+
+.model-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background-color: #3d3d3d;
+    color: white !important;
+    text-decoration: none !important;
+    font-size: 0.8rem;
+    font-weight: 600;
+    transition: color 0.2s ease, background-color 0.2s ease;
+    border: 1px solid #444;
+    text-align: center;
+}
+
+.model-btn:hover {
+    color: #787878 !important;
+    background-color: #2b2b2b;
+}
+
+@media (max-width: 1521px) {
+    .model-btn {
+        font-size: 0.7rem;
+        padding: 10px 5px;
+    }
+}
+
+/* Corvette Featured Button */
+.featured-corvette-btn {
+    background: linear-gradient(145deg, #444, #222) !important;
+    border: 1px solid #cc0000 !important;
+    font-weight: 800 !important;
+    letter-spacing: 3px;
+}
+
+.featured-corvette-btn:hover {
+    background-color: #cc0000 !important;
+    color: white !important;
+}
+
+.vette-variant-btn {
+    font-size: 0.75rem !important;
+    background-color: #2b2b2b !important;
+    border: 1px dashed #555 !important;
+}
+
+.vette-variant-btn:hover {
+    border-style: solid !important;
+    border-color: #cc0000 !important;
+}
+
+/* GMC/Hummer Featured Button */
+.featured-gmc-btn {
+    background: linear-gradient(145deg, #444, #222) !important;
+    border: 1px solid #007bff !important;
+    font-weight: 800 !important;
+    letter-spacing: 3px;
+}
+
+.featured-gmc-btn:hover {
+    background-color: #007bff !important;
+    color: white !important;
+}
+
+.hummer-variant-btn {
+    font-size: 0.75rem !important;
+    background-color: #2b2b2b !important;
+    border: 1px dashed #555 !important;
+}
+
+.hummer-variant-btn:hover {
+    border-style: solid !important;
+    border-color: #007bff !important;
+}
+
 .footer {
     width: 100%;
     text-align: inherit;

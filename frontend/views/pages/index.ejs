@@ -92,13 +92,16 @@
                     <div class="row g-2">
                         <% 
                         const caddyModels = ['CT4', 'CT5', 'CT6', 'ESCALADE', 'ESCALADE IQ'];
+                        caddyModels.forEach(model => {
+                            const isLegacy = false; 
                         %>
-                        <div class="col-6 col-md-4 col-lg-3 i-link">
-                            <a href="/vehicles?model=<%= encodeURIComponent(model) %>" 
-                            class="model-btn w-100 <%= isLegacy ? 'text-legacy' : '' %>">
-                                <%= model %>
-                            </a>
-                        </div>
+                            <div class="col-6 col-md-4 col-lg-3 i-link">
+                                <a href="/vehicles?model=<%= encodeURIComponent(model) %>" 
+                                class="model-btn w-100 <%= isLegacy ? 'text-legacy' : '' %>">
+                                    <%= model %>
+                                </a>
+                            </div>
+                        <% }); %>
                     </div>
                 </div>
 

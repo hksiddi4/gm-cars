@@ -488,9 +488,6 @@ img {
     padding: 0 0 5px;
     color: #858585;
     margin-top: auto;
-    justify-content: space-between;
-    align-items: center;
-    display: flex;
 }
 
 /* Vehicles */

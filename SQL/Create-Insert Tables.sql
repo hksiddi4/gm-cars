@@ -457,3 +457,6 @@ GROUP BY v.model;
 
 select * from Orders where order_number = 'FRCB2N';
 delete from Vehicles where vin = '1G1YB2D46T5100433';
+
+SELECT * FROM Vehicles v 
+WHERE SUBSTRING(v.vin, 5, 4) = '9RRL';

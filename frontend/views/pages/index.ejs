@@ -90,18 +90,43 @@
 
                     <h5 class="mt-4 mb-2" style="color: white; font-size: 0.9rem; letter-spacing: 1px;">CADILLAC</h5>
                     <div class="row g-2">
-                        <% 
-                        const caddyModels = ['CT4', 'CT5', 'CT6', 'ESCALADE', 'ESCALADE IQ'];
-                        caddyModels.forEach(model => {
-                            const isLegacy = false; 
-                        %>
-                            <div class="col-6 col-md-4 col-lg-3 i-link">
-                                <a href="/vehicles?model=<%= encodeURIComponent(model) %>" 
-                                class="model-btn w-100 <%= isLegacy ? 'text-legacy' : '' %>">
-                                    <%= model %>
-                                </a>
+                        <div class="col-6 col-md-4 col-lg-3">
+                            <div class="row g-2">
+                                <% 
+                                const standardCaddy = ['CT4', 'CT5', 'CT6'];
+                                standardCaddy.forEach(model => { 
+                                %>
+                                    <div class="col-12 i-link">
+                                        <a href="/vehicles?model=<%= encodeURIComponent(model) %>" class="model-btn w-100">
+                                            <%= model %>
+                                        </a>
+                                    </div>
+                                <% }); %>
                             </div>
-                        <% }); %>
+                        </div>
+
+                        <div class="col-6 col-md-8 col-lg-9">
+                            <div class="row g-2">
+                                <div class="col-12 i-link">
+                                    <a href="/vehicles?model=ESCALADE&model=ESCALADE%20ESV&model=ESCALADE%20IQ" 
+                                    class="model-btn w-100 featured-caddy-btn d-flex align-items-center justify-content-center">
+                                        <i class="bi bi-gem me-2"></i> ALL ESCALADE MODELS
+                                    </a>
+                                </div>
+
+                                <% 
+                                const escaladeVariants = ['ESCALADE', 'ESCALADE ESV', 'ESCALADE IQ'];
+                                escaladeVariants.forEach(model => { 
+                                %>
+                                    <div class="col-12 col-md-6 col-lg-4 i-link">
+                                        <a href="/vehicles?model=<%= encodeURIComponent(model) %>" 
+                                        class="model-btn w-100 caddy-variant-btn">
+                                            <%= model %>
+                                        </a>
+                                    </div>
+                                <% }); %>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

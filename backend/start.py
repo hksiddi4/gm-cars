@@ -167,7 +167,7 @@ def sort_price():
             "WBL": ["v.model = 'CAMARO'", "v.trim NOT IN ('ZL1', '1LS')", "c.color_name IN ('BLACK', 'SUMMIT WHITE', 'SHARKSKIN METALLIC', 'SATIN STEEL GRAY METALLIC')"],
             "B2E": ["v.model = 'CAMARO'", "v.trim IN ('2LT', '2SS', '3LT')", "v.modelYear != '2024'", "c.color_name IN ('BLACK', 'SUMMIT WHITE', 'RAPID BLUE', 'SHARKSKIN METALLIC', 'SATIN STEEL GRAY METALLIC', 'SHOCK')"],
             "ZCR": ["v.model = 'CORVETTE STINGRAY'", "v.modelYear = '2022'", "v.trim = '3LT'", "(c.color_name = 'HYPERSONIC GRAY METALLIC' OR c.color_name = 'ACCELERATE YELLOW METALLIC')"],
-            "ZTK": ["v.model = 'CORVETTE ZR1'"],
+            "ZTK": ["v.model IN ('CORVETTE ZR1', 'CORVETTE ZR1X'"],
             "Z07": ["v.model = 'CORVETTE Z06'"],
             "Z51": ["v.model = 'CORVETTE STINGRAY'"],
             "Y70": ["v.model IN ('CORVETTE STINGRAY', 'CORVETTE Z06')", "v.modelYear = '2023'", "v.trim IN ('3LT', '3LZ')", "(c.color_name = 'WHITE PEARL METALLIC TRICOAT' OR c.color_name = 'CARBON FLASH METALLIC')"],

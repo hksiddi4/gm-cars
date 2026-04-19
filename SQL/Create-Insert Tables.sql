@@ -444,8 +444,10 @@ LEFT JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id
 LEFT JOIN Colors c ON v.color_id = c.color_id
 LEFT JOIN Dealers dl ON v.dealer_id = dl.dealer_id
 LEFT JOIN Orders o ON v.order_id = o.order_id
-ORDER BY v.vehicle_id ASC
+ORDER BY v.vehicle_id DESC
 LIMIT 20;
+
+select * from vehicles where vin = '';
 
 SELECT v.model, COUNT(*) as added_count
 FROM Vehicles v

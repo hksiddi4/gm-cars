@@ -28,7 +28,7 @@ let maintenanceMode = false; // Toggle this to true to lock the site
 function getHeaderImages() {
     try {
         const files = fs.readdirSync(headerImagesDir);
-        return files.filter(file => /\.(png)$/i.test(file)).map(file => `/img/header/${file}`);
+        return files.filter(file => /\.(webp)$/i.test(file)).map(file => `/img/header/${file}`);
     } catch (err) {
         console.error('Error reading header images:', err);
         return [];
@@ -45,7 +45,7 @@ function getLocalImageRPOs() {
         modelDirs.forEach(modelDir => {
             const modelPath = path.join(rpoWheelsDir, modelDir);
             const imageFiles = fs.readdirSync(modelPath)
-                .filter(file => /\.(jpg|jpeg|png|webp)$/i.test(file));
+                .filter(file => /\.(webp)$/i.test(file));
             
             imageFiles.forEach(file => {
                 const rpoCode = path.parse(file).name.toUpperCase();

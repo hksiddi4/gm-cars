@@ -60,7 +60,7 @@
                         }) %>
 
                         <button type="submit" class="btn btn-primary mt-3 w-100">Apply Filters</button>
-                        <% if (selectedModels.length > 0 || selectedRPO || selectedTrim || selectedEngine || selectedTrans || selectedYear || selectedBody || selectedColor || selectedCountry || limit != 100 || selectedOrder) { %>
+                        <% if (selectedModels.length > 0 || selectedRPO || selectedTrim || selectedEngine || selectedTrans || selectedDrivetrain || selectedYear || selectedBody || selectedColor || selectedCountry || limit != 100 || selectedOrder) { %>
                             <button type="button" id="clearFilters" class="btn btn-secondary mt-2 w-100">Clear All</button>
                         <% } %>
                     </form>
@@ -110,6 +110,7 @@
                 trim: selectedTrim,
                 engine: selectedEngine,
                 trans: selectedTrans,
+                drivetrain: selectedDrivetrain,
                 year: selectedYear,
                 body: selectedBody,
                 color: selectedColor,
@@ -187,7 +188,20 @@
                                     </select>
                                 </div>
                             </th>
-                            <th scope="col">Drivetrain</th>
+                            <th scope="col">
+                                <% if (typeof drivetrains !== 'undefined' && drivetrains.length > 1) { %>
+                                    <div class="dropdown-container">
+                                        <select id="drivetrainSelect" class="form-select small-dropdown <%= selectedDrivetrain ? 'active-filter' : '' %>">
+                                            <option value="">Drivetrain</option>
+                                            <% drivetrains.forEach(function(dt) { %>
+                                                <option value="<%= dt %>" <% if (selectedDrivetrain === dt) { %>selected<% } %>><%= dt %></option>
+                                            <% }) %>
+                                        </select>
+                                    </div>
+                                <% } else { %>
+                                    Drivetrain
+                                <% } %>
+                            </th>
                             <th scope="col">
                                 <div class="dropdown-container">
                                     <select id="colorSelect" class="form-select small-dropdown <%= selectedColor ? 'active-filter' : '' %>">
@@ -475,6 +489,7 @@
             const trimSelect = document.getElementById('trimSelect');
             const engineSelect = document.getElementById('engineSelect');
             const transSelect = document.getElementById('transSelect');
+            const drivetrainSelect = document.getElementById('drivetrainSelect');
             const colorSelect = document.getElementById('colorSelect');
             const countrySelect = document.getElementById('countrySelect');
             const orderSelect = document.getElementById('orderSelect');
@@ -610,6 +625,7 @@
             addSelectListener('trimSelect', 'trim');
             addSelectListener('engineSelect', 'engine');
             addSelectListener('transSelect', 'trans');
+            addSelectListener('drivetrainSelect', 'drivetrain');
             addSelectListener('colorSelect', 'color');
             addSelectListener('countrySelect', 'country');
             addSelectListener('limitSelect', 'limit');
@@ -639,6 +655,7 @@
                 addIfNotEmpty('trim', trimSelect.value);
                 addIfNotEmpty('engine', engineSelect.value);
                 addIfNotEmpty('trans', transSelect.value);
+                addIfNotEmpty('drivetrain', drivetrainSelect.value);
                 addIfNotEmpty('color', colorSelect.value);
                 addIfNotEmpty('country', countrySelect.value);
                 addIfNotEmpty('limit', limitSelect.value);

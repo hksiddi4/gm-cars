@@ -88,6 +88,7 @@ def sort_price():
     trim = request.args.get('trim')
     engine = request.args.get('engine')
     trans = request.args.get('trans')
+    drivetrain = request.args.get('drivetrain')
     models_list = request.args.getlist('model') or request.args.getlist('model[]')
     rpo = request.args.get('rpo')
     color = request.args.get('color')
@@ -142,6 +143,9 @@ def sort_price():
     if trans:
         conditions.append("t.transmission_type = %s")
         params.append(trans)
+    if drivetrain:
+        conditions.append("d.drivetrain_type = %s")
+        params.append(drivetrain)
     if color:
         conditions.append("c.color_name = %s")
         params.append(color)
@@ -249,6 +253,7 @@ def sort_price():
             trims = execute_read_query(conn, "SELECT DISTINCT trim FROM Vehicles ORDER BY trim ASC")
             engines = execute_read_query(conn, "SELECT engine_rpo AS rpo, engine_type AS name FROM Engines ORDER BY engine_rpo ASC")
             trans = execute_read_query(conn, "SELECT DISTINCT transmission_type FROM Transmissions ORDER BY transmission_type ASC")
+            drivetrains = execute_read_query(conn, "SELECT DISTINCT drivetrain_type FROM Drivetrains ORDER BY drivetrain_type ASC")
             colors = execute_read_query(conn, "SELECT DISTINCT color_name FROM Colors ORDER BY color_name ASC")
             countries = execute_read_query(conn, "SELECT DISTINCT country FROM Orders ORDER BY country ASC")
             close_connection(conn)
@@ -259,15 +264,16 @@ def sort_price():
                 'body': [r['body'] for r in bodies],
                 'trim': [r['trim'] for r in trims],
                 'transmission_type': [r['transmission_type'] for r in trans],
+                'drivetrain_type': [r['drivetrain_type'] for r in drivetrains],
                 'color_name': [r['color_name'] for r in colors],
                 'country': [r['country'] for r in countries]
             }, engines
         
         else:
-            columns = ['modelYear', 'body', 'trim', 'transmission_type', 'model', 'color_name', 'country']
+            columns = ['modelYear', 'body', 'trim', 'transmission_type', 'drivetrain_type', 'model', 'color_name', 'country']
             sqlStatement = f"""
                 SELECT DISTINCT v.modelYear, v.model, v.body, v.trim, e.engine_type, e.engine_rpo, 
-                    t.transmission_type, c.color_name, o.country 
+                    t.transmission_type, d.drivetrain_type, c.color_name, o.country 
                 FROM Vehicles v 
                 {join_clause}
                 {current_where}
@@ -301,6 +307,7 @@ def sort_price():
     body_list = distinct_values['body']
     trim_list = distinct_values['trim']
     trans_list = distinct_values['transmission_type']
+    drivetrain_list = distinct_values['drivetrain_type']
     model_list = distinct_values['model']
     color_list = distinct_values['color_name']
     country_list = distinct_values['country']
@@ -353,6 +360,7 @@ def sort_price():
         'trim': trim_list,
         'engine': engine_list,
         'trans': trans_list,
+        'drivetrain': drivetrain_list,
         'color': color_list,
         'country': country_list
     })
@@ -366,7 +374,7 @@ def stats():
     trim = request.args.get('trim', '').strip() or None
     engine = request.args.get('engine', '').strip() or None
     trans = request.args.get('trans', '').strip() or None
-
+    drivetrain = request.args.get('drivetrain', '').strip() or None
     conditions = []
     year_cond = None
     
@@ -391,12 +399,13 @@ def stats():
     if trim: conditions.append(f"v.trim = '{trim}'")
     if engine: conditions.append(f"e.engine_type = '{engine}'")
     if trans: conditions.append(f"t.transmission_type = '{trans}'")
-
+    if drivetrain: conditions.append(f"d.drivetrain_type = '{drivetrain}'")
     where_clause = f"WHERE {' AND '.join(conditions)}" if conditions else ""
     join_clause = """
         JOIN Colors c ON v.color_id = c.color_id
         JOIN Engines e ON v.engine_id = e.engine_id
         JOIN Transmissions t ON v.transmission_id = t.transmission_id
+        JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id
     """
 
     conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
@@ -471,7 +480,7 @@ def stats():
         return jsonify([])
 
     # 4. EXECUTE AND FILTER RESULTS
-    distinct_sql = f"SELECT DISTINCT v.modelYear, v.model, v.body, v.trim, e.engine_type, t.transmission_type FROM Vehicles v {join_clause} {where_clause}"
+    distinct_sql = f"SELECT DISTINCT v.modelYear, v.model, v.body, v.trim, e.engine_type, t.transmission_type, d.drivetrain_type FROM Vehicles v {join_clause} {where_clause}"
     distinct_results = execute_read_query(conn, distinct_sql)
     
     # Get all available years for the dropdown
@@ -497,7 +506,7 @@ def stats():
 
     # Query for all other dropdowns based on FULL filters
     distinct_sql = f"""
-        SELECT DISTINCT v.model, v.body, v.trim, e.engine_type, t.transmission_type 
+        SELECT DISTINCT v.model, v.body, v.trim, e.engine_type, t.transmission_type, d.drivetrain_type
         FROM Vehicles v 
         {join_clause} 
         {where_clause}
@@ -519,6 +528,7 @@ def stats():
         'trim': sorted(set(r['trim'] for r in distinct_results if r.get('trim'))),
         'engine': sorted(set(r['engine_type'] for r in distinct_results if r.get('engine_type'))),
         'trans': sorted(set(r['transmission_type'] for r in distinct_results if r.get('transmission_type'))),
+        'drivetrain': sorted(set(r['drivetrain_type'] for r in distinct_results if r.get('drivetrain_type'))),
         'category': category
     })
     

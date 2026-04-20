@@ -189,18 +189,16 @@
                                 </div>
                             </th>
                             <th scope="col">
-                                <% if (typeof drivetrains !== 'undefined' && drivetrains.length > 1) { %>
-                                    <div class="dropdown-container">
-                                        <select id="drivetrainSelect" class="form-select small-dropdown <%= selectedDrivetrain ? 'active-filter' : '' %>">
-                                            <option value="">Drivetrain</option>
+                                <div class="dropdown-container">
+                                    <select id="drivetrainSelect" class="form-select small-dropdown <%= selectedDrivetrain ? 'active-filter' : '' %>">
+                                        <option value="">Drivetrain</option>
+                                        <% if (typeof drivetrains !== 'undefined') { %>
                                             <% drivetrains.forEach(function(dt) { %>
                                                 <option value="<%= dt %>" <% if (selectedDrivetrain === dt) { %>selected<% } %>><%= dt %></option>
                                             <% }) %>
-                                        </select>
-                                    </div>
-                                <% } else { %>
-                                    Drivetrain
-                                <% } %>
+                                        <% } %>
+                                    </select>
+                                </div>
                             </th>
                             <th scope="col">
                                 <div class="dropdown-container">
@@ -635,9 +633,9 @@
 
                 const params = new URLSearchParams();
 
-                const currentRpo = new URLSearchParams(window.location.search).get('rpo');
-                if (currentRpo) {
-                    params.set('rpo', currentRpo);
+                const currentUrlParams = new URLSearchParams(window.location.search);
+                if (currentUrlParams.has('rpo')) {
+                    params.set('rpo', currentUrlParams.get('rpo'));
                 }
 
                 const checkboxes = filterForm.querySelectorAll('input[type="checkbox"]');
@@ -645,21 +643,28 @@
                     if (cb.checked) params.append('model', cb.value);
                 });
 
-                const addIfNotEmpty = (key, value) => {
-                    if (value) params.set(key, value);
+                const addIfPresent = (id, paramName) => {
+                    const el = document.getElementById(id);
+                    if (el && el.value) {
+                        params.set(paramName, el.value);
+                    } else if (!el && currentUrlParams.has(paramName)) {
+                        params.set(paramName, currentUrlParams.get(paramName));
+                    }
                 };
 
-                addIfNotEmpty('rpo', rpoSelect.value);
-                addIfNotEmpty('year', yearSelect.value);
-                addIfNotEmpty('body', bodySelect.value);
-                addIfNotEmpty('trim', trimSelect.value);
-                addIfNotEmpty('engine', engineSelect.value);
-                addIfNotEmpty('trans', transSelect.value);
-                addIfNotEmpty('drivetrain', drivetrainSelect.value);
-                addIfNotEmpty('color', colorSelect.value);
-                addIfNotEmpty('country', countrySelect.value);
-                addIfNotEmpty('limit', limitSelect.value);
-                addIfNotEmpty('order', selectedOrder);
+                addIfPresent('yearSelect', 'year');
+                addIfPresent('bodySelect', 'body');
+                addIfPresent('trimSelect', 'trim');
+                addIfPresent('engineSelect', 'engine');
+                addIfPresent('transSelect', 'trans');
+                addIfPresent('drivetrainSelect', 'drivetrain');
+                addIfPresent('colorSelect', 'color');
+                addIfPresent('countrySelect', 'country');
+                addIfPresent('limitSelect', 'limit');
+                
+                if (selectedOrder) params.set('order', selectedOrder);
+
+                params.set('page', 1);
 
                 window.location.href = `/vehicles?${params.toString()}`;
             });

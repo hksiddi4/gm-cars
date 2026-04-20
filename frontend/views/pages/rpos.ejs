@@ -77,7 +77,7 @@
                 card.className = 'rpo-card';
 
                 const img = document.createElement('img');
-                img.src = `../img/rpos/${model}/${rpo}.jpg`;
+                img.src = `../img/rpos/${model}/${rpo}.webp`;
                 img.alt = rpo;
                 img.onerror = function() {
                     if (!this.dataset.fallback) {
@@ -86,11 +86,11 @@
                         const gmcModels = ['hummer', 'hummersuv'];
                         let imagePath = '../img/brand-logos/';
                         if (cadillacModels.includes(model)) {
-                            imagePath += 'cadillac.png';
+                            imagePath += 'cadillac.webp';
                         } else if (gmcModels.includes(model)) {
-                            imagePath += 'gmc.png';
+                            imagePath += 'gmc.webp';
                         } else {
-                            imagePath += 'chevrolet.png';
+                            imagePath += 'chevrolet.webp';
                         }
                         this.src = imagePath;
                         missingRpos.push(rpo);

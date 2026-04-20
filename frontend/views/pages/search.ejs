@@ -151,11 +151,11 @@
                       <td>
                         <% if (data.country) { %>
                           <% if (data.country === 'CANADA') { %>
-                            <img src="../../img/flags/canada_flag.png" alt="Canada Flag" width="30" style="margin-right: 5px;">CANADA
+                            <img src="../../img/flags/canada_flag.webp" alt="Canada Flag" width="30" style="margin-right: 5px;">CANADA
                           <% } else if (data.country === 'USA') { %>
-                            <img src="../../img/flags/usa_flag.png" alt="USA Flag" width="30" style="margin-right: 5px;">UNITED STATES
+                            <img src="../../img/flags/usa_flag.webp" alt="USA Flag" width="30" style="margin-right: 5px;">UNITED STATES
                           <% } else if (data.country === 'MEXICO') { %>
-                            <img src="../../img/flags/mexico_flag.png" alt="Mexico Flag" width="30" style="margin-right: 5px;">Mexico
+                            <img src="../../img/flags/mexico_flag.webp" alt="Mexico Flag" width="30" style="margin-right: 5px;">Mexico
                           <% } %>
                         <% } %>
                       </td>
@@ -339,19 +339,19 @@
             const img = new Image();
             let imgSrc;
             if (model.startsWith('CORVETTE')) {
-              imgSrc = `../img/rpos/corvette/${rpoCode}.jpg`;
+              imgSrc = `../img/rpos/corvette/${rpoCode}.webp`;
             } else if (model === 'ESCALADE IQ') {
-              imgSrc = `../img/rpos/escaladeiq/${rpoCode}.jpg`;
+              imgSrc = `../img/rpos/escaladeiq/${rpoCode}.webp`;
             } else if (model === 'CT4' && vehicleTrim.startsWith('V-SERIES')) {
-                imgSrc = `../img/rpos/ct4v/${rpoCode}.jpg`;
+                imgSrc = `../img/rpos/ct4v/${rpoCode}.webp`;
             } else if (model === 'CT5' && vehicleTrim.startsWith('V-SERIES')) {
-                imgSrc = `../img/rpos/ct5v/${rpoCode}.jpg`;
+                imgSrc = `../img/rpos/ct5v/${rpoCode}.webp`;
             } else if (model === 'HUMMER EV PICKUP') {
-              imgSrc = `../img/rpos/hummer/${rpoCode}.jpg`;
+              imgSrc = `../img/rpos/hummer/${rpoCode}.webp`;
             } else if (model === 'HUMMER EV SUV') {
-              imgSrc = `../img/rpos/hummersuv/${rpoCode}.jpg`;
+              imgSrc = `../img/rpos/hummersuv/${rpoCode}.webp`;
             } else {
-              imgSrc = `../img/rpos/${model.toLowerCase()}/${rpoCode}.jpg`;
+              imgSrc = `../img/rpos/${model.toLowerCase()}/${rpoCode}.webp`;
             }
 
             img.src = imgSrc;
@@ -488,11 +488,11 @@
         const mmc = <%- JSON.stringify(mmc) %>;
         const colorMap = <%- JSON.stringify(colorMap) %>;
         let intColor = <%- JSON.stringify(intColor) %>;
-        const ghostImg = '../../img/ghost-chevrolet-car-alt.png';
+        const ghostImg = '../../img/ghost-chevrolet-car-alt.webp';
         
-        if (model === 'CAMARO') fallbackImg = '../../img/vehicleLogos/camaro.png';
-        else if (model.startsWith('CT')) fallbackImg = '../../img/vehicleLogos/cadillac.png';
-        else if (model.startsWith('CORVETTE')) fallbackImg = '../../img/vehicleLogos/corvette.png';
+        if (model === 'CAMARO') fallbackImg = '../../img/vehicleLogos/camaro.webp';
+        else if (model.startsWith('CT')) fallbackImg = '../../img/vehicleLogos/cadillac.webp';
+        else if (model.startsWith('CORVETTE')) fallbackImg = '../../img/vehicleLogos/corvette.webp';
         else fallbackImg = ghostImg;
         carouselImage.removeAttribute('src');
         carouselImage.classList.add('shimmer');

@@ -10,7 +10,6 @@ services:
       - DB_PASS
       - DB_NAME
 
-
   frontend:
     build: ./frontend
     networks:

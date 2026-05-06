@@ -50,5 +50,5 @@ networks:
   front-macvlan:
     external: true
   gramps-net:
-    name: ix-gramps-web_ix-internal-gramps-net
+    name: ix-internal-gramps-web-gramps-net
     external: true

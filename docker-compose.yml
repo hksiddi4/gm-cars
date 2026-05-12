@@ -30,6 +30,7 @@ services:
         ipv4_address: 192.168.1.50
       app-network: {}
       gramps-net: {}
+      nextcloud-net: {}
     environment:
       - TZ=${TZ:-UTC}
     volumes:
@@ -61,4 +62,7 @@ networks:
     external: true
   gramps-net:
     name: ix-internal-gramps-web-gramps-net
+    external: true
+  nextcloud-net:
+    name: ix-internal-nextcloud-nextcloud-net
     external: true

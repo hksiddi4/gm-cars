@@ -187,6 +187,9 @@ def sort_price():
             "ZLZ5": ["v.modelYear = '2025'", "v.model ='CT5'", "v.trim = 'V-SERIES BLACKWING'", "c.color_name = 'MAGNUS METAL FROST'"],
             "ABQ": ["v.modelYear = '2023'", "v.model = 'CT5'", "v.trim = 'V-SERIES BLACKWING'", "v.msrp > '118000'"],
             "ZLT": ["v.modelYear = '2024'", "v.model = 'CT5'", "v.trim = 'V-SERIES BLACKWING'", "opt.option_code IN ('ZLT', 'ZLV')"],
+            "V8V": ["v.modelYear = '2026'", "v.model = 'CT5'", "v.trim = 'V-SERIES BLACKWING'"],
+            "PCK": ["v.modelYear = '2026'", "v.model = 'CT5'", "v.trim = 'V-SERIES BLACKWING'", "c.color_name = 'DEEP OCEAN TINTCOAT'"],
+            # F1 Collector "": ["v.modelYear = '2026'", "v.model = 'CT5'", "v.trim = 'V-SERIES BLACKWING'", "c.color_name = 'MIDNIGHT STONE FROST'", "opt.option_code = 'V8V'"],
             "Z6X": ["v.model IN ('HUMMER EV SUV', 'HUMMER EV PICKUP')"],
             "WFP": ["v.modelYear = '2024'", "v.model = 'HUMMER EV SUV'", "v.trim = '3X'", "c.color_name = 'NEPTUNE BLUE MATTE'"],
         }

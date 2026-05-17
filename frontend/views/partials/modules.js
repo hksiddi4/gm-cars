@@ -129,6 +129,8 @@ const colorMap = {
   "DRIFT METALLIC": "GAE",
   "BLADE SILVER MATTE": "GRF",
   "BRONZE DUNE METALLIC": "GMU",
+  "VIBRANT WHITE TRICOAT": "G4J",
+  "DEEP OCEAN TINTCOAT": "G3Y",
 };
 
 const intColor = {

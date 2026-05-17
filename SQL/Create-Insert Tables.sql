@@ -227,6 +227,9 @@ CROSS JOIN (
     UNION ALL SELECT 'WFP', 'Omega Edition'
 	UNION ALL SELECT 'ZRA', 'Quail Silver Limited Edition'
 	UNION ALL SELECT 'USA', 'Stars & Steel Limited Edition'
+	UNION ALL SELECT 'V8V', 'Precision Package'
+	UNION ALL SELECT 'PCK', 'Deep Ocean Appearance Package'
+	-- UNION ALL SELECT '', 'F1 Collector Edition'
 ) AS special_map ON opt.option_code = special_map.rpo_code
 WHERE NOT EXISTS (
     SELECT 1
@@ -460,3 +463,10 @@ delete from Vehicles where vin = '1G1YB2D46T5100433';
 
 SELECT * FROM Vehicles v 
 WHERE SUBSTRING(v.vin, 5, 4) = '9RRL';
+
+SELECT v.*
+FROM Vehicles v
+JOIN Orders o ON v.order_id = o.order_id
+WHERE o.creation_date = '2021-12-31';
+
+select NOW();

@@ -94,19 +94,72 @@ app.use((req, res, next) => {
 
 // --- ROUTES ---
 
-app.get('/stickers/:folder/:filename', (req, res) => {
+app.get('/stickers/:folder/:filename', async (req, res) => {
     const { folder, filename } = req.params;
     const localFilePath = path.join('/stickers', folder, filename);
 
-    // Check if the file exists in storage
+    // Check if the file exists on your TrueNAS storage
     if (fs.existsSync(localFilePath)) {
-        console.log("local");
+        res.setHeader('X-Sticker-Source', 'local');
         return res.sendFile(localFilePath);
     }
 
-    // Fallback: Extract the VIN from the filename and redirect to GM's servers
+    res.setHeader('X-Sticker-Source', 'fallback');
+
+    // Build the external GM fallback destination
     const vin = filename.replace('.pdf', '');
-    return res.redirect(`https://cws.gm.com/vs-cws/vehshop/v2/vehicle/windowsticker?vin=${vin}`);
+    const gmUrl = `https://cws.gm.com/vs-cws/vehshop/v2/vehicle/windowsticker?vin=${vin}`;
+
+    try {
+        const response = await fetch(gmUrl);
+        const contentType = response.headers.get('content-type') || '';
+
+        // If GM returns JSON or a bad status, parse it for the error code
+        if (!response.ok || contentType.includes('application/json')) {
+            const errorText = await response.text();
+
+            if (errorText.includes('"errorCode":1001') || errorText.includes('No Window Sticker found')) {                
+                // Return clean HTML matching your exact search.ejs
+                return res.send(`
+                    <!DOCTYPE html>
+                    <html lang="en">
+                    <head>
+                        <style>
+                            body {
+                                margin: 0;
+                                padding: 0;
+                                font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                                background-color: transparent;
+                            }
+                            .no-sticker-box {
+                                display: flex; 
+                                justify-content: center; 
+                                align-items: center; 
+                                height: 750px; /* Fits comfortably inside your 800px iframe container */
+                            }
+                            h2 {
+                                font-weight: 500;
+                                color: #212529;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="no-sticker-box">
+                            <h2>No window sticker available</h2>
+                        </div>
+                    </body>
+                    </html>
+                `);
+            }
+        }
+
+        return res.redirect(gmUrl);
+
+    } catch (error) {
+        console.error("Network bottleneck checking GM fallback, defaulting to standard redirect:", error);
+        // Fallback safety net: if your connection to GM times out, issue a standard redirect anyway
+        return res.redirect(gmUrl);
+    }
 });
 
 app.get('/maintenance', (req, res) => {

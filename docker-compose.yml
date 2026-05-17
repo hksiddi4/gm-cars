@@ -22,6 +22,7 @@ services:
       - TZ=${TZ:-UTC}
     volumes:
       - /etc/localtime:/etc/localtime:ro
+      - /mnt/NVMe/Apps/GM-Vehicles/window-stickers:/stickers:ro
 
   nginx:
     image: nginx:stable

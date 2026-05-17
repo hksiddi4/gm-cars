@@ -190,7 +190,6 @@
                 <div style="display: flex; flex-direction: column; align-items: center;">
                   <div style="margin-bottom: 10px;">
                     <a href="<%= stickerPath %>"
-                      id="open-sticker-btn"
                       target="_blank" class="btn btn-sm btn-outline-secondary">
                       Open Window Sticker in New Tab
                     </a>
@@ -484,19 +483,6 @@
             }
           });
         });
-
-        const stickerBtn = document.getElementById('open-sticker-btn');
-        if (stickerBtn) {
-          fetch("<%= stickerPath %>", { method: 'HEAD' })
-            .then(res => {
-              if (res.headers.get('X-Sticker-Source') === 'fallback') {
-                // Swap standard grey outline for Bootstrap's red outline style
-                stickerBtn.classList.remove('btn-outline-secondary');
-                stickerBtn.classList.add('btn-outline-danger');
-              }
-            })
-            .catch(err => console.error('Error verifying sticker asset source:', err));
-        }
 
         setTimeout(() => {
           const stickerFrame = document.getElementById('window-sticker-frame');

@@ -94,6 +94,21 @@ app.use((req, res, next) => {
 
 // --- ROUTES ---
 
+app.get('/stickers/:folder/:filename', (req, res) => {
+    const { folder, filename } = req.params;
+    const localFilePath = path.join('/stickers', folder, filename);
+
+    // Check if the file exists in storage
+    if (fs.existsSync(localFilePath)) {
+        console.log("local");
+        return res.sendFile(localFilePath);
+    }
+
+    // Fallback: Extract the VIN from the filename and redirect to GM's servers
+    const vin = filename.replace('.pdf', '');
+    return res.redirect(`https://cws.gm.com/vs-cws/vehshop/v2/vehicle/windowsticker?vin=${vin}`);
+});
+
 app.get('/maintenance', (req, res) => {
     res.render('pages/errors/maintenance', {
         pagePath: '/maintenance',

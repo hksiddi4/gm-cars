@@ -382,8 +382,6 @@
         };
 
         function buildQueryString(params) {
-
-        function buildQueryString(params) {
             const queryStrings = Object.entries(params)
                 .filter(([key, value]) => value)
                 .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)

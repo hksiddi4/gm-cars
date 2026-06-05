@@ -444,7 +444,7 @@
                 { data: ct4vRpo, label: 'CT4-V' },
                 { data: ct5Rpo, label: 'CT5' },
                 { data: ct5vRpo, label: 'CT5-V' },
-                { data: hummerRpo, label: 'Hummer EV' },
+                { data: hummerRpo, label: 'Hummer EV PICKUP' },
                 { data: hummersuvRpo, label: 'Hummer EV SUV' }
             ];
 
@@ -537,7 +537,7 @@
                             return desc.replace(new RegExp(query, 'gi'), match => `<span class="highlight">${match}</span>`);
                         });
 
-                        li.innerHTML = `<strong>${highlightedRpo}</strong>:&nbsp; <span class="small text-muted">(${highlightedDescriptions.join(' | ')})</span>`;
+                        li.innerHTML = `<strong>${highlightedRpo}</strong>:&nbsp; <span class="small text-muted">${highlightedDescriptions.join(' | ')}</span>`;
                         
                         li.addEventListener('click', () => {
                             const url = new URL(window.location.href);

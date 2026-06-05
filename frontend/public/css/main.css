@@ -1,7 +1,7 @@
 /* Universal */
 * {
     scrollbar-width: thin;
-    scrollbar-color: #888 #ffffff00 ;
+    scrollbar-color: #888 #ffffff00;
 }
 
 /* WebKit browsers */
@@ -309,11 +309,9 @@ h1, h2, h4, p {
     justify-content: center;
     padding: 10px 24px;
     border-radius: 10px;
-    
     background-color: transparent;
     color: white !important;
     text-decoration: none !important;
-    
     transition: color 0.2s ease, background-color 0.2s ease;
 }
 
@@ -324,8 +322,7 @@ h1, h2, h4, p {
 
 /* Ensure it stays white even after being clicked */
 .i-link a:visited, 
-.i-link a:active, 
-.i-link a:hover {
+.i-link a:active {
     color: white;
     text-decoration: none !important;
 }
@@ -967,16 +964,9 @@ img {
     }
 
     .form-select.small-dropdown {
-        font-size: 0.75rem;
         white-space: nowrap;
         text-overflow: ellipsis;
         overflow: visible;
-    }
-
-    #top-scroll {
-        display: block;
-        height: 8px;
-        pointer-events: auto;
     }
 
     #top-scroll-wrapper, #bottom-scroll-wrapper {
@@ -986,7 +976,6 @@ img {
 
     #top-scroll-wrapper {
         width: 100%;
-        -webkit-overflow-scrolling: touch;
     }
 
     #top-scroll {
@@ -1117,10 +1106,6 @@ img {
         -webkit-overflow-scrolling: touch;
     }
 
-    .table-responsive, #top-scroll-wrapper {
-        -webkit-overflow-scrolling: touch;
-    }
-
     #vinTable, #rpoTable {
         width: 100% !important;
         max-width: 100% !important;
@@ -1162,10 +1147,6 @@ img {
     }
 
     /* Search */
-    #vinTable td:nth-child(2) {
-        text-align: right;
-    }
-
     .flex-row-wrap {
         flex-direction: column;
     }

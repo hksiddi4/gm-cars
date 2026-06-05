@@ -436,19 +436,28 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             const rpoDataSets = [
-                camaroRpo, corvetteRpo, escaladeRpo, escaladeiqRpo, 
-                ct4Rpo, ct4vRpo, ct5Rpo, ct5vRpo, hummerRpo, hummersuvRpo
+                { data: camaroRpo, label: 'Camaro' },
+                { data: corvetteRpo, label: 'Corvette' },
+                { data: escaladeRpo, label: 'Escalade' },
+                { data: escaladeiqRpo, label: 'Escalade IQ' },
+                { data: ct4Rpo, label: 'CT4' },
+                { data: ct4vRpo, label: 'CT4-V' },
+                { data: ct5Rpo, label: 'CT5' },
+                { data: ct5vRpo, label: 'CT5-V' },
+                { data: hummerRpo, label: 'Hummer EV' },
+                { data: hummersuvRpo, label: 'Hummer EV SUV' }
             ];
 
             const rawMasterMap = {};
-            rpoDataSets.forEach(dataSet => {
-                Object.entries(dataSet).forEach(([code, description]) => {
+            rpoDataSets.forEach(set => {
+                Object.entries(set.data).forEach(([code, description]) => {
                     if (!description || description.trim() === "") return;
                     
                     if (!rawMasterMap[code]) {
                         rawMasterMap[code] = new Set();
                     }
-                    rawMasterMap[code].add(description.trim());
+                    // Append the model label cleanly to the package text string
+                    rawMasterMap[code].add(`${description.trim()} — ${set.label}`);
                 });
             });
 

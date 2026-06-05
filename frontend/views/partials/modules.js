@@ -708,7 +708,7 @@ const camaroRpo = {
   "NUC": "",
   "NUE": "",
   "NV9": "Steering, power",
-  "OAR": "",
+  "OAR": "Pre-Production Vehicle",
   "P3H": "Bowties, Black, front and rear",
   "PCJ": "LPO, Dark Tint Rear Lighting Package",
   "PCK": "LPO, Black Accent Exterior Package",

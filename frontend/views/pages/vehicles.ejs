@@ -434,7 +434,7 @@
             });
         }
 
-        function updateIcons(selectedOrder) {
+        function updateIcons(selectedOrder) 
             const vinIcon = document.getElementById('vinIcon');
             const msrpIcon = document.getElementById('msrpIcon');
 
@@ -459,10 +459,13 @@
                 tag.type = 'button';
                 tag.className = 'rpo-tag';
 
-                const desc = rpoDescriptions[code];
-                const descHtml = desc 
-                    ? `<span>${desc}</span>` 
-                    : `<span style="color: gray; font-style: italic;">Unknown</span>`;
+                let descHtml;
+                if (code in rpoDescriptions) {
+                    const displayText = rpoDescriptions[code] ? rpoDescriptions[code] : 'No description available';
+                    descHtml = `<span>${displayText}</span>`;
+                } else {
+                    descHtml = `<span style="color: gray; font-style: italic;">Unknown</span>`;
+                }
 
                 tag.innerHTML = `<strong>${code}</strong>: ${descHtml} &nbsp;×`;
 
@@ -559,16 +562,18 @@
                 rpoResults.innerHTML = '';
 
                 if (query.length > 1) {
-                    const matchingRPOs = Object.entries(rpoDescriptions).filter(([rpo, description]) =>
-                        rpo.includes(query) || description.toLowerCase().includes(query.toLowerCase())
-                    );
+                    const matchingRPOs = Object.entries(rpoDescriptions).filter(([rpo, description]) => {
+                        const safeDesc = description || '';
+                        return rpo.includes(query) || safeDesc.toLowerCase().includes(query.toLowerCase());
+                    });
 
                     matchingRPOs.forEach(([rpo, description]) => {
                         const li = document.createElement('li');
                         li.classList.add('list-group-item');
+                        const safeDesc = description || 'No description available';
                         const highlightedRpo = rpo.replace(new RegExp(query, 'gi'), match => `<span class="highlight">${match}</span>`);
-                        const highlightedDescription = description.replace(new RegExp(query, 'gi'), match => `<span class="highlight">${match}</span>`);
-                        
+                        const highlightedDescription = safeDesc.replace(new RegExp(query, 'gi'), match => `<span class="highlight">${match}</span>`);
+
                         li.innerHTML = `<strong>${highlightedRpo}</strong>: <span>${highlightedDescription}</span>`;
                         li.style.cursor = 'pointer';
                         li.addEventListener('click', () => {

@@ -9,7 +9,6 @@
     <%- include('../partials/header'); %>
     <div class="custom-container">
         <div class="row" style="padding-top: 20px;">
-            <!-- Filters -->
             <div class="col-md-6">
                 <div id="filterToggle" class="d-inline-flex align-items-center" style="cursor: pointer;">
                     <h4 class="mb-0">Filter</h4>
@@ -66,7 +65,6 @@
                     </form>
                 </div>
             </div>
-            <!-- RPO Search -->
             <div class="col-md-4 mt-2 position-relative">
                 <input type="text" id="rpoSearchInput" class="form-control" placeholder="Search RPOs..." />
                 <ul id="rpoResults" class="list-group mt-2"></ul>
@@ -124,7 +122,6 @@
                 </div>
             <% } %>
             <%- include('../partials/pagination', { currentPage, totalPages, baseQuery, buildQuery }) %>
-            <!-- Vehicles Table -->
             <div id="top-scroll-wrapper">
                 <div id="top-scroll"></div>
             </div>
@@ -256,8 +253,7 @@
                                             <option value="ZLZ5" <% if (rpo === 'ZLZ5') { %>selected<% } %>>Le Monstre Special Edition</option>
                                             <option value="V8V" <% if (rpo === 'V8V') { %>selected<% } %>>Precision Package</option>
                                             <option value="PCK" <% if (rpo === 'PCK') { %>selected<% } %>>Deep Ocean Appearance Package</option>
-                                            <!-- <option value="" <% if (rpo === '') { %>selected<% } %>>F1 Collector's Edition</option> -->
-                                        </optgroup>
+                                            </optgroup>
                                         <optgroup label="Hummer EV">
                                             <option value="Z6X" <% if (rpo === 'Z6X') { %>selected<% } %>>Extreme Off-Road Package</option>
                                             <option value="WFP" <% if (rpo === 'WFP') { %>selected<% } %>>Omega Edition</option>
@@ -284,8 +280,8 @@
                         <% vehicle_data.forEach(function(data) { %>
                             <tr style="cursor: pointer;" onmousedown="handleMouseDown(event);" data-url="/search?vin=<%= data.vin %>">
                                 <td scope="row" style="text-align: left;" class="<%= data.special_desc && data.special_desc.includes('Pre-Production Vehicle') ? 'highlight' : '' %>">
-																    <%= data.vin.slice(0, 9) %><strong><%= data.vin.slice(9) %></strong>
-																 </td>
+                                                    <%= data.vin.slice(0, 9) %><strong><%= data.vin.slice(9) %></strong>
+                                                 </td>
                                  <td scope="row"><%= data.modelYear %></td>
                                 <td scope="row"><%= data.model %></td>
                                 <td scope="row"><%= data.body %></td>
@@ -338,7 +334,6 @@
                     </tbody>
                 </table>
             </div>
-            <!-- Pagination -->
             <%- include('../partials/pagination', { currentPage, totalPages, baseQuery, buildQuery }) %>
             <% } else { %>
                 <div class="response-container" style="padding: 40px 0;">
@@ -452,18 +447,26 @@
             rpoDataSets.forEach(set => {
                 Object.entries(set.data).forEach(([code, description]) => {
                     if (!description || description.trim() === "") return;
-                    
+
+                    const cleanDesc = description.trim();
+
                     if (!rawMasterMap[code]) {
-                        rawMasterMap[code] = new Set();
+                        rawMasterMap[code] = {};
                     }
-                    // Append the model label cleanly to the package text string
-                    rawMasterMap[code].add(`${description.trim()} — ${set.label}`);
+                    if (!rawMasterMap[code][cleanDesc]) {
+                        rawMasterMap[code][cleanDesc] = new Set();
+                    }
+
+                    rawMasterMap[code][cleanDesc].add(set.label);
                 });
             });
 
             const rpoDescriptions = {};
-            Object.entries(rawMasterMap).forEach(([code, descSet]) => {
-                rpoDescriptions[code] = Array.from(descSet);
+            Object.entries(rawMasterMap).forEach(([code, descGroup]) => {
+                rpoDescriptions[code] = Object.entries(descGroup).map(([desc, labelsSet]) => {
+                    const labelsArray = Array.from(labelsSet);
+                    return `${desc} — ${labelsArray.join(', ')}`;
+                });
             });
 
             const rpoSearchInput = document.getElementById('rpoSearchInput');

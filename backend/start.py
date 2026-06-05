@@ -188,6 +188,7 @@ def sort_price():
             "ABQ": ["v.modelYear = '2023'", "v.model = 'CT5'", "v.trim = 'V-SERIES BLACKWING'", "v.msrp > '118000'"],
             "ZLT": ["v.modelYear = '2024'", "v.model = 'CT5'", "v.trim = 'V-SERIES BLACKWING'", "opt.option_code IN ('ZLT', 'ZLV')"],
             "V8V": ["v.model = 'CT5'", "v.trim = 'V-SERIES BLACKWING'"],
+            # PCK is used for other model packages, work on changing to allow regular filtering
             "PCK": ["v.modelYear = '2026'", "v.model = 'CT5'", "v.trim = 'V-SERIES BLACKWING'", "c.color_name = 'DEEP OCEAN TINTCOAT'"],
             # F1 Collector "": ["v.modelYear = '2026'", "v.model = 'CT5'", "v.trim = 'V-SERIES BLACKWING'", "c.color_name = 'MIDNIGHT STONE FROST'", "opt.option_code = 'V8V'"],
             "Z6X": ["v.model IN ('HUMMER EV SUV', 'HUMMER EV PICKUP')"],

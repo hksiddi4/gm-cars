@@ -70,7 +70,7 @@
                     <% vin_data.forEach(function(data) { %>
                     <tr>
                       <td class="label-column"><strong>VIN</strong></td>
-                      <td><%= data.vin || 'N/A' %></td>
+											 <td><%= data.vin.slice(0, 9) %><strong><%= data.vin.slice(9) %></strong></td>
                     </tr>
                     <tr>
                       <td class="label-column"><strong>ORDER NUMBER</strong></td>

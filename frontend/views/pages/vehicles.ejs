@@ -331,7 +331,6 @@
                                         <img src="../../img/flags/mexico_flag.webp" alt="Mexico Flag" width="20">
                                     <% } %>
                                 </td>
-                                <!-- <td scope="row" style="text-align: left;"><%= data.dealer_name || 'N/A' %></td> -->
                             </tr>
                         <% }) %>
                     </tbody>
@@ -367,19 +366,6 @@
         const ct5vRpo = <%- JSON.stringify(ct5vRpo) %>;
         const hummerRpo = <%- JSON.stringify(hummerRpo) %>;
         const hummersuvRpo = <%- JSON.stringify(hummersuvRpo) %>;
-
-        const rpoDescriptions = {
-            ...camaroRpo,
-            ...corvetteRpo,
-            ...escaladeRpo,
-            ...escaladeiqRpo,
-            ...ct4Rpo,
-            ...ct4vRpo,
-            ...ct5Rpo,
-            ...ct5vRpo,
-            ...hummerRpo,
-            ...hummersuvRpo
-        };
 
         function buildQueryString(params) {
             const queryStrings = Object.entries(params)
@@ -446,61 +432,127 @@
             setIcon(vinIcon, selectedOrder === 'vinASC' ? 'up' : 'down', selectedOrder === 'vinASC' || selectedOrder === 'vinDESC');
         }
 
-        function renderSelectedRPOs() {
-            const container = document.getElementById('selectedRPOs');
-            container.innerHTML = '';
-            const url = new URL(window.location.href);
-            const rpoParam = url.searchParams.get('rpo');
-            if (!rpoParam) return;
-            const rpos = rpoParam.split(',');
-
-            rpos.forEach(code => {
-                const tag = document.createElement('button');
-                tag.type = 'button';
-                tag.className = 'rpo-tag';
-
-                let descHtml;
-                if (code in rpoDescriptions) {
-                    const displayText = rpoDescriptions[code] ? rpoDescriptions[code] : 'No description available';
-                    descHtml = `<span>${displayText}</span>`;
-                } else {
-                    descHtml = `<span style="color: gray; font-style: italic;">No description available</span>`;
-                }
-
-                tag.innerHTML = `<strong>${code}</strong>:&nbsp; ${descHtml} &nbsp;×`;
-
-                tag.addEventListener('click', () => {
-                    const newRpos = rpos.filter(r => r !== code);
-                    const url = new URL(window.location.href);
-                    if (newRpos.length) {
-                        url.searchParams.set('rpo', newRpos.join(','));
-                    } else {
-                        url.searchParams.delete('rpo');
-                    }
-                    url.searchParams.set('page', 1);
-                    window.location.href = url.toString();
-                });
-
-                container.appendChild(tag);
-            });
-        }
-
         document.addEventListener('DOMContentLoaded', function() {
+            const rpoDataSets = [
+                camaroRpo, corvetteRpo, escaladeRpo, escaladeiqRpo, 
+                ct4Rpo, ct4vRpo, ct5Rpo, ct5vRpo, hummerRpo, hummersuvRpo
+            ];
+
+            const rawMasterMap = {};
+            rpoDataSets.forEach(dataSet => {
+                Object.entries(dataSet).forEach(([code, description]) => {
+                    if (!description || description.trim() === "") return;
+                    
+                    if (!rawMasterMap[code]) {
+                        rawMasterMap[code] = new Set();
+                    }
+                    rawMasterMap[code].add(description.trim());
+                });
+            });
+
+            const rpoDescriptions = {};
+            Object.entries(rawMasterMap).forEach(([code, descSet]) => {
+                rpoDescriptions[code] = Array.from(descSet);
+            });
+
+            const rpoSearchInput = document.getElementById('rpoSearchInput');
+            const rpoResults = document.getElementById('rpoResults');
+
+            window.renderSelectedRPOs = function() {
+                const container = document.getElementById('selectedRPOs');
+                container.innerHTML = '';
+                const url = new URL(window.location.href);
+                const rpoParam = url.searchParams.get('rpo');
+                if (!rpoParam) return;
+                const rpos = rpoParam.split(',');
+
+                rpos.forEach(code => {
+                    const tag = document.createElement('button');
+                    tag.type = 'button';
+                    tag.className = 'rpo-tag';
+
+                    const descArray = rpoDescriptions[code] || [];
+
+                    let descHtml;
+                    if (descArray.length > 0) {
+                        descHtml = `<span class="rpo-desc-stack" style="display: inline-flex; flex-direction: column; vertical-align: middle; text-align: left;">`;
+                        descArray.forEach((desc, index) => {
+                            const trailingComma = index < descArray.length - 1 ? ',' : '';
+                            descHtml += `<span class="rpo-desc-item" style="display: block; line-height: 1.3;">${desc}${trailingComma}</span>`;
+                        });
+                        descHtml += `</span>`;
+                    } else {
+                        descHtml = `<span style="color: gray; font-style: italic;">No description available</span>`;
+                    }
+
+                    tag.innerHTML = `
+                        <span class="rpo-tag-content" style="display: inline-flex; align-items: center; gap: 6px;">
+                            <strong>${code}</strong>:&nbsp; ${descHtml} &nbsp;×
+                        </span>
+                    `;
+
+                    tag.addEventListener('click', () => {
+                        const newRpos = rpos.filter(r => r !== code);
+                        const url = new URL(window.location.href);
+                        if (newRpos.length) {
+                            url.searchParams.set('rpo', newRpos.join(','));
+                        } else {
+                            url.searchParams.delete('rpo');
+                        }
+                        url.searchParams.set('page', 1);
+                        window.location.href = url.toString();
+                    });
+
+                    container.appendChild(tag);
+                });
+            }
+
             renderSelectedRPOs();
+
+            rpoSearchInput.addEventListener('input', function() {
+                const query = rpoSearchInput.value.toUpperCase().trim();
+                rpoResults.innerHTML = '';
+
+                if (query.length > 1) {
+                    Object.entries(rpoDescriptions).filter(([rpo, descArray]) => {
+                        return rpo.includes(query) || descArray.some(d => d.toLowerCase().includes(query.toLowerCase()));
+                    }).forEach(([rpo, descArray]) => {
+                        const li = document.createElement('li');
+                        li.classList.add('list-group-item');
+                        li.style.cursor = 'pointer';
+
+                        const highlightedRpo = rpo.replace(new RegExp(query, 'gi'), match => `<span class="highlight">${match}</span>`);
+                        const highlightedDescriptions = descArray.map(desc => {
+                            return desc.replace(new RegExp(query, 'gi'), match => `<span class="highlight">${match}</span>`);
+                        });
+
+                        li.innerHTML = `<strong>${highlightedRpo}</strong>:&nbsp; <span class="small text-muted">(${highlightedDescriptions.join(' | ')})</span>`;
+                        
+                        li.addEventListener('click', () => {
+                            const url = new URL(window.location.href);
+                            const currentRPO = url.searchParams.get('rpo');
+                            let newRPO;
+
+                            if (currentRPO) {
+                                const rpoSet = new Set(currentRPO.split(','));
+                                rpoSet.add(rpo);
+                                newRPO = Array.from(rpoSet).join(',');
+                            } else {
+                                newRPO = rpo;
+                            }
+
+                            url.searchParams.set('rpo', newRPO);
+                            window.location.href = url.toString();
+                        });
+
+                        rpoResults.appendChild(li);
+                    });
+                }
+            });
+
             const filterToggle = document.getElementById('filterToggle');
             const filterContent = document.getElementById('filterContent');
             const filterIcon = document.getElementById('filterIcon');
-            const clearFilters = document.getElementById('clearFilters');
-            const rpoSelect = document.getElementById('rpoSelect');
-            const yearSelect = document.getElementById('yearSelect');
-            const bodySelect = document.getElementById('bodySelect');
-            const trimSelect = document.getElementById('trimSelect');
-            const engineSelect = document.getElementById('engineSelect');
-            const transSelect = document.getElementById('transSelect');
-            const drivetrainSelect = document.getElementById('drivetrainSelect');
-            const colorSelect = document.getElementById('colorSelect');
-            const countrySelect = document.getElementById('countrySelect');
-            const orderSelect = document.getElementById('orderSelect');
             const filterForm = document.getElementById('filterForm');
             const limitSelect = document.getElementById('limitSelect');
             const currentOrder = new URLSearchParams(window.location.search).get('order');
@@ -553,50 +605,6 @@
                 setTimeout(updateTopInnerWidth, 200); 
                 window.addEventListener('resize', debouncedResizeUpdate); 
             })();
-
-            const rpoSearchInput = document.getElementById('rpoSearchInput');
-            const rpoResults = document.getElementById('rpoResults');
-
-            rpoSearchInput.addEventListener('input', function() {
-                const query = rpoSearchInput.value.toUpperCase().trim();
-                rpoResults.innerHTML = '';
-
-                if (query.length > 1) {
-                    const matchingRPOs = Object.entries(rpoDescriptions).filter(([rpo, description]) => {
-                        const safeDesc = description || '';
-                        return rpo.includes(query) || safeDesc.toLowerCase().includes(query.toLowerCase());
-                    });
-
-                    matchingRPOs.forEach(([rpo, description]) => {
-                        const li = document.createElement('li');
-                        li.classList.add('list-group-item');
-                        const safeDesc = description || 'No description available';
-                        const highlightedRpo = rpo.replace(new RegExp(query, 'gi'), match => `<span class="highlight">${match}</span>`);
-                        const highlightedDescription = safeDesc.replace(new RegExp(query, 'gi'), match => `<span class="highlight">${match}</span>`);
-
-                        li.innerHTML = `<strong>${highlightedRpo}</strong>:&nbsp; <span>${highlightedDescription}</span>`;
-                        li.style.cursor = 'pointer';
-                        li.addEventListener('click', () => {
-                            const url = new URL(window.location.href);
-                            const currentRPO = url.searchParams.get('rpo');
-                            let newRPO;
-
-                            if (currentRPO) {
-                                const rpoSet = new Set(currentRPO.split(','));
-                                rpoSet.add(rpo);
-                                newRPO = Array.from(rpoSet).join(',');
-                            } else {
-                                newRPO = rpo;
-                            }
-
-                            url.searchParams.set('rpo', newRPO);
-                            window.location.href = url.toString();
-                        });
-
-                        rpoResults.appendChild(li);
-                    });
-                }
-            });
 
             filterToggle.addEventListener('click', function() {
                 if (filterContent.classList.contains('show')) {

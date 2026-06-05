@@ -459,8 +459,12 @@
                 tag.type = 'button';
                 tag.className = 'rpo-tag';
 
-                const desc = rpoDescriptions[code] || 'No description';
-                tag.innerHTML = `<strong>${code}</strong>: <span>${desc}</span> &nbsp;×`;
+                const desc = rpoDescriptions[code];
+                const descHtml = desc 
+                    ? `<span>${desc}</span>` 
+                    : `<span style="color: gray; font-style: italic;">Unknown</span>`;
+
+                tag.innerHTML = `<strong>${code}</strong>: ${descHtml} &nbsp;×`;
 
                 tag.addEventListener('click', () => {
                     const newRpos = rpos.filter(r => r !== code);

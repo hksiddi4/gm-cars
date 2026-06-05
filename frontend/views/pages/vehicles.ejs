@@ -356,30 +356,32 @@
     <script>
         let startX;
         let selectedOrder = '';
-        let rpoDescriptions = {};
 
-        const cachedRPO = sessionStorage.getItem('rpoCodes');
+        const camaroRpo = <%- JSON.stringify(camaroRpo) %>;
+        const corvetteRpo = <%- JSON.stringify(corvetteRpo) %>;
+        const escaladeRpo = <%- JSON.stringify(escaladeRpo) %>;
+        const escaladeiqRpo = <%- JSON.stringify(escaladeiqRpo) %>;
+        const ct4Rpo = <%- JSON.stringify(ct4Rpo) %>;
+        const ct4vRpo = <%- JSON.stringify(ct4vRpo) %>;
+        const ct5Rpo = <%- JSON.stringify(ct5Rpo) %>;
+        const ct5vRpo = <%- JSON.stringify(ct5vRpo) %>;
+        const hummerRpo = <%- JSON.stringify(hummerRpo) %>;
+        const hummersuvRpo = <%- JSON.stringify(hummersuvRpo) %>;
 
-        if (cachedRPO) {
-            const data = JSON.parse(cachedRPO);
-            data.allRpoCodes.forEach(([code, desc]) => {
-                rpoDescriptions[code] = desc;
-            });
-            renderSelectedRPOs();
-        } else {
-            fetch('https://decoderpo.com/static/rpoCodes.json')
-                .then(res => res.json())
-                .then(data => {
-                    sessionStorage.setItem('rpoCodes', JSON.stringify(data));
-                    data.allRpoCodes.forEach(([code, desc]) => {
-                        rpoDescriptions[code] = desc;
-                    });
-                    renderSelectedRPOs();
-                })
-                .catch(err => {
-                    console.error('Failed to load RPO data:', err);
-                });
-        }
+        const rpoDescriptions = {
+            ...camaroRpo,
+            ...corvetteRpo,
+            ...escaladeRpo,
+            ...escaladeiqRpo,
+            ...ct4Rpo,
+            ...ct4vRpo,
+            ...ct5Rpo,
+            ...ct5vRpo,
+            ...hummerRpo,
+            ...hummersuvRpo
+        };
+
+        function buildQueryString(params) {
 
         function buildQueryString(params) {
             const queryStrings = Object.entries(params)
@@ -480,6 +482,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
+            renderSelectedRPOs();
             const filterToggle = document.getElementById('filterToggle');
             const filterContent = document.getElementById('filterContent');
             const filterIcon = document.getElementById('filterIcon');

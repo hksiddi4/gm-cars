@@ -423,43 +423,15 @@ FROM
 JOIN 
     Vehicles v ON o.vehicle_id = v.vehicle_id
 WHERE 
-    v.model = 'CAMARO'
+    v.model = 'ESCALADE IQ'
 ORDER BY 
     o.option_code;
-    
-SELECT 
-    v.vehicle_id,
-    v.vin,
-    v.modelYear,
-    v.model,
-    v.trim,
-    e.engine_type,
-    t.transmission_type,
-    d.drivetrain_type,
-    c.color_name,
-    v.msrp,
-    dl.dealer_name,
-    o.order_number
-FROM Vehicles v
-LEFT JOIN Engines e ON v.engine_id = e.engine_id
-LEFT JOIN Transmissions t ON v.transmission_id = t.transmission_id
-LEFT JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id
-LEFT JOIN Colors c ON v.color_id = c.color_id
-LEFT JOIN Dealers dl ON v.dealer_id = dl.dealer_id
-LEFT JOIN Orders o ON v.order_id = o.order_id
-ORDER BY v.vehicle_id DESC
-LIMIT 20;
-
-select * from vehicles where vin = '';
 
 SELECT v.model, COUNT(*) as added_count
 FROM Vehicles v
 JOIN Orders o ON v.order_id = o.order_id
 WHERE o.creation_date = (SELECT MAX(creation_date) FROM Orders)
 GROUP BY v.model;
-
-select * from Orders where order_number = 'FRCB2N';
-delete from Vehicles where vin = '1G1YB2D46T5100433';
 
 SELECT * FROM Vehicles v 
 WHERE SUBSTRING(v.vin, 5, 4) = '9RRL';
@@ -468,5 +440,3 @@ SELECT v.*
 FROM Vehicles v
 JOIN Orders o ON v.order_id = o.order_id
 WHERE o.creation_date = '2021-12-31';
-
-select NOW();

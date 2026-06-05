@@ -283,9 +283,6 @@
       }
 
       document.addEventListener('DOMContentLoaded', () => {
-        let rpoDescriptions = {};
-        const rpoDescriptionCache = {};
-
         const vin_data = <%- JSON.stringify(vin_data) %>;
         const vin = vin_data[0];
         const model = vin.model?.toUpperCase() || '';
@@ -303,7 +300,6 @@
         const hummersuvRpo = <%- JSON.stringify(hummersuvRpo) %>;
 
         const allRpoDescriptions = {
-          ...rpoDescriptions,
           ...camaroRpo,
           ...corvetteRpo,
           ...escaladeRpo,
@@ -316,28 +312,7 @@
           ...hummersuvRpo
         };
 
-        function loadRpoDescriptions() {
-          const cached = sessionStorage.getItem('rpoCodes');
-          if (cached) {
-            const data = JSON.parse(cached);
-            data.allRpoCodes.forEach(([code, desc]) => {
-              rpoDescriptions[code] = desc;
-            });
-            return Promise.resolve();
-          } else {
-            return fetch('https://decoderpo.com/static/rpoCodes.json')
-              .then(res => res.json())
-              .then(data => {
-                sessionStorage.setItem('rpoCodes', JSON.stringify(data));
-                data.allRpoCodes.forEach(([code, desc]) => {
-                  rpoDescriptions[code] = desc;
-                });
-              })
-              .catch(err => console.error('Failed to load RPO data:', err));
-          }
-        }
-
-        function renderRpoCards(vin, model, rpoDescriptions) {
+        function renderRpoCards(vin, model) {
           const container = document.getElementById('rpoImageContainer');
           container.innerHTML = '';
 
@@ -390,7 +365,7 @@
                 (model === 'CT5' && vehicleTrim.startsWith('V-SERIES') && ct5vRpo[rpoCode]) ||
                 (model === 'HUMMER EV PICKUP' && hummerRpo[rpoCode]) ||
                 (model === 'HUMMER EV SUV' && hummersuvRpo[rpoCode]) ||
-                rpoDescriptions[rpoCode] ||
+                allRpoDescriptions[rpoCode] ||
                 '';
 
               card.innerHTML = `
@@ -411,77 +386,59 @@
           }, 800);
         }
 
-        loadRpoDescriptions().then(() => {
-          if (vin.model) {
-            renderRpoCards(vin, vin.model, rpoDescriptions);
+        if (vin.model) {
+          renderRpoCards(vin, vin.model);
+        }
+
+        document.querySelectorAll('.rpo-description').forEach(element => {
+          const rpoCode = element.getAttribute('data-code');
+
+          if (model === 'CAMARO' && camaroRpo[rpoCode]) {
+            element.innerHTML = `<div>${camaroRpo[rpoCode]}</div>`;
+            return;
+          }
+          if (model.startsWith('CORVETTE') && corvetteRpo[rpoCode]) {
+            element.innerHTML = `<div>${corvetteRpo[rpoCode]}</div>`;
+            return;
+          }
+          if (model === 'ESCALADE' && escaladeRpo[rpoCode]) {
+            element.innerHTML = `<div>${escaladeRpo[rpoCode]}</div>`;
+            return;
+          }
+          if (model === 'ESCALADE IQ' && escaladeiqRpo[rpoCode]) {
+            element.innerHTML = `<div>${escaladeiqRpo[rpoCode]}</div>`;
+            return;
+          }
+          if (model === 'CT4' && ct4Rpo[rpoCode]) {
+            element.innerHTML = `<div>${ct4Rpo[rpoCode]}</div>`;
+            return;
+          }
+          if (model === 'CT4' && vehicleTrim.startsWith('V-SERIES') && ct4vRpo[rpoCode]) {
+            element.innerHTML = `<div>${ct4vRpo[rpoCode]}</div>`;
+            return;
+          }
+          if (model === 'CT5' && ct5Rpo[rpoCode]) {
+            element.innerHTML = `<div>${ct5Rpo[rpoCode]}</div>`;
+            return;
+          }
+          if (model === 'CT5' && vehicleTrim.startsWith('V-SERIES') && ct5vRpo[rpoCode]) {
+            element.innerHTML = `<div>${ct5vRpo[rpoCode]}</div>`;
+            return;
+          }
+          if (model === 'HUMMER EV PICKUP' && hummerRpo[rpoCode]) {
+            element.innerHTML = `<div>${hummerRpo[rpoCode]}</div>`;
+            return;
+          }
+          if (model === 'HUMMER EV SUV' && hummersuvRpo[rpoCode]) {
+            element.innerHTML = `<div>${hummersuvRpo[rpoCode]}</div>`;
+            return;
           }
 
-          document.querySelectorAll('.rpo-description').forEach(element => {
-            const rpoCode = element.getAttribute('data-code');
-
-            if (model === 'CAMARO' && camaroRpo[rpoCode]) {
-              element.innerHTML = `<div>${camaroRpo[rpoCode]}</div>`;
-              return;
-            }
-
-            if (model.startsWith('CORVETTE') && corvetteRpo[rpoCode]) {
-              element.innerHTML = `<div>${corvetteRpo[rpoCode]}</div>`;
-              return;
-            }
-
-            if (model === 'ESCALADE' && escaladeRpo[rpoCode]) {
-              element.innerHTML = `<div>${escaladeRpo[rpoCode]}</div>`;
-              return;
-            }
-
-            if (model === 'ESCALADE IQ' && escaladeiqRpo[rpoCode]) {
-              element.innerHTML = `<div>${escaladeiqRpo[rpoCode]}</div>`;
-              return;
-            }
-
-            if (model === 'CT4' && ct4Rpo[rpoCode]) {
-              element.innerHTML = `<div>${ct4Rpo[rpoCode]}</div>`;
-              return;
-            }
-
-            if (model === 'CT4' && vehicleTrim.startsWith('V-SERIES') && ct4vRpo[rpoCode]) {
-              element.innerHTML = `<div>${ct4vRpo[rpoCode]}</div>`;
-              return;
-            }
-
-            if (model === 'CT5' && ct5Rpo[rpoCode]) {
-              element.innerHTML = `<div>${ct5Rpo[rpoCode]}</div>`;
-              return;
-            }
-
-            if (model === 'CT5' && vehicleTrim.startsWith('V-SERIES') && ct5vRpo[rpoCode]) {
-              element.innerHTML = `<div>${ct5vRpo[rpoCode]}</div>`;
-              return;
-            }
-
-            if (model === 'HUMMER EV PICKUP' && hummerRpo[rpoCode]) {
-              element.innerHTML = `<div>${hummerRpo[rpoCode]}</div>`;
-              return;
-            }
-
-            if (model === 'HUMMER EV SUV' && hummersuvRpo[rpoCode]) {
-              element.innerHTML = `<div>${hummersuvRpo[rpoCode]}</div>`;
-              return;
-            }
-
-            if (rpoDescriptions[rpoCode]) {
-              element.innerHTML = `<div class="rpo-outsourced">${rpoDescriptions[rpoCode]}</div>`;
-            } else {
-              fetch(`https://decoderpo.com/api/getRPODescription/${rpoCode}`)
-                .then(resp => resp.ok ? resp.json() : Promise.reject())
-                .then(data => {
-                  const decoded = atob(data[0]);
-                  const lines = JSON.parse(decoded);
-                  element.innerHTML = lines.map(line => `<div class="rpo-outsourced">${line}</div>`).join('');
-                })
-                .catch(() => (element.textContent = 'Not found'));
-            }
-          });
+          if (allRpoDescriptions[rpoCode]) {
+            element.innerHTML = `<div>${allRpoDescriptions[rpoCode]}</div>`;
+          } else {
+            element.textContent = 'Not found';
+          }
         });
 
         setTimeout(() => {

@@ -547,6 +547,9 @@ img {
     display: inline-flex;
     align-items: center;
     font-size: 0.9rem;
+    color: black;
+    border: none;
+    outline: none;
 }
 
 #rpoResults {

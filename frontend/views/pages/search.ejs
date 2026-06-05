@@ -437,7 +437,7 @@
           if (allRpoDescriptions[rpoCode]) {
             element.innerHTML = `<div>${allRpoDescriptions[rpoCode]}</div>`;
           } else {
-            element.textContent = 'Not found';
+            element.innerHTML = `<div style="color: gray; font-style: italic;">Not found</div>`;
           }
         });
 

@@ -70,10 +70,6 @@
     transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
 
-.rpo-outsourced {
-    font-style: italic;
-}
-
 #loading-animation {
   position: relative;
   width: 100%;
@@ -554,10 +550,6 @@ img {
     display: inline-flex;
     align-items: center;
     font-size: 0.9rem;
-}
-
-.rpo-outsourced {
-    font-style: italic;
 }
 
 #rpoResults {

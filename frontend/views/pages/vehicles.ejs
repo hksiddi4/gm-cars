@@ -460,8 +460,7 @@
                 tag.className = 'rpo-tag';
 
                 const desc = rpoDescriptions[code] || 'No description';
-                const descHtml = rpoDescriptions[code] ? `<span class="rpo-outsourced">${desc}</span>` : desc;
-                tag.innerHTML = `<strong>${code}</strong>: ${descHtml} &nbsp;×`;
+                tag.innerHTML = `<strong>${code}</strong>: <span>${desc}</span> &nbsp;×`;
 
                 tag.addEventListener('click', () => {
                     const newRpos = rpos.filter(r => r !== code);
@@ -565,9 +564,8 @@
                         li.classList.add('list-group-item');
                         const highlightedRpo = rpo.replace(new RegExp(query, 'gi'), match => `<span class="highlight">${match}</span>`);
                         const highlightedDescription = description.replace(new RegExp(query, 'gi'), match => `<span class="highlight">${match}</span>`);
-                        // Highlighted description comes from outsourced rpoDescriptions -> italicize
-                        li.innerHTML = `<strong>${rpo}</strong>: <span class="rpo-outsourced">${highlightedDescription}</span>`;
                         
+                        li.innerHTML = `<strong>${highlightedRpo}</strong>: <span>${highlightedDescription}</span>`;
                         li.style.cursor = 'pointer';
                         li.addEventListener('click', () => {
                             const url = new URL(window.location.href);

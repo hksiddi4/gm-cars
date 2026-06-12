@@ -68,7 +68,7 @@
                 const cardWrapper = document.createElement('div');
                 cardWrapper.className = 'rpo-wrapper';
                 const link = document.createElement('a');
-                link.href = `/vehicles?model=${model}&rpo=${rpo}`;
+                link.href = model === 'corvette' ? `/vehicles?rpo=${rpo}` : `/vehicles?model=${model}&rpo=${rpo}`;
                 link.style.textDecoration = 'none';
 
                 link.className = 'rpo-card-link';

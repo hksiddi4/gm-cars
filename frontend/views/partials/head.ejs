@@ -29,7 +29,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#515151">
-<link rel="icon" href="../../img/favicon.webp">
+
+<link rel="icon" type="image/png" href="../../img/favicon.png" sizes="192x192">
+<link rel="apple-touch-icon" href="../../img/favicon.png">
 
 <meta name="description" content="<%= customDescription %>">
 <meta name="keywords" content="GM, General Motors, build counts, vehicle statistics, Chevrolet, Cadillac, production numbers">
@@ -40,13 +42,13 @@
 <meta property="og:description" content="<%= customDescription %>">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://www.gmbuildcounts.com<%= typeof canonicalPath !== 'undefined' ? canonicalPath : '' %>">
-<meta property="og:image" content="https://www.gmbuildcounts.com/img/favicon.webp">
+<meta property="og:image" content="https://www.gmbuildcounts.com/img/favicon.png">
 <meta property="og:site_name" content="GM Build Counts">
 
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="<%= pageTitle %>">
 <meta name="twitter:description" content="<%= customDescription %>">
-<meta name="twitter:image" content="https://www.gmbuildcounts.com/img/favicon.webp">
+<meta name="twitter:image" content="https://www.gmbuildcounts.com/img/favicon.png">
 
 <script type="application/ld+json">
 {
@@ -62,12 +64,13 @@
   }
 }
 </script>
+
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "Organization",
   "url": "https://www.gmbuildcounts.com",
-  "logo": "https://www.gmbuildcounts.com/img/favicon.webp",
+  "logo": "https://www.gmbuildcounts.com/img/favicon.png", 
   "name": "GM Build Counts",
   "sameAs": [],
   "contactPoint": {
@@ -145,7 +148,7 @@
     "@type": "CollectionPage",
     "url": "https://www.gmbuildcounts.com/about",
     "name": "About GM Build Counts",
-    "description": "Last updated per vehicle."
+    "description": "About us & latest updates per vehicle."
   }
   </script>
   <% } else if (pagePath === '/rpos') { %>

@@ -23,7 +23,6 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /mnt/NVMe/Apps/GM-Vehicles/window-stickers:/stickers:ro
-      - frontend-assets:/app/public
 
   nginx:
     image: nginx:stable
@@ -41,7 +40,6 @@ services:
       - /mnt/NVMe/Apps/GM-Vehicles/certbot/www:/var/www/certbot
       - /etc/localtime:/etc/localtime:ro
       - /mnt/NVMe/Apps/GM-Vehicles/window-stickers:/stickers:ro
-      - frontend-assets:/var/www/frontend/public:ro
     depends_on:
       - frontend
       - backend
@@ -70,6 +68,3 @@ networks:
   nextcloud-net:
     name: ix-internal-nextcloud-nextcloud-net
     external: true
-
-volumes:
-  frontend-assets:

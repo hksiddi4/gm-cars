@@ -39,6 +39,8 @@ services:
       - /mnt/NVMe/Apps/GM-Vehicles/certbot/conf:/etc/letsencrypt
       - /mnt/NVMe/Apps/GM-Vehicles/certbot/www:/var/www/certbot
       - /etc/localtime:/etc/localtime:ro
+      - ./frontend/public:/var/www/frontend/public:ro
+      - /mnt/NVMe/Apps/GM-Vehicles/window-stickers:/stickers:ro
     depends_on:
       - frontend
       - backend

@@ -94,18 +94,29 @@ app.use((req, res, next) => {
 
 // --- ROUTES ---
 
-app.get('/stickers/:folder/:filename', (req, res) => {
+app.get('/stickers/:folder/:filename', async (req, res) => {
     const { folder, filename } = req.params;
     const localFilePath = path.join('/stickers', folder, filename);
+    const vin = filename.replace('.pdf', '');
+    const gmUrl = `https://cws.gm.com/vs-cws/vehshop/v2/vehicle/windowsticker?vin=${vin}`;
 
-    // Check if the file exists in storage
+    // Check if the file exists in local storage
     if (fs.existsSync(localFilePath)) {
         return res.sendFile(localFilePath);
     }
 
-    // Fallback: Extract the VIN from the filename and redirect to GM's servers
-    const vin = filename.replace('.pdf', '');
-    return res.redirect(`https://cws.gm.com/vs-cws/vehshop/v2/vehicle/windowsticker?vin=${vin}`);
+    try {
+        const response = await axiosInstance.get(gmUrl, { responseType: 'stream' });
+
+        if (response.headers['content-type'] && response.headers['content-type'].includes('application/pdf')) {
+            res.setHeader('Content-Type', 'application/pdf');
+            response.data.pipe(res);
+        } else {
+            res.status(404).send('Sticker not found');
+        }
+    } catch (error) {
+        res.status(404).send('Sticker not found');
+    }
 });
 
 app.get('/maintenance', (req, res) => {

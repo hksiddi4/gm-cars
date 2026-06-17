@@ -154,7 +154,6 @@ def sort_price():
         params.append(country_map.get(country, 'USA'))
     if rpo:
         rpo_list = rpo.split(',') if ',' in rpo else [rpo]
-        h40_selected = 'H40' in rpo_list
         # NOTE: rpo_n is calculated AFTER substitutions/removals later
 
         join_clause += "\n            JOIN Options opt ON v.vehicle_id = opt.vehicle_id"
@@ -165,7 +164,7 @@ def sort_price():
             "A1Z": ["v.model = 'CAMARO'", "v.body = 'COUPE'", "v.trim = 'ZL1'"],
             "A1Y": ["v.model = 'CAMARO'", "v.body = 'COUPE'", "v.trim IN ('1SS', '2SS')"],
             "A1X": ["v.modelYear IN ('2019', '2020', '2021')", "v.model = 'CAMARO'", "v.body = 'COUPE'", "v.trim IN ('1LT', '2LT', '3LT')"],
-                "H40": ["((v.modelYear = '2024' AND v.model = 'CAMARO' AND v.trim = '2SS' AND c.color_name = 'RADIANT RED TINTCOAT' AND opt.option_code = 'SL1') OR v.vin IN ('1G1FK1R65R0117449', '1G1FK3D62R0118478'))"],
+            "H40": ["((v.modelYear = '2024' AND v.model = 'CAMARO' AND v.trim = '2SS' AND c.color_name = 'RADIANT RED TINTCOAT' AND opt.option_code = 'SL1') OR v.vin IN ('1G1FK1R65R0117449', '1G1FK3D62R0118478'))"],
             "PEH": ["v.modelYear = '2020'", "v.model = 'CAMARO'", "v.body = 'COUPE'", "v.trim IN ('2SS', 'ZL1')", "t.transmission_type = 'A10'", "c.color_name = 'BLACK'"],
             "Z4Z": ["v.model = 'CAMARO'", "v.body = 'CONVERTIBLE'", "v.trim = '2SS'", "c.color_name IN ('WILD CHERRY TINTCOAT', 'SUMMIT WHITE', 'SHARKSKIN METALLIC', 'SATIN STEEL GRAY METALLIC')"],
             "WBL": ["v.model = 'CAMARO'", "v.trim NOT IN ('ZL1', '1LS')", "c.color_name IN ('BLACK', 'SUMMIT WHITE', 'SHARKSKIN METALLIC', 'SATIN STEEL GRAY METALLIC')"],
@@ -176,7 +175,7 @@ def sort_price():
             "Z51": ["v.model = 'CORVETTE STINGRAY'"],
             # "Z25": ["v.model = 'CORVETTE GRAND SPORT'"],
             # "FEB": ["v.model = 'CORVETTE GRAND SPORT'"],
-            # "T0F": ["v.model = 'CORVETTE GRAND SPORT'"],
+            # "FEY": ["v.model = 'CORVETTE GRAND SPORT'"],
             "Y70": ["v.model IN ('CORVETTE STINGRAY', 'CORVETTE Z06')", "v.modelYear = '2023'", "v.trim IN ('3LT', '3LZ')", "(c.color_name = 'WHITE PEARL METALLIC TRICOAT' OR c.color_name = 'CARBON FLASH METALLIC')"],
             "USA": ["v.model IN ('CORVETTE STINGRAY', 'CORVETTE Z06', 'CORVETTE E-RAY', 'CORVETTE ZR1', 'CORVETTE ZR1X')", "v.modelYear = '2026'", "v.trim IN ('3LT', '3LZ')", "(c.color_name = 'ARCTIC WHITE' OR c.color_name = 'BLACK')"],
             "ZRA": ["v.model = 'CORVETTE ZR1X'", "v.modelYear = '2026'", "v.trim = '3LZ'", "c.color_name = 'BLADE SILVER MATTE'"],

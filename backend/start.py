@@ -165,7 +165,7 @@ def sort_price():
             "A1Z": ["v.model = 'CAMARO'", "v.body = 'COUPE'", "v.trim = 'ZL1'"],
             "A1Y": ["v.model = 'CAMARO'", "v.body = 'COUPE'", "v.trim IN ('1SS', '2SS')"],
             "A1X": ["v.modelYear IN ('2019', '2020', '2021')", "v.model = 'CAMARO'", "v.body = 'COUPE'", "v.trim IN ('1LT', '2LT', '3LT')"],
-            "H40": [f"(v.modelYear = '2024' AND v.model = 'CAMARO' AND v.trim = '2SS' AND c.color_name = 'RADIANT RED TINTCOAT' AND opt.option_code = 'SL1') OR v.vin IN ('1G1FK1R65R0117449', '1G1FK3D62R0118478')"],
+                "H40": ["((v.modelYear = '2024' AND v.model = 'CAMARO' AND v.trim = '2SS' AND c.color_name = 'RADIANT RED TINTCOAT' AND opt.option_code = 'SL1') OR v.vin IN ('1G1FK1R65R0117449', '1G1FK3D62R0118478'))"],
             "PEH": ["v.modelYear = '2020'", "v.model = 'CAMARO'", "v.body = 'COUPE'", "v.trim IN ('2SS', 'ZL1')", "t.transmission_type = 'A10'", "c.color_name = 'BLACK'"],
             "Z4Z": ["v.model = 'CAMARO'", "v.body = 'CONVERTIBLE'", "v.trim = '2SS'", "c.color_name IN ('WILD CHERRY TINTCOAT', 'SUMMIT WHITE', 'SHARKSKIN METALLIC', 'SATIN STEEL GRAY METALLIC')"],
             "WBL": ["v.model = 'CAMARO'", "v.trim NOT IN ('ZL1', '1LS')", "c.color_name IN ('BLACK', 'SUMMIT WHITE', 'SHARKSKIN METALLIC', 'SATIN STEEL GRAY METALLIC')"],
@@ -196,19 +196,6 @@ def sort_price():
             "Z6X": ["v.model IN ('HUMMER EV SUV', 'HUMMER EV PICKUP')"],
             "WFP": ["v.modelYear = '2024'", "v.model = 'HUMMER EV SUV'", "v.trim = '3X'", "c.color_name = 'NEPTUNE BLUE MATTE'"],
         }
-
-        if h40_selected:
-            vin_filters = []
-            if trim:
-                vin_filters.append(f"v.trim = '{trim}'")
-            if color:
-                vin_filters.append(f"c.color_name = '{color}'")
-            vin_extra = " AND " + " AND ".join(vin_filters) if vin_filters else ""
-            rpo_conditions["H40"] = [
-                f"((v.modelYear = '2024' AND v.model = 'CAMARO' AND v.trim = '2SS' "
-                f"AND c.color_name = 'RADIANT RED TINTCOAT' AND opt.option_code = 'SL1') "
-                f"OR (v.vin IN ('1G1FK1R65R0117449','1G1FK3D62R0118478'){vin_extra}))"
-            ]
 
         # 1. Apply all specific RPO conditions to the WHERE clause
         for rpo in rpo_list:
@@ -384,6 +371,7 @@ def stats():
     drivetrain = request.args.get('drivetrain', '').strip() or None
     conditions = []
     year_cond = None
+    params = []
 
     if model == "CORVETTE (C8)" and year and int(year) < 2020:
         year = None
@@ -392,21 +380,23 @@ def stats():
         target_year = year if year else "2026"
 
     if year:
-        year_cond = f"v.modelYear = '{year}'"
+        year_cond = "v.modelYear = %s"
         conditions.append(year_cond)
+        params.append(year)
 
     if model:
         if model == "CORVETTE (C8)":
             conditions.append("v.model LIKE 'CORVETTE%'")
             conditions.append("v.modelYear >= '2020'")
         else:
-            conditions.append(f"v.model = '{model}'")
+            conditions.append("v.model = %s")
+            params.append(model)
 
-    if body: conditions.append(f"v.body = '{body}'")
-    if trim: conditions.append(f"v.trim = '{trim}'")
-    if engine: conditions.append(f"e.engine_type = '{engine}'")
-    if trans: conditions.append(f"t.transmission_type = '{trans}'")
-    if drivetrain: conditions.append(f"d.drivetrain_type = '{drivetrain}'")
+    if body: conditions.append("v.body = %s"); params.append(body)
+    if trim: conditions.append("v.trim = %s"); params.append(trim)
+    if engine: conditions.append("e.engine_type = %s"); params.append(engine)
+    if trans: conditions.append("t.transmission_type = %s"); params.append(trans)
+    if drivetrain: conditions.append("d.drivetrain_type = %s"); params.append(drivetrain)
     where_clause = f"WHERE {' AND '.join(conditions)}" if conditions else ""
     join_clause = """
         JOIN Colors c ON v.color_id = c.color_id
@@ -471,12 +461,14 @@ def stats():
         """
     elif category == 'production':
         prod_conditions = conditions.copy()
+        prod_params = params.copy()
         if not any("v.modelYear" in c for c in prod_conditions):
-            prod_conditions.append(f"v.modelYear = '{target_year}'")
+            prod_conditions.append("v.modelYear = %s")
+            prod_params.append(target_year)
 
         full_where = f"WHERE {' AND '.join(prod_conditions)}"
         sqlStatement = f"""
-            SELECT DATE_FORMAT(o.creation_date, '%Y-%m-%d') AS label, COUNT(*) AS total_count
+            SELECT DATE_FORMAT(o.creation_date, '%%Y-%%m-%%d') AS label, COUNT(*) AS total_count
             FROM Vehicles v
             JOIN Orders o ON v.order_id = o.order_id
             {full_where}
@@ -488,7 +480,7 @@ def stats():
 
     # 4. EXECUTE AND FILTER RESULTS
     distinct_sql = f"SELECT DISTINCT v.modelYear, v.model, v.body, v.trim, e.engine_type, t.transmission_type, d.drivetrain_type FROM Vehicles v {join_clause} {where_clause}"
-    distinct_results = execute_read_query(conn, distinct_sql)
+    distinct_results = execute_read_query(conn, distinct_sql, params)
 
     # Get all available years for the dropdown
     all_years_raw = execute_read_query(conn, "SELECT DISTINCT modelYear FROM Vehicles ORDER BY modelYear DESC")
@@ -499,16 +491,31 @@ def stats():
     # Ensure y is treated as an int for the comparison
         all_years = [y for y in all_years if y is not None and int(y) >= 2020]
 
-    viewTable = execute_read_query(conn, sqlStatement) if category else []
+    if category == 'production':
+        viewTable = execute_read_query(conn, sqlStatement, prod_params)
+    elif category:
+        viewTable = execute_read_query(conn, sqlStatement, params)
+    else:
+        viewTable = []
 
     # 3. DYNAMIC DROPDOWN LOGIC (Like the /vehicles page)
     # Fetch years agnostic of the current year selection
     year_agnostic_conds = [c for c in conditions if c != year_cond]
+    
+    # Reconstruct params without the year param
+    year_agnostic_params = []
+    if model and model != "CORVETTE (C8)": year_agnostic_params.append(model)
+    if body: year_agnostic_params.append(body)
+    if trim: year_agnostic_params.append(trim)
+    if engine: year_agnostic_params.append(engine)
+    if trans: year_agnostic_params.append(trans)
+    if drivetrain: year_agnostic_params.append(drivetrain)
+
     year_where = f"WHERE {' AND '.join(year_agnostic_conds)}" if year_agnostic_conds else ""
 
     # Query for the Year dropdown
     year_sql = f"SELECT DISTINCT v.modelYear FROM Vehicles v {join_clause} {year_where} ORDER BY v.modelYear DESC"
-    all_years_raw = execute_read_query(conn, year_sql)
+    all_years_raw = execute_read_query(conn, year_sql, year_agnostic_params)
     all_years = [r['modelYear'] for r in all_years_raw if r.get('modelYear')]
 
     # Query for all other dropdowns based on FULL filters
@@ -518,7 +525,7 @@ def stats():
         {join_clause}
         {where_clause}
     """
-    distinct_results = execute_read_query(conn, distinct_sql)
+    distinct_results = execute_read_query(conn, distinct_sql, params)
 
     close_connection(conn)
 
@@ -544,13 +551,16 @@ def wheel_stats():
     model = request.args.get('model', '').strip() or None
 
     conditions = []
+    params = []
     if model:
         if model == "CORVETTE (ALL)":
             corvette_models = ["CORVETTE STINGRAY", "CORVETTE STINGRAY W/ Z51", "CORVETTE GRAND SPORT", "CORVETTE E-RAY", "CORVETTE Z06", "CORVETTE ZR1", "CORVETTE ZR1X"]
-            corvette_list = ", ".join(f"'{m}'" for m in corvette_models)
+            corvette_list = ", ".join(['%s'] * len(corvette_models))
             conditions.append(f"model IN ({corvette_list})")
+            params.extend(corvette_models)
         else:
-            conditions.append(f"model = '{model}'")
+            conditions.append("model = %s")
+            params.append(model)
 
     where_clause = f"WHERE {' AND '.join(conditions)}" if conditions else ""
 
@@ -561,7 +571,7 @@ def wheel_stats():
     """
 
     conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
-    distinct_results = execute_read_query(conn, distinct_sql)
+    distinct_results = execute_read_query(conn, distinct_sql, params)
     model_list = sorted(set(r['model'] for r in distinct_results if r['model']))
 
     close_connection(conn)

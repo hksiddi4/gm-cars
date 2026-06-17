@@ -282,7 +282,7 @@
       }
 
       document.addEventListener('DOMContentLoaded', () => {
-        const vin_data = <%- JSON.stringify(vin_data) %>;
+        const vin_data = <%- JSON.stringify(vin_data).replace(/</g, '\\u003c') %>;
         const vin = vin_data[0];
         const model = vin.model?.toUpperCase() || '';
         const vehicleTrim = vin.trim || '';

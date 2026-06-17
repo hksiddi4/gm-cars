@@ -96,6 +96,13 @@ app.use((req, res, next) => {
 
 app.get('/stickers/:folder/:filename', async (req, res) => {
     const { folder, filename } = req.params;
+
+    // Prevent Path Traversal
+    if (folder.includes('..') || folder.includes('/') || folder.includes('\\') || 
+        filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
+        return res.status(400).send('Invalid path');
+    }
+
     const localFilePath = path.join('/stickers', folder, filename);
     const vin = filename.replace('.pdf', '');
     const gmUrl = `https://cws.gm.com/vs-cws/vehshop/v2/vehicle/windowsticker?vin=${vin}`;

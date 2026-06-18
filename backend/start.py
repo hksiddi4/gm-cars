@@ -96,6 +96,7 @@ def sort_price():
     order = request.args.get('order')
     page = int(request.args.get('page', 1))
     limit = int(request.args.get('limit', 100))
+    
     try:
         page = int(page)
         limit = int(limit)
@@ -108,22 +109,22 @@ def sort_price():
     rpo_list = []
     rpo_list_for_filtering = []
     conditions = []
+    params = []
 
-    join_clause = """
-            JOIN Engines e ON v.engine_id = e.engine_id
-            JOIN Transmissions t ON v.transmission_id = t.transmission_id
-            JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id
-            JOIN Colors c ON v.color_id = c.color_id
-            JOIN Orders o ON v.order_id = o.order_id
-            LEFT JOIN SpecialEditions se ON v.vehicle_id = se.vehicle_id
+    # 1. BASE FILTER JOINS (SpecialEditions intentionally excluded for performance)
+    filter_join_clause = """
+        JOIN Engines e ON v.engine_id = e.engine_id
+        JOIN Transmissions t ON v.transmission_id = t.transmission_id
+        JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id
+        JOIN Colors c ON v.color_id = c.color_id
+        JOIN Orders o ON v.order_id = o.order_id
     """
 
     country_map = {
         "CAN": "CANADA",
         "MEX": "MEXICO"
-        }
+    }
 
-    params = []
     if year:
         conditions.append("v.modelYear = %s")
         params.append(year)
@@ -152,13 +153,14 @@ def sort_price():
     if country:
         conditions.append("o.country = %s")
         params.append(country_map.get(country, 'USA'))
+
+    # 2. RPO HANDLING
     if rpo:
         rpo_list = rpo.split(',') if ',' in rpo else [rpo]
-        # NOTE: rpo_n is calculated AFTER substitutions/removals later
-
-        join_clause += "\n            JOIN Options opt ON v.vehicle_id = opt.vehicle_id"
+        filter_join_clause += " JOIN Options opt ON v.vehicle_id = opt.vehicle_id"
+        
         rpo_conditions = {
-            "Z4B": ["v.modelYear = '2024'", "v.model = 'CAMARO'", "c.color_name IN ('PANTHER BLACK MATTE', 'PANTHER BLACK METALLIC TINTCOAT')"],
+			"Z4B": ["v.modelYear = '2024'", "v.model = 'CAMARO'", "c.color_name IN ('PANTHER BLACK MATTE', 'PANTHER BLACK METALLIC TINTCOAT')"],
             "ZL4B": ["v.modelYear = '2024'", "v.model = 'CAMARO'", "v.trim = 'ZL1'", "c.color_name = 'PANTHER BLACK MATTE'"],
             "X56": ["v.modelYear = '2024'", "v.model = 'CAMARO'", "v.body = 'COUPE'", "v.trim = 'ZL1'", "t.transmission_type = 'M6'", "c.color_name = 'RIPTIDE BLUE METALLIC'", "v.msrp = '89185'"],
             "A1Z": ["v.model = 'CAMARO'", "v.body = 'COUPE'", "v.trim = 'ZL1'"],
@@ -196,12 +198,10 @@ def sort_price():
             "WFP": ["v.modelYear = '2024'", "v.model = 'HUMMER EV SUV'", "v.trim = '3X'", "c.color_name = 'NEPTUNE BLUE MATTE'"],
         }
 
-        # 1. Apply all specific RPO conditions to the WHERE clause
-        for rpo in rpo_list:
-            if rpo in rpo_conditions:
-                conditions.extend(rpo_conditions[rpo])
+        for rpo_code in rpo_list:
+            if rpo_code in rpo_conditions:
+                conditions.extend(rpo_conditions[rpo_code])
 
-        # 2. Define the RPO codes that need substitution for the opt.option_code filter
         substitution_map = {
             'ZL4B': 'Z4B',
             'ZLZ4': 'ZLZ',
@@ -209,17 +209,12 @@ def sort_price():
             'PCK1': 'PCK'
         }
 
-        # 3. Handle substitutions and special exclusions (H40 and ZLT are NOT option codes)
         for code in rpo_list:
             if code in substitution_map:
-                # Replace the code for the SQL filter
                 rpo_list_for_filtering.append(substitution_map[code])
             elif code not in ['H40', 'ZLT']:
-                # Keep regular RPOs for the SQL filter
                 rpo_list_for_filtering.append(code)
-            # Codes H40 and ZLT are effectively removed from the final list
 
-        # Remove duplicates from the list generated for SQL filtering (in case ZLZ4 and ZLZ5 were both requested)
         rpo_list_for_filtering = list(set(rpo_list_for_filtering))
         rpo_n = len(rpo_list_for_filtering)
 
@@ -231,15 +226,27 @@ def sort_price():
 
     where_clause = "WHERE " + " AND ".join(conditions) if conditions else ""
 
-    if not rpo_list_for_filtering or 'H40' in rpo_list: # H40 is checked against the original list to determine if the JOIN/GROUP BY should be used
+    if not rpo_list_for_filtering or 'H40' in rpo_list:
         rpo_clause = ""
     else:
         rpo_clause = f"HAVING COUNT(DISTINCT opt.option_code) = {rpo_n}"
 
-    def get_all_distinct_values(current_where, current_params):
+    # 3. ORDERING
+    if any(code in ["ZL4B", "X56", "PEH"] for code in rpo_list) and order not in ["ASC", "DESC"]:
+        order_clause = "ORDER BY SUBSTRING(v.vin, -6)"
+    elif order in ["ASC", "DESC"]:
+        order_clause = f"ORDER BY v.msrp {'ASC' if order == 'ASC' else 'DESC'}"
+    elif order in ["vinASC", "vinDESC"]:
+        order_clause = f"ORDER BY SUBSTRING(v.vin, -6) {'DESC' if order == 'vinDESC' else 'ASC'}, v.modelYear ASC"
+    else:
+        order_clause = "ORDER BY v.vehicle_id DESC"
+
+    # 4. DROPDOWN GENERATOR (Optimized)
+    def get_all_distinct_values(current_where, current_params, current_filter_joins, current_rpo_clause):
         conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
 
         if not current_where:
+            # Fastest path for default page load
             years = execute_read_query(conn, "SELECT DISTINCT modelYear FROM Vehicles ORDER BY modelYear DESC")
             models = execute_read_query(conn, "SELECT DISTINCT model FROM Vehicles ORDER BY model ASC")
             bodies = execute_read_query(conn, "SELECT DISTINCT body FROM Vehicles ORDER BY body ASC")
@@ -263,15 +270,26 @@ def sort_price():
             }, engines
 
         else:
+            # Optimized deferred join approach for fetching valid dropdowns on filtered views
             columns = ['modelYear', 'body', 'trim', 'transmission_type', 'drivetrain_type', 'model', 'color_name', 'country']
+            
             sqlStatement = f"""
                 SELECT DISTINCT v.modelYear, v.model, v.body, v.trim, e.engine_type, e.engine_rpo,
-                    t.transmission_type, d.drivetrain_type, c.color_name, o.country
-                FROM Vehicles v
-                {join_clause}
-                {current_where}
-                GROUP BY v.vehicle_id
-                {rpo_clause}
+                                t.transmission_type, d.drivetrain_type, c.color_name, o.country
+                FROM (
+                    SELECT v.vehicle_id
+                    FROM Vehicles v
+                    {current_filter_joins}
+                    {current_where}
+                    GROUP BY v.vehicle_id
+                    {current_rpo_clause}
+                ) AS filtered_ids
+                JOIN Vehicles v ON v.vehicle_id = filtered_ids.vehicle_id
+                JOIN Engines e ON v.engine_id = e.engine_id
+                JOIN Transmissions t ON v.transmission_id = t.transmission_id
+                JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id
+                JOIN Colors c ON v.color_id = c.color_id
+                JOIN Orders o ON v.order_id = o.order_id
             """
             results = execute_read_query(conn, sqlStatement, current_params)
             close_connection(conn)
@@ -294,7 +312,9 @@ def sort_price():
                 for rpo, name in sorted(list(distinct_engines), key=lambda x: x[0] or "")
             ]
             return sorted_values, sorted_engines
-    distinct_values, engine_list = get_all_distinct_values(where_clause, params)
+
+    # 5. FETCH DATA
+    distinct_values, engine_list = get_all_distinct_values(where_clause, params, filter_join_clause, rpo_clause)
 
     year_list = distinct_values['modelYear']
     body_list = distinct_values['body']
@@ -305,39 +325,54 @@ def sort_price():
     color_list = distinct_values['color_name']
     country_list = distinct_values['country']
 
-    if any(code in ["ZL4B", "X56", "PEH"] for code in rpo_list) and order not in ["ASC", "DESC"]:
-        order_clause = "ORDER BY SUBSTRING(v.vin, -6)"
-    elif order in ["ASC", "DESC"]:
-        order_clause = f"ORDER BY v.msrp {'ASC' if order == 'ASC' else 'DESC'}"
-    elif order in ["vinASC", "vinDESC"]:
-        order_clause = f"ORDER BY SUBSTRING(v.vin, -6) {'DESC' if order == 'vinDESC' else 'ASC'}, v.modelYear ASC"
-    else:
-        order_clause = "ORDER BY v.vehicle_id DESC"
-
     conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
+    
+    # Inner subquery specifically to grab the paginated IDs rapidly
+    inner_sql = f"""
+        SELECT v.vehicle_id
+        FROM Vehicles v {filter_join_clause}
+        {where_clause}
+        GROUP BY v.vehicle_id
+        {rpo_clause}
+        {order_clause}
+        LIMIT %s OFFSET %s
+    """
+
+    # Outer query to fetch the wide dataset and attach Special Editions purely for those 100 rows
     select = f"""
         SELECT v.vehicle_id, v.vin, v.modelYear, v.model, v.body, v.trim,
             e.engine_type, t.transmission_type, d.drivetrain_type,
             c.color_name, v.msrp, o.country,
             GROUP_CONCAT(DISTINCT se.special_desc ORDER BY se.special_desc ASC SEPARATOR ', ') AS special_desc
-        FROM Vehicles v {join_clause}
-        {where_clause}
+        FROM (
+            {inner_sql}
+        ) AS page_keys
+        JOIN Vehicles v ON v.vehicle_id = page_keys.vehicle_id
+        JOIN Engines e ON v.engine_id = e.engine_id
+        JOIN Transmissions t ON v.transmission_id = t.transmission_id
+        JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id
+        JOIN Colors c ON v.color_id = c.color_id
+        JOIN Orders o ON v.order_id = o.order_id
+        LEFT JOIN SpecialEditions se ON v.vehicle_id = se.vehicle_id
         GROUP BY v.vehicle_id, v.vin, v.modelYear, v.model, v.body, v.trim,
                  e.engine_type, t.transmission_type, d.drivetrain_type,
                  c.color_name, v.msrp, o.country
-        {rpo_clause}
         {order_clause}
-        LIMIT %s OFFSET %s
     """
+    
     query_params = params + [limit, offset]
     viewTable = execute_read_query(conn, select, query_params)
+
+    # 6. TOTAL COUNT CALCULATION
     if where_clause:
         totalSql = f"""
             SELECT COUNT(*) AS total FROM (
-                SELECT v.vehicle_id FROM Vehicles v {join_clause}
+                SELECT v.vehicle_id 
+                FROM Vehicles v {filter_join_clause}
                 {where_clause}
                 GROUP BY v.vehicle_id {rpo_clause}
-            ) AS filtered_vehicles"""
+            ) AS filtered_vehicles
+        """
         total_items = execute_read_query(conn, totalSql, params)[0]['total']
     else:
         total_items = execute_read_query(conn, "SELECT COUNT(vehicle_id) AS total FROM Vehicles")[0]['total']

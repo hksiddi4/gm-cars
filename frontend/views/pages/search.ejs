@@ -13,7 +13,6 @@
     }
 
     const stickerPath = `/stickers/${formattedModel}_${vin.modelYear}/${vin.vin}.pdf`;
-    console.log(stickerPath);
   %>
   <title>
     <%= (vin.modelYear ? "'" + vin.modelYear.toString().slice(-2) : 'N/A') %>
@@ -680,8 +679,8 @@
         let urls = [];
 
         // Troubleshooting imgGen
-        console.log(`Model Year: ${modelYear}, MMC Code: ${mmc_code}, Trim: ${trim}, Color: ${color}, Interior Color: ${colorInt}`);
-        console.log(`https://cgi.chevrolet.com/mmgprod-us/dynres/prove/image.gen?i=${modelYear}/${mmc_code}/${mmc_code}__${trim}/${color}_${rpos}gmds10.png&v=deg01&std=true&country=US&send404=true&transparentBackgroundPng=true`);
+        //console.log(`Model Year: ${modelYear}, MMC Code: ${mmc_code}, Trim: ${trim}, Color: ${color}, Interior Color: ${colorInt}`);
+        //console.log(`https://cgi.chevrolet.com/mmgprod-us/dynres/prove/image.gen?i=${modelYear}/${mmc_code}/${mmc_code}__${trim}/${color}_${rpos}gmds10.png&v=deg01&std=true&country=US&send404=true&transparentBackgroundPng=true`);
         
         if (model === 'CELESTIQ') {
           warningDiv.innerHTML = 'Image generation does not support Celestiq.';

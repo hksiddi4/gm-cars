@@ -5,7 +5,7 @@ import os
 
 # Create new user in mysql wb, don't use root. Will not work otherwise!
 class Creds:
-    conString = #os.environ.get('DB_HOST')
+    conString = os.environ.get('DB_HOST')
     userName = os.environ.get('DB_USER')
     password = os.environ.get('DB_PASS')
     dbName = os.environ.get('DB_NAME')

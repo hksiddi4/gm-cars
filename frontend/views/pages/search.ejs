@@ -799,8 +799,16 @@ function renderRpoCards(vin, model) {
           if (el) {
             const galleryRect = gallery.getBoundingClientRect();
             const elRect = el.getBoundingClientRect();
+            
+            // Calculate how much to move to center the thumbnail
             const offset = elRect.left - galleryRect.left - (galleryRect.width / 2) + (elRect.width / 2);
-            gallery.scrollBy({ left: offset, behavior: 'smooth' });
+            let targetScroll = gallery.scrollLeft + offset;
+            
+            // Clamp the scroll position to prevent the last item from centering in empty space
+            const maxScroll = gallery.scrollWidth - gallery.clientWidth;
+            targetScroll = Math.max(0, Math.min(targetScroll, maxScroll));
+            
+            gallery.scrollTo({ left: targetScroll, behavior: 'smooth' });
           }
 
           let nextIndex = (index + 1) % urls.length;

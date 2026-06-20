@@ -816,7 +816,7 @@ img {
     white-space: nowrap;
     max-width: 100%;
     gap: 5px;
-    padding: 10px 0;
+    padding: 10px 0 0 0;
 }
 
 #image-gallery img {
@@ -829,7 +829,7 @@ img {
   gap: 5px;
   overflow: hidden;
   width: 100%;
-  padding: 10px 0;
+  padding: 10px 0 0 0;
   justify-content: center;
   align-items: center;
 }
@@ -855,6 +855,7 @@ img {
     min-width: auto;
     overflow: hidden;
     position: relative;
+    margin-bottom: 10px;
 }
 
 #carousel-image {

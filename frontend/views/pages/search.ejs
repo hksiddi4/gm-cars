@@ -296,7 +296,7 @@
           ...hummersuvRpo
         };
 
-        function renderRpoCards(vin, model) {
+function renderRpoCards(vin, model) {
           const container = document.getElementById('rpoImageContainer');
           container.innerHTML = '';
 
@@ -306,7 +306,17 @@
           }
 
           let found = false;
-          vin.rpo_codes.forEach(rpoCode => {
+          
+          // 1. Sort the RPO codes alphabetically
+          const sortedRpoCodes = [...vin.rpo_codes].sort();
+
+          sortedRpoCodes.forEach(rpoCode => {
+            // 2. Create and append the wrapper immediately to lock in alphabetical order
+            const cardWrapper = document.createElement('div');
+            cardWrapper.className = 'rpo-wrapper';
+            cardWrapper.style.display = 'none'; // Hide it until the image actually loads
+            container.appendChild(cardWrapper);
+
             const img = new Image();
             let imgSrc;
             if (model.startsWith('CORVETTE')) {
@@ -329,8 +339,6 @@
             img.alt = rpoCode;
 
             img.onload = () => {
-              const cardWrapper = document.createElement('div');
-              cardWrapper.className = 'rpo-wrapper';
               const cardLink = document.createElement('a');
               cardLink.href = `/vehicles?model=${encodeURIComponent(model)}&rpo=${encodeURIComponent(rpoCode)}`;
               cardLink.className = 'rpo-card-link';
@@ -358,9 +366,10 @@
                 <div class="rpo-description">${desc}</div>
               `;
 
+              // 3. Append the contents to the pre-positioned wrapper and make it visible
               cardLink.appendChild(card);
               cardWrapper.appendChild(cardLink);
-              container.appendChild(cardWrapper);
+              cardWrapper.style.display = ''; 
               found = true;
             };
           });

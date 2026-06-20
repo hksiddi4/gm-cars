@@ -47,8 +47,8 @@
                                     'CORVETTE Z06', 'CORVETTE ZR1', 'CORVETTE ZR1X'
                                 ];
                                 corvetteVariants.forEach(model => { 
-                                    const isLegacy = (model === 'CORVETTE STINGRAY W/ Z51' || model === 'CORVETTE GRAND SPORT');
-                                    const isNew = (model === 'XCORVETTE GRAND SPORT' || model === 'CORVETTE GRAND SPORT X');
+                                    const isLegacy = (model === 'CORVETTE STINGRAY W/ Z51');
+                                    const isNew = (model === 'CORVETTE GRAND SPORT' || model === 'CORVETTE GRAND SPORT X');
                                 %>
                                     <div class="col-12 col-md-6 col-lg-4 i-link">
                                         <a href="/vehicles?model=<%= encodeURIComponent(model) %>" 

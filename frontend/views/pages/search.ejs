@@ -48,7 +48,6 @@
             <% } %>
         </div>
         <div class="flex-row-wrap">
-            <!-- Photo Carousel -->
             <div id="image-warning"></div>
             <div id="carousel-container">
               <div id="loading-animation" class="shimmer">
@@ -62,14 +61,13 @@
                 <div id="image-gallery"></div>
               </div>
             </div>
-            <!-- vinTable -->
             <div class="table-responsive no-mobile-scroll" style="text-align: left; justify-content: flex-start;">
               <table class="table-veh table-hover border shadow" id="vinTable">
                 <tbody>
                     <% vin_data.forEach(function(data) { %>
                     <tr>
                       <td class="label-column"><strong>VIN</strong></td>
-											 <td><%= data.vin.slice(0, 9) %><strong><%= data.vin.slice(9) %></strong></td>
+                       <td><%= data.vin.slice(0, 9) %><strong><%= data.vin.slice(9) %></strong></td>
                     </tr>
                     <tr>
                       <td class="label-column"><strong>ORDER NUMBER</strong></td>
@@ -179,7 +177,6 @@
     </div>
     <div class="custom-container">
         <div style="display: flex;">
-            <!-- Window Sticker -->
             <div id="sticker-container" style="flex: 1;">
               <% if (vin.country === 'MEXICO' || vin.dealer_name === 'N/A') { %>
                 <div style="display: flex; justify-content: center; align-items: center; height: 800px;">
@@ -204,17 +201,6 @@
               <% } %>
             </div>
         </div>
-        <!-- <div class="rarity-container">
-          <% vin_data.forEach(function(data) { %>
-            <% if (data.allJson) { %>
-              <button id="see-rarity" class="btn btn-primary rarity-btn" data-alljson='<%= JSON.stringify(data.allJson) %>'>See Rarity</button>
-            <% } %>
-          <% }); %>
-          <div class="response-container">
-            <div id="response" class="response"></div>
-            <div><a id="snark" style="color: rgb(40, 40, 40);"></a></div>
-          </div>
-        </div> -->
         <div class="rpo-container" id="rpoImageContainer"></div>
         <div class="table-responsive no-mobile-scroll" style="text-align: left; justify-content: flex-start; margin-top: 10px;">
           <table class="table-veh table-hover border border shadow" id="rpoTable">
@@ -495,7 +481,7 @@
             options = options.filter(code => code !== "T3S");
           }
         } else {
-          if (["1YC07", "1YC67", "1YY07", "1YY67", "1YW07", "1YW67", "1YX07", "1YX67"].includes(mmc_code)) { // Camaro/Corvette
+          if (["1YC07", "1YC67", "1YY07", "1YY67", "1YW07", "1YW67", "1YX07", "1YX67", "1YE07", "1YE67"].includes(mmc_code)) { // Camaro/Corvette
             trim = options.find(opt => ["1LT", "2LT", "3LT"].includes(opt)) || trim;
           } else if (["1YH07", "1YH67", "1YG07", "1YG67", "1YR07", "1YR67", "1YZ07", "1YZ67", "1YS07", "1YS67"].includes(mmc_code)) { // Corvette Z06/E-Ray
             trim = options.find(opt => ["1LZ", "2LZ", "3LZ"].includes(opt)) || trim;
@@ -739,18 +725,55 @@
               carouselImage.style.display = 'block';
               carouselImage.classList.remove('shimmer');
               carouselImage.style.opacity = 1;
-              document.getElementById('prev').style.display = 'block';
-              document.getElementById('next').style.display = 'block';
+              
+              if (urls.length > 1) {
+                document.getElementById('prev').style.display = 'block';
+                document.getElementById('next').style.display = 'block';
+              } else {
+                document.getElementById('prev').style.display = 'none';
+                document.getElementById('next').style.display = 'none';
+              }
+              
               document.getElementById('image-gallery-shimmer').style.display = 'none';
-              document.getElementById('image-gallery').style.display = 'flex';
+              
+              if (urls.length === 1 && urls[0] === ghostImg) {
+                document.getElementById('image-gallery').style.display = 'none';
+              } else {
+                document.getElementById('image-gallery').style.display = 'flex';
+              }
+              
               initialLoad = false;
             };
+
+            // Setup a safety 404 catch on the first load attempt
+            carouselImage.onerror = () => {
+              if (carouselImage.src.includes('ghost')) return; // Exit logic loop
+              
+              if (!warningDiv.innerHTML.includes('Image generation does not support')) {
+                warningDiv.innerHTML += (warningDiv.innerHTML ? '<br>' : '') + `Image generation does not support ${modelYear} ${vin.model || model}`;
+                warningDiv.style.color = '#e57373';
+              }
+              
+              // Clear array to stop indexing the 404 images
+              urls = [ghostImg];
+              currentIndex = 0;
+              gallery.innerHTML = ''; // Wipe pre-loaded thumbnails
+              carouselImage.src = ghostImg;
+            };
+
             carouselImage.src = imgSrc;
           } else {
             carouselImage.style.opacity = 0;
 
             setTimeout(() => {
               carouselImage.onload = () => {
+                carouselImage.style.opacity = 1;
+              };
+              
+              // Backup catch in case subsequent gallery items fail
+              carouselImage.onerror = () => {
+                if (carouselImage.src.includes('ghost')) return;
+                carouselImage.src = ghostImg; 
                 carouselImage.style.opacity = 1;
               };
 

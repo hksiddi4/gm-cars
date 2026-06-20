@@ -53,9 +53,9 @@
                                 %>
                                     <div class="col-12 col-md-6 col-lg-4 i-link">
                                         <% if (isDisabled) { %>
-                                            <div class="model-btn w-100 vette-variant-btn text-muted" style="pointer-events: none; opacity: 0.4; background-color: #252525 !important; border-color: #333 !important;">
+                                            <a href="#" class="model-btn w-100 vette-variant-btn text-muted" style="pointer-events: none; opacity: 0.4; background-color: #252525 !important; border-color: #333 !important;">
                                                 <%= model %>
-                                            </div>
+                                            </a>
                                         <% } else { %>
                                             <a href="/vehicles?model=<%= encodeURIComponent(model) %>" 
                                             class="model-btn w-100 vette-variant-btn <%= isLegacy ? 'text-legacy' : '' %> <%= isNew ? 'glow-new-btn' : '' %>">

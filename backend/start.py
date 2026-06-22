@@ -176,7 +176,7 @@ def sort_price():
             "Z07": ["v.model = 'CORVETTE Z06'"],
             "Z51": ["v.model = 'CORVETTE STINGRAY'"],
             "Z25": ["v.model = 'CORVETTE GRAND SPORT'"],
-            "FEB": ["v.model = 'CORVETTE GRAND SPORT'"],
+            "FEB": ["v.model = 'CORVETTE GRAND SPORT'", "opt.option_code IN ('J56', 'XFR', 'B4Z')"],
             "FEY": ["v.model = 'CORVETTE GRAND SPORT'"],
             "Y70": ["v.model IN ('CORVETTE STINGRAY', 'CORVETTE Z06')", "v.modelYear = '2023'", "v.trim IN ('3LT', '3LZ')", "(c.color_name = 'WHITE PEARL METALLIC TRICOAT' OR c.color_name = 'CARBON FLASH METALLIC')"],
             "USA": ["v.model IN ('CORVETTE STINGRAY', 'CORVETTE Z06', 'CORVETTE E-RAY', 'CORVETTE ZR1', 'CORVETTE ZR1X')", "v.modelYear = '2026'", "v.trim IN ('3LT', '3LZ')", "(c.color_name = 'ARCTIC WHITE' OR c.color_name = 'BLACK')"],

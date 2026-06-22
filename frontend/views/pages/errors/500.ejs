@@ -11,8 +11,15 @@
         <div class="content">
             <div class="custom-container">
                 <div class="row">
-                    <h1 class="pagetitle">Server Error: 500</h1>
-                    <h4><%= JSON.stringify(error, null, 2) %></h4>
+                    <div class="response-container" style="padding: 40px 0;">
+                         <div class="response" role="status">
+                             <p>Server Error: 500</p>
+                             <div style="margin-top: 12px; display:flex; gap:10px; justify-content:center;">
+                                 <button type="button" class="btn btn-outline-light" onclick="history.back()">Go Back</button>
+                                 <button type="button" class="btn btn-secondary" id="clearFiltersBtn" onclick="window.location.href='/'">Go Home</button>
+                             </div>
+                         </div>
+                     </div>
                 </div>
             </div>
         </div>

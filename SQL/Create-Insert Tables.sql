@@ -3,6 +3,9 @@ use vehicles;
 create user 'hussain' identified by 'Hussain92';
 grant all privileges on vehicles.* to 'hussain'@'%';
 
+select * from Vehicles limit 10;
+select count(*) from Vehicles;
+
 -- staging_allGM
 CREATE TABLE IF NOT EXISTS staging_allGM (
 	vin varchar(17) PRIMARY KEY,
@@ -96,6 +99,13 @@ CREATE TABLE Options (
     option_code CHAR(3),
     UNIQUE (vehicle_id, option_code)
 );
+
+CREATE TABLE `Options_New` (
+  `vehicle_id` BIGINT UNSIGNED NOT NULL,
+  `option_code` CHAR(3) NOT NULL,
+  PRIMARY KEY (`vehicle_id`, `option_code`),
+  KEY `idx_option_lookup` (`option_code`, `vehicle_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Special Editions Table
 CREATE TABLE SpecialEditions (
@@ -222,6 +232,7 @@ CROSS JOIN (
     UNION ALL SELECT 'OAR', 'Pre-Production Vehicle'
     UNION ALL SELECT 'PEH', 'Hertz / Hendrick Motorsports Edition'
     UNION ALL SELECT 'ZLT', '20th Anniversary of V-Series Special Edition'
+    UNION ALL SELECT 'ZLV', '20th Anniversary of V-Series Special Edition'
     UNION ALL SELECT 'ZTK', 'ZTK Track Performance Package'
     UNION ALL SELECT 'Z6X', 'Extreme Off-Road Package'
     UNION ALL SELECT 'WFP', 'Omega Edition'
@@ -229,6 +240,9 @@ CROSS JOIN (
 	UNION ALL SELECT 'USA', 'Stars & Steel Limited Edition'
 	UNION ALL SELECT 'V8V', 'Precision Package'
 	UNION ALL SELECT 'PCK', 'Deep Ocean Appearance Package'
+    UNION ALL SELECT 'Z25', 'Grand Sport Launch Edition'
+    UNION ALL SELECT 'FEB', 'Z52 Sport Performance Package'
+    UNION ALL SELECT 'FEY', 'Z52 Track Performance Package'
 	-- UNION ALL SELECT '', 'F1 Collector Edition'
 ) AS special_map ON opt.option_code = special_map.rpo_code
 WHERE NOT EXISTS (
@@ -236,7 +250,9 @@ WHERE NOT EXISTS (
     FROM SpecialEditions se 
     WHERE se.vehicle_id = v.vehicle_id 
     AND se.special_desc = special_map.special_desc
-);
+)
+AND (special_map.rpo_code != 'PCK' OR v.model = 'CT5');
+drop table SpecialEditions;
 
 -- Add ZLZ dual-meaning special edition logic
 INSERT IGNORE INTO SpecialEditions (vehicle_id, special_desc)
@@ -405,15 +421,31 @@ UPDATE Colors SET rpo_code = 'GBD' WHERE color_name = 'AEGEAN STONE';
 UPDATE Colors SET rpo_code = 'GXP' WHERE color_name = 'DEEP SEA METALLIC';
 UPDATE Colors SET rpo_code = 'G5D' WHERE color_name = 'LATTE METALLIC';
 UPDATE Colors SET rpo_code = 'GRF' WHERE color_name = 'BLADE SILVER MATTE';
+UPDATE Colors SET rpo_code = 'G8T' WHERE color_name = 'LIQUID STEEL TRICOAT';
+UPDATE Colors SET rpo_code = 'G8L' WHERE color_name = 'KINGFISHER METALLIC';
+UPDATE Colors SET rpo_code = 'GOG' WHERE color_name = 'EMERALD ISLE METALLIC';
+UPDATE Colors SET rpo_code = 'G9E' WHERE color_name = 'MOSS METALLIC';
+UPDATE Colors SET rpo_code = 'GXA' WHERE color_name = 'SEA WOLF TRICOAT';
+UPDATE Colors SET rpo_code = 'GLN' WHERE color_name = 'CAROLINA BLUE';
+UPDATE Colors SET rpo_code = 'GNW' WHERE color_name = 'MAVERICK NOIR';
+UPDATE Colors SET rpo_code = 'GNO' WHERE color_name = 'BARBED WIRE METALLIC';
+UPDATE Colors SET rpo_code = 'G9T' WHERE color_name = 'SIKU TRICOAT';
+UPDATE Colors SET rpo_code = 'GLD' WHERE color_name = 'ARC BLUE METALLIC';
+UPDATE Colors SET rpo_code = 'G9N' WHERE color_name = 'FITZ GRAY TRICOAT';
+UPDATE Colors SET rpo_code = 'GHX' WHERE color_name = 'VERMILLION METALLIC';
+UPDATE Colors SET rpo_code = 'GXE' WHERE color_name = 'LAGOON';
+UPDATE Colors SET rpo_code = 'GMF' WHERE color_name = 'MAUI METALLIC';
+UPDATE Colors SET rpo_code = 'G9M' WHERE color_name = 'CASPIA TRICOAT';
+UPDATE Colors SET rpo_code = 'GGA' WHERE color_name = 'DEEP AMETHYST METALLIC';
+UPDATE Colors SET rpo_code = 'GHG' WHERE color_name = 'CARNELIAN METALLIC';
+UPDATE Colors SET rpo_code = 'G8X' WHERE color_name = 'BOYSENBERRY METALLIC';
 
 UPDATE Colors SET rpo_code = 'G' WHERE color_name = '';
 SELECT * FROM Colors;
 
 -- Set Engine RPO
 select * from Engines;
-update Engines SET engine_rpo = "ETI" WHERE engine_id = 15;
-
-select * from Vehicles;
+update Engines SET engine_rpo = "LS6" WHERE engine_id = 24;
 
 -- Find RPO codes by model for gm-rpo-images script
 SELECT DISTINCT

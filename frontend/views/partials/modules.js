@@ -2482,7 +2482,14 @@ const ct4vRpo = {
   "Y5Y": "Driver Assist Package",
   "Y6F": "Climate Package",
   "YF5": "Emissions, California state requirements",
+  "ZLD": "Sebring IMSA Edition",
+  "ZLE": "Watkins Glen IMSA Edition",
+  "ZLG": "Road Atlanta IMSA Edition",
+  "ZLJ": "Impact Edition",
+  "ZLK": "Arrival Edition",
+  "ZLR": "Elevation Edition",
   "ZLZ": "Petit Pataud Special Edition",
+  "ZLZ4": "Petit Pataud Special Edition",
 }
 
 const ct5Rpo = {
@@ -2806,6 +2813,7 @@ const ct5vRpo = {
   "A2X": "Seat adjuster, driver 8-way power",
   "A45": "Memory settings",
   "A7K": "Seat adjuster, front passenger 8-way power",
+  "ABQ": "120th Anniversary Edition",
   "AEF": "Window, power",
   "AER": "Window, power",
   "AF6": "Seat, driver power lumbar massage",
@@ -2950,7 +2958,9 @@ const ct5vRpo = {
   "PAP": "Phone projection",
   "PB4": "Wheel lugs, locking",
   "PCJ": "Platinum Package",
+  "PCK": "Deep Ocean Appearance Package",
   "PCK": "Premium Package",
+  "PCK1": "Deep Ocean Appearance Package",
   "PDB": "LPO, Onyx Package",
   "PDH": "LPO, Interior Protection Package",
   "PDJ": "LPO, Bronze Accent Package",
@@ -3097,7 +3107,10 @@ const ct5vRpo = {
   "Y6F": "Climate Package",
   "Y6L": "Parking Package",
   "YF5": "Emissions, California state requirements",
+  "ZLT": "20th Anniversary of V-Series Special Edition",
+  "ZLV": "20th Anniversary of V-Series Special Edition",
   "ZLZ": "Le Monstre Special Edition",
+  "ZLZ5": "Le Monstre Special Edition",
   "ZRG": "Platinum Package",
 }
 

@@ -1,3 +1,5 @@
+DROP PROCEDURE IF EXISTS execute_gm_data_sync;
+
 CALL execute_gm_data_sync();
 
 DELIMITER //
@@ -121,34 +123,39 @@ BEGIN
     JOIN Vehicles v ON v.vin = s.vin
     JOIN Options opt ON v.vehicle_id = opt.vehicle_id
     CROSS JOIN (
-        SELECT 'A1X' AS rpo_code, '1LE' AS special_desc
-        UNION ALL SELECT 'A1Y', '1LE'
-        UNION ALL SELECT 'Z4B', 'Collectors Edition'
-        UNION ALL SELECT 'X56', 'Garage 56 Special Edition'
-        UNION ALL SELECT 'Z51', 'Z51 Performance Package'
-        UNION ALL SELECT 'ZCR', 'IMSA GTLM Championship C8.R Edition'
-        UNION ALL SELECT 'Y70', '70th Anniversary Edition'
-        UNION ALL SELECT 'Z07', 'Z07 Performance Package'
-        UNION ALL SELECT 'ZLE', 'Watkins Glen IMSA Edition'
-        UNION ALL SELECT 'ZLD', 'Sebring IMSA Edition'
-        UNION ALL SELECT 'ZLG', 'Road Atlanta IMSA Edition'
-        UNION ALL SELECT 'ZLK', 'Arrival Edition'
-        UNION ALL SELECT 'ZLJ', 'Impact Edition'
-        UNION ALL SELECT 'ZLR', 'Elevation Edition'
-        UNION ALL SELECT 'ABQ', '120th Anniversary Edition'
-        UNION ALL SELECT 'OAR', 'Pre-Production Vehicle'
-        UNION ALL SELECT 'PEH', 'Hertz / Hendrick Motorsports Edition'
-        UNION ALL SELECT 'ZLT', '20th Anniversary of V-Series Special Edition'
-        UNION ALL SELECT 'ZTK', 'ZTK Track Performance Package'
-        UNION ALL SELECT 'Z6X', 'Extreme Off-Road Package'
-        UNION ALL SELECT 'WFP', 'Omega Edition'
-        UNION ALL SELECT 'ZRA', 'Quail Silver Limited Edition'
-        UNION ALL SELECT 'USA', 'Stars & Steel Limited Edition'
-        UNION ALL SELECT 'V8V', 'Precision Package'
-        UNION ALL SELECT 'PCK', 'Deep Ocean Appearance Package'
+		SELECT 'A1X' AS rpo_code, '1LE' AS special_desc
+		UNION ALL SELECT 'A1Y', '1LE'
+		UNION ALL SELECT 'Z4B', 'Collectors Edition'
+		UNION ALL SELECT 'X56', 'Garage 56 Special Edition'
+		UNION ALL SELECT 'Z51', 'Z51 Performance Package'
+		UNION ALL SELECT 'ZCR', 'IMSA GTLM Championship C8.R Edition'
+		UNION ALL SELECT 'Y70', '70th Anniversary Edition'
+		UNION ALL SELECT 'Z07', 'Z07 Performance Package'
+		UNION ALL SELECT 'ZLE', 'Watkins Glen IMSA Edition'
+		UNION ALL SELECT 'ZLD', 'Sebring IMSA Edition'
+		UNION ALL SELECT 'ZLG', 'Road Atlanta IMSA Edition'
+		UNION ALL SELECT 'ZLK', 'Arrival Edition'
+		UNION ALL SELECT 'ZLJ', 'Impact Edition'
+		UNION ALL SELECT 'ZLR', 'Elevation Edition'
+		UNION ALL SELECT 'ABQ', '120th Anniversary Edition'
+		UNION ALL SELECT 'OAR', 'Pre-Production Vehicle'
+		UNION ALL SELECT 'PEH', 'Hertz / Hendrick Motorsports Edition'
+		UNION ALL SELECT 'ZLT', '20th Anniversary of V-Series Special Edition'
+		UNION ALL SELECT 'ZLV', '20th Anniversary of V-Series Special Edition'
+		UNION ALL SELECT 'ZTK', 'ZTK Track Performance Package'
+		UNION ALL SELECT 'Z6X', 'Extreme Off-Road Package'
+		UNION ALL SELECT 'WFP', 'Omega Edition'
+		UNION ALL SELECT 'ZRA', 'Quail Silver Limited Edition'
+		UNION ALL SELECT 'USA', 'Stars & Steel Limited Edition'
+		UNION ALL SELECT 'V8V', 'Precision Package'
+		UNION ALL SELECT 'PCK', 'Deep Ocean Appearance Package'
+		UNION ALL SELECT 'Z25', 'Grand Sport Launch Edition'
+		UNION ALL SELECT 'FEB', 'Z52 Sport Performance Package'
+		UNION ALL SELECT 'FEY', 'Z52 Track Performance Package'
     ) AS special_map ON opt.option_code = special_map.rpo_code
     LEFT JOIN SpecialEditions se ON se.vehicle_id = v.vehicle_id AND se.special_desc = special_map.special_desc
-    WHERE se.special_id IS NULL;
+    WHERE se.special_id IS NULL
+    AND (special_map.rpo_code != 'PCK' OR v.model = 'CT5');
 
     COMMIT;
 END //

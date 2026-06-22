@@ -515,23 +515,26 @@ function renderRpoCards(vin, model) {
           }
         }
 
-        let warningMessages = [];
-
-        if (!mmc_code) {
-          warningMessages.push('ERROR: MMC_Code unset in database');
-        }
-        if (!trim) {
-          warningMessages.push('ERROR: Trim unset in file');
-        }
-
-        if (warningMessages.length > 0) {
-          warningDiv.innerHTML = warningMessages.join('<br>');
-          warningDiv.style.color = '#e57373';
-        }
-
         let rpos = options.join('_');
         let color = options.find(opt => Object.values(colorMap).includes(opt));
         let colorInt = options.find(opt => Object.keys(intColor).includes(opt));
+        
+        // --- ADDED VALIDATION CHECK FOR UNDEFINED/NULL ---
+        let missingVarsMsgs = [];
+        const requiredVars = { modelYear, mmc_code, trim, color, colorInt };
+        
+        for (const [key, value] of Object.entries(requiredVars)) {
+          if (value === undefined || value === null || value === '') {
+            missingVarsMsgs.push(`Error: ${key} is undefined/null`);
+          }
+        }
+
+        if (missingVarsMsgs.length > 0) {
+          warningDiv.innerHTML += (warningDiv.innerHTML ? '<br>' : '') + missingVarsMsgs.join('<br>');
+          warningDiv.style.color = '#e57373';
+        }
+        // -------------------------------------------------
+
         const modelUpper = vin_data[0].model ? vin_data[0].model.toUpperCase() : '';
         let extMax = 7;
         let intMax = 4;

@@ -229,6 +229,8 @@ const intColor = {
   "EPX": "Very Dark Atmosphere Napa Leather w/ Perforated Sueded Microfiber Inserts",
   "HUB": "Ultimate Suede Jet Black Napa Leather w/ Perforated Sueded Microfiber Inserts",
   "HVZ": "Asymmetrical Adrenaline Red / Jet Black Napa Leather w/ Perforated Inserts",
+  "HAG": "MMETRICAL SANTORINI BLUE / JET BLACK NAPA LEATHER W/ PERFORATED INSERTS",
+  "EL9": "SANTORINI BLUE DIPPED W/ TORCH RED ACCENTS NAPA LEATHER W/ PERFORATED INSERTS",
   // Camaro
   "H01": "Kalahari Leather",
   "H0W": "Jet Black Leather W/ Red accents",

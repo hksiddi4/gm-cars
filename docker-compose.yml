@@ -10,8 +10,6 @@ services:
       - DB_USER
       - DB_PASS
       - DB_NAME
-      - ADMIN_USER
-      - ADMIN_PASS
     volumes:
       - /etc/localtime:/etc/localtime:ro
 
@@ -22,6 +20,8 @@ services:
     restart: always
     environment:
       - TZ=${TZ:-UTC}
+      - ADMIN_USER
+      - ADMIN_PASS
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /mnt/NVMe/Apps/GM-Vehicles/window-stickers:/stickers:ro

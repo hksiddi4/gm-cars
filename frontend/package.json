@@ -4,6 +4,7 @@
     "ejs": "^5.0.1",
     "express": "^5.2.1",
     "express-basic-auth": "^1.2.1",
+    "express-rate-limit": "^8.5.2",
     "pm2": "^7.0.0"
   },
   "devDependencies": {

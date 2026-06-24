@@ -6,13 +6,33 @@ const path = require('path');
 
 const basicAuth = require('express-basic-auth');
 
-// Create the authentication middleware
+const authLimiter = rateLimit({
+    windowMs: 5 * 60 * 1000,
+    max: 3,
+    message: 'Too many login attempts from this IP, please try again after 5 minutes.',
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
 const requireAdmin = basicAuth({
     users: {
         [process.env.ADMIN_USER]: process.env.ADMIN_PASS
     },
-    challenge: true, // This prompts the browser's native login dialog
-    unauthorizedResponse: 'Unauthorized access.'
+    challenge: true,
+    unauthorizedResponse: (req) => {
+        return `
+            <!DOCTYPE html>
+            <html>
+            <head><title>Unauthorized</title></head>
+            <body>
+                <script>
+                    alert("Unauthorized access.");
+                    window.location.href = "/";
+                </script>
+            </body>
+            </html>
+        `;
+    }
 });
 
 // Import all RPO constants as a single object
@@ -287,7 +307,7 @@ app.get('/wheels', async (req, res) => {
     }
 });
 
-app.get('/query', requireAdmin, (req, res) => {
+app.get('/query', authLimiter, requireAdmin, (req, res) => {
     res.render('pages/query', {
         canonicalPath: '/query',
         pagePath: '/query',
@@ -295,7 +315,7 @@ app.get('/query', requireAdmin, (req, res) => {
     });
 });
 
-app.post('/ai-query', requireAdmin, async (req, res) => {
+app.post('/ai-query', authLimiter, requireAdmin, async (req, res) => {
     try {
         const userPrompt = req.body.prompt;
 

@@ -1,0 +1,21 @@
+[6/22/2026, 8:56:12 PM] Show me all 2022 Camaro ZL1 in blue
+[6/22/2026, 8:57:45 PM] Show me all CT5V Blackwing in matte paint
+[6/22/2026, 8:59:43 PM] Show me all CT5 V-Series Blackwing in matte paint
+[6/22/2026, 9:01:28 PM] Show me all CT5 V-Series Blackwing in matte paint
+[6/23/2026, 6:07:48 PM] Show me all Corvettes with front lift and green color
+[6/23/2026, 6:10:14 PM] How many green corvettes are there
+[6/23/2026, 6:13:04 PM] How many green corvettes are there
+[6/23/2026, 6:13:46 PM] How many green corvettes zr1s are there
+[6/23/2026, 6:17:11 PM] How many green corvettes zr1s are there
+[6/23/2026, 6:17:44 PM] How many green corvettes are there
+[6/23/2026, 6:19:38 PM] How many Camaro 2SS 1LE in white
+[6/23/2026, 6:31:36 PM] How many Camaro 2SS 1LE in white
+[6/23/2026, 6:34:13 PM] How many Camaro 2SS 1LE in white
+[6/23/2026, 6:38:53 PM] How many Camaro 2SS 1LE in white
+[6/23/2026, 6:42:23 PM] Show me all CT4 or CT5s that have "N5RW" in the VIN
+[6/23/2026, 6:45:58 PM] Show me all CT4 or CT5s that have "N5RW" in the VIN. Return only the distinct values for year, model, trim, engine, trans, and drivetrain
+[6/23/2026, 6:49:09 PM] Show me all CT4 or CT5s that have "W5RK" in the VIN. Return only the distinct values for year, model, trim, engine, trans, and drivetrain
+[6/23/2026, 6:50:46 PM] Show me all CT4 or CT5s that have "T5RW" in the VIN. Return only the distinct values for year, model, trim, engine, trans, and drivetrain
+[6/23/2026, 6:52:08 PM] Show me all CT4 or CT5s that have "T5RK" in the VIN. Return only the distinct values for year, model, trim, engine, trans, and drivetrain
+[6/23/2026, 6:53:07 PM] Show me all CT4 or CT5s that have "X5RK" in the VIN. Return only the distinct values for year, model, trim, engine, trans, and drivetrain
+[6/23/2026, 6:54:03 PM] Show me all CT4 or CT5s that have "J5RK" in the VIN. Return only the distinct values for year, model, trim, engine, trans, and drivetrain

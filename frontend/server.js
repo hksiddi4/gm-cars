@@ -4,16 +4,27 @@ const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 
+const basicAuth = require('express-basic-auth');
+
+// Create the authentication middleware
+const requireAdmin = basicAuth({
+    users: {
+        [process.env.ADMIN_USER]: process.env.ADMIN_PASS
+    },
+    challenge: true, // This prompts the browser's native login dialog
+    unauthorizedResponse: 'Unauthorized access.'
+});
+
 // Import all RPO constants as a single object
 const modules = require('./views/partials/modules.js');
 
 const headerImagesDir = path.join(__dirname, 'public', 'img', 'header');
 const rpoWheelsDir = path.join(__dirname, 'public', 'img', 'rpos');
 
-const baseURL = 'http://backend:5000';
+const baseURL = 'http://192.168.1.121:5000';
 
 // Axios instance with default timeout
-const axiosInstance = axios.create({ timeout: 30000 });
+const axiosInstance = axios.create({ timeout: 240000 });
 
 // App Configuration
 app.use(express.urlencoded({ extended: true }));
@@ -273,6 +284,42 @@ app.get('/wheels', async (req, res) => {
         });
     } catch (error) {
         res.status(500).render('pages/errors/500', { error });
+    }
+});
+
+app.get('/query', requireAdmin, (req, res) => {
+    res.render('pages/query', {
+        canonicalPath: '/query',
+        pagePath: '/query',
+        colorMap: modules.colorMap || {} 
+    });
+});
+
+app.post('/ai-query', requireAdmin, async (req, res) => {
+    try {
+        const userPrompt = req.body.prompt;
+
+        // --- NEW LOGGING LOGIC ---
+        const timestamp = new Date().toLocaleString('en-US', { timeZone: 'America/Chicago' }); 
+        const logEntry = `[${timestamp}] ${userPrompt}\n`;
+        const logFilePath = path.join(__dirname, 'query_logs.txt');
+
+        fs.appendFile(logFilePath, logEntry, (err) => {
+            if (err) console.error("Failed to write to query log:", err);
+        });
+        // -------------------------
+
+        const response = await axiosInstance.post(`${baseURL}/ai-query`, { 
+            prompt: userPrompt 
+        });
+
+        res.json(response.data);
+    } catch (error) {
+        console.error("AI Query Error:", error.response?.data || error.message);
+        res.status(500).json({ 
+            error: 'AI query failed', 
+            details: error.response?.data?.error || 'Unknown error' 
+        });
     }
 });
 

@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('../partials/head'); %>
+    <title>AI Database Query | GM Build Counts</title>
+    <%- include('../partials/analytics'); %>
+    <style>
+        .ai-sql-block { 
+            background: #1e1e1e; 
+            color: #d4d4d4; 
+            padding: 15px; 
+            border-radius: 5px; 
+            font-family: monospace; 
+            overflow-x: auto; 
+        }
+        
+        #loadingContainer {
+            display: none; 
+            position: relative; 
+            height: 100px; 
+            margin-top: 20px;
+        }
+        
+        #loadingText {
+            position: absolute;
+            top: 75%;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-weight: bold;
+        }
+
+        @keyframes spinAndCenter {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        #loadingContainer .spinner {
+            animation: spinAndCenter 1s linear infinite;
+        }
+        
+        /* Force the table to behave identically to vehicles.ejs */
+        .table-responsive { width: 100%; }
+        #dataTable { width: 100%; table-layout: auto; }
+
+        .table-responsive { 
+            width: 100%; 
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        #dataTable { 
+            width: 100%; 
+            min-width: max-content; /* Prevents mobile columns from squishing */
+            white-space: nowrap;    /* Keeps data strictly on one line */
+        }
+
+        #dataTable th {
+            user-select: none; /* Prevents text highlighting when clicking headers */
+        }
+
+        /* Lighter grey for the textarea placeholder */
+        #promptInput::placeholder {
+            color: #a0a0a0;
+            opacity: 1; 
+        }
+    </style>
+</head>
+<body>
+    <%- include('../partials/header'); %>
+    
+    <div class="custom-container">
+        <div class="row" style="padding-top: 20px;">
+            <div class="col-12">
+                <h1>Natural Language Query</h1>
+                <p>Ask a question, and the AI will fetch the results.<br>
+                    100 vehicle limit<br>
+                    ~80 second wait
+                </p>
+                
+                <div class="p-3 mb-4" style="background-color: #333; border: 1px solid #444; border-radius: 8px;">
+                    <textarea id="promptInput" class="form-control mb-3" rows="3" placeholder="e.g., Show me all 2024 Camaros with a Panther Black Matte exterior..." style="background-color: #2b2b2b; color: white; border: 1px solid #555;"></textarea>
+                    <button id="askBtn" class="btn btn-primary w-100">Run Query</button>
+                    
+                    <div id="loadingContainer">
+                        <div class="spinner"></div>
+                        <div id="loadingText">Processing request... Please wait.</div>
+                    </div>
+                </div>
+
+                <div id="errorAlert" class="alert alert-danger" style="display: none;"></div>
+
+                <div id="resultsContainer" style="display: none;">
+                    <h4>Generated SQL</h4>
+                    <pre class="ai-sql-block" id="sqlOutput"></pre>
+                    
+                    <div class="stats d-flex justify-content-between align-items-end mt-4 mb-2">
+                        <p id="rowCount" style="color: rgb(103, 103, 103); margin: 0;"></p>
+                    </div>
+                    
+                    <div id="top-scroll-wrapper">
+                        <div id="top-scroll"></div>
+                    </div>
+                    <div class="table-responsive" id="bottom-scroll-wrapper">
+                        <table class="table-veh table-hover border border shadow" id="dataTable">
+                            <thead id="tableHead">
+                                </thead>
+                            <tbody id="tableBody">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <%- include('../partials/footer'); %>
+
+    <script>
+        const colorMap = <%- JSON.stringify(colorMap || {}) %>;
+
+        document.getElementById('promptInput').addEventListener('keydown', function(event) {
+            // Check if the Enter key is pressed and Shift is NOT being held down
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault(); // Prevent the textarea from creating a new line
+                document.getElementById('askBtn').click(); // Trigger the Run Query button
+            }
+        });
+
+        // Set up the synced scrollbars just like in vehicles.ejs
+        let topWrapper, bottomWrapper, topInner, tableEl;
+
+        function initializeScrollSync() {
+            topWrapper = document.getElementById('top-scroll-wrapper');
+            bottomWrapper = document.getElementById('bottom-scroll-wrapper');
+            topInner = document.getElementById('top-scroll');
+            tableEl = document.getElementById('dataTable');
+            
+            if (!topWrapper || !topInner || !bottomWrapper || !tableEl) return;
+
+            let isTicking = false;
+            let sourceWrapper = null; 
+
+            function syncScroll(source, target) {
+                sourceWrapper = source;
+                if (!isTicking) {
+                    window.requestAnimationFrame(() => {
+                        const targetWrapper = sourceWrapper === topWrapper ? bottomWrapper : topWrapper;
+                        targetWrapper.scrollLeft = sourceWrapper.scrollLeft;
+                        isTicking = false;
+                        sourceWrapper = null;
+                    });
+                    isTicking = true;
+                }
+            }
+            
+            topWrapper.addEventListener('scroll', () => syncScroll(topWrapper, bottomWrapper), { passive: true });
+            bottomWrapper.addEventListener('scroll', () => syncScroll(bottomWrapper, topWrapper), { passive: true });
+            window.addEventListener('resize', updateTopInnerWidth);
+        }
+
+        function updateTopInnerWidth() {
+            if(!tableEl || !topInner) return;
+            const width = tableEl.scrollWidth; 
+            if (width && topInner.style.width !== width + 'px') {
+                topInner.style.width = width + 'px';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', initializeScrollSync);
+
+        let startX;
+        function handleMouseDown(event) {
+            startX = event.clientX;
+        }
+
+        function handleRowClick(url, event) {
+            const distance = Math.abs(event.clientX - startX);
+            if (distance > 5) return;
+            window.location.href = url;
+        }
+
+        // API Call Logic
+        // Global variables for local sorting
+        let currentResults = [];
+        let currentElapsedTime = '0.00';
+        let sortState = { column: null, direction: 'asc' };
+
+        // API Call Logic
+        document.getElementById('askBtn').addEventListener('click', async () => {
+            const prompt = document.getElementById('promptInput').value.trim();
+            if (!prompt) return alert('Please enter a question.');
+
+            const startTime = Date.now();
+
+            // UI Reset
+            document.getElementById('errorAlert').style.display = 'none';
+            document.getElementById('resultsContainer').style.display = 'none';
+            document.getElementById('loadingContainer').style.display = 'block';
+            document.getElementById('askBtn').disabled = true;
+            
+            // Reset sort state for new queries
+            sortState = { column: null, direction: 'asc' };
+
+            try {
+                const response = await fetch('/ai-query', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: prompt })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Something went wrong processing the query.');
+                }
+
+                document.getElementById('sqlOutput').textContent = data.generated_sql;
+                
+                // Save data globally for local sorting
+                currentResults = data.results;
+                currentElapsedTime = ((Date.now() - startTime) / 1000).toFixed(2);
+                
+                renderTable();
+                
+                document.getElementById('resultsContainer').style.display = 'block';
+                
+                // Recalculate scrollbar width after table generates
+                setTimeout(updateTopInnerWidth, 100);
+
+            } catch (err) {
+                const errorBox = document.getElementById('errorAlert');
+                errorBox.textContent = err.message;
+                errorBox.style.display = 'block';
+            } finally {
+                document.getElementById('loadingContainer').style.display = 'none';
+                document.getElementById('askBtn').disabled = false;
+            }
+        });
+
+        // Local Sorting Logic
+        function handleSort(column) {
+            if (sortState.column === column) {
+                sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortState.column = column;
+                sortState.direction = 'asc';
+            }
+
+            currentResults.sort((a, b) => {
+                let valA = a[column];
+                let valB = b[column];
+
+                // Handle MSRP as numbers for accurate math sorting
+                if (column.toUpperCase() === 'MSRP') {
+                    valA = Number(valA) || 0;
+                    valB = Number(valB) || 0;
+                } else {
+                    // Handle strings (like VIN) safely
+                    valA = valA ? String(valA).toLowerCase() : '';
+                    valB = valB ? String(valB).toLowerCase() : '';
+                }
+
+                if (valA < valB) return sortState.direction === 'asc' ? -1 : 1;
+                if (valA > valB) return sortState.direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            renderTable();
+        }
+
+        // Exact match rendering function based on vehicles.ejs
+        function renderTable() {
+            const tHead = document.getElementById('tableHead');
+            const tBody = document.getElementById('tableBody');
+            
+            tHead.innerHTML = '';
+            tBody.innerHTML = '';
+
+            if (!currentResults || currentResults.length === 0) {
+                document.getElementById('rowCount').textContent = `Retrieved 0 vehicles in ${currentElapsedTime} seconds`;
+                tBody.innerHTML = '<tr><td class="text-center" colspan="100%">No results found for this query.</td></tr>';
+                return;
+            }
+
+            document.getElementById('rowCount').textContent = `Retrieved ${currentResults.length.toLocaleString()} vehicles in ${currentElapsedTime} seconds`;
+
+            // Build Header Row dynamically
+            const columns = Object.keys(currentResults[0]);
+            const trHead = document.createElement('tr');
+            
+            columns.forEach(col => {
+                const th = document.createElement('th');
+                th.setAttribute('scope', 'col');
+                const cleanName = col.replace(/_/g, ' '); 
+
+                // Inject sorting logic specifically for VIN and MSRP
+                if (col.toUpperCase() === 'VIN' || col.toUpperCase() === 'MSRP') {
+                    th.classList.add('sortable');
+                    th.style.cursor = 'pointer';
+                    
+                    let iconHtml = '';
+                    if (sortState.column === col) {
+                        iconHtml = ` <i class="bi bi-chevron-${sortState.direction === 'asc' ? 'up' : 'down'}"></i>`;
+                    } else {
+                        // Invisible placeholder so the column width doesn't shift when clicked
+                        iconHtml = ` <i class="bi bi-chevron-down" style="opacity: 0.2;"></i>`;
+                    }
+                    
+                    th.innerHTML = `${cleanName}${iconHtml}`;
+                    th.addEventListener('click', () => handleSort(col));
+                } else {
+                    th.textContent = cleanName;
+                }
+
+                trHead.appendChild(th);
+            });
+            tHead.appendChild(trHead);
+
+            // Build Data Rows
+            currentResults.forEach(data => {
+                const tr = document.createElement('tr');
+                tr.style.cursor = 'pointer';
+
+                // VIN click routing
+                if (data['VIN']) {
+                    tr.setAttribute('data-url', `/search?vin=${data['VIN']}`);
+                    tr.addEventListener('mousedown', handleMouseDown);
+                    tr.addEventListener('click', (event) => handleRowClick(`/search?vin=${data['VIN']}`, event));
+                }
+
+                columns.forEach(col => {
+                    const td = document.createElement('td');
+                    td.setAttribute('scope', 'row');
+                    
+                    const cellValue = data[col];
+
+                    // 1. VIN Logic
+                    if (col.toUpperCase() === 'VIN' && typeof cellValue === 'string') {
+                        td.style.textAlign = 'left';
+                        const isPreProd = data['Package_Option'] && data['Package_Option'].includes('Pre-Production Vehicle');
+                        if (isPreProd) td.className = 'highlight';
+                        
+                        if (cellValue.length === 17) {
+                            td.innerHTML = `${cellValue.slice(0, 9)}<strong>${cellValue.slice(9)}</strong>`;
+                        } else {
+                            td.textContent = cellValue;
+                        }
+                    } 
+                    // 2. Exterior Color Logic
+                    else if (col === 'Exterior_Color') {
+                        td.style.textAlign = 'left';
+                        td.style.alignItems = 'center';
+                        
+                        let imageRpoCode = colorMap[cellValue];
+
+                        // Exception logic ported directly from vehicles.ejs
+                        if (cellValue === 'BLADE SILVER METALLIC' && Number(data['Year']) >= 2026) {
+                            imageRpoCode = 'GKA';
+                        }
+                        
+                        const finalImageSrcRPO = imageRpoCode || 'default';
+
+                        td.innerHTML = `
+                            <img id="sample" 
+                                 src="../../img/extColors/${finalImageSrcRPO}.webp" 
+                                 alt="Color Code: ${finalImageSrcRPO}" 
+                                 width="20" height="20" 
+                                 onerror="this.onerror=null; this.src='../../img/extColors/default.webp';">
+                            ${cellValue || 'N/A'}
+                        `;
+                    } 
+                    // 3. MSRP Logic
+                    else if (col.toUpperCase() === 'MSRP') {
+                        td.className = 'accounting-format';
+                        if (cellValue === null || cellValue === 0) {
+                            td.innerHTML = `<span></span><span>N/A</span>`;
+                        } else {
+                            td.innerHTML = `<span>$</span><span>${cellValue.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</span>`;
+                        }
+                    } 
+                    // 4. Country Flags
+                    else if (col.toUpperCase() === 'COUNTRY') {
+                        if (cellValue === "USA") {
+                            td.innerHTML = `<img src="../../img/flags/usa_flag.webp" alt="USA Flag" width="20">`;
+                        } else if (cellValue === "CANADA" || cellValue === "CAN") {
+                            td.innerHTML = `<img src="../../img/flags/canada_flag.webp" alt="Canada Flag" width="20">`;
+                        } else if (cellValue === "MEXICO" || cellValue === "MEX") {
+                            td.innerHTML = `<img src="../../img/flags/mexico_flag.webp" alt="Mexico Flag" width="20">`;
+                        } else {
+                            td.textContent = cellValue || '';
+                        }
+                    } 
+                    // 5. Standard text columns
+                    else {
+                        td.textContent = cellValue ?? '';
+                    }
+
+                    tr.appendChild(td);
+                });
+                
+                tBody.appendChild(tr);
+            });
+        }
+    </script>
+</body>
+</html>

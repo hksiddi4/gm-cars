@@ -10,7 +10,20 @@ const rateLimit = require('express-rate-limit');
 const authLimiter = rateLimit({
     windowMs: 5 * 60 * 1000,
     max: 3,
-    message: 'Too many login attempts from this IP, please try again after 5 minutes.',
+    handler: (req, res) => {
+        res.status(429).send(`
+            <!DOCTYPE html>
+            <html>
+            <head><title>Too Many Requests</title></head>
+            <body>
+                <script>
+                    alert("Too many login attempts from this IP, please try again after 5 minutes.");
+                    window.location.href = "/";
+                </script>
+            </body>
+            </html>
+        `);
+    },
     standardHeaders: true,
     legacyHeaders: false,
 });

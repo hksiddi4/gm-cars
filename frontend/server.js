@@ -7,19 +7,33 @@ const path = require('path');
 const basicAuth = require('express-basic-auth');
 const rateLimit = require('express-rate-limit');
 
+// 1. Updated Rate Limiter with a proper HTML error page
 const authLimiter = rateLimit({
     windowMs: 5 * 60 * 1000,
     max: 3,
     handler: (req, res) => {
         res.status(429).send(`
             <!DOCTYPE html>
-            <html>
-            <head><title>Too Many Requests</title></head>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <meta http-equiv="refresh" content="4;url=/" />
+                <title>Too Many Requests</title>
+                <style>
+                    body { background-color: #1e1e1e; color: #d4d4d4; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; text-align: center; }
+                    .box { background: #2b2b2b; padding: 40px; border-radius: 8px; border: 1px solid #444; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+                    a { color: #0d6efd; text-decoration: none; }
+                    a:hover { text-decoration: underline; }
+                </style>
+            </head>
             <body>
-                <script>
-                    alert("Too many login attempts from this IP, please try again after 5 minutes.");
-                    window.location.href = "/";
-                </script>
+                <div class="box">
+                    <h2 style="color: #ff4c4c;">Too Many Attempts</h2>
+                    <p>Too many login attempts from this IP.<br>Please try again after 5 minutes.</p>
+                    <p style="font-size: 0.9em; color: #888;">Redirecting home in a few seconds...</p>
+                    <a href="/">Click here to return home now</a>
+                </div>
             </body>
             </html>
         `);
@@ -28,6 +42,7 @@ const authLimiter = rateLimit({
     legacyHeaders: false,
 });
 
+// 2. Updated Basic Auth setup with a proper HTML error page
 const requireAdmin = basicAuth({
     users: {
         [process.env.ADMIN_USER]: process.env.ADMIN_PASS
@@ -36,13 +51,26 @@ const requireAdmin = basicAuth({
     unauthorizedResponse: (req) => {
         return `
             <!DOCTYPE html>
-            <html>
-            <head><title>Unauthorized</title></head>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <meta http-equiv="refresh" content="3;url=/" />
+                <title>Unauthorized</title>
+                <style>
+                    body { background-color: #1e1e1e; color: #d4d4d4; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; text-align: center; }
+                    .box { background: #2b2b2b; padding: 40px; border-radius: 8px; border: 1px solid #444; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+                    a { color: #0d6efd; text-decoration: none; }
+                    a:hover { text-decoration: underline; }
+                </style>
+            </head>
             <body>
-                <script>
-                    alert("Unauthorized access.");
-                    window.location.href = "/";
-                </script>
+                <div class="box">
+                    <h2 style="color: #ff4c4c;">Unauthorized Access</h2>
+                    <p>You do not have permission to view this page.</p>
+                    <p style="font-size: 0.9em; color: #888;">Redirecting home in 3 seconds...</p>
+                    <a href="/">Click here to return home now</a>
+                </div>
             </body>
             </html>
         `;

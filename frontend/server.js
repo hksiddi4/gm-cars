@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 
 const basicAuth = require('express-basic-auth');
+const rateLimit = require('express-rate-limit');
 
 const authLimiter = rateLimit({
     windowMs: 5 * 60 * 1000,

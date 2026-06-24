@@ -89,6 +89,7 @@ const baseURL = 'http://backend:5000';
 const axiosInstance = axios.create({ timeout: 240000 });
 
 // App Configuration
+app.set('trust proxy', 1);
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static('public'));

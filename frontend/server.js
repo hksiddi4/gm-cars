@@ -7,7 +7,6 @@ const path = require('path');
 const basicAuth = require('express-basic-auth');
 const rateLimit = require('express-rate-limit');
 
-// 1. Updated Rate Limiter with a proper HTML error page
 const authLimiter = rateLimit({
     windowMs: 5 * 60 * 1000,
     max: 3,
@@ -42,7 +41,6 @@ const authLimiter = rateLimit({
     legacyHeaders: false,
 });
 
-// 2. Updated Basic Auth setup with a proper HTML error page
 const requireAdmin = basicAuth({
     users: {
         [process.env.ADMIN_USER]: process.env.ADMIN_PASS
@@ -77,7 +75,6 @@ const requireAdmin = basicAuth({
     }
 });
 
-// Import all RPO constants as a single object
 const modules = require('./views/partials/modules.js');
 
 const headerImagesDir = path.join(__dirname, 'public', 'img', 'header');

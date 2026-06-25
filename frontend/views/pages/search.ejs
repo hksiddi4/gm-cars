@@ -318,19 +318,19 @@
 
             let imgSrc;
             if (model.startsWith('CORVETTE')) {
-              imgSrc = `../img/rpos/corvette/${rpoCode}.webp`;
+              imgSrc = `/img/rpos/corvette/${rpoCode}.webp`;
             } else if (model === 'ESCALADE IQ') {
-              imgSrc = `../img/rpos/escaladeiq/${rpoCode}.webp`;
+              imgSrc = `/img/rpos/escaladeiq/${rpoCode}.webp`;
             } else if (model === 'CT4' && vehicleTrim.startsWith('V-SERIES')) {
-                imgSrc = `../img/rpos/ct4v/${rpoCode}.webp`;
+                imgSrc = `/img/rpos/ct4v/${rpoCode}.webp`;
             } else if (model === 'CT5' && vehicleTrim.startsWith('V-SERIES')) {
-                imgSrc = `../img/rpos/ct5v/${rpoCode}.webp`;
+                imgSrc = `/img/rpos/ct5v/${rpoCode}.webp`;
             } else if (model === 'HUMMER EV PICKUP') {
-              imgSrc = `../img/rpos/hummer/${rpoCode}.webp`;
+              imgSrc = `/img/rpos/hummer/${rpoCode}.webp`;
             } else if (model === 'HUMMER EV SUV') {
-              imgSrc = `../img/rpos/hummersuv/${rpoCode}.webp`;
+              imgSrc = `/img/rpos/hummersuv/${rpoCode}.webp`;
             } else {
-              imgSrc = `../img/rpos/${model.toLowerCase()}/${rpoCode}.webp`;
+              imgSrc = `/img/rpos/${model.toLowerCase()}/${rpoCode}.webp`;
             }
 
             const cardLink = document.createElement('a');
@@ -450,11 +450,11 @@
         const mmc = <%- JSON.stringify(mmc) %>;
         const colorMap = <%- JSON.stringify(colorMap) %>;
         let intColor = <%- JSON.stringify(intColor) %>;
-        const ghostImg = '../../img/ghost-chevrolet-car-alt.webp';
+        const ghostImg = /img/ghost-chevrolet-car-alt.webp';
         
-        if (model === 'CAMARO') fallbackImg = '../../img/vehicleLogos/camaro.webp';
-        else if (model.startsWith('CT') || model === 'CELESTIQ' || model.startsWith('ESCALADE')) fallbackImg = '../../img/vehicleLogos/cadillac.webp';
-        else if (model.startsWith('CORVETTE')) fallbackImg = '../../img/vehicleLogos/corvette.webp';
+        if (model === 'CAMARO') fallbackImg = '/img/vehicleLogos/camaro.webp';
+        else if (model.startsWith('CT') || model === 'CELESTIQ' || model.startsWith('ESCALADE')) fallbackImg = '/img/vehicleLogos/cadillac.webp';
+        else if (model.startsWith('CORVETTE')) fallbackImg = '/img/vehicleLogos/corvette.webp';
         else fallbackImg = ghostImg;
         carouselImage.removeAttribute('src');
         carouselImage.classList.add('shimmer');

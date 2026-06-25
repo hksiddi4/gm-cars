@@ -179,8 +179,8 @@
                                     <td scope="row"><%= data.rank %></td>
                                     <td scope="row" style="white-space: nowrap; text-align: left;">
                                         <% if (category === 'color') { %>
-                                            <img src="../../img/extColors/<%= data.rpo_code %>.webp" 
-                                                onerror="this.src='../../img/extColors/default.webp';" 
+                                            <img src="/img/extColors/<%= data.rpo_code %>.webp" 
+                                                onerror="this.src='/img/extColors/default.webp';" 
                                                 width="20" height="20" style="margin-right: 8px; border-radius: 50%;">
                                             <%= data.label %>
                                         <% } else if (category === 'engine') { %>

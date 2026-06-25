@@ -286,23 +286,27 @@ app.get('/vehicles', async (req, res) => {
 });
 
 app.get('/search', async (req, res) => {
-    const vin = req.query.vin?.trim();
-    if (!vin || vin.length !== 17) {
+    // 1. Unique variable for the incoming query string
+    const vinQuery = req.query.vin?.trim();
+    
+    if (!vinQuery || vinQuery.length !== 17) {
         return res.status(400).render('pages/errors/400', { pagePath: '/search', canonicalPath: '/search' });
     }
 
     try {
-        const response = await axiosInstance.get(`${baseURL}/search`, { params: { vin } });
+        // Pass vinQuery to the backend
+        const response = await axiosInstance.get(`${baseURL}/search`, { params: { vin: vinQuery } });
         const vin_data = response.data;
 
         if (!vin_data || vin_data.length === 0) throw new Error('VIN not found');
 
-        const vin = vin_data[0];
+        // 2. Unique variable for the data object
+        const vehicle = vin_data[0]; 
         let verifiedRpoImages = [];
 
-        if (vin.rpo_codes && Array.isArray(vin.rpo_codes)) {
-            const modelUpper = vin.model?.toUpperCase() || '';
-            const vehicleTrim = vin.trim || '';
+        if (vehicle.rpo_codes && Array.isArray(vehicle.rpo_codes)) {
+            const modelUpper = vehicle.model?.toUpperCase() || '';
+            const vehicleTrim = vehicle.trim || '';
             
             // Mirror directory resolution logic used on frontend
             let folderName = modelUpper.toLowerCase();
@@ -320,9 +324,9 @@ app.get('/search', async (req, res) => {
                 folderName = 'hummersuv';
             }
 
-            vin.rpo_codes.forEach(rpoCode => {
+            vehicle.rpo_codes.forEach(rpoCode => {
                 const absoluteImagePath = path.join(__dirname, 'public', 'img', 'rpos', folderName, `${rpoCode}.webp`);
-
+                
                 // Only pass to view if file physically exists on NVMe drive
                 if (fs.existsSync(absoluteImagePath)) {
                     verifiedRpoImages.push(rpoCode);
@@ -336,7 +340,7 @@ app.get('/search', async (req, res) => {
             vin_data,
             verifiedRpoImages,
             pagePath: '/search',
-            canonicalPath: `/search?vin=${vin}`
+            canonicalPath: `/search?vin=${vinQuery}`
         });
     } catch (error) {
         console.error("Search Route Error:", error);

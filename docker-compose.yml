@@ -31,9 +31,10 @@ services:
   nginx:
     image: nginx:stable
     networks:
-      - app-network
-      - gramps-net
-      - nextcloud-net
+      app-network:
+        ipv4_address: 172.22.0.10
+      gramps-net: {}
+      nextcloud-net: {}
     environment:
       - TZ=${TZ:-UTC}
     volumes:
@@ -60,6 +61,9 @@ services:
 networks:
   app-network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.22.0.0/16
   gramps-net:
     name: ix-internal-gramps-web-gramps-net
     external: true

@@ -339,6 +339,8 @@ app.get('/search', async (req, res) => {
         res.render('pages/search', {
             vin_data,
             verifiedRpoImages,
+            colorMap: modules.colorMap,
+            intColor: modules.intColor,
             pagePath: '/search',
             canonicalPath: `/search?vin=${vinQuery}`
         });

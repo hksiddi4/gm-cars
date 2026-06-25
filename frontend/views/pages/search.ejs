@@ -272,7 +272,9 @@
         const model = vin.model?.toUpperCase() || '';
         const vehicleTrim = vin.trim || '';
 
-        const camaroRpo = <%- JSON.stringify(camaroRpo) %>;
+        const intColor = <%- JSON.stringify(intColor) %>;
+        const colorMap = <%- JSON.stringify(colorMap) %>;
+        const camaroRpo = <%- JSON.stringify(camaroRpo) %>;1
         const corvetteRpo = <%- JSON.stringify(corvetteRpo) %>;
         const escaladeRpo = <%- JSON.stringify(escaladeRpo) %>;
         const escaladeiqRpo = <%- JSON.stringify(escaladeiqRpo) %>;
@@ -284,6 +286,8 @@
         const hummersuvRpo = <%- JSON.stringify(hummersuvRpo) %>;
 
         const allRpoDescriptions = {
+          ...intColor,
+          ...colorMap,
           ...camaroRpo,
           ...corvetteRpo,
           ...escaladeRpo,

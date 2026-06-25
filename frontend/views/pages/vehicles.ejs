@@ -361,6 +361,7 @@
         let startX;
         let selectedOrder = '';
 
+        const intColor = <%- JSON.stringify(intColor) %>;
         const camaroRpo = <%- JSON.stringify(camaroRpo) %>;
         const corvetteRpo = <%- JSON.stringify(corvetteRpo) %>;
         const escaladeRpo = <%- JSON.stringify(escaladeRpo) %>;
@@ -439,6 +440,7 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             const rpoDataSets = [
+                { data: intColor, label: 'Interior Color' },
                 { data: camaroRpo, label: 'Camaro' },
                 { data: corvetteRpo, label: 'Corvette' },
                 { data: escaladeRpo, label: 'Escalade' },

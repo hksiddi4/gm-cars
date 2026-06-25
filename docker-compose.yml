@@ -31,9 +31,9 @@ services:
   nginx:
     image: nginx:stable
     networks:
-      app-network: {}
-      gramps-net: {}
-      nextcloud-net: {}
+      - app-network
+      - gramps-net
+      - nextcloud-net
     environment:
       - TZ=${TZ:-UTC}
     volumes:
@@ -50,6 +50,8 @@ services:
     command: tunnel --no-autoupdate run
     networks:
       - app-network
+      - gramps-net
+      - nextcloud-net
     environment:
       - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
     depends_on:

@@ -79,6 +79,7 @@
                 const img = document.createElement('img');
                 img.src = `../img/rpos/${model}/${rpo}.webp`;
                 img.alt = rpo;
+                img.loading = 'lazy';
                 img.onerror = function() {
                     if (!this.dataset.fallback) {
                         this.dataset.fallback = 'true';

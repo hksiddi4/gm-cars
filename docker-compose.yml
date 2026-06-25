@@ -31,8 +31,6 @@ services:
   nginx:
     image: nginx:stable
     networks:
-      front-macvlan:
-        ipv4_address: 192.168.1.50
       app-network: {}
       gramps-net: {}
       nextcloud-net: {}
@@ -60,8 +58,6 @@ services:
 networks:
   app-network:
     driver: bridge
-  front-macvlan:
-    external: true
   gramps-net:
     name: ix-internal-gramps-web-gramps-net
     external: true

@@ -304,7 +304,7 @@ app.get('/search', async (req, res) => {
 
         vin_data.forEach(v => v.msrp = formatCurrency(v.msrp));
 
-        const stickerPath = `/stickers/${vehicle.model}/${vehicle.modelYear}/${vehicle.vin}.pdf`; 
+        const stickerPath = `/window-stickers/${vehicle.model}/${vehicle.modelYear}/${vehicle.vin}.pdf`; 
         const absoluteStickerPath = path.join(__dirname, 'public', 'stickers', vehicle.model, vehicle.modelYear.toString(), `${vehicle.vin}.pdf`);
 
         const hasSticker = fs.existsSync(absoluteStickerPath);

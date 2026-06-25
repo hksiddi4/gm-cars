@@ -49,7 +49,7 @@ services:
   cloudflare-tunnel:
     image: cloudflare/cloudflared:latest
     restart: unless-stopped
-    command: tunnel --no-autoupdate run
+    command: tunnel --no-autoupdate --protocol http2 run
     networks:
       - app-network
     environment:

@@ -31,8 +31,9 @@ services:
   nginx:
     image: nginx:stable
     networks:
-      app-network:
-        ipv4_address: 172.22.0.10
+      front-macvlan:
+        ipv4_address: 192.168.1.50
+      app-network: {}
       gramps-net: {}
       nextcloud-net: {}
     environment:
@@ -51,8 +52,6 @@ services:
     command: tunnel --no-autoupdate run
     networks:
       - app-network
-      - gramps-net
-      - nextcloud-net
     environment:
       - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
     depends_on:
@@ -61,9 +60,8 @@ services:
 networks:
   app-network:
     driver: bridge
-    ipam:
-      config:
-        - subnet: 172.22.0.0/16
+  front-macvlan:
+    external: true
   gramps-net:
     name: ix-internal-gramps-web-gramps-net
     external: true

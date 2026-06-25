@@ -27,7 +27,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /mnt/NVMe/Apps/GM-Vehicles/window-stickers:/stickers:ro
-      - /mnt/NVMe/Apps/GM-Vehicles/public:/frontend/public:ro 
+      - /mnt/NVMe/Apps/GM-Vehicles/public:/app/public:ro 
 
   nginx:
     image: nginx:stable

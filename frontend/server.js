@@ -41,6 +41,18 @@ const authLimiter = rateLimit({
     legacyHeaders: false,
 });
 
+const apiLimiter = rateLimit({
+    windowMs: 5 * 60 * 1000,
+    handler: (req, res) => {
+        res.status(429).json({ 
+            error: 'Rate limit exceeded', 
+            details: 'Too many queries sent. Please wait a moment and try again.' 
+        });
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
 const requireAdmin = basicAuth({
     users: {
         [process.env.ADMIN_USER]: process.env.ADMIN_PASS
@@ -355,7 +367,7 @@ app.get('/query', authLimiter, requireAdmin, (req, res) => {
     });
 });
 
-app.post('/ai-query', authLimiter, requireAdmin, async (req, res) => {
+app.post('/ai-query', apiLimiter, requireAdmin, async (req, res) => {
     try {
         const userPrompt = req.body.prompt;
 

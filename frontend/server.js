@@ -297,14 +297,49 @@ app.get('/search', async (req, res) => {
 
         if (!vin_data || vin_data.length === 0) throw new Error('VIN not found');
 
+        const vin = vin_data[0];
+        let verifiedRpoImages = [];
+
+        if (vin.rpo_codes && Array.isArray(vin.rpo_codes)) {
+            const modelUpper = vin.model?.toUpperCase() || '';
+            const vehicleTrim = vin.trim || '';
+            
+            // Mirror directory resolution logic used on frontend
+            let folderName = modelUpper.toLowerCase();
+            if (modelUpper.startsWith('CORVETTE')) {
+                folderName = 'corvette';
+            } else if (modelUpper === 'ESCALADE IQ') {
+                folderName = 'escaladeiq';
+            } else if (modelUpper === 'CT4' && vehicleTrim.startsWith('V-SERIES')) {
+                folderName = 'ct4v';
+            } else if (modelUpper === 'CT5' && vehicleTrim.startsWith('V-SERIES')) {
+                folderName = 'ct5v';
+            } else if (modelUpper === 'HUMMER EV PICKUP') {
+                folderName = 'hummer';
+            } else if (modelUpper === 'HUMMER EV SUV') {
+                folderName = 'hummersuv';
+            }
+
+            vin.rpo_codes.forEach(rpoCode => {
+                const absoluteImagePath = path.join(__dirname, 'public', 'img', 'rpos', folderName, `${rpoCode}.webp`);
+
+                // Only pass to view if file physically exists on NVMe drive
+                if (fs.existsSync(absoluteImagePath)) {
+                    verifiedRpoImages.push(rpoCode);
+                }
+            });
+        }
+
         vin_data.forEach(v => v.msrp = formatCurrency(v.msrp));
 
         res.render('pages/search', {
             vin_data,
+            verifiedRpoImages,
             pagePath: '/search',
             canonicalPath: `/search?vin=${vin}`
         });
     } catch (error) {
+        console.error("Search Route Error:", error);
         res.status(400).render('pages/errors/400', { pagePath: '/search', canonicalPath: '/search' });
     }
 });

@@ -296,28 +296,26 @@
           ...hummersuvRpo
         };
 
-function renderRpoCards(vin, model) {
+        function renderRpoCards(vin, model) {
           const container = document.getElementById('rpoImageContainer');
           container.innerHTML = '';
 
-          if (!vin?.rpo_codes?.length) {
-            container.innerHTML = '<h4>No RPO codes found for this VIN.</h4>';
+          // Fetch the pre-verified RPO images array compiled by server.js
+          const verifiedRpoImages = <%- JSON.stringify(verifiedRpoImages || []) %>;
+
+          if (!verifiedRpoImages.length) {
+            container.innerHTML = '<h4>No specific RPO images found for this vehicle.</h4>';
             return;
           }
 
-          let found = false;
-          
-          // 1. Sort the RPO codes alphabetically
-          const sortedRpoCodes = [...vin.rpo_codes].sort();
+          // Sort the pre-filtered codes alphabetically
+          const sortedRpoCodes = [...verifiedRpoImages].sort();
 
           sortedRpoCodes.forEach(rpoCode => {
-            // 2. Create and append the wrapper immediately to lock in alphabetical order
             const cardWrapper = document.createElement('div');
             cardWrapper.className = 'rpo-wrapper';
-            cardWrapper.style.display = 'none'; // Hide it until the image actually loads
             container.appendChild(cardWrapper);
 
-            const img = new Image();
             let imgSrc;
             if (model.startsWith('CORVETTE')) {
               imgSrc = `../img/rpos/corvette/${rpoCode}.webp`;
@@ -335,48 +333,36 @@ function renderRpoCards(vin, model) {
               imgSrc = `../img/rpos/${model.toLowerCase()}/${rpoCode}.webp`;
             }
 
-            img.src = imgSrc;
-            img.alt = rpoCode;
+            const cardLink = document.createElement('a');
+            cardLink.href = `/vehicles?model=${encodeURIComponent(model)}&rpo=${encodeURIComponent(rpoCode)}`;
+            cardLink.className = 'rpo-card-link';
 
-            img.onload = () => {
-              const cardLink = document.createElement('a');
-              cardLink.href = `/vehicles?model=${encodeURIComponent(model)}&rpo=${encodeURIComponent(rpoCode)}`;
-              cardLink.className = 'rpo-card-link';
+            const card = document.createElement('div');
+            card.className = 'rpo-card';
 
-              const card = document.createElement('div');
-              card.className = 'rpo-card';
+            const desc =
+              (model === 'CAMARO' && camaroRpo[rpoCode]) ||
+              (model.startsWith('CORVETTE') && corvetteRpo[rpoCode]) ||
+              (model === 'ESCALADE' && escaladeRpo[rpoCode]) ||
+              (model === 'ESCALADE IQ' && escaladeiqRpo[rpoCode]) ||
+              (model === 'CT4' && ct4Rpo[rpoCode]) ||
+              (model === 'CT4' && vehicleTrim.startsWith('V-SERIES') && ct4vRpo[rpoCode]) ||
+              (model === 'CT5' && ct5Rpo[rpoCode]) ||
+              (model === 'CT5' && vehicleTrim.startsWith('V-SERIES') && ct5vRpo[rpoCode]) ||
+              (model === 'HUMMER EV PICKUP' && hummerRpo[rpoCode]) ||
+              (model === 'HUMMER EV SUV' && hummersuvRpo[rpoCode]) ||
+              allRpoDescriptions[rpoCode] ||
+              '';
 
-              const desc =
-                (model === 'CAMARO' && camaroRpo[rpoCode]) ||
-                (model.startsWith('CORVETTE') && corvetteRpo[rpoCode]) ||
-                (model === 'ESCALADE' && escaladeRpo[rpoCode]) ||
-                (model === 'ESCALADE IQ' && escaladeiqRpo[rpoCode]) ||
-                (model === 'CT4' && ct4Rpo[rpoCode]) ||
-                (model === 'CT4' && vehicleTrim.startsWith('V-SERIES') && ct4vRpo[rpoCode]) ||
-                (model === 'CT5' && ct5Rpo[rpoCode]) ||
-                (model === 'CT5' && vehicleTrim.startsWith('V-SERIES') && ct5vRpo[rpoCode]) ||
-                (model === 'HUMMER EV PICKUP' && hummerRpo[rpoCode]) ||
-                (model === 'HUMMER EV SUV' && hummersuvRpo[rpoCode]) ||
-                allRpoDescriptions[rpoCode] ||
-                '';
+            card.innerHTML = `
+              <img src="${imgSrc}" alt="${rpoCode}">
+              <p>${rpoCode}</p>
+              <div class="rpo-description">${desc}</div>
+            `;
 
-              card.innerHTML = `
-                <img src="${img.src}" alt="${rpoCode}">
-                <p>${rpoCode}</p>
-                <div class="rpo-description">${desc}</div>
-              `;
-
-              // 3. Append the contents to the pre-positioned wrapper and make it visible
-              cardLink.appendChild(card);
-              cardWrapper.appendChild(cardLink);
-              cardWrapper.style.display = ''; 
-              found = true;
-            };
+            cardLink.appendChild(card);
+            cardWrapper.appendChild(cardLink);
           });
-
-          setTimeout(() => {
-            if (!found) container.innerHTML = '<h4>No specific RPO images found for this vehicle.</h4>';
-          }, 800);
         }
 
         if (vin.model && model !== 'CELESTIQ') {

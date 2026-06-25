@@ -40,8 +40,6 @@ services:
       - TZ=${TZ:-UTC}
     volumes:
       - /mnt/NVMe/Apps/GM-Vehicles/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
-      - /mnt/NVMe/Apps/GM-Vehicles/certbot/conf:/etc/letsencrypt
-      - /mnt/NVMe/Apps/GM-Vehicles/certbot/www:/var/www/certbot
       - /etc/localtime:/etc/localtime:ro
     depends_on:
       - frontend
@@ -58,18 +56,6 @@ services:
       - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
     depends_on:
       - nginx
-
-  certbot:
-    image: certbot/certbot
-    container_name: certbot
-    volumes:
-      - /mnt/NVMe/Apps/GM-Vehicles/certbot/conf:/etc/letsencrypt
-      - /mnt/NVMe/Apps/GM-Vehicles/certbot/www:/var/www/certbot
-      - /etc/localtime:/etc/localtime:ro
-    entrypoint: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; certbot renew --webroot -w /var/www/certbot; done'"
-    restart: always
-    networks:
-      - app-network
 
 networks:
   app-network:

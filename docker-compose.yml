@@ -43,7 +43,7 @@ services:
       - /mnt/NVMe/Apps/GM-Vehicles/public:/usr/share/nginx/html:ro 
       - /etc/localtime:/etc/localtime:ro
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://192.168.1.50/"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/"]
       interval: 10s
       timeout: 5s
       retries: 3

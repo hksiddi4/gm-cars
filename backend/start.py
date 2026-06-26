@@ -328,10 +328,12 @@ def sort_price():
         rpo_n = len(rpo_list_for_filtering)
 
         if len(rpo_list_for_filtering) > 1:
-            rpo_placeholders = "', '".join(rpo_list_for_filtering)
-            conditions.append(f"opt.option_code IN ('{rpo_placeholders}')")
+            placeholders = ', '.join(['%s'] * len(rpo_list_for_filtering))
+            conditions.append(f"opt.option_code IN ({placeholders})")
+            params.extend(rpo_list_for_filtering)
         elif len(rpo_list_for_filtering) == 1:
-            conditions.append(f"opt.option_code = '{rpo_list_for_filtering[0]}'")
+            conditions.append("opt.option_code = %s")
+            params.append(rpo_list_for_filtering[0])
 
     where_clause = "WHERE " + " AND ".join(conditions) if conditions else ""
 

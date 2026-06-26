@@ -304,8 +304,15 @@ app.get('/search', async (req, res) => {
 
         vin_data.forEach(v => v.msrp = formatCurrency(v.msrp));
 
-        const stickerPath = `/window-stickers/${vehicle.model}/${vehicle.modelYear}/${vehicle.vin}.pdf`; 
-        const absoluteStickerPath = path.join(__dirname, 'public', 'stickers', vehicle.model, vehicle.modelYear.toString(), `${vehicle.vin}.pdf`);
+        let formattedModel = vehicle.model;
+        if (formattedModel === 'CT4' || formattedModel === 'CT5') {
+            formattedModel = 'CT4-CT5';
+        } else if (formattedModel.startsWith('CORVETTE')) {
+            formattedModel = 'CORVETTE';
+        }
+
+        const stickerPath = `/window-stickers/${formattedModel}_${vehicle.modelYear}/${vehicle.vin}.pdf`; 
+        const absoluteStickerPath = path.join(__dirname, 'public', 'window-stickers', `${formattedModel}_${vehicle.modelYear}`, `${vehicle.vin}.pdf`);
 
         const hasSticker = fs.existsSync(absoluteStickerPath);
 

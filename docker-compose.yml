@@ -29,7 +29,7 @@ services:
       - /mnt/NVMe/Apps/GM-Vehicles/public:/app/public:ro
 
   nginx:
-    image: nginx:stable
+    build: ./nginx
     networks:
       front-macvlan:
         ipv4_address: 192.168.1.50
@@ -43,13 +43,16 @@ services:
       - /mnt/NVMe/Apps/GM-Vehicles/public:/usr/share/nginx/html:ro 
       - /etc/localtime:/etc/localtime:ro
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/"]
+      test: ["CMD", "curl", "-f", "http://localhost/"]
       interval: 10s
       timeout: 5s
       retries: 3
+      start_period: 30s
     depends_on:
-      - frontend
-      - backend
+      frontend:
+        condition: service_started
+      backend:
+        condition: service_started
     restart: always
 
   cloudflare-tunnel:

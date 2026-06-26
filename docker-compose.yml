@@ -43,7 +43,7 @@ services:
       - /mnt/NVMe/Apps/GM-Vehicles/public:/usr/share/nginx/html:ro 
       - /etc/localtime:/etc/localtime:ro
     healthcheck:
-      test: ["CMD-SHELL", "ps aux | grep -v grep | grep -q nginx || exit 1"]
+      test: ["CMD", "nginx", "-t"]
       interval: 10s
       timeout: 5s
       retries: 3

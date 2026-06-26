@@ -177,20 +177,20 @@
     </div>
     <div class="custom-container">
         <div style="display: flex;">
-            <div id="sticker-container">
+            <div id="sticker-container" style="display: flex; justify-content: center; width: 100%;">
               <% if (hasSticker) { %>
-                <div id="sticker-wrapper">
+                <div id="sticker-wrapper" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
                   <div style="margin-bottom: 10px;">
                     <a href="<%= stickerPath %>" target="_blank" class="btn btn-sm btn-outline-secondary">
-                      Open Window Sticker in New Tab
+                        Open Window Sticker in New Tab
                     </a>
                   </div>
-                  <div style="width: 100%; overflow-x: auto; height: 800px">
-                    <iframe src="<%= stickerPath %>" width="100%" height="100%" style="border: none;"></iframe>
+                  <div style="width: 100%; overflow: hidden; aspect-ratio: 8.5 / 11;">
+                      <iframe src="<%= stickerPath %>" width="100%" height="100%" style="border: none;"></iframe>
                   </div>
                 </div>
               <% } else { %>
-                <div style="display: flex; justify-content: center; align-items: center;">
+                <div style="display: flex; justify-content: center; align-items: center; height: 400px;">
                   <h2>No window sticker available</h2>
                 </div>
               <% } %>

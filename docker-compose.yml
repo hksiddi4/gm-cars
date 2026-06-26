@@ -29,7 +29,7 @@ services:
       - /mnt/NVMe/Apps/GM-Vehicles/public:/app/public:ro
 
   nginx:
-    build: ./nginx
+    image: nginx:stable
     networks:
       front-macvlan:
         ipv4_address: 192.168.1.50
@@ -43,7 +43,7 @@ services:
       - /mnt/NVMe/Apps/GM-Vehicles/public:/usr/share/nginx/html:ro 
       - /etc/localtime:/etc/localtime:ro
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/"]
+      test: ["CMD-SHELL", "ps aux | grep -v grep | grep -q nginx || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 3

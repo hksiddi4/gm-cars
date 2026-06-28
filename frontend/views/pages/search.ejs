@@ -693,6 +693,11 @@
         }
 
         function showImage(index) {
+          // If clicking the current active image after initial load, do nothing
+          if (!initialLoad && index === currentIndex) {
+            return;
+          }
+
           while (urls[index] === null) {
             index = (index + 1) % urls.length;
             if (index === currentIndex) break;

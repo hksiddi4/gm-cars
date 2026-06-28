@@ -341,7 +341,7 @@
             const card = document.createElement('div');
             card.className = 'rpo-card';
 
-            const desc =
+            let descText = 
               (model === 'CAMARO' && camaroRpo[rpoCode]) ||
               (model.startsWith('CORVETTE') && corvetteRpo[rpoCode]) ||
               (model === 'ESCALADE' && escaladeRpo[rpoCode]) ||
@@ -352,13 +352,16 @@
               (model === 'CT5' && vehicleTrim.startsWith('V-SERIES') && ct5vRpo[rpoCode]) ||
               (model === 'HUMMER EV PICKUP' && hummerRpo[rpoCode]) ||
               (model === 'HUMMER EV SUV' && hummersuvRpo[rpoCode]) ||
-              allRpoDescriptions[rpoCode] ||
-              '';
+              allRpoDescriptions[rpoCode];
+
+            const descHTML = descText 
+              ? `<div>${descText}</div>` 
+              : `<div style="color: gray; font-style: italic;">No description available</div>`;
 
             card.innerHTML = `
               <img src="${imgSrc}" alt="${rpoCode}">
               <p>${rpoCode}</p>
-              <div class="rpo-description">${desc}</div>
+              <div class="rpo-description">${descHTML}</div>
             `;
 
             cardLink.appendChild(card);
@@ -373,7 +376,7 @@
           if (rpoImgContainer) rpoImgContainer.style.display = 'none';
         }
 
-        document.querySelectorAll('.rpo-description').forEach(element => {
+        document.querySelectorAll('#rpoTable .rpo-description').forEach(element => {
           const rpoCode = element.getAttribute('data-code');
 
           if (model === 'CAMARO' && camaroRpo[rpoCode]) {

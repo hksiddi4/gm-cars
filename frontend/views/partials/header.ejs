@@ -102,6 +102,8 @@
         
         header.addEventListener('click', function(event) {
             const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const isClickInsideSidebar = sidebar.contains(event.target);
+            const isClickOnToggler = event.target.closest('.navbar-toggler');
             
             if (header.classList.contains('header-minimized') && scrollTop > 0) {
                 if (!event.target.closest('.navbar-toggler') && !event.target.closest('#sidebar')) {
@@ -109,6 +111,16 @@
                         top: 0,
                         behavior: 'smooth'
                     });
+                }
+            }
+
+            if (sidebar.classList.contains('show') && !isClickInsideSidebar && !isClickOnToggler) {
+                const bsCollapse = bootstrap.Collapse.getInstance(sidebar) || new bootstrap.Collapse(sidebar, { toggle: false });
+                bsCollapse.hide();
+
+                const toggler = document.querySelector('.navbar-toggler');
+                if (toggler) {
+                    toggler.setAttribute('aria-expanded', 'false');
                 }
             }
         });

@@ -53,7 +53,7 @@
               <div id="loading-animation" class="shimmer">
                 <div class="shimmer-box"></div>
               </div>
-              <div id="carousel-image"></div>
+              <img id="carousel-image" alt="Vehicle Image">
               <button id="prev" style="display: none;">&#10094;</button>
               <button id="next" style="display: none;">&#10095;</button>
               <div style="display: flex; justify-content: center;">
@@ -454,7 +454,7 @@
         else if (model.startsWith('CT') || model === 'CELESTIQ' || model.startsWith('ESCALADE')) fallbackImg = '/img/vehicleLogos/cadillac.webp';
         else if (model.startsWith('CORVETTE')) fallbackImg = '/img/vehicleLogos/corvette.webp';
         else fallbackImg = ghostImg;
-        carouselImage.style.backgroundImage = 'none';
+        carouselImage.removeAttribute('src');
         carouselImage.classList.add('shimmer');
 
         const modelYear = vin_data[0].modelYear;
@@ -727,9 +727,7 @@
           const imgSrc = urls[index];
 
           if (initialLoad) {
-            const imgPreloader = new Image();
-
-            imgPreloader.onload = () => {
+            carouselImage.onload = () => {
               loadingAnimation.style.display = 'none';
               carouselImage.style.display = 'block';
               carouselImage.classList.remove('shimmer');
@@ -751,45 +749,43 @@
                 document.getElementById('image-gallery').style.display = 'flex';
               }
               
-              // Apply the background style after verification
-              carouselImage.style.backgroundImage = `url('${imgSrc}')`;
               initialLoad = false;
             };
 
-            imgPreloader.onerror = () => {
-              if (imgSrc.includes('ghost')) return;
+            // Setup a safety 404 catch on the first load attempt
+            carouselImage.onerror = () => {
+              if (carouselImage.src.includes('ghost')) return; // Exit logic loop
               
               if (!warningDiv.innerHTML.includes('Image generation does not support')) {
                 warningDiv.innerHTML += (warningDiv.innerHTML ? '<br>' : '') + `Image generation does not support ${modelYear} ${vin.model || model}`;
                 warningDiv.style.color = '#e57373';
               }
               
+              // Clear array to stop indexing the 404 images
               urls = [ghostImg];
               currentIndex = 0;
-              gallery.innerHTML = ''; 
-              carouselImage.style.backgroundImage = `url('${ghostImg}')`;
+              gallery.innerHTML = ''; // Wipe pre-loaded thumbnails
+              carouselImage.src = ghostImg;
             };
 
-            imgPreloader.src = imgSrc;
+            carouselImage.src = imgSrc;
           } else {
             carouselImage.style.opacity = 0;
 
             setTimeout(() => {
-              const imgPreloader = new Image();
-
-              imgPreloader.onload = () => {
-                carouselImage.style.backgroundImage = `url('${imgSrc}')`;
+              carouselImage.onload = () => {
                 carouselImage.style.opacity = 1;
               };
               
-              imgPreloader.onerror = () => {
-                if (imgSrc.includes('ghost')) return;
-                carouselImage.style.backgroundImage = `url('${ghostImg}')`;
+              // Backup catch in case subsequent gallery items fail
+              carouselImage.onerror = () => {
+                if (carouselImage.src.includes('ghost')) return;
+                carouselImage.src = ghostImg; 
                 carouselImage.style.opacity = 1;
               };
 
-              imgPreloader.src = imgSrc;
-              carouselImage.setAttribute('aria-label', `Image ${index + 1}`);
+              carouselImage.src = imgSrc;
+              carouselImage.alt = `Image ${index + 1}`;
             }, 200);
           }
 
@@ -802,9 +798,11 @@
             const galleryRect = gallery.getBoundingClientRect();
             const elRect = el.getBoundingClientRect();
             
+            // Calculate how much to move to center the thumbnail
             const offset = elRect.left - galleryRect.left - (galleryRect.width / 2) + (elRect.width / 2);
             let targetScroll = gallery.scrollLeft + offset;
             
+            // Clamp the scroll position to prevent the last item from centering in empty space
             const maxScroll = gallery.scrollWidth - gallery.clientWidth;
             targetScroll = Math.max(0, Math.min(targetScroll, maxScroll));
             

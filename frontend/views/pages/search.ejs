@@ -282,9 +282,18 @@
         const hummerRpo = <%- JSON.stringify(hummerRpo) %>;
         const hummersuvRpo = <%- JSON.stringify(hummersuvRpo) %>;
 
+        const invertedColorMap = {};
+        for (const [name, code] of Object.entries(colorMap)) {
+          if (code && code.length === 3) { 
+            invertedColorMap[code] = name;
+          } else {
+            invertedColorMap[name] = name;
+          }
+        }
+
         const allRpoDescriptions = {
           ...intColor,
-          ...colorMap,
+          ...invertedColorMap,
           ...camaroRpo,
           ...corvetteRpo,
           ...escaladeRpo,
@@ -352,6 +361,7 @@
               (model === 'CT5' && vehicleTrim.startsWith('V-SERIES') && ct5vRpo[rpoCode]) ||
               (model === 'HUMMER EV PICKUP' && hummerRpo[rpoCode]) ||
               (model === 'HUMMER EV SUV' && hummersuvRpo[rpoCode]) ||
+              invertedColorMap[rpoCode] ||
               allRpoDescriptions[rpoCode];
 
             const descHTML = descText 
@@ -417,6 +427,11 @@
           }
           if (model === 'HUMMER EV SUV' && hummersuvRpo[rpoCode]) {
             element.innerHTML = `<div>${hummersuvRpo[rpoCode]}</div>`;
+            return;
+          }
+
+          if (invertedColorMap[rpoCode]) {
+            element.innerHTML = `<div>${invertedColorMap[rpoCode]}</div>`;
             return;
           }
 

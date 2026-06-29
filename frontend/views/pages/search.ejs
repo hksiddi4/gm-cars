@@ -53,7 +53,7 @@
               <div id="loading-animation" class="shimmer">
                 <div class="shimmer-box"></div>
               </div>
-              <img id="carousel-image" alt="Vehicle Image">
+              <div id="carousel-image"></div>
               <button id="prev" style="display: none;">&#10094;</button>
               <button id="next" style="display: none;">&#10095;</button>
               <div style="display: flex; justify-content: center;">
@@ -454,7 +454,7 @@
         else if (model.startsWith('CT') || model === 'CELESTIQ' || model.startsWith('ESCALADE')) fallbackImg = '/img/vehicleLogos/cadillac.webp';
         else if (model.startsWith('CORVETTE')) fallbackImg = '/img/vehicleLogos/corvette.webp';
         else fallbackImg = ghostImg;
-        carouselImage.removeAttribute('src');
+        carouselImage.style.backgroundImage = 'none';
         carouselImage.classList.add('shimmer');
 
         const modelYear = vin_data[0].modelYear;
@@ -768,7 +768,7 @@
               carouselImage.src = ghostImg;
             };
 
-            carouselImage.src = imgSrc;
+            carouselImage.style.backgroundImage = `url('${imgSrc}')`;
           } else {
             carouselImage.style.opacity = 0;
 
@@ -784,7 +784,7 @@
                 carouselImage.style.opacity = 1;
               };
 
-              carouselImage.src = imgSrc;
+              carouselImage.style.backgroundImage = `url('${imgSrc}')`;
               carouselImage.alt = `Image ${index + 1}`;
             }, 200);
           }

@@ -752,34 +752,34 @@
               initialLoad = false;
             };
 
+            // Setup a safety 404 catch on the first load attempt
             carouselImage.onerror = () => {
-              if (carouselImage.src.includes('ghost')) return;
+              if (carouselImage.src.includes('ghost')) return; // Exit logic loop
               
               if (!warningDiv.innerHTML.includes('Image generation does not support')) {
                 warningDiv.innerHTML += (warningDiv.innerHTML ? '<br>' : '') + `Image generation does not support ${modelYear} ${vin.model || model}`;
                 warningDiv.style.color = '#e57373';
               }
               
+              // Clear array to stop indexing the 404 images
               urls = [ghostImg];
               currentIndex = 0;
-              gallery.innerHTML = '';
+              gallery.innerHTML = ''; // Wipe pre-loaded thumbnails
               carouselImage.src = ghostImg;
             };
 
             carouselImage.src = imgSrc;
           } else {
             carouselImage.style.opacity = 0;
-            loadingAnimation.style.display = 'block';
 
             setTimeout(() => {
               carouselImage.onload = () => {
-                loadingAnimation.style.display = 'none';
                 carouselImage.style.opacity = 1;
               };
               
+              // Backup catch in case subsequent gallery items fail
               carouselImage.onerror = () => {
                 if (carouselImage.src.includes('ghost')) return;
-                loadingAnimation.style.display = 'none';
                 carouselImage.src = ghostImg; 
                 carouselImage.style.opacity = 1;
               };
@@ -797,10 +797,15 @@
           if (el) {
             const galleryRect = gallery.getBoundingClientRect();
             const elRect = el.getBoundingClientRect();
+            
+            // Calculate how much to move to center the thumbnail
             const offset = elRect.left - galleryRect.left - (galleryRect.width / 2) + (elRect.width / 2);
             let targetScroll = gallery.scrollLeft + offset;
+            
+            // Clamp the scroll position to prevent the last item from centering in empty space
             const maxScroll = gallery.scrollWidth - gallery.clientWidth;
             targetScroll = Math.max(0, Math.min(targetScroll, maxScroll));
+            
             gallery.scrollTo({ left: targetScroll, behavior: 'smooth' });
           }
 

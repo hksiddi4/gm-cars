@@ -2,6 +2,8 @@ const express = require('express');
 const compression = require('compression');
 const app = express();
 const axios = require('axios');
+const TurndownService = require('turndown');
+const turndownService = new TurndownService();
 const fs = require('fs');
 const path = require('path');
 
@@ -109,6 +111,33 @@ app.use(express.static('public', {
     etag: true
 }));
 app.set('view engine', 'ejs');
+// Agent Content Negotiation Middleware
+app.use((req, res, next) => {
+    const originalRender = res.render;
+    
+    res.render = function (view, options, callback) {
+        originalRender.call(this, view, options, (err, html) => {
+            if (err) {
+                if (callback) return callback(err);
+                return next(err);
+            }
+            
+            // If the agent specifically requests markdown over html
+            if (req.accepts(['html', 'text/markdown']) === 'text/markdown') {
+                res.set('Content-Type', 'text/markdown');
+                // Convert the rendered HTML template to Markdown
+                const markdown = turndownService.turndown(html);
+                if (callback) return callback(null, markdown);
+                return res.send(markdown);
+            }
+            
+            // Default to standard HTML for standard web browsers
+            if (callback) return callback(null, html);
+            res.send(html);
+        });
+    };
+    next();
+});
 
 let maintenanceMode = false; // Toggle this to true to lock the site
 

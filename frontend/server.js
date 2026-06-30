@@ -1,4 +1,5 @@
 const express = require('express');
+const compression = require('compression');
 const app = express();
 const axios = require('axios');
 const fs = require('fs');
@@ -98,10 +99,15 @@ const baseURL = 'http://backend:5000';
 const axiosInstance = axios.create({ timeout: 240000 });
 
 // App Configuration
+app.use(compression());
+app.use(express.urlencoded({ extended: true }));
 app.set('trust proxy', 1);
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static('public', {
+    maxAge: '30d',
+    etag: true
+}));
 app.set('view engine', 'ejs');
 
 let maintenanceMode = false; // Toggle this to true to lock the site
@@ -166,6 +172,7 @@ app.use((req, res, next) => {
     // 2. Global View Variables (res.locals)
     res.locals.req = req;
     res.locals.headerImages = cachedHeaderImages;
+    res.locals.currentHeaderImage = cachedHeaderImages[Math.floor(Math.random() * cachedHeaderImages.length)];
     res.locals.localRpoImageMap = localRpoImageMap;
     res.locals.formatCurrency = formatCurrency;
     

@@ -156,32 +156,44 @@
                         if (rpo === '5JW') imgRpo = 'WR1';
                         const outsourcedUrl = `https://www.${manufacturer}.com/bypass/master_tools/ddp/gmna/assets/US/${manufacturer}/${year}/${category}/${modelLower}/small_byo3/${imgRpo}.jpg`;
                         const finalImageUrl = getWheelImageUrl(imgRpo, outsourcedUrl, selectedModel);
-                        row.innerHTML = `
-                            <td>
-                                <img 
-                                    class="wheel-image"
-                                    data-rpo="${imgRpo}"
-                                    src="${finalImageUrl}"
-                                    alt="Wheel Image"
-                                    onerror="
-                                        // Outsourced URL fallback for year (if present)
-                                        if (this.src.includes('bypass/master_tools') && !this.dataset.fallback) {
-                                            this.dataset.fallback = 'true';
-                                            this.src = this.src.replace('/${year}/', '/2024/');
-                                        } 
-                                        // Final fallback to generic placeholder
-                                        else if (!this.dataset.placeholder) {
-                                            this.dataset.placeholder = 'true';
-                                            this.src = '/img/placeholder-wheel.webp'; 
-                                        }
-                                    "
-                                />
-                            </td>
-                            <td style="text-align: left;">
-                                <strong>${rpo}</strong>
-                                <div class="rpo-description" data-code="${rpo}" style="margin-top: 4px;"></div>
-                            </td>
-                        `;
+
+                        const imageCell = document.createElement('td');
+                        const img = document.createElement('img');
+                        img.className = 'wheel-image';
+                        img.dataset.rpo = imgRpo;
+                        img.src = finalImageUrl;
+                        img.alt = 'Wheel Image';
+                        img.onerror = function () {
+                            // Outsourced URL fallback for year (if present)
+                            if (this.src.includes('bypass/master_tools') && !this.dataset.fallback) {
+                                this.dataset.fallback = 'true';
+                                this.src = this.src.replace('/' + year + '/', '/2024/');
+                            }
+                            // Final fallback to generic placeholder
+                            else if (!this.dataset.placeholder) {
+                                this.dataset.placeholder = 'true';
+                                this.src = '/img/placeholder-wheel.webp';
+                            }
+                        };
+                        imageCell.appendChild(img);
+
+                        const detailsCell = document.createElement('td');
+                        detailsCell.style.textAlign = 'left';
+
+                        const rpoStrong = document.createElement('strong');
+                        rpoStrong.textContent = rpo;
+
+                        const descDiv = document.createElement('div');
+                        descDiv.className = 'rpo-description';
+                        descDiv.dataset.code = rpo;
+                        descDiv.style.marginTop = '4px';
+
+                        detailsCell.appendChild(rpoStrong);
+                        detailsCell.appendChild(descDiv);
+
+                        row.appendChild(imageCell);
+                        row.appendChild(detailsCell);
+
                         tableBody.appendChild(row);
                     });
 

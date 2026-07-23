@@ -131,7 +131,9 @@
             modelSelect.addEventListener('change', function () {
                 const selectedModelRaw = this.value;
                 const selectedModel = selectedModelRaw ? selectedModelRaw.toUpperCase() : '';
-                tableBody.innerHTML = ''; // Safe here because it's a static empty string
+                
+                // Securely clear table contents
+                tableBody.textContent = ''; 
 
                 const hasValidModel = selectedModel && Object.prototype.hasOwnProperty.call(modelRpoMap, selectedModel);
 
@@ -147,10 +149,15 @@
                 if (hasValidModel) {
                     let modelLower = selectedModel.toLowerCase().replace(/ /g, '-').replace('e-ray', 'eray');
                     if (selectedModel === 'CORVETTE STINGRAY' || selectedModel === 'CORVETTE (ALL)') modelLower = 'corvette';
+                    
                     const category = modelLower.startsWith('corvette') ? 'corvette' : modelLower;
                     const year = (selectedModel === 'CAMARO') ? '2024' : '2025';
                     const cadillacModels = ['ESCALADE', 'ESCALADE IQ', 'CT4', 'CT5', 'CT6', 'CT4V', 'CT5V'];
                     const manufacturer = cadillacModels.includes(selectedModel) || selectedModel.startsWith('CT') || selectedModel.startsWith('ESCALADE') ? 'cadillac' : 'chevrolet';
+
+                    // Escape variables derived from user input (this.value) to satisfy CodeQL's XSS/DOM sinks checks
+                    const safeCategory = encodeURIComponent(category);
+                    const safeModelLower = encodeURIComponent(modelLower);
 
                     const rposToRender = selectedModel === 'CORVETTE (ALL)' 
                         ? [...new Set(modelRpoMap['CORVETTE ZR1'].concat(modelRpoMap['CORVETTE Z06'], modelRpoMap['CORVETTE E-RAY'], modelRpoMap['CORVETTE STINGRAY']))]
@@ -162,15 +169,25 @@
                         if (rpo === '5K9') imgRpo = '57V';
                         if (rpo === '5JW') imgRpo = 'WR1';
                         
-                        const outsourcedUrl = `https://www.${manufacturer}.com/bypass/master_tools/ddp/gmna/assets/US/${manufacturer}/${year}/${category}/${modelLower}/small_byo3/${imgRpo}.jpg`;
+                        const safeImgRpo = encodeURIComponent(imgRpo);
+                        
+                        // Safely constructed URL
+                        const outsourcedUrl = `https://www.${manufacturer}.com/bypass/master_tools/ddp/gmna/assets/US/${manufacturer}/${year}/${safeCategory}/${safeModelLower}/small_byo3/${safeImgRpo}.jpg`;
                         const finalImageUrl = getWheelImageUrl(imgRpo, outsourcedUrl, selectedModel);
                         
-                        // Construct elements securely using DOM API
                         const tdImage = document.createElement('td');
                         const img = document.createElement('img');
                         img.className = 'wheel-image';
                         img.dataset.rpo = imgRpo;
-                        img.src = finalImageUrl;
+                        
+                        // Wrapping the source in the URL constructor ensures it forms a valid URL instead of executing rogue text
+                        try {
+                            const parsedUrl = new URL(finalImageUrl, window.location.origin);
+                            img.src = parsedUrl.href;
+                        } catch (e) {
+                            img.src = '/img/placeholder-wheel.webp';
+                        }
+                        
                         img.alt = 'Wheel Image';
                         
                         img.onerror = function() {
@@ -211,14 +228,13 @@
                         const model = modelSelect.value?.toUpperCase();
 
                         const applyFormatting = (desc) => {
-                            element.textContent = ''; // Clear securely
+                            element.textContent = ''; 
                             let lines = Array.isArray(desc) ? desc : [desc];
                             
                             lines.forEach(line => {
                                 const div = document.createElement('div');
                                 div.className = 'rpo-local';
                                 
-                                // Split by keywords to dynamically create strong tags without innerHTML
                                 const parts = line.split(/(forged|carbon fiber)/gi);
                                 parts.forEach(part => {
                                     if (/(forged|carbon fiber)/i.test(part)) {
@@ -245,7 +261,7 @@
                         } else if (rpoDescriptions[rpoCode]) {
                             applyFormatting(rpoDescriptions[rpoCode]);
                         } else {
-                            element.textContent = 'Not found'; // Safe text assignment
+                            element.textContent = 'Not found'; 
                         }
                     });
                 } else {

@@ -74,8 +74,6 @@
             ...hummersuvRpo
         };
 
-        const rpoDescriptionCache = {};
-
         const modelRpoMap = {
             'CAMARO': [
                 'REG', 'SGE', '5K9', '57V', '56F', 'SHH', 'SRI', '58E', 'SHL', '56H', 'RQ9',
@@ -93,15 +91,6 @@
             'CORVETTE E-RAY': ['ROU', 'SON', 'ROX', 'SOM', 'ROY', 'ROZ', 'STZ'],
             'CORVETTE STINGRAY': ['5DG', '5DO', 'Q8P', 'Q8Q', 'Q9Y', 'Q9O', 'Q99', 'Q9I', 'Q9A', '5DG', 'QE5'],
             'CORVETTE (ALL)': ['Q9A', '5DG', 'Q9Y', '5DO', 'Q9O', 'Q9I', 'Q99', 'Q8Q', 'Q8P', 'QE5', 'Q7Q', 'Q7Z', 'Q8W', 'Q8X', 'Q8P', 'Q8Q', 'Q9Y', 'Q9O', 'Q99', 'Q9I', 'Q9A', '5DG', 'QE5', 'ROU', 'SON', 'ROX', 'SOM', 'ROY', 'ROZ', 'STZ', 'SOE', 'SOA', 'SRK', 'SRN', 'STE', 'STX', '5DK', '5DH', 'STZ', 'SOJ', 'SOG', 'SOF', 'SOH', 'SU1']
-        };
-
-        const escapeHtml = (unsafe) => {
-            return (unsafe || '').toString()
-                 .replace(/&/g, "&amp;")
-                 .replace(/</g, "&lt;")
-                 .replace(/>/g, "&gt;")
-                 .replace(/"/g, "&quot;")
-                 .replace(/'/g, "&#039;");
         };
 
         const getLocalRpoDescription = (rpoCode, model) => {
@@ -142,7 +131,7 @@
             modelSelect.addEventListener('change', function () {
                 const selectedModelRaw = this.value;
                 const selectedModel = selectedModelRaw ? selectedModelRaw.toUpperCase() : '';
-                tableBody.innerHTML = '';
+                tableBody.innerHTML = ''; // Safe here because it's a static empty string
 
                 const hasValidModel = selectedModel && Object.prototype.hasOwnProperty.call(modelRpoMap, selectedModel);
 
@@ -176,7 +165,7 @@
                         const outsourcedUrl = `https://www.${manufacturer}.com/bypass/master_tools/ddp/gmna/assets/US/${manufacturer}/${year}/${category}/${modelLower}/small_byo3/${imgRpo}.jpg`;
                         const finalImageUrl = getWheelImageUrl(imgRpo, outsourcedUrl, selectedModel);
                         
-                        // Construct elements securely using DOM API instead of innerHTML
+                        // Construct elements securely using DOM API
                         const tdImage = document.createElement('td');
                         const img = document.createElement('img');
                         img.className = 'wheel-image';
@@ -184,7 +173,6 @@
                         img.src = finalImageUrl;
                         img.alt = 'Wheel Image';
                         
-                        // Implement secure onerror handler
                         img.onerror = function() {
                             if (this.src.includes('bypass/master_tools') && !this.dataset.fallback) {
                                 this.dataset.fallback = 'true';
@@ -222,23 +210,27 @@
                         const rpoCode = element.getAttribute('data-code');
                         const model = modelSelect.value?.toUpperCase();
 
-                        if (rpoDescriptionCache[rpoCode]) {
-                            element.innerHTML = rpoDescriptionCache[rpoCode];
-                            return;
-                        }
-
                         const applyFormatting = (desc) => {
+                            element.textContent = ''; // Clear securely
                             let lines = Array.isArray(desc) ? desc : [desc];
-                            const formattedLines = lines.map(line =>
-                                // Sanitize the raw data first, then apply formatting
-                                escapeHtml(line)
-                                    .replace(/forged/gi, '<strong>$&</strong>')
-                                    .replace(/carbon fiber/gi, '<strong>$&</strong>')
-                            );
                             
-                            const html = formattedLines.map(line => `<div class="rpo-local">${line}</div>`).join('');
-                            element.innerHTML = html;
-                            rpoDescriptionCache[rpoCode] = html;
+                            lines.forEach(line => {
+                                const div = document.createElement('div');
+                                div.className = 'rpo-local';
+                                
+                                // Split by keywords to dynamically create strong tags without innerHTML
+                                const parts = line.split(/(forged|carbon fiber)/gi);
+                                parts.forEach(part => {
+                                    if (/(forged|carbon fiber)/i.test(part)) {
+                                        const strong = document.createElement('strong');
+                                        strong.textContent = part;
+                                        div.appendChild(strong);
+                                    } else if (part) {
+                                        div.appendChild(document.createTextNode(part));
+                                    }
+                                });
+                                element.appendChild(div);
+                            });
 
                             const row = element.closest('tr');
                             const descText = lines.join(' ').toLowerCase();
@@ -250,14 +242,10 @@
                         
                         if (localDescription) {
                             applyFormatting(localDescription);
-                            return;
-                        }
-
-                        if (rpoDescriptions[rpoCode]) {
+                        } else if (rpoDescriptions[rpoCode]) {
                             applyFormatting(rpoDescriptions[rpoCode]);
                         } else {
-                            element.textContent = 'Not found';
-                            rpoDescriptionCache[rpoCode] = 'Not found';
+                            element.textContent = 'Not found'; // Safe text assignment
                         }
                     });
                 } else {

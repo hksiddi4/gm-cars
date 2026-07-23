@@ -497,23 +497,46 @@
 
                     const descArray = rpoDescriptions[code] || [];
 
-                    let descHtml;
+                    const content = document.createElement('span');
+                    content.className = 'rpo-tag-content';
+                    content.style.display = 'inline-flex';
+                    content.style.alignItems = 'center';
+                    content.style.gap = '6px';
+
+                    const strong = document.createElement('strong');
+                    strong.textContent = code;
+                    content.appendChild(strong);
+                    content.appendChild(document.createTextNode(':\u00A0'));
+
                     if (descArray.length > 0) {
-                        descHtml = `<span class="rpo-desc-stack" style="display: inline-flex; flex-direction: column; vertical-align: middle; text-align: left;">`;
+                        const descStack = document.createElement('span');
+                        descStack.className = 'rpo-desc-stack';
+                        descStack.style.display = 'inline-flex';
+                        descStack.style.flexDirection = 'column';
+                        descStack.style.verticalAlign = 'middle';
+                        descStack.style.textAlign = 'left';
+
                         descArray.forEach((desc, index) => {
+                            const item = document.createElement('span');
+                            item.className = 'rpo-desc-item';
+                            item.style.display = 'block';
+                            item.style.lineHeight = '1.3';
                             const trailingComma = index < descArray.length - 1 ? ',' : '';
-                            descHtml += `<span class="rpo-desc-item" style="display: block; line-height: 1.3;">${desc}${trailingComma}</span>`;
+                            item.textContent = `${desc}${trailingComma}`;
+                            descStack.appendChild(item);
                         });
-                        descHtml += `</span>`;
+
+                        content.appendChild(descStack);
                     } else {
-                        descHtml = `<span style="color: gray; font-style: italic;">No description available</span>`;
+                        const noDesc = document.createElement('span');
+                        noDesc.style.color = 'gray';
+                        noDesc.style.fontStyle = 'italic';
+                        noDesc.textContent = 'No description available';
+                        content.appendChild(noDesc);
                     }
 
-                    tag.innerHTML = `
-                        <span class="rpo-tag-content" style="display: inline-flex; align-items: center; gap: 6px;">
-                            <strong>${code}</strong>:&nbsp; ${descHtml} &nbsp;×
-                        </span>
-                    `;
+                    content.appendChild(document.createTextNode('\u00A0×'));
+                    tag.appendChild(content);
 
                     tag.addEventListener('click', () => {
                         const newRpos = rpos.filter(r => r !== code);

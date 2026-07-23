@@ -406,7 +406,18 @@
             if (distance > 5) {
                 return;
             }
-            window.location.href = url;
+
+            if (typeof url !== 'string') {
+                return;
+            }
+
+            const trimmedUrl = url.trim();
+            const hasScheme = /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(trimmedUrl);
+            if (!trimmedUrl.startsWith('/') || hasScheme) {
+                return;
+            }
+
+            window.location.href = trimmedUrl;
         }
 
         function addSelectListener(selectId, paramName) {

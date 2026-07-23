@@ -243,7 +243,8 @@ app.get('/about', async (req, res) => {
             pagePath: '/about'
         });
     } catch (err) {
-        res.status(500).render('pages/errors/500', { error: err });
+        console.error("About Route Error:", err);
+        res.status(500).render('pages/errors/500', { pagePath: '/about', canonicalPath: '/about' });
     }
 });
 
@@ -292,7 +293,8 @@ app.get('/vehicles', async (req, res) => {
             canonicalPath: req.originalUrl
         });
     } catch (error) {
-        res.status(500).render('pages/errors/500', { error });
+        console.error("Vehicles Route Error:", error);
+        res.status(500).render('pages/errors/500', { pagePath: '/vehicles', canonicalPath: req.originalUrl });
     }
 });
 

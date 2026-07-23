@@ -140,14 +140,22 @@
             const url = new URL(window.location.href);
 
             modelSelect.addEventListener('change', function () {
-                const selectedModel = this.value?.toUpperCase();
+                const selectedModelRaw = this.value;
+                const selectedModel = selectedModelRaw ? selectedModelRaw.toUpperCase() : '';
                 tableBody.innerHTML = '';
+
+                const hasValidModel = selectedModel && Object.prototype.hasOwnProperty.call(modelRpoMap, selectedModel);
 
                 if (selectedModel) url.searchParams.set('model', selectedModel);
                 else url.searchParams.delete('model');
                 history.replaceState(null, '', url.toString());
 
-                if (selectedModel && modelRpoMap[selectedModel]) {
+                if (selectedModel && !hasValidModel) {
+                    table.style.display = 'none';
+                    return;
+                }
+
+                if (hasValidModel) {
                     let modelLower = selectedModel.toLowerCase().replace(/ /g, '-').replace('e-ray', 'eray');
                     if (selectedModel === 'CORVETTE STINGRAY' || selectedModel === 'CORVETTE (ALL)') modelLower = 'corvette';
                     const category = modelLower.startsWith('corvette') ? 'corvette' : modelLower;

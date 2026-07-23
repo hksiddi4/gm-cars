@@ -61,6 +61,7 @@
 
         function renderRPOs(model) {
             container.innerHTML = '';
+            if (!Object.prototype.hasOwnProperty.call(allRpos, model)) return;
             const rpos = allRpos[model];
             const missingRpos = [];
 
@@ -68,7 +69,10 @@
                 const cardWrapper = document.createElement('div');
                 cardWrapper.className = 'rpo-wrapper';
                 const link = document.createElement('a');
-                link.href = model === 'corvette' ? `/vehicles?rpo=${rpo}` : `/vehicles?model=${model}&rpo=${rpo}`;
+                const params = new URLSearchParams();
+                if (model !== 'corvette') params.set('model', model);
+                params.set('rpo', rpo);
+                link.href = `/vehicles?${params.toString()}`;
                 link.style.textDecoration = 'none';
 
                 link.className = 'rpo-card-link';

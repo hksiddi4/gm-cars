@@ -425,12 +425,12 @@
                 }
 
                 // Allow only expected internal vehicles routes.
-                if (!/^\/vehicles(\/[A-Za-z0-9._~!$&'()*+,;=:@%-]*)?$/.test(safePathname)) {
+                if (!/^\/(vehicles|search)(\/[A-Za-z0-9._~!$&'()*+,;=:@%-]*)?$/.test(safePathname)) {
                     return;
                 }
 
                 // Navigate only to the validated internal pathname.
-                window.location.assign(safePathname);
+                window.location.assign(safePathname + parsedUrl.search);
             } catch (e) {
                 return;
             }

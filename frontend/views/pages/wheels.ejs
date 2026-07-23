@@ -126,8 +126,14 @@
         const getSafeWheelImageUrl = (candidateUrl) => {
             if (!candidateUrl || typeof candidateUrl !== 'string') return '/img/placeholder-wheel.webp';
 
-            // Allow known-safe local assets
-            if (candidateUrl.startsWith('/img/')) return candidateUrl;
+            // Allow known-safe local assets only (block protocol-relative and control chars)
+            if (
+                candidateUrl.startsWith('/img/') &&
+                !candidateUrl.startsWith('//') &&
+                !/[\u0000-\u001F\u007F]/.test(candidateUrl)
+            ) {
+                return candidateUrl;
+            }
 
             try {
                 const parsed = new URL(candidateUrl, window.location.origin);
@@ -149,7 +155,8 @@
             const url = new URL(window.location.href);
 
             modelSelect.addEventListener('change', function () {
-                const selectedModel = this.value?.toUpperCase();
+                const rawModel = (this.value || '').toUpperCase();
+                const selectedModel = Object.prototype.hasOwnProperty.call(modelRpoMap, rawModel) ? rawModel : '';
                 tableBody.innerHTML = '';
 
                 if (selectedModel) url.searchParams.set('model', selectedModel);

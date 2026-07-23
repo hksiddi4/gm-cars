@@ -406,7 +406,34 @@
             if (distance > 5) {
                 return;
             }
-            window.location.href = url;
+
+            if (typeof url !== 'string') {
+                return;
+            }
+
+            const trimmedUrl = url.trim();
+            try {
+                const parsedUrl = new URL(trimmedUrl, window.location.origin);
+                if (parsedUrl.origin !== window.location.origin) {
+                    return;
+                }
+
+                const safePathname = parsedUrl.pathname;
+
+                if (!safePathname.startsWith('/')) {
+                    return;
+                }
+
+                // Allow only expected internal vehicles routes.
+                if (!/^\/vehicles(\/[A-Za-z0-9._~!$&'()*+,;=:@%-]*)?$/.test(safePathname)) {
+                    return;
+                }
+
+                // Navigate only to the validated internal pathname.
+                window.location.assign(safePathname);
+            } catch (e) {
+                return;
+            }
         }
 
         function addSelectListener(selectId, paramName) {

@@ -429,8 +429,28 @@
                     return;
                 }
 
-                // Navigate only to the validated internal pathname.
-                window.location.assign(safePathname + parsedUrl.search);
+                // Rebuild a safe query string from allowlisted params only.
+                const allowedQueryParams = new Set(['order', 'year', 'make', 'model', 'trim', 'status', 'stock', 'vin', 'page']);
+                const sanitizedParams = new URLSearchParams();
+                for (const [key, value] of parsedUrl.searchParams.entries()) {
+                    if (!allowedQueryParams.has(key)) {
+                        continue;
+                    }
+
+                    const trimmedValue = value.trim();
+                    if (trimmedValue.length === 0 || trimmedValue.length > 100) {
+                        continue;
+                    }
+
+                    if (!/^[A-Za-z0-9 _.,:+/-]+$/.test(trimmedValue)) {
+                        continue;
+                    }
+
+                    sanitizedParams.set(key, trimmedValue);
+                }
+
+                const safeSearch = sanitizedParams.toString();
+                window.location.assign(safePathname + (safeSearch ? `?${safeSearch}` : ''));
             } catch (e) {
                 return;
             }

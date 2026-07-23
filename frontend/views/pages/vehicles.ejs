@@ -417,11 +417,26 @@
                 if (parsedUrl.origin !== window.location.origin) {
                     return;
                 }
-                if (!parsedUrl.pathname.startsWith('/')) {
+
+                const safePathname = parsedUrl.pathname;
+                const safeSearch = parsedUrl.search;
+                const safeHash = parsedUrl.hash;
+
+                if (!safePathname.startsWith('/')) {
                     return;
                 }
 
-                window.location.href = `${parsedUrl.pathname}${parsedUrl.search}${parsedUrl.hash}`;
+                // Allow only expected internal vehicles routes.
+                if (!/^\/vehicles(\/[A-Za-z0-9._~!$&'()*+,;=:@%-]*)?$/.test(safePathname)) {
+                    return;
+                }
+
+                // Reject potentially dangerous characters in query/hash.
+                if (/[<>"'`]/.test(safeSearch) || /[<>"'`]/.test(safeHash)) {
+                    return;
+                }
+
+                window.location.href = `${safePathname}${safeSearch}${safeHash}`;
             } catch (e) {
                 return;
             }

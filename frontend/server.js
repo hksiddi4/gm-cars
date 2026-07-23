@@ -44,6 +44,13 @@ const authLimiter = rateLimit({
     legacyHeaders: false,
 });
 
+const searchLimiter = rateLimit({
+    windowMs: 5 * 60 * 1000,
+    max: 30,
+    standardHeaders: true,
+    legacyHeaders: false
+});
+
 const apiLimiter = rateLimit({
     windowMs: 5 * 60 * 1000,
     handler: (req, res) => {
@@ -289,7 +296,7 @@ app.get('/vehicles', async (req, res) => {
     }
 });
 
-app.get('/search', async (req, res) => {
+app.get('/search', searchLimiter, async (req, res) => {
     // 1. Unique variable for the incoming query string
     const vinQuery = req.query.vin?.trim();
     

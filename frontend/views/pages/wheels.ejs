@@ -123,6 +123,25 @@
             return outsourcedUrl;
         };
 
+        const getSafeWheelImageUrl = (candidateUrl) => {
+            if (!candidateUrl || typeof candidateUrl !== 'string') return '/img/placeholder-wheel.webp';
+
+            // Allow known-safe local assets
+            if (candidateUrl.startsWith('/img/')) return candidateUrl;
+
+            try {
+                const parsed = new URL(candidateUrl, window.location.origin);
+                const allowedHosts = new Set(['www.cadillac.com', 'www.chevrolet.com']);
+                if (parsed.protocol === 'https:' && allowedHosts.has(parsed.hostname)) {
+                    return parsed.toString();
+                }
+            } catch (e) {
+                // ignore and fall through to placeholder
+            }
+
+            return '/img/placeholder-wheel.webp';
+        };
+
         document.addEventListener('DOMContentLoaded', function () {
             const modelSelect = document.getElementById('filterModel');
             const table = document.getElementById('wheelTable');
@@ -156,12 +175,13 @@
                         if (rpo === '5JW') imgRpo = 'WR1';
                         const outsourcedUrl = `https://www.${manufacturer}.com/bypass/master_tools/ddp/gmna/assets/US/${manufacturer}/${year}/${category}/${modelLower}/small_byo3/${imgRpo}.jpg`;
                         const finalImageUrl = getWheelImageUrl(imgRpo, outsourcedUrl, selectedModel);
+                        const safeImageUrl = getSafeWheelImageUrl(finalImageUrl);
 
                         const imageCell = document.createElement('td');
                         const img = document.createElement('img');
                         img.className = 'wheel-image';
                         img.dataset.rpo = imgRpo;
-                        img.src = finalImageUrl;
+                        img.src = safeImageUrl;
                         img.alt = 'Wheel Image';
                         img.onerror = function () {
                             // Outsourced URL fallback for year (if present)

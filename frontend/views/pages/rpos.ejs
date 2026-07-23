@@ -61,8 +61,9 @@
 
         function renderRPOs(model) {
             container.innerHTML = '';
-            if (!Object.prototype.hasOwnProperty.call(allRpos, model)) return;
-            const rpos = allRpos[model];
+            const safeModel = Object.prototype.hasOwnProperty.call(allRpos, model) ? model : null;
+            if (!safeModel) return;
+            const rpos = allRpos[safeModel];
             const missingRpos = [];
 
             Object.keys(rpos).forEach(rpo => {
@@ -70,7 +71,7 @@
                 cardWrapper.className = 'rpo-wrapper';
                 const link = document.createElement('a');
                 const params = new URLSearchParams();
-                if (model !== 'corvette') params.set('model', model);
+                if (safeModel !== 'corvette') params.set('model', safeModel);
                 params.set('rpo', rpo);
                 link.href = `/vehicles?${params.toString()}`;
                 link.style.textDecoration = 'none';
@@ -81,7 +82,7 @@
                 card.className = 'rpo-card';
 
                 const img = document.createElement('img');
-                img.src = `../img/rpos/${model}/${rpo}.webp`;
+                img.src = `../img/rpos/${encodeURIComponent(safeModel)}/${encodeURIComponent(rpo)}.webp`;
                 img.alt = rpo;
                 img.loading = 'lazy';
                 img.onerror = function() {
@@ -90,9 +91,9 @@
                         const cadillacModels = ['escalade', 'escaladeiq', 'ct4', 'ct4v', 'ct5', 'ct5v'];
                         const gmcModels = ['hummer', 'hummersuv'];
                         let imagePath = '../img/brand-logos/';
-                        if (cadillacModels.includes(model)) {
+                        if (cadillacModels.includes(safeModel)) {
                             imagePath += 'cadillac.webp';
-                        } else if (gmcModels.includes(model)) {
+                        } else if (gmcModels.includes(safeModel)) {
                             imagePath += 'gmc.webp';
                         } else {
                             imagePath += 'chevrolet.webp';

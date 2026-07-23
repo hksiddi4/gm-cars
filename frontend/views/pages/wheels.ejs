@@ -47,6 +47,7 @@
         </div>
     </div>
     <%- include('../partials/footer'); %>
+    
     <script>
         const camaroRpo = <%- JSON.stringify(camaroRpo) %>;
         const corvetteRpo = <%- JSON.stringify(corvetteRpo) %>;
@@ -94,6 +95,15 @@
             'CORVETTE (ALL)': ['Q9A', '5DG', 'Q9Y', '5DO', 'Q9O', 'Q9I', 'Q99', 'Q8Q', 'Q8P', 'QE5', 'Q7Q', 'Q7Z', 'Q8W', 'Q8X', 'Q8P', 'Q8Q', 'Q9Y', 'Q9O', 'Q99', 'Q9I', 'Q9A', '5DG', 'QE5', 'ROU', 'SON', 'ROX', 'SOM', 'ROY', 'ROZ', 'STZ', 'SOE', 'SOA', 'SRK', 'SRN', 'STE', 'STX', '5DK', '5DH', 'STZ', 'SOJ', 'SOG', 'SOF', 'SOH', 'SU1']
         };
 
+        const escapeHtml = (unsafe) => {
+            return (unsafe || '').toString()
+                 .replace(/&/g, "&amp;")
+                 .replace(/</g, "&lt;")
+                 .replace(/>/g, "&gt;")
+                 .replace(/"/g, "&quot;")
+                 .replace(/'/g, "&#039;");
+        };
+
         const getLocalRpoDescription = (rpoCode, model) => {
             switch (model) {
                 case 'CT4':
@@ -119,7 +129,7 @@
         const getWheelImageUrl = (rpoCode, outsourcedUrl, model) => {
             const key = `${model}-${rpoCode}`;
             if (localRpoImageMap[key]) return localRpoImageMap[key];
-            if (localRpoImageMap[rpoCode]) return localRpoImageMap[rpoCode]; // fallback
+            if (localRpoImageMap[rpoCode]) return localRpoImageMap[rpoCode];
             return outsourcedUrl;
         };
 
@@ -154,34 +164,47 @@
                         let imgRpo = rpo;
                         if (rpo === '5K9') imgRpo = '57V';
                         if (rpo === '5JW') imgRpo = 'WR1';
+                        
                         const outsourcedUrl = `https://www.${manufacturer}.com/bypass/master_tools/ddp/gmna/assets/US/${manufacturer}/${year}/${category}/${modelLower}/small_byo3/${imgRpo}.jpg`;
                         const finalImageUrl = getWheelImageUrl(imgRpo, outsourcedUrl, selectedModel);
-                        row.innerHTML = `
-                            <td>
-                                <img 
-                                    class="wheel-image"
-                                    data-rpo="${imgRpo}"
-                                    src="${finalImageUrl}"
-                                    alt="Wheel Image"
-                                    onerror="
-                                        // Outsourced URL fallback for year (if present)
-                                        if (this.src.includes('bypass/master_tools') && !this.dataset.fallback) {
-                                            this.dataset.fallback = 'true';
-                                            this.src = this.src.replace('/${year}/', '/2024/');
-                                        } 
-                                        // Final fallback to generic placeholder
-                                        else if (!this.dataset.placeholder) {
-                                            this.dataset.placeholder = 'true';
-                                            this.src = '/img/placeholder-wheel.webp'; 
-                                        }
-                                    "
-                                />
-                            </td>
-                            <td style="text-align: left;">
-                                <strong>${rpo}</strong>
-                                <div class="rpo-description" data-code="${rpo}" style="margin-top: 4px;"></div>
-                            </td>
-                        `;
+                        
+                        // Construct elements securely using DOM API instead of innerHTML
+                        const tdImage = document.createElement('td');
+                        const img = document.createElement('img');
+                        img.className = 'wheel-image';
+                        img.dataset.rpo = imgRpo;
+                        img.src = finalImageUrl;
+                        img.alt = 'Wheel Image';
+                        
+                        // Implement secure onerror handler
+                        img.onerror = function() {
+                            if (this.src.includes('bypass/master_tools') && !this.dataset.fallback) {
+                                this.dataset.fallback = 'true';
+                                this.src = this.src.replace(`/${year}/`, '/2024/');
+                            } 
+                            else if (!this.dataset.placeholder) {
+                                this.dataset.placeholder = 'true';
+                                this.src = '/img/placeholder-wheel.webp'; 
+                            }
+                        };
+                        tdImage.appendChild(img);
+                        
+                        const tdText = document.createElement('td');
+                        tdText.style.textAlign = 'left';
+                        
+                        const strongText = document.createElement('strong');
+                        strongText.textContent = rpo;
+                        
+                        const descDiv = document.createElement('div');
+                        descDiv.className = 'rpo-description';
+                        descDiv.dataset.code = rpo;
+                        descDiv.style.marginTop = '4px';
+                        
+                        tdText.appendChild(strongText);
+                        tdText.appendChild(descDiv);
+                        
+                        row.appendChild(tdImage);
+                        row.appendChild(tdText);
                         tableBody.appendChild(row);
                     });
 
@@ -199,8 +222,10 @@
                         const applyFormatting = (desc) => {
                             let lines = Array.isArray(desc) ? desc : [desc];
                             const formattedLines = lines.map(line =>
-                                line.replace(/forged/gi, '<strong>forged</strong>')
-                                    .replace(/carbon fiber/gi, '<strong>carbon fiber</strong>')
+                                // Sanitize the raw data first, then apply formatting
+                                escapeHtml(line)
+                                    .replace(/forged/gi, '<strong>$&</strong>')
+                                    .replace(/carbon fiber/gi, '<strong>$&</strong>')
                             );
                             
                             const html = formattedLines.map(line => `<div class="rpo-local">${line}</div>`).join('');

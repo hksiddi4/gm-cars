@@ -240,10 +240,30 @@
         startX = event.clientX;
       }
 
+      function getSafeNavigationUrl(rawUrl) {
+        if (!rawUrl || typeof rawUrl !== 'string') return null;
+
+        try {
+          const parsed = new URL(rawUrl, window.location.origin);
+          const isHttp = parsed.protocol === 'http:' || parsed.protocol === 'https:';
+          const isSameOrigin = parsed.origin === window.location.origin;
+
+          if (!isHttp || !isSameOrigin) return null;
+
+          return parsed.pathname + parsed.search + parsed.hash;
+        } catch (e) {
+          return null;
+        }
+      }
+
       function handleRowClick(url, event) {
         const distance = Math.abs(event.clientX - startX);
         if (distance > 5) return;
-        window.location.href = url;
+
+        const safeUrl = getSafeNavigationUrl(url);
+        if (!safeUrl) return;
+
+        window.location.href = safeUrl;
       }
 
       function loadImageWithRetry(url, retries = 3, delay = 1000) {

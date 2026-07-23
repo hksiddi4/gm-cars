@@ -335,11 +335,13 @@ app.get('/search', searchLimiter, async (req, res) => {
                 folderName = 'hummersuv';
             }
 
+            const baseRpoDir = path.resolve(__dirname, 'public', 'img', 'rpos', folderName);
             vehicle.rpo_codes.forEach(rpoCode => {
-                const absoluteImagePath = path.join(__dirname, 'public', 'img', 'rpos', folderName, `${rpoCode}.webp`);
+                const absoluteImagePath = path.resolve(baseRpoDir, `${rpoCode}.webp`);
+                const relativePath = path.relative(baseRpoDir, absoluteImagePath);
                 
-                // Only pass to view if file physically exists on NVMe drive
-                if (fs.existsSync(absoluteImagePath)) {
+                // Only pass to view if file physically exists on NVMe drive and is within base directory
+                if (!relativePath.startsWith('..') && !path.isAbsolute(relativePath) && fs.existsSync(absoluteImagePath)) {
                     verifiedRpoImages.push(rpoCode);
                 }
             });
@@ -354,10 +356,12 @@ app.get('/search', searchLimiter, async (req, res) => {
             formattedModel = 'CORVETTE';
         }
 
-        const stickerPath = `/window-stickers/${formattedModel}_${vehicle.modelYear}/${vehicle.vin}.pdf`; 
-        const absoluteStickerPath = path.join(__dirname, 'public', 'window-stickers', `${formattedModel}_${vehicle.modelYear}`, `${vehicle.vin}.pdf`);
+        const baseStickerDir = path.resolve(__dirname, 'public', 'window-stickers', `${formattedModel}_${vehicle.modelYear}`);
+        const absoluteStickerPath = path.resolve(baseStickerDir, `${vehicle.vin}.pdf`);
+        const relativeStickerPath = path.relative(baseStickerDir, absoluteStickerPath);
 
-        const hasSticker = fs.existsSync(absoluteStickerPath);
+        const hasSticker = !relativeStickerPath.startsWith('..') && !path.isAbsolute(relativeStickerPath) && fs.existsSync(absoluteStickerPath);
+        const stickerPath = `/window-stickers/${formattedModel}_${vehicle.modelYear}/${vehicle.vin}.pdf`; 
 
         res.render('pages/search', {
             vin_data,

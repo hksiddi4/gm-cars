@@ -412,12 +412,19 @@
             }
 
             const trimmedUrl = url.trim();
-            const hasScheme = /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(trimmedUrl);
-            if (!trimmedUrl.startsWith('/') || hasScheme) {
+            try {
+                const parsedUrl = new URL(trimmedUrl, window.location.origin);
+                if (parsedUrl.origin !== window.location.origin) {
+                    return;
+                }
+                if (!parsedUrl.pathname.startsWith('/')) {
+                    return;
+                }
+
+                window.location.href = `${parsedUrl.pathname}${parsedUrl.search}${parsedUrl.hash}`;
+            } catch (e) {
                 return;
             }
-
-            window.location.href = trimmedUrl;
         }
 
         function addSelectListener(selectId, paramName) {

@@ -411,7 +411,7 @@ app.get('/stats', async (req, res) => {
         });
     } catch (error) {
         console.error('Error in /stats:', error);
-        res.status(500).render('pages/errors/500', { message: 'Internal server error' });
+        res.status(500).render('pages/errors/500', { error: 'Internal Server Error' });
     }
 });
 
@@ -429,7 +429,7 @@ app.get('/wheels', async (req, res) => {
         });
     } catch (error) {
         console.error('Error in /wheels:', error);
-        res.status(500).render('pages/errors/500', { message: 'Internal server error' });
+        res.status(500).render('pages/errors/500', { error: 'Internal Server Error' });
     }
 });
 

@@ -419,8 +419,6 @@
                 }
 
                 const safePathname = parsedUrl.pathname;
-                const rawSearch = parsedUrl.search;
-                const rawHash = parsedUrl.hash;
 
                 if (!safePathname.startsWith('/')) {
                     return;
@@ -431,17 +429,8 @@
                     return;
                 }
 
-                // Reject potentially dangerous characters in query/hash.
-                if (/[<>"'`]/.test(rawSearch) || /[<>"'`]/.test(rawHash)) {
-                    return;
-                }
-
-                const canonicalSearchParams = new URLSearchParams(rawSearch);
-                const safeSearch = canonicalSearchParams.toString() ? `?${canonicalSearchParams.toString()}` : '';
-                const hashValue = rawHash.startsWith('#') ? rawHash.slice(1) : rawHash;
-                const safeHash = hashValue ? `#${encodeURIComponent(hashValue)}` : '';
-
-                window.location.assign(`${safePathname}${safeSearch}${safeHash}`);
+                // Navigate only to the validated internal pathname.
+                window.location.assign(safePathname);
             } catch (e) {
                 return;
             }

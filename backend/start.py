@@ -91,8 +91,8 @@ def natural_language_query():
         response = requests.post(OLLAMA_URL, json=payload, timeout=120)
         response.raise_for_status()
         generated_sql = response.json().get('response', '').strip()
-    except Exception as e:
-        return jsonify({'error': f'Failed to communicate with AI model: {str(e)}'}), 500
+    except Exception:
+        return jsonify({'error': 'Failed to communicate with AI model'}), 500
 
     if generated_sql.startswith("```"):
         generated_sql = generated_sql.replace("```sql", "").replace("```", "").strip()

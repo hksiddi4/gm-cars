@@ -110,7 +110,8 @@ def natural_language_query():
             
     except Exception as e:
         close_connection(conn)
-        return jsonify({'error': 'Execution error', 'generated_sql': generated_sql, 'details': str(e)}), 400
+        app.logger.exception("Execution error while running generated SQL")
+        return jsonify({'error': 'Execution error', 'generated_sql': generated_sql}), 400
     
     close_connection(conn)
 

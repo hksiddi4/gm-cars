@@ -123,6 +123,24 @@
             return outsourcedUrl;
         };
 
+        const getSafeImageUrl = (urlValue) => {
+            if (!urlValue || typeof urlValue !== 'string') return '/img/placeholder-wheel.webp';
+
+            // Allow local static assets
+            if (urlValue.startsWith('/')) return urlValue;
+
+            try {
+                const parsed = new URL(urlValue, window.location.origin);
+                const allowedHosts = new Set(['www.cadillac.com', 'www.chevrolet.com']);
+                const isHttp = parsed.protocol === 'http:' || parsed.protocol === 'https:';
+                if (isHttp && allowedHosts.has(parsed.hostname)) return parsed.toString();
+            } catch (e) {
+                // fall through to placeholder
+            }
+
+            return '/img/placeholder-wheel.webp';
+        };
+
         document.addEventListener('DOMContentLoaded', function () {
             const modelSelect = document.getElementById('filterModel');
             const table = document.getElementById('wheelTable');
@@ -161,7 +179,7 @@
                         const img = document.createElement('img');
                         img.className = 'wheel-image';
                         img.dataset.rpo = imgRpo;
-                        img.src = finalImageUrl;
+                        img.src = getSafeImageUrl(finalImageUrl);
                         img.alt = 'Wheel Image';
                         img.onerror = function () {
                             // Outsourced URL fallback for year (if present)

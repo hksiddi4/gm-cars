@@ -249,8 +249,12 @@
           const isSameOrigin = parsed.origin === window.location.origin;
 
           if (!isHttp || !isSameOrigin) return null;
+          if (!parsed.pathname.startsWith('/')) return null;
 
-          return parsed.pathname + parsed.search + parsed.hash;
+          const safeUrl = parsed.pathname + parsed.search + parsed.hash;
+          if (/%0d|%0a/i.test(safeUrl)) return null;
+
+          return safeUrl;
         } catch (e) {
           return null;
         }
@@ -263,7 +267,7 @@
         const safeUrl = getSafeNavigationUrl(url);
         if (!safeUrl) return;
 
-        window.location.href = safeUrl;
+        window.location.assign(safeUrl);
       }
 
       function loadImageWithRetry(url, retries = 3, delay = 1000) {
@@ -855,9 +859,12 @@
         });
 
         document.querySelectorAll('#rpoTable tbody tr').forEach(row => {
-          const url = row.getAttribute('data-url');
           row.addEventListener('mousedown', handleMouseDown);
-          row.addEventListener('click', (event) => handleRowClick(url, event));
+          row.addEventListener('click', (event) => {
+            const link = row.querySelector('a[href]');
+            if (!link) return;
+            handleRowClick(link.href, event);
+          });
         });
 
         document.addEventListener('keydown', (event) => {

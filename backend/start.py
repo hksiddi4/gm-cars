@@ -47,8 +47,9 @@ Rules:
 5. Append `LIMIT 100` (without a semicolon) unless executing aggregate functions.
 6. Transmission: Automatic `t.transmission_type LIKE 'A%'`, Manual `t.transmission_type LIKE 'M%'`. Drivetrains: 'RWD', 'AWD', '4WD'.
 7. Use wildcard `LIKE` for generic color matching (e.g., c.color_name LIKE '%ORANGE%').
-8. Trims vs Special Editions: Trims are in `v.trim`. Packages like '1LE', 'ZTK' are in SpecialEditions.
-9. Corvettes: Models use `v.model LIKE 'CORVETTE%'`.
+8. Trims vs Special Editions: Trims are in `v.trim`. Packages like '1LE', 'ZTK' are in SpecialEditions. 
+9. Package Filtering: To filter by a package or special edition, you MUST use a correlated EXISTS subquery in the WHERE clause: `EXISTS (SELECT 1 FROM SpecialEditions se WHERE se.vehicle_id = v.vehicle_id AND se.special_desc LIKE '%1LE%')`. Do NOT repeat the GROUP_CONCAT subquery in the WHERE clause.
+10. Corvettes: Models use `v.model LIKE 'CORVETTE%'`.
 """
 
 @app.route('/ai-query', methods=['POST'])
@@ -68,7 +69,7 @@ def natural_language_query():
         "keep_alive": -1,  # Keep model warm in RAM indefinitely
         "options": {
             "temperature": 0.1,
-            "num_predict": 256  # Prevent long run-on generation
+            "num_predict": 1024  # Prevent long run-on generation
         }
     }
 

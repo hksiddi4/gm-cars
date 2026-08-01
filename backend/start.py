@@ -26,26 +26,25 @@ Dealers (dealer_id, dealer_name, dealer_address, dealer_code)
 Drivetrains (drivetrain_id, drivetrain_type)
 Engines (engine_id, engine_type, engine_rpo)
 MMC_Codes (mmc_id, mmc_code)
-Options (option_id, vehicle_id, option_code)
 Orders (order_id, order_number, creation_date, dealer_id, allocation_id, country)
 SpecialEditions (special_id, vehicle_id, special_desc)
 Transmissions (transmission_id, transmission_type)
 Vehicles (vehicle_id, vin, modelYear, model, body, trim, engine_id, transmission_id, drivetrain_id, color_id, msrp, mmc_id, order_id)
 
-Joins: v.color_id=c.color_id, v.engine_id=e.engine_id, v.transmission_id=t.transmission_id, v.drivetrain_id=d.drivetrain_id, v.mmc_id=m.mmc_id, v.order_id=o.order_id, o.dealer_id=dealer.dealer_id, opt.vehicle_id=v.vehicle_id, se.vehicle_id=v.vehicle_id
+Joins: v.color_id=c.color_id, v.engine_id=e.engine_id, v.transmission_id=t.transmission_id, v.drivetrain_id=d.drivetrain_id, v.mmc_id=m.mmc_id, v.order_id=o.order_id, o.dealer_id=dealer.dealer_id
 
 Rules:
 1. ONLY SELECT queries.
 2. Mandatory column layout when returning vehicles:
-   SELECT v.vin AS VIN, v.modelYear AS Year, v.model AS Model, v.body AS Body, v.trim AS Trim, e.engine_type AS Engine, t.transmission_type AS Trans, d.drivetrain_type AS Drivetrain, c.color_name AS Exterior_Color, v.msrp AS MSRP, IFNULL(GROUP_CONCAT(DISTINCT se.special_desc), '') AS Package_Option, o.country AS Country
-3. Always include `JOIN Orders o ON v.order_id = o.order_id` and `LEFT JOIN SpecialEditions se ON v.vehicle_id = se.vehicle_id`.
-4. Group by `GROUP BY v.vehicle_id` before limit.
+   SELECT v.vin AS VIN, v.modelYear AS Year, v.model AS Model, v.body AS Body, v.trim AS Trim, e.engine_type AS Engine, t.transmission_type AS Trans, d.drivetrain_type AS Drivetrain, c.color_name AS Exterior_Color, v.msrp AS MSRP, (SELECT GROUP_CONCAT(se.special_desc SEPARATOR ', ') FROM SpecialEditions se WHERE se.vehicle_id = v.vehicle_id) AS Package_Option, o.country AS Country
+3. Always include `JOIN Orders o ON v.order_id = o.order_id`. Do NOT join SpecialEditions in the FROM clause.
+4. NEVER use GROUP BY. The subquery in the SELECT list safely handles duplicate packages without breaking strict SQL modes.
 5. Append `LIMIT 100` unless executing aggregate functions (COUNT, SUM, AVG).
 6. Transmission: Automatic `t.transmission_type LIKE 'A%'`, Manual `t.transmission_type LIKE 'M%'`. Drivetrains: 'RWD', 'AWD', '4WD'.
 7. Do NOT add WHERE conditions for transmission/drivetrain/year unless explicitly requested.
 8. Use wildcard `LIKE` for generic color matching (e.g., c.color_name LIKE '%ORANGE%').
-9. Trims vs Special Editions: Trims are in `v.trim` ('2SS', 'ZL1', '3LZ'). Packages like '1LE', 'ZTK', 'Track Package' are in SpecialEditions (`se.special_desc LIKE '%1LE%'`).
-10. Fuzzy package search: Use wildcards between terms (e.g., `se.special_desc LIKE '%Track%Package%'`).
+9. Trims vs Special Editions: Trims are in `v.trim` ('2SS', 'ZL1', '3LZ'). Packages like '1LE', 'ZTK' are in SpecialEditions.
+10. Fuzzy package search: Use wildcards between terms inside a WHERE EXISTS subquery (e.g., `EXISTS (SELECT 1 FROM SpecialEditions WHERE vehicle_id = v.vehicle_id AND special_desc LIKE '%Track%Package%')`).
 11. Corvettes: Models use `v.model LIKE 'CORVETTE%'` or specific model names (`CORVETTE STINGRAY`, `CORVETTE ZR1`).
 """
 
@@ -71,7 +70,7 @@ def natural_language_query():
     }
 
     try:
-        response = requests.post(OLLAMA_URL, json=payload, timeout=60)
+        response = requests.post(OLLAMA_URL, json=payload, timeout=120)
         response.raise_for_status()
         generated_sql = response.json().get('response', '').strip()
     except Exception as e:

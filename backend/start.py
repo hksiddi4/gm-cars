@@ -12,7 +12,7 @@ CORS(app)
 
 myCreds = sql.Creds()
 
-OLLAMA_URL = "http://192.168.1.126:11434/api/generate"
+OLLAMA_URL = "http://192.168.1.126:30068/api/generate"
 AI_MODEL = "qwen2.5-coder:14b"
 
 DB_SCHEMA_CONTEXT = """

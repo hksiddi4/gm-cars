@@ -15,11 +15,10 @@
         }
         
         #loadingContainer {
-            display: none; 
+            display: none; /* Keep hidden by default */
             position: relative; 
             margin-top: 20px;
             padding: 20px 0 10px 0;
-            display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
@@ -228,7 +227,7 @@
             // UI Reset
             document.getElementById('errorAlert').style.display = 'none';
             document.getElementById('resultsContainer').style.display = 'none';
-            document.getElementById('loadingContainer').style.display = 'block';
+            document.getElementById('loadingContainer').style.display = 'flex'; // Changed from 'block' to 'flex'
             document.getElementById('askBtn').disabled = true;
             
             // Reset sort state for new queries

@@ -263,19 +263,20 @@
                 }
 
                 // 3. Handle graceful backend errors
+                if (data && data.generated_sql) {
+                    document.getElementById('sqlOutput').textContent = data.generated_sql;
+                    document.getElementById('resultsContainer').style.display = 'block';
+                }
+
                 if (!response.ok) {
                     throw new Error(data.error || 'Something went wrong processing the query.');
                 }
 
                 // --- SUCCESS LOGIC ---
-                document.getElementById('sqlOutput').textContent = data.generated_sql;
-                
                 currentResults = data.results;
                 currentElapsedTime = ((Date.now() - startTime) / 1000).toFixed(2);
                 
                 renderTable();
-                
-                document.getElementById('resultsContainer').style.display = 'block';
                 setTimeout(updateTopInnerWidth, 100);
 
             } catch (err) {

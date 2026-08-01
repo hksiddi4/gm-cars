@@ -94,11 +94,18 @@ def natural_language_query():
         db_results = execute_read_query(conn, generated_sql)
         if db_results is None:
             close_connection(conn)
-            return jsonify({'error': 'AI generated invalid SQL syntax or execution failed.', 'generated_sql': generated_sql}), 400
+            return jsonify({
+                'error': 'AI generated invalid SQL syntax or execution failed.', 
+                'generated_sql': generated_sql
+            }), 400
             
     except Exception as e:
         close_connection(conn)
-        return jsonify({'error': 'Execution error', 'generated_sql': generated_sql, 'details': str(e)}), 400
+        return jsonify({
+            'error': 'Execution error', 
+            'generated_sql': generated_sql, 
+            'details': str(e)
+        }), 400
     
     close_connection(conn)
 

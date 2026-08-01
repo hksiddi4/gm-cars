@@ -12,7 +12,7 @@ CORS(app)
 
 myCreds = sql.Creds()
 
-OLLAMA_URL = "http://192.168.1.126:30068/api/generate"
+OLLAMA_URL = "http://192.168.1.126:11434/api/generate"
 AI_MODEL = "qwen2.5-coder:14b"
 
 DB_SCHEMA_CONTEXT = """
@@ -91,8 +91,8 @@ def natural_language_query():
         response = requests.post(OLLAMA_URL, json=payload, timeout=120)
         response.raise_for_status()
         generated_sql = response.json().get('response', '').strip()
-    except Exception:
-        return jsonify({'error': 'Failed to communicate with AI model'}), 500
+    except Exception as e:
+        return jsonify({'error': f'Failed to communicate with AI model: {str(e)}'}), 500
 
     if generated_sql.startswith("```"):
         generated_sql = generated_sql.replace("```sql", "").replace("```", "").strip()
@@ -110,8 +110,7 @@ def natural_language_query():
             
     except Exception as e:
         close_connection(conn)
-        app.logger.exception("Execution error while running generated SQL")
-        return jsonify({'error': 'Execution error', 'generated_sql': generated_sql}), 400
+        return jsonify({'error': 'Execution error', 'generated_sql': generated_sql, 'details': str(e)}), 400
     
     close_connection(conn)
 

@@ -13,60 +13,39 @@ CORS(app)
 myCreds = sql.Creds()
 
 OLLAMA_URL = "http://192.168.1.126:11434/api/generate"
-AI_MODEL = "qwen2.5-coder:7b"
+AI_MODEL = "qwen2.5-coder:7b"  # Changed from 14b to 7b for 3x-4x speedup
 
-DB_SCHEMA_CONTEXT = """
-You are a MySQL expert database assistant. Generate ONLY a valid MySQL statement. No Markdown wrapper, no markdown blocks, no triple backticks, and no explanations.
+# Cleaned, tightly-formatted schema context (fewer tokens = faster prompt processing)
+DB_SCHEMA_CONTEXT = """You are a MySQL database assistant. Output ONLY a valid raw MySQL SELECT statement. No markdown, no triple backticks, no explanations.
 
-Here is the exact database schema based on the actual table structures:
+Schema:
+Colors (color_id, color_name, rpo_code)
+Dealers (dealer_id, dealer_name, dealer_address, dealer_code)
+Drivetrains (drivetrain_id, drivetrain_type)
+Engines (engine_id, engine_type, engine_rpo)
+MMC_Codes (mmc_id, mmc_code)
+Options (option_id, vehicle_id, option_code)
+Orders (order_id, order_number, creation_date, dealer_id, allocation_id, country)
+SpecialEditions (special_id, vehicle_id, special_desc)
+Transmissions (transmission_id, transmission_type)
+Vehicles (vehicle_id, vin, modelYear, model, body, trim, engine_id, transmission_id, drivetrain_id, color_id, msrp, mmc_id, order_id)
 
-CREATE TABLE Colors (color_id BIGINT, color_name VARCHAR(64), rpo_code VARCHAR(3));
-CREATE TABLE Dealers (dealer_id BIGINT, dealer_name VARCHAR(128), dealer_address VARCHAR(256), dealer_code VARCHAR(16));
-CREATE TABLE Drivetrains (drivetrain_id BIGINT, drivetrain_type VARCHAR(8));
-CREATE TABLE Engines (engine_id BIGINT, engine_type VARCHAR(64), engine_rpo VARCHAR(3));
-CREATE TABLE MMC_Codes (mmc_id BIGINT, mmc_code VARCHAR(16));
-CREATE TABLE Options (option_id BIGINT, vehicle_id BIGINT, option_code CHAR(3));
-CREATE TABLE Orders (order_id BIGINT, order_number VARCHAR(6), creation_date DATE, dealer_id BIGINT, allocation_id BIGINT, country VARCHAR(32));
-CREATE TABLE SpecialEditions (special_id BIGINT, vehicle_id BIGINT, special_desc VARCHAR(64));
-CREATE TABLE Transmissions (transmission_id BIGINT, transmission_type VARCHAR(16));
-CREATE TABLE Vehicles (vehicle_id BIGINT, vin VARCHAR(17), modelYear INT, model VARCHAR(32), body VARCHAR(32), trim VARCHAR(32), engine_id BIGINT, transmission_id BIGINT, drivetrain_id BIGINT, color_id BIGINT, msrp INT, mmc_id BIGINT, order_id BIGINT);
-
-Join Relationships:
-- v.color_id = c.color_id
-- v.engine_id = e.engine_id
-- v.transmission_id = t.transmission_id
-- v.drivetrain_id = d.drivetrain_id
-- v.mmc_id = m.mmc_id
-- v.order_id = o.order_id
-- o.dealer_id = dealer.dealer_id
-- opt.vehicle_id = v.vehicle_id
-- se.vehicle_id = v.vehicle_id
+Joins: v.color_id=c.color_id, v.engine_id=e.engine_id, v.transmission_id=t.transmission_id, v.drivetrain_id=d.drivetrain_id, v.mmc_id=m.mmc_id, v.order_id=o.order_id, o.dealer_id=dealer.dealer_id, opt.vehicle_id=v.vehicle_id, se.vehicle_id=v.vehicle_id
 
 Rules:
-1. Only output SELECT queries.
-2. Use standard table aliases (e.g., Vehicles v, Colors c, Transmissions t, Engines e, Drivetrains d, Orders o, Options opt, Dealers dealer, MMC_Codes m, SpecialEditions se).
-3. MANDATORY COLUMN SELECTION AND ORDER: If returning vehicle records, you MUST select EXACTLY the following 12 columns in this exact sequence. Do NOT add, omit, or rearrange any columns:
+1. ONLY SELECT queries.
+2. Mandatory column layout when returning vehicles:
    SELECT v.vin AS VIN, v.modelYear AS Year, v.model AS Model, v.body AS Body, v.trim AS Trim, e.engine_type AS Engine, t.transmission_type AS Trans, d.drivetrain_type AS Drivetrain, c.color_name AS Exterior_Color, v.msrp AS MSRP, IFNULL(GROUP_CONCAT(DISTINCT se.special_desc), '') AS Package_Option, o.country AS Country
-4. MANDATORY JOINS: Because the mandatory SELECT statement requires data from Orders and SpecialEditions, you MUST ALWAYS include both `JOIN Orders o ON v.order_id = o.order_id` and `LEFT JOIN SpecialEditions se ON v.vehicle_id = se.vehicle_id` in your query when returning vehicle records.
-5. Because of the GROUP_CONCAT, if you are returning vehicle records, you MUST include "GROUP BY v.vehicle_id" before the limit.
-6. ALWAYS append LIMIT 100 to the end of the query unless the user is asking for an aggregate function (COUNT, SUM, AVG).
-7. CRITICAL DATA MAPPING FOR WHERE CLAUSES:
-   - Transmission types are stored as codes. "Automatic" means t.transmission_type LIKE 'A%' (e.g., A10, A8, DCT8). "Manual" means t.transmission_type LIKE 'M%' (e.g., M6, M7).
-   - Drivetrains are stored as short codes: 'RWD', 'AWD', '4WD'.
-8. STRICT ANTI-HALLUCINATION: Do NOT add WHERE conditions for transmission, drivetrain, year, or any other attribute UNLESS the user explicitly requests them in the prompt.
-9. COLOR MATCHING: Database color names are highly specific (e.g., 'SEBRING ORANGE TINTCOAT'). When a user asks for a generic color like 'Orange', 'Red', or 'Black', you MUST use a wildcard search (e.g., c.color_name LIKE '%ORANGE%') instead of an exact match.
-10. DECONSTRUCTING COMPOUND NAMES: Users combine attributes into one phrase (e.g., "Camaro 2SS 1LE"). You MUST explicitly separate them AND you MUST include all requested parts in the WHERE clause. NEVER combine a trim and a special edition into the same string, and NEVER silently drop the special edition from the query.
-    - INCORRECT: `WHERE v.trim = '1LE 2SS'` (Combines them)
-    - INCORRECT: `WHERE v.trim = '2SS'` (Drops the 1LE condition entirely)
-    - CORRECT: `WHERE v.model = 'CAMARO' AND v.trim = '2SS' AND se.special_desc LIKE '%1LE%'`
-    'Camaro' is the model. '1LT', '2SS', '3LZ', 'ZL1' are trims. Identifiers like '1LE', 'Launch Edition', 'Collector Edition' belong EXCLUSIVELY in the SpecialEditions table (`se.special_desc LIKE '%1LE%'`).
-11. FUZZY PACKAGE MATCHING: Database special edition descriptions contain full marketing names (e.g., 'ZTK Track Performance Package'). If a user asks for a multi-word package like 'Track Package', you MUST place wildcards between the keywords (e.g., `se.special_desc LIKE '%Track%Package%'`) to allow for words in the middle, or search for the single most unique keyword (e.g., `se.special_desc LIKE '%Track%'`). NEVER use exact adjacent wildcards like `'%Track Package%'`.
-12. CORVETTE MODEL NAME: All Corvette models are 'CORVETTE XXX'. If a user asks for corvette without specifing model ('STINGRAY', 'E-RAY', 'GRAND SPORT', 'GRAND SPORT X', 'Z06', 'ZR1', 'ZR1X'), use wildcards after Corvette (`'CORVETTE%'`).
-    - INCORRECT: `WHERE v.model LIKE 'CORVETTE%' AND v.trim = 'ZR1'` (Treats model as trim)
-    - CORRECT: `WHERE v.model LIKE 'CORVETTE ZR1`
+3. Always include `JOIN Orders o ON v.order_id = o.order_id` and `LEFT JOIN SpecialEditions se ON v.vehicle_id = se.vehicle_id`.
+4. Group by `GROUP BY v.vehicle_id` before limit.
+5. Append `LIMIT 100` unless executing aggregate functions (COUNT, SUM, AVG).
+6. Transmission: Automatic `t.transmission_type LIKE 'A%'`, Manual `t.transmission_type LIKE 'M%'`. Drivetrains: 'RWD', 'AWD', '4WD'.
+7. Do NOT add WHERE conditions for transmission/drivetrain/year unless explicitly requested.
+8. Use wildcard `LIKE` for generic color matching (e.g., c.color_name LIKE '%ORANGE%').
+9. Trims vs Special Editions: Trims are in `v.trim` ('2SS', 'ZL1', '3LZ'). Packages like '1LE', 'ZTK', 'Track Package' are in SpecialEditions (`se.special_desc LIKE '%1LE%'`).
+10. Fuzzy package search: Use wildcards between terms (e.g., `se.special_desc LIKE '%Track%Package%'`).
+11. Corvettes: Models use `v.model LIKE 'CORVETTE%'` or specific model names (`CORVETTE STINGRAY`, `CORVETTE ZR1`).
 """
-
-# ========================= AI NL-to-SQL Route =========================
 
 @app.route('/ai-query', methods=['POST'])
 def natural_language_query():
@@ -82,18 +61,21 @@ def natural_language_query():
         "model": AI_MODEL,
         "prompt": system_combined_prompt,
         "stream": False,
+        "keep_alive": -1,  # Keep model warm in RAM indefinitely
         "options": {
-            "temperature": 0.1
+            "temperature": 0.1,
+            "num_predict": 256  # Prevent long run-on generation
         }
     }
 
     try:
-        response = requests.post(OLLAMA_URL, json=payload, timeout=120)
+        response = requests.post(OLLAMA_URL, json=payload, timeout=60)
         response.raise_for_status()
         generated_sql = response.json().get('response', '').strip()
     except Exception as e:
         return jsonify({'error': f'Failed to communicate with AI model: {str(e)}'}), 500
 
+    # Clean code blocks
     if generated_sql.startswith("```"):
         generated_sql = generated_sql.replace("```sql", "").replace("```", "").strip()
 

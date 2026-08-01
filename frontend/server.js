@@ -44,6 +44,13 @@ const authLimiter = rateLimit({
     legacyHeaders: false,
 });
 
+const searchLimiter = rateLimit({
+    windowMs: 5 * 60 * 1000,
+    max: 30,
+    standardHeaders: true,
+    legacyHeaders: false
+});
+
 const apiLimiter = rateLimit({
     windowMs: 5 * 60 * 1000,
     handler: (req, res) => {
@@ -236,7 +243,8 @@ app.get('/about', async (req, res) => {
             pagePath: '/about'
         });
     } catch (err) {
-        res.status(500).render('pages/errors/500', { error: err });
+        console.error("About Route Error:", err);
+        res.status(500).render('pages/errors/500', { pagePath: '/about', canonicalPath: '/about' });
     }
 });
 
@@ -285,11 +293,12 @@ app.get('/vehicles', async (req, res) => {
             canonicalPath: req.originalUrl
         });
     } catch (error) {
-        res.status(500).render('pages/errors/500', { error });
+        console.error("Vehicles Route Error:", error);
+        res.status(500).render('pages/errors/500', { pagePath: '/vehicles', canonicalPath: req.originalUrl });
     }
 });
 
-app.get('/search', async (req, res) => {
+app.get('/search', searchLimiter, async (req, res) => {
     // 1. Unique variable for the incoming query string
     const vinQuery = req.query.vin?.trim();
     
@@ -328,11 +337,13 @@ app.get('/search', async (req, res) => {
                 folderName = 'hummersuv';
             }
 
+            const baseRpoDir = path.resolve(__dirname, 'public', 'img', 'rpos', folderName);
             vehicle.rpo_codes.forEach(rpoCode => {
-                const absoluteImagePath = path.join(__dirname, 'public', 'img', 'rpos', folderName, `${rpoCode}.webp`);
+                const absoluteImagePath = path.resolve(baseRpoDir, `${rpoCode}.webp`);
+                const relativePath = path.relative(baseRpoDir, absoluteImagePath);
                 
-                // Only pass to view if file physically exists on NVMe drive
-                if (fs.existsSync(absoluteImagePath)) {
+                // Only pass to view if file physically exists on NVMe drive and is within base directory
+                if (!relativePath.startsWith('..') && !path.isAbsolute(relativePath) && fs.existsSync(absoluteImagePath)) {
                     verifiedRpoImages.push(rpoCode);
                 }
             });
@@ -347,10 +358,12 @@ app.get('/search', async (req, res) => {
             formattedModel = 'CORVETTE';
         }
 
-        const stickerPath = `/window-stickers/${formattedModel}_${vehicle.modelYear}/${vehicle.vin}.pdf`; 
-        const absoluteStickerPath = path.join(__dirname, 'public', 'window-stickers', `${formattedModel}_${vehicle.modelYear}`, `${vehicle.vin}.pdf`);
+        const baseStickerDir = path.resolve(__dirname, 'public', 'window-stickers', `${formattedModel}_${vehicle.modelYear}`);
+        const absoluteStickerPath = path.resolve(baseStickerDir, `${vehicle.vin}.pdf`);
+        const relativeStickerPath = path.relative(baseStickerDir, absoluteStickerPath);
 
-        const hasSticker = fs.existsSync(absoluteStickerPath);
+        const hasSticker = !relativeStickerPath.startsWith('..') && !path.isAbsolute(relativeStickerPath) && fs.existsSync(absoluteStickerPath);
+        const stickerPath = `/window-stickers/${formattedModel}_${vehicle.modelYear}/${vehicle.vin}.pdf`; 
 
         res.render('pages/search', {
             vin_data,
@@ -397,7 +410,8 @@ app.get('/stats', async (req, res) => {
             canonicalPath: req.originalUrl
         });
     } catch (error) {
-        res.status(500).render('pages/errors/500', { error });
+        console.error('Error in /stats:', error);
+        res.status(500).render('pages/errors/500', { error: 'Internal Server Error' });
     }
 });
 
@@ -414,7 +428,8 @@ app.get('/wheels', async (req, res) => {
             canonicalPath: '/wheels'
         });
     } catch (error) {
-        res.status(500).render('pages/errors/500', { error });
+        console.error('Error in /wheels:', error);
+        res.status(500).render('pages/errors/500', { error: 'Internal Server Error' });
     }
 });
 

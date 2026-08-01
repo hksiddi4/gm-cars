@@ -47,6 +47,7 @@
         </div>
     </div>
     <%- include('../partials/footer'); %>
+    
     <script>
         const camaroRpo = <%- JSON.stringify(camaroRpo) %>;
         const corvetteRpo = <%- JSON.stringify(corvetteRpo) %>;
@@ -72,8 +73,6 @@
             ...hummerRpo,
             ...hummersuvRpo
         };
-
-        const rpoDescriptionCache = {};
 
         const modelRpoMap = {
             'CAMARO': [
@@ -119,7 +118,7 @@
         const getWheelImageUrl = (rpoCode, outsourcedUrl, model) => {
             const key = `${model}-${rpoCode}`;
             if (localRpoImageMap[key]) return localRpoImageMap[key];
-            if (localRpoImageMap[rpoCode]) return localRpoImageMap[rpoCode]; // fallback
+            if (localRpoImageMap[rpoCode]) return localRpoImageMap[rpoCode];
             return outsourcedUrl;
         };
 
@@ -130,20 +129,35 @@
             const url = new URL(window.location.href);
 
             modelSelect.addEventListener('change', function () {
-                const selectedModel = this.value?.toUpperCase();
-                tableBody.innerHTML = '';
+                const selectedModelRaw = this.value;
+                const selectedModel = selectedModelRaw ? selectedModelRaw.toUpperCase() : '';
+                
+                // Securely clear table contents
+                tableBody.textContent = ''; 
+
+                const hasValidModel = selectedModel && Object.prototype.hasOwnProperty.call(modelRpoMap, selectedModel);
 
                 if (selectedModel) url.searchParams.set('model', selectedModel);
                 else url.searchParams.delete('model');
                 history.replaceState(null, '', url.toString());
 
-                if (selectedModel && modelRpoMap[selectedModel]) {
+                if (selectedModel && !hasValidModel) {
+                    table.style.display = 'none';
+                    return;
+                }
+
+                if (hasValidModel) {
                     let modelLower = selectedModel.toLowerCase().replace(/ /g, '-').replace('e-ray', 'eray');
                     if (selectedModel === 'CORVETTE STINGRAY' || selectedModel === 'CORVETTE (ALL)') modelLower = 'corvette';
+                    
                     const category = modelLower.startsWith('corvette') ? 'corvette' : modelLower;
                     const year = (selectedModel === 'CAMARO') ? '2024' : '2025';
                     const cadillacModels = ['ESCALADE', 'ESCALADE IQ', 'CT4', 'CT5', 'CT6', 'CT4V', 'CT5V'];
                     const manufacturer = cadillacModels.includes(selectedModel) || selectedModel.startsWith('CT') || selectedModel.startsWith('ESCALADE') ? 'cadillac' : 'chevrolet';
+
+                    // Escape variables derived from user input (this.value) to satisfy CodeQL's XSS/DOM sinks checks
+                    const safeCategory = encodeURIComponent(category);
+                    const safeModelLower = encodeURIComponent(modelLower);
 
                     const rposToRender = selectedModel === 'CORVETTE (ALL)' 
                         ? [...new Set(modelRpoMap['CORVETTE ZR1'].concat(modelRpoMap['CORVETTE Z06'], modelRpoMap['CORVETTE E-RAY'], modelRpoMap['CORVETTE STINGRAY']))]
@@ -154,34 +168,56 @@
                         let imgRpo = rpo;
                         if (rpo === '5K9') imgRpo = '57V';
                         if (rpo === '5JW') imgRpo = 'WR1';
-                        const outsourcedUrl = `https://www.${manufacturer}.com/bypass/master_tools/ddp/gmna/assets/US/${manufacturer}/${year}/${category}/${modelLower}/small_byo3/${imgRpo}.jpg`;
+                        
+                        const safeImgRpo = encodeURIComponent(imgRpo);
+                        
+                        // Safely constructed URL
+                        const outsourcedUrl = `https://www.${manufacturer}.com/bypass/master_tools/ddp/gmna/assets/US/${manufacturer}/${year}/${safeCategory}/${safeModelLower}/small_byo3/${safeImgRpo}.jpg`;
                         const finalImageUrl = getWheelImageUrl(imgRpo, outsourcedUrl, selectedModel);
-                        row.innerHTML = `
-                            <td>
-                                <img 
-                                    class="wheel-image"
-                                    data-rpo="${imgRpo}"
-                                    src="${finalImageUrl}"
-                                    alt="Wheel Image"
-                                    onerror="
-                                        // Outsourced URL fallback for year (if present)
-                                        if (this.src.includes('bypass/master_tools') && !this.dataset.fallback) {
-                                            this.dataset.fallback = 'true';
-                                            this.src = this.src.replace('/${year}/', '/2024/');
-                                        } 
-                                        // Final fallback to generic placeholder
-                                        else if (!this.dataset.placeholder) {
-                                            this.dataset.placeholder = 'true';
-                                            this.src = '/img/placeholder-wheel.webp'; 
-                                        }
-                                    "
-                                />
-                            </td>
-                            <td style="text-align: left;">
-                                <strong>${rpo}</strong>
-                                <div class="rpo-description" data-code="${rpo}" style="margin-top: 4px;"></div>
-                            </td>
-                        `;
+                        
+                        const tdImage = document.createElement('td');
+                        const img = document.createElement('img');
+                        img.className = 'wheel-image';
+                        img.dataset.rpo = imgRpo;
+                        
+                        // Wrapping the source in the URL constructor ensures it forms a valid URL instead of executing rogue text
+                        try {
+                            const parsedUrl = new URL(finalImageUrl, window.location.origin);
+                            img.src = parsedUrl.href;
+                        } catch (e) {
+                            img.src = '/img/placeholder-wheel.webp';
+                        }
+                        
+                        img.alt = 'Wheel Image';
+                        
+                        img.onerror = function() {
+                            if (this.src.includes('bypass/master_tools') && !this.dataset.fallback) {
+                                this.dataset.fallback = 'true';
+                                this.src = this.src.replace(`/${year}/`, '/2024/');
+                            } 
+                            else if (!this.dataset.placeholder) {
+                                this.dataset.placeholder = 'true';
+                                this.src = '/img/placeholder-wheel.webp'; 
+                            }
+                        };
+                        tdImage.appendChild(img);
+                        
+                        const tdText = document.createElement('td');
+                        tdText.style.textAlign = 'left';
+                        
+                        const strongText = document.createElement('strong');
+                        strongText.textContent = rpo;
+                        
+                        const descDiv = document.createElement('div');
+                        descDiv.className = 'rpo-description';
+                        descDiv.dataset.code = rpo;
+                        descDiv.style.marginTop = '4px';
+                        
+                        tdText.appendChild(strongText);
+                        tdText.appendChild(descDiv);
+                        
+                        row.appendChild(tdImage);
+                        row.appendChild(tdText);
                         tableBody.appendChild(row);
                     });
 
@@ -191,21 +227,26 @@
                         const rpoCode = element.getAttribute('data-code');
                         const model = modelSelect.value?.toUpperCase();
 
-                        if (rpoDescriptionCache[rpoCode]) {
-                            element.innerHTML = rpoDescriptionCache[rpoCode];
-                            return;
-                        }
-
                         const applyFormatting = (desc) => {
+                            element.textContent = ''; 
                             let lines = Array.isArray(desc) ? desc : [desc];
-                            const formattedLines = lines.map(line =>
-                                line.replace(/forged/gi, '<strong>forged</strong>')
-                                    .replace(/carbon fiber/gi, '<strong>carbon fiber</strong>')
-                            );
                             
-                            const html = formattedLines.map(line => `<div class="rpo-local">${line}</div>`).join('');
-                            element.innerHTML = html;
-                            rpoDescriptionCache[rpoCode] = html;
+                            lines.forEach(line => {
+                                const div = document.createElement('div');
+                                div.className = 'rpo-local';
+                                
+                                const parts = line.split(/(forged|carbon fiber)/gi);
+                                parts.forEach(part => {
+                                    if (/(forged|carbon fiber)/i.test(part)) {
+                                        const strong = document.createElement('strong');
+                                        strong.textContent = part;
+                                        div.appendChild(strong);
+                                    } else if (part) {
+                                        div.appendChild(document.createTextNode(part));
+                                    }
+                                });
+                                element.appendChild(div);
+                            });
 
                             const row = element.closest('tr');
                             const descText = lines.join(' ').toLowerCase();
@@ -217,14 +258,10 @@
                         
                         if (localDescription) {
                             applyFormatting(localDescription);
-                            return;
-                        }
-
-                        if (rpoDescriptions[rpoCode]) {
+                        } else if (rpoDescriptions[rpoCode]) {
                             applyFormatting(rpoDescriptions[rpoCode]);
                         } else {
-                            element.textContent = 'Not found';
-                            rpoDescriptionCache[rpoCode] = 'Not found';
+                            element.textContent = 'Not found'; 
                         }
                     });
                 } else {

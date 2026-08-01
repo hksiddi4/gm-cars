@@ -22,30 +22,33 @@ DB_SCHEMA_CONTEXT = """You are a MySQL database assistant. Output ONLY a valid r
 
 Schema:
 Colors (color_id, color_name, rpo_code)
-Dealers (dealer_id, dealer_name, dealer_address, dealer_code)
+Dealers (dealer_id, dealer_name, location, sitedealer_code)
 Drivetrains (drivetrain_id, drivetrain_type)
 Engines (engine_id, engine_type, engine_rpo)
-MMC_Codes (mmc_id, mmc_code)
-Orders (order_id, order_number, creation_date, dealer_id, allocation_id, country)
+MMC_Codes (mmc_code_id, mmc_code)
+Orders (order_id, order_number, creation_date, mmc_code_id, sell_source, country)
 SpecialEditions (special_id, vehicle_id, special_desc)
 Transmissions (transmission_id, transmission_type)
-Vehicles (vehicle_id, vin, modelYear, model, body, trim, engine_id, transmission_id, drivetrain_id, color_id, msrp, mmc_id, order_id)
-
-Joins: v.color_id=c.color_id, v.engine_id=e.engine_id, v.transmission_id=t.transmission_id, v.drivetrain_id=d.drivetrain_id, v.mmc_id=m.mmc_id, v.order_id=o.order_id, o.dealer_id=dealer.dealer_id
+Vehicles (vehicle_id, vin, modelYear, model, body, trim, engine_id, transmission_id, drivetrain_id, color_id, msrp, dealer_id, order_id)
 
 Rules:
-1. ONLY SELECT queries.
-2. Mandatory column layout when returning vehicles:
-   SELECT v.vin AS VIN, v.modelYear AS Year, v.model AS Model, v.body AS Body, v.trim AS Trim, e.engine_type AS Engine, t.transmission_type AS Trans, d.drivetrain_type AS Drivetrain, c.color_name AS Exterior_Color, v.msrp AS MSRP, (SELECT GROUP_CONCAT(se.special_desc SEPARATOR ', ') FROM SpecialEditions se WHERE se.vehicle_id = v.vehicle_id) AS Package_Option, o.country AS Country
-3. Always include `JOIN Orders o ON v.order_id = o.order_id`. Do NOT join SpecialEditions in the FROM clause.
-4. NEVER use GROUP BY. The subquery in the SELECT list safely handles duplicate packages without breaking strict SQL modes.
-5. Append `LIMIT 100` unless executing aggregate functions (COUNT, SUM, AVG).
+1. ONLY SELECT queries. Do NOT append a semicolon at the end of the query.
+2. Mandatory column layout when returning vehicles (Note the backticks):
+   SELECT v.vin AS `VIN`, v.modelYear AS `Year`, v.model AS `Model`, v.body AS `Body`, v.trim AS `Trim`, e.engine_type AS `Engine`, t.transmission_type AS `Trans`, d.drivetrain_type AS `Drivetrain`, c.color_name AS `Exterior_Color`, v.msrp AS `MSRP`, IFNULL((SELECT GROUP_CONCAT(se.special_desc) FROM SpecialEditions se WHERE se.vehicle_id = v.vehicle_id), '') AS `Package_Option`, o.country AS `Country`
+3. ALWAYS use `LEFT JOIN` for all table relationships to prevent dropping vehicles with missing data. Use these exact links:
+   - LEFT JOIN Colors c ON v.color_id = c.color_id
+   - LEFT JOIN Engines e ON v.engine_id = e.engine_id
+   - LEFT JOIN Transmissions t ON v.transmission_id = t.transmission_id
+   - LEFT JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id
+   - LEFT JOIN Dealers dealer ON v.dealer_id = dealer.dealer_id
+   - LEFT JOIN Orders o ON v.order_id = o.order_id
+   - LEFT JOIN MMC_Codes m ON o.mmc_code_id = m.mmc_code_id
+4. Do NOT join SpecialEditions in the FROM clause. NEVER use GROUP BY.
+5. Append `LIMIT 100` (without a semicolon) unless executing aggregate functions.
 6. Transmission: Automatic `t.transmission_type LIKE 'A%'`, Manual `t.transmission_type LIKE 'M%'`. Drivetrains: 'RWD', 'AWD', '4WD'.
-7. Do NOT add WHERE conditions for transmission/drivetrain/year unless explicitly requested.
-8. Use wildcard `LIKE` for generic color matching (e.g., c.color_name LIKE '%ORANGE%').
-9. Trims vs Special Editions: Trims are in `v.trim` ('2SS', 'ZL1', '3LZ'). Packages like '1LE', 'ZTK' are in SpecialEditions.
-10. Fuzzy package search: Use wildcards between terms inside a WHERE EXISTS subquery (e.g., `EXISTS (SELECT 1 FROM SpecialEditions WHERE vehicle_id = v.vehicle_id AND special_desc LIKE '%Track%Package%')`).
-11. Corvettes: Models use `v.model LIKE 'CORVETTE%'` or specific model names (`CORVETTE STINGRAY`, `CORVETTE ZR1`).
+7. Use wildcard `LIKE` for generic color matching (e.g., c.color_name LIKE '%ORANGE%').
+8. Trims vs Special Editions: Trims are in `v.trim`. Packages like '1LE', 'ZTK' are in SpecialEditions.
+9. Corvettes: Models use `v.model LIKE 'CORVETTE%'`.
 """
 
 @app.route('/ai-query', methods=['POST'])

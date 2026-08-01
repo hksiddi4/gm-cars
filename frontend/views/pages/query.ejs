@@ -38,20 +38,24 @@
             animation: spinAndCenter 1s linear infinite;
         }
         
-        /* Force the table to behave identically to vehicles.ejs */
-        .table-responsive { width: 100%; }
-        #dataTable { width: 100%; table-layout: auto; }
-
-        .table-responsive { 
+        /* --- Table Layout Fixes (Isolated to this page) --- */
+        #bottom-scroll-wrapper { 
             width: 100%; 
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
         }
         
         #dataTable { 
-            width: 100%; 
-            min-width: max-content; /* Prevents mobile columns from squishing */
-            white-space: nowrap;    /* Keeps data strictly on one line */
+            /* Overrides the global .table-veh 'display: block' mobile rule */
+            display: table !important; 
+            width: 100% !important; 
+            min-width: max-content !important; 
+            table-layout: auto !important;
+            white-space: nowrap !important;
+        }
+
+        #dataTable th, #dataTable td {
+            white-space: nowrap !important; /* Guarantees data stays on one line */
         }
 
         #dataTable th {

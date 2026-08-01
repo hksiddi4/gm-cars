@@ -441,9 +441,17 @@
                             td.textContent = cellValue || '';
                         }
                     } 
-                    // 5. Standard text columns
+                    // 5. Standard text/numeric columns (handles COUNT queries and standard text)
                     else {
-                        td.textContent = cellValue ?? '';
+                        if (typeof cellValue === 'number') {
+                            // Format integers/counts with thousands commas (e.g., 12197 -> 12,197)
+                            td.textContent = cellValue.toLocaleString();
+                        } else if (typeof cellValue === 'string' && !isNaN(cellValue) && cellValue.trim() !== '' && !cellValue.includes('.')) {
+                            // Fallback if the database driver returns the numeric count as a string digit
+                            td.textContent = Number(cellValue).toLocaleString();
+                        } else {
+                            td.textContent = cellValue ?? '';
+                        }
                     }
 
                     tr.appendChild(td);

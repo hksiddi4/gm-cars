@@ -205,28 +205,39 @@
                 const response = await fetch('/ai-query', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: prompt })
+                    body: JSON.stringify({ prompt: prompt }),
+                    credentials: 'same-origin'
                 });
 
-                console.log(response);
+                console.log("Network Response:", response);
 
-                const data = await response.json();
+                // 1. Read the raw response as text first to prevent JSON.parse crashes
+                const rawText = await response.text();
 
+                // 2. Safely attempt to parse the text as JSON
+                let data;
+                try {
+                    data = JSON.parse(rawText);
+                } catch (parseError) {
+                    // If it fails to parse, it's an HTML error page (like a 504 Timeout)
+                    console.error("Server returned non-JSON. Raw text:", rawText);
+                    throw new Error(`The connection timed out or failed (Status: ${response.status}). The server took longer than 30 seconds to respond.`);
+                }
+
+                // 3. Handle graceful backend errors
                 if (!response.ok) {
                     throw new Error(data.error || 'Something went wrong processing the query.');
                 }
 
+                // --- SUCCESS LOGIC ---
                 document.getElementById('sqlOutput').textContent = data.generated_sql;
                 
-                // Save data globally for local sorting
                 currentResults = data.results;
                 currentElapsedTime = ((Date.now() - startTime) / 1000).toFixed(2);
                 
                 renderTable();
                 
                 document.getElementById('resultsContainer').style.display = 'block';
-                
-                // Recalculate scrollbar width after table generates
                 setTimeout(updateTopInnerWidth, 100);
 
             } catch (err) {

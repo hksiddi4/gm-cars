@@ -13,7 +13,7 @@ CORS(app)
 myCreds = sql.Creds()
 
 OLLAMA_URL = "http://192.168.1.126:11434/api/generate"
-AI_MODEL = "qwen2.5-coder:14b"
+AI_MODEL = "qwen2.5-coder:7b"
 
 DB_SCHEMA_CONTEXT = """
 You are a MySQL expert database assistant. Generate ONLY a valid MySQL statement. No Markdown wrapper, no markdown blocks, no triple backticks, and no explanations.

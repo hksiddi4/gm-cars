@@ -1,9 +1,10 @@
 import sql
 import flask
 import requests
-from flask import request, jsonify
+from flask import jsonify, request
 from flask_cors import CORS
 from sql import create_connection, execute_read_query, close_connection, Creds
+from functools import lru_cache
 
 app = flask.Flask(__name__)
 app.config["DEBUG"] = False
@@ -101,6 +102,44 @@ def natural_language_query():
         'results': db_results
     })
 
+# 1. CACHE DEFAULT DROPDOWNS OUTSIDE THE ROUTE
+# This completely eliminates 8 DB queries on every default page load.
+@lru_cache(maxsize=1)
+def get_cached_default_dropdowns():
+    conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
+    years = execute_read_query(conn, "SELECT DISTINCT modelYear FROM Vehicles ORDER BY modelYear DESC")
+    models = execute_read_query(conn, "SELECT DISTINCT model FROM Vehicles ORDER BY model ASC")
+    bodies = execute_read_query(conn, "SELECT DISTINCT body FROM Vehicles ORDER BY body ASC")
+    trims = execute_read_query(conn, "SELECT DISTINCT trim FROM Vehicles ORDER BY trim ASC")
+    engines = execute_read_query(conn, "SELECT engine_rpo AS rpo, engine_type AS name FROM Engines ORDER BY engine_rpo ASC")
+    trans = execute_read_query(conn, "SELECT DISTINCT transmission_type FROM Transmissions ORDER BY transmission_type ASC")
+    drivetrains = execute_read_query(conn, "SELECT DISTINCT drivetrain_type FROM Drivetrains ORDER BY drivetrain_type ASC")
+    colors = execute_read_query(conn, "SELECT DISTINCT color_name FROM Colors ORDER BY color_name ASC")
+    countries = execute_read_query(conn, "SELECT DISTINCT country FROM Orders ORDER BY country ASC")
+    close_connection(conn)
+
+    return {
+        'modelYear': [r['modelYear'] for r in years],
+        'model': [r['model'] for r in models],
+        'body': [r['body'] for r in bodies],
+        'trim': [r['trim'] for r in trims],
+        'transmission_type': [r['transmission_type'] for r in trans],
+        'drivetrain_type': [r['drivetrain_type'] for r in drivetrains],
+        'color_name': [r['color_name'] for r in colors],
+        'country': [r['country'] for r in countries]
+    }, engines
+
+@app.route('/api/refresh-cache', methods=['POST'])
+def refresh_cache():
+    secret = request.headers.get('Authorization')
+    if secret != "4f699a27c3f62daba5fd6779859c8262c3e337d24bd8cc356b5ccf65f724163b":
+        return jsonify({"error": "Unauthorized"}), 401
+        
+    # This instantly deletes the cached dropdowns
+    get_cached_default_dropdowns.cache_clear()
+    
+    return jsonify({"message": "Dropdown cache cleared successfully"})
+
 #========================= View Pages #=========================
 
 @app.route('/search', methods=['GET'])
@@ -172,6 +211,52 @@ def search_inv():
 
     return jsonify([vehicle])
 
+def get_all_distinct_values(current_where, current_params, current_filter_joins, current_rpo_clause):
+    conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
+    columns = ['modelYear', 'body', 'trim', 'transmission_type', 'drivetrain_type', 'model', 'color_name', 'country']
+    
+    sqlStatement = f"""
+        SELECT DISTINCT v.modelYear, v.model, v.body, v.trim, e.engine_type, e.engine_rpo,
+                        t.transmission_type, d.drivetrain_type, c.color_name, o.country
+        FROM (
+            SELECT v.vehicle_id
+            FROM Vehicles v
+            {current_filter_joins}
+            {current_where}
+            GROUP BY v.vehicle_id
+            {current_rpo_clause}
+        ) AS filtered_ids
+        JOIN Vehicles v ON v.vehicle_id = filtered_ids.vehicle_id
+        JOIN Engines e ON v.engine_id = e.engine_id
+        JOIN Transmissions t ON v.transmission_id = t.transmission_id
+        JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id
+        JOIN Colors c ON v.color_id = c.color_id
+        JOIN Orders o ON v.order_id = o.order_id
+    """
+    results = execute_read_query(conn, sqlStatement, current_params)
+    close_connection(conn)
+
+    distinct_values = {col: set() for col in columns}
+    distinct_engines = set()
+    
+    if results:
+        for result in results:
+            for col in columns:
+                if result.get(col) is not None:
+                    distinct_values[col].add(result[col])
+            if result.get('engine_type') is not None:
+                distinct_engines.add((result.get('engine_rpo'), result.get('engine_type')))
+
+    sorted_values = {
+        'modelYear': sorted(list(distinct_values['modelYear']), reverse=True),
+        **{col: sorted(list(distinct_values[col])) for col in columns if col != 'modelYear'}
+    }
+    sorted_engines = [
+        {'rpo': rpo, 'name': name}
+        for rpo, name in sorted(list(distinct_engines), key=lambda x: x[0] or "")
+    ]
+    return sorted_values, sorted_engines
+
 @app.route('/vehicles', methods=['GET'])
 def sort_price():
     year = request.args.get('year')
@@ -202,7 +287,7 @@ def sort_price():
     conditions = []
     params = []
 
-    # 1. BASE FILTER JOINS (SpecialEditions intentionally excluded for performance)
+    # 1. BASE FILTER JOINS
     filter_join_clause = """
         JOIN Engines e ON v.engine_id = e.engine_id
         JOIN Transmissions t ON v.transmission_id = t.transmission_id
@@ -334,113 +419,42 @@ def sort_price():
     else:
         order_clause = "ORDER BY v.vehicle_id DESC"
 
-    # 4. DROPDOWN GENERATOR (Optimized)
-    def get_all_distinct_values(current_where, current_params, current_filter_joins, current_rpo_clause):
-        conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
+    # 4. FETCH DROPDOWNS
+    if not where_clause:
+        # PULL FROM MEMORY CACHE (Super fast, 0 DB queries)
+        distinct_values, engine_list = get_cached_default_dropdowns()
+    else:
+        # RUN DYNAMIC DROPDOWN QUERY ONLY IF FILTERS ARE APPLIED
+        distinct_values, engine_list = get_all_distinct_values(where_clause, params, filter_join_clause, rpo_clause)
 
-        if not current_where:
-            # Fastest path for default page load
-            years = execute_read_query(conn, "SELECT DISTINCT modelYear FROM Vehicles ORDER BY modelYear DESC")
-            models = execute_read_query(conn, "SELECT DISTINCT model FROM Vehicles ORDER BY model ASC")
-            bodies = execute_read_query(conn, "SELECT DISTINCT body FROM Vehicles ORDER BY body ASC")
-            trims = execute_read_query(conn, "SELECT DISTINCT trim FROM Vehicles ORDER BY trim ASC")
-            engines = execute_read_query(conn, "SELECT engine_rpo AS rpo, engine_type AS name FROM Engines ORDER BY engine_rpo ASC")
-            trans = execute_read_query(conn, "SELECT DISTINCT transmission_type FROM Transmissions ORDER BY transmission_type ASC")
-            drivetrains = execute_read_query(conn, "SELECT DISTINCT drivetrain_type FROM Drivetrains ORDER BY drivetrain_type ASC")
-            colors = execute_read_query(conn, "SELECT DISTINCT color_name FROM Colors ORDER BY color_name ASC")
-            countries = execute_read_query(conn, "SELECT DISTINCT country FROM Orders ORDER BY country ASC")
-            close_connection(conn)
-
-            return {
-                'modelYear': [r['modelYear'] for r in years],
-                'model': [r['model'] for r in models],
-                'body': [r['body'] for r in bodies],
-                'trim': [r['trim'] for r in trims],
-                'transmission_type': [r['transmission_type'] for r in trans],
-                'drivetrain_type': [r['drivetrain_type'] for r in drivetrains],
-                'color_name': [r['color_name'] for r in colors],
-                'country': [r['country'] for r in countries]
-            }, engines
-
-        else:
-            # Optimized deferred join approach for fetching valid dropdowns on filtered views
-            columns = ['modelYear', 'body', 'trim', 'transmission_type', 'drivetrain_type', 'model', 'color_name', 'country']
-            
-            sqlStatement = f"""
-                SELECT DISTINCT v.modelYear, v.model, v.body, v.trim, e.engine_type, e.engine_rpo,
-                                t.transmission_type, d.drivetrain_type, c.color_name, o.country
-                FROM (
-                    SELECT v.vehicle_id
-                    FROM Vehicles v
-                    {current_filter_joins}
-                    {current_where}
-                    GROUP BY v.vehicle_id
-                    {current_rpo_clause}
-                ) AS filtered_ids
-                JOIN Vehicles v ON v.vehicle_id = filtered_ids.vehicle_id
-                JOIN Engines e ON v.engine_id = e.engine_id
-                JOIN Transmissions t ON v.transmission_id = t.transmission_id
-                JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id
-                JOIN Colors c ON v.color_id = c.color_id
-                JOIN Orders o ON v.order_id = o.order_id
-            """
-            results = execute_read_query(conn, sqlStatement, current_params)
-            close_connection(conn)
-
-            distinct_values = {col: set() for col in columns}
-            distinct_engines = set()
-            for result in results:
-                for col in columns:
-                    if result[col] is not None:
-                        distinct_values[col].add(result[col])
-                if result['engine_type'] is not None:
-                    distinct_engines.add((result['engine_rpo'], result['engine_type']))
-
-            sorted_values = {
-                'modelYear': sorted(list(distinct_values['modelYear']), reverse=True),
-                **{col: sorted(list(distinct_values[col])) for col in columns if col != 'modelYear'}
-            }
-            sorted_engines = [
-                {'rpo': rpo, 'name': name}
-                for rpo, name in sorted(list(distinct_engines), key=lambda x: x[0] or "")
-            ]
-            return sorted_values, sorted_engines
-
-    # 5. FETCH DATA
-    distinct_values, engine_list = get_all_distinct_values(where_clause, params, filter_join_clause, rpo_clause)
-
-    year_list = distinct_values['modelYear']
-    body_list = distinct_values['body']
-    trim_list = distinct_values['trim']
-    trans_list = distinct_values['transmission_type']
-    drivetrain_list = distinct_values['drivetrain_type']
-    model_list = distinct_values['model']
-    color_list = distinct_values['color_name']
-    country_list = distinct_values['country']
-
+    # 5. FETCH CONSOLIDATED DATA & TOTAL COUNT IN ONE QUERY
     conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
     
-    # Inner subquery specifically to grab the paginated IDs rapidly
-    inner_sql = f"""
-        SELECT v.vehicle_id
-        FROM Vehicles v {filter_join_clause}
-        {where_clause}
-        GROUP BY v.vehicle_id
-        {rpo_clause}
-        {order_clause}
-        LIMIT %s OFFSET %s
-    """
-
-    # Outer query to fetch the wide dataset and attach Special Editions purely for those 100 rows
+    # We include v.msrp, v.vin, v.modelYear in the grouping so the order_clause can access them
     select = f"""
+        WITH MatchingVehicles AS (
+            SELECT v.vehicle_id, v.msrp, v.vin, v.modelYear
+            FROM Vehicles v {filter_join_clause}
+            {where_clause}
+            GROUP BY v.vehicle_id, v.msrp, v.vin, v.modelYear
+            {rpo_clause}
+        ),
+        TotalCount AS (
+            SELECT COUNT(*) AS total FROM MatchingVehicles
+        ),
+        Paginated AS (
+            SELECT vehicle_id
+            FROM MatchingVehicles
+            {order_clause}
+            LIMIT %s OFFSET %s
+        )
         SELECT v.vehicle_id, v.vin, v.modelYear, v.model, v.body, v.trim,
             e.engine_type, t.transmission_type, d.drivetrain_type,
             c.color_name, v.msrp, o.country,
+            (SELECT total FROM TotalCount) AS total_items,
             GROUP_CONCAT(DISTINCT se.special_desc ORDER BY se.special_desc ASC SEPARATOR ', ') AS special_desc
-        FROM (
-            {inner_sql}
-        ) AS page_keys
-        JOIN Vehicles v ON v.vehicle_id = page_keys.vehicle_id
+        FROM Paginated p
+        JOIN Vehicles v ON v.vehicle_id = p.vehicle_id
         JOIN Engines e ON v.engine_id = e.engine_id
         JOIN Transmissions t ON v.transmission_id = t.transmission_id
         JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id
@@ -449,41 +463,33 @@ def sort_price():
         LEFT JOIN SpecialEditions se ON v.vehicle_id = se.vehicle_id
         GROUP BY v.vehicle_id, v.vin, v.modelYear, v.model, v.body, v.trim,
                  e.engine_type, t.transmission_type, d.drivetrain_type,
-                 c.color_name, v.msrp, o.country
+                 c.color_name, v.msrp, o.country, total_items
         {order_clause}
     """
     
     query_params = params + [limit, offset]
     viewTable = execute_read_query(conn, select, query_params)
-
-    # 6. TOTAL COUNT CALCULATION
-    if where_clause:
-        totalSql = f"""
-            SELECT COUNT(*) AS total FROM (
-                SELECT v.vehicle_id 
-                FROM Vehicles v {filter_join_clause}
-                {where_clause}
-                GROUP BY v.vehicle_id {rpo_clause}
-            ) AS filtered_vehicles
-        """
-        total_items = execute_read_query(conn, totalSql, params)[0]['total']
-    else:
-        total_items = execute_read_query(conn, "SELECT COUNT(vehicle_id) AS total FROM Vehicles")[0]['total']
-
     close_connection(conn)
+
+    # 6. EXTRACT TOTAL AND CLEANUP JSON
+    total_items = viewTable[0]['total_items'] if viewTable else 0
+    
+    # Remove the total_items column from the individual row dicts before returning
+    for row in viewTable:
+        row.pop('total_items', None)
 
     return jsonify({
         'data': viewTable,
         'total': total_items,
-        'year': year_list,
-        'model': model_list,
-        'body': body_list,
-        'trim': trim_list,
+        'year': distinct_values['modelYear'],
+        'model': distinct_values['model'],
+        'body': distinct_values['body'],
+        'trim': distinct_values['trim'],
         'engine': engine_list,
-        'trans': trans_list,
-        'drivetrain': drivetrain_list,
-        'color': color_list,
-        'country': country_list
+        'trans': distinct_values['transmission_type'],
+        'drivetrain': distinct_values['drivetrain_type'],
+        'color': distinct_values['color_name'],
+        'country': distinct_values['country']
     })
 
 @app.route('/stats', methods=['GET'])

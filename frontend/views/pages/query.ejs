@@ -67,6 +67,31 @@
             color: #a0a0a0;
             opacity: 1; 
         }
+
+        /* SQL Copy Button Styles */
+        .sql-container {
+            position: relative;
+        }
+        
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 0.8rem;
+            padding: 4px 10px;
+            background-color: #2b2b2b;
+            color: #d4d4d4;
+            border: 1px solid #555;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            z-index: 10;
+        }
+        
+        .copy-btn:hover {
+            background-color: #444;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -95,7 +120,10 @@
 
                 <div id="resultsContainer" style="display: none;">
                     <h4>Generated SQL</h4>
-                    <pre class="ai-sql-block" id="sqlOutput"></pre>
+                    <div class="sql-container">
+                        <pre class="ai-sql-block" id="sqlOutput"></pre>
+                        <button id="copySqlBtn" class="copy-btn">Copy</button>
+                    </div>
                     
                     <div class="stats d-flex justify-content-between align-items-end mt-4 mb-2">
                         <p id="rowCount" style="color: rgb(103, 103, 103); margin: 0;"></p>
@@ -418,6 +446,31 @@
                 tBody.appendChild(tr);
             });
         }
+
+        // Copy SQL to Clipboard Logic
+        document.getElementById('copySqlBtn').addEventListener('click', function() {
+            const sqlText = document.getElementById('sqlOutput').textContent;
+            navigator.clipboard.writeText(sqlText).then(() => {
+                const btn = document.getElementById('copySqlBtn');
+                const originalText = btn.textContent;
+                const originalBg = btn.style.backgroundColor;
+                const originalBorder = btn.style.borderColor;
+
+                btn.textContent = 'Copied!';
+                btn.style.backgroundColor = '#198754'; // Bootstrap success green
+                btn.style.borderColor = '#198754';
+                btn.style.color = 'white';
+
+                setTimeout(() => {
+                    btn.textContent = 'Copy';
+                    btn.style.backgroundColor = '';
+                    btn.style.borderColor = '';
+                    btn.style.color = '#d4d4d4';
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+            });
+        });
     </script>
 </body>
 </html>

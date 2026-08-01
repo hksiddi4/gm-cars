@@ -48,8 +48,9 @@ Rules:
 6. Transmission: Automatic `t.transmission_type LIKE 'A%'`, Manual `t.transmission_type LIKE 'M%'`. Drivetrains: 'RWD', 'AWD', '4WD'.
 7. Use wildcard `LIKE` for generic color matching (e.g., c.color_name LIKE '%ORANGE%').
 8. Trims vs Special Editions: Trims are in `v.trim`. Packages like '1LE', 'ZTK' are in SpecialEditions. 
-9. Package Filtering: To filter by a package or special edition, you MUST use a correlated EXISTS subquery in the WHERE clause: `EXISTS (SELECT 1 FROM SpecialEditions se WHERE se.vehicle_id = v.vehicle_id AND se.special_desc LIKE '%1LE%')`. Do NOT repeat the GROUP_CONCAT subquery in the WHERE clause.
-10. Corvettes: Models use `v.model LIKE 'CORVETTE%'`.
+9. Package Filtering: To filter by a package or special edition, you MUST use a correlated EXISTS subquery in the WHERE clause: `EXISTS (SELECT 1 FROM SpecialEditions se WHERE se.vehicle_id = v.vehicle_id AND se.special_desc LIKE '%Keyword%')`.
+10. Package Keywords Reference: Map user requests to these descriptions: 'Collector', 'Garage 56', '1LE', 'Hendrick', 'Indy 500', 'Redline', 'Shock and Steel', 'C8.R', 'ZTK', 'Z07', 'Z51', 'Grand Sport', '70th Anniversary', 'Stars & Steel', 'Quail Silver', 'Watkins Glen', 'Sebring', 'Blackwing', 'Omega Edition', 'Extreme Off-Road'.
+11. Corvettes: Models use `v.model LIKE 'CORVETTE%'`.
 """
 
 @app.route('/ai-query', methods=['POST'])

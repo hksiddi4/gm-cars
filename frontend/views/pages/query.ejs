@@ -37,8 +37,12 @@
             0% { transform: translate(-50%, -50%) rotate(0deg); }
             100% { transform: translate(-50%, -50%) rotate(360deg); }
         }
+
         #loadingContainer .spinner {
-            animation: spinAndCenter 1s linear infinite;
+            position: static;
+            transform: none;
+            margin: 0 auto;
+            animation: spin 1s linear infinite;
         }
         
         /* --- Table Layout Fixes (Isolated to this page) --- */

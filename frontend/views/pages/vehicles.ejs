@@ -466,6 +466,10 @@
             if (!selectElement) return;
 
             selectElement.addEventListener('change', function(event) {
+                // Dim immediately before initiating page load
+                const table = document.getElementById('allTable');
+                if (table) table.classList.add('table-refreshing');
+
                 const value = event.target.value;
                 const url = new URL(window.location.href);
                 if (value) {

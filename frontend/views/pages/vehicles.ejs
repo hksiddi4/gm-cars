@@ -123,6 +123,11 @@
                     Data available from May 17, 2019 onward
                 </div>
             <% } %>
+            <% if (selectedYear && Number(selectedYear) < 2023) { %>
+                <div style="color: #cc6666; margin-bottom: 10px;">
+                    Window Sticker's avialable from January 1, 2022 onward
+                </div>
+            <% } %>
             <%- include('../partials/pagination', { currentPage, totalPages, baseQuery, buildQuery }) %>
             <!-- Vehicles Table -->
             <div id="top-scroll-wrapper">

@@ -534,6 +534,33 @@
             const rpoSearchInput = document.getElementById('rpoSearchInput');
             const rpoResults = document.getElementById('rpoResults');
 
+            rpoSearchInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    
+                    const code = rpoSearchInput.value.toUpperCase().trim();
+                    
+                    // Only trigger search if the code is exactly 3 characters long
+                    if (code.length === 3) {
+                        const url = new URL(window.location.href);
+                        const currentRPO = url.searchParams.get('rpo');
+                        let newRPO;
+
+                        if (currentRPO) {
+                            const rpoSet = new Set(currentRPO.split(','));
+                            rpoSet.add(code);
+                            newRPO = Array.from(rpoSet).join(',');
+                        } else {
+                            newRPO = code;
+                        }
+
+                        url.searchParams.set('rpo', newRPO);
+                        url.searchParams.set('page', '1');
+                        window.location.href = url.toString();
+                    }
+                }
+            });
+
             window.renderSelectedRPOs = function() {
                 const container = document.getElementById('selectedRPOs');
                 container.innerHTML = '';

@@ -579,6 +579,7 @@ const camaroRpo = {
   "NPP": "Exhaust, dual-mode, performance",
   "NV9": "Steering, power",
   "OAR": "Pre-Production Vehicle",
+  "R7V": "Show Vehicle ID",
   "P3H": "Bowties, Black, front and rear",
   "PCJ": "LPO, Dark Tint Rear Lighting Package",
   "PCK": "LPO, Black Accent Exterior Package",
@@ -943,6 +944,7 @@ const corvetteRpo = {
   "NPP": "Exhaust, performance",
   "NWI": "Exhaust tips, bright",
   "OAR": "Pre-Production Vehicle",
+  "R7V": "Show Vehicle ID",
   "P0H": "12 Months OnStar Connect Plus",
   "P0I": "24 Months OnStar Connect Plus",
   "P0J": "24 Months OnStar Protect",
@@ -1186,6 +1188,7 @@ const corvetteRpo = {
 
 const escaladeRpo = { // 2025-2026
   "OAR": "Pre-Production Vehicle",
+  "R7V": "Show Vehicle ID",
   "5FD": "LPO, 24\" (61 cm) Bright alloy wheels",
   "5FE": "LPO, 24\" (61 cm) Black alloy wheels",
   "5JL": "LPO, Front 6-Piston Brembo Brake Upgrade with Color Matched Rear Calipers",
@@ -1718,6 +1721,7 @@ const escaladeRpo = { // 2025-2026
 
 const escaladeiqRpo = {
   "OAR": "Pre-Production Vehicle",
+  "R7V": "Show Vehicle ID",
   "41T": "Black roof",
   "5AV": "LPO, GM Energy PowerShift Charger, Residential bidirectional EV charger",
   "5CH": "LPO, GM PowerUp 2 (J1772) Charger, Residential EV charger",
@@ -3116,6 +3120,7 @@ const ct5vRpo = {
 
 const hummerRpo = {
   "OAR": "Pre-Production Vehicle",
+  "R7V": "Show Vehicle ID",
   "5AV": "LPO, GM Energy PowerShift Charger, Residential bidirectional EV charger",
   "5C6": "Cargo tie downs, (8)",
   "5CH": "LPO, GM PowerUp 2 (J1772) Charger, Residential EV charger",
@@ -3341,6 +3346,7 @@ const hummerRpo = {
 
 const hummersuvRpo = {
   "OAR": "Pre-Production Vehicle",
+  "R7V": "Show Vehicle ID",
   "5AV": "LPO, GM Energy PowerShift Charger, Residential bidirectional EV charger",
   "5C6": "Cargo tie-downs",
   "5CH": "LPO, GM PowerUp 2 (J1772) Charger, Residential EV charger",

@@ -216,7 +216,7 @@
                   %>
                     <% if (rpo) { %>
                       <tr style="cursor: pointer;" onmousedown="handleMouseDown(event);" data-url="/vehicles?rpo=<%= rpo %>">
-                        <td class="<%= rpo.includes('OAR') ? 'highlight' : '' %>"><%= rpo %></td>
+                        <td class="<%= rpo.includes('OAR') ? 'highlight' : '' %> <%= rpo.includes('R7V') ? 'text-highlight' : '' %>"><%= rpo %></td>
                         <td class="rpo-description" data-code="<%= rpo %>" style="text-align: left;"></td>
                       </tr>
                     <% } %>

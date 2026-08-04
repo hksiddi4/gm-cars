@@ -13,6 +13,11 @@ const rateLimit = require('express-rate-limit');
 const authLimiter = rateLimit({
     windowMs: 5 * 60 * 1000,
     max: 3,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req, res) => {
+        return req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.ip;
+    },
     handler: (req, res) => {
         res.status(429).send(`
             <!DOCTYPE html>
@@ -48,11 +53,20 @@ const searchLimiter = rateLimit({
     windowMs: 5 * 60 * 1000,
     max: 30,
     standardHeaders: true,
-    legacyHeaders: false
+    legacyHeaders: false,
+    keyGenerator: (req, res) => {
+        return req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.ip;
+    }
 });
 
 const apiLimiter = rateLimit({
     windowMs: 5 * 60 * 1000,
+    max: 3,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req, res) => {
+        return req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.ip;
+    },
     handler: (req, res) => {
         res.status(429).json({ 
             error: 'Rate limit exceeded', 

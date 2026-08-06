@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <%- include('../partials/head'); %>
-    <title>Daily Production Stats</title>
+    <title>Daily Production Stats - GM Build Counts</title>
     <!-- Load Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -47,7 +47,7 @@
                     </a>
                 </div>
 
-                <!-- Filters Row (Styled identical to stats.ejs) -->
+                <!-- Filters Row -->
                 <div class="d-flex flex-wrap gap-2 mb-4 w-100">
                     <% if (stats.available_models && stats.available_models.length > 0) { %>
                         <div class="statsDropdown" style="max-width: 300px;">
@@ -148,11 +148,44 @@
                             </div>
                         </div>
 
-                        <!-- Special Editions (Table matching main.css styles) -->
+                        <!-- Special Editions (Linked to /vehicles) -->
                         <div class="col-12">
                             <div class="dashboard-card">
-                                <h5 class="text-white fw-bold mb-3 text-center">Packages/Options</h5>
-                                <% const specialKeys = Object.keys(stats.specialedition); %>
+                                <h5 class="text-white fw-bold mb-3 text-center">Packages/Editions</h5>
+                                <% 
+                                    const specialKeys = Object.keys(stats.specialedition); 
+                                    // Reverse lookup map to turn DB descriptions into valid RPO codes for the vehicles filter
+                                    const specialToRpoMap = {
+                                        "1LE": "A1Y",
+                                        "Collectors Edition": "Z4B",
+                                        "Garage 56 Special Edition": "X56",
+                                        "Z51 Performance Package": "Z51",
+                                        "IMSA GTLM Championship C8.R Edition": "ZCR",
+                                        "70th Anniversary Edition": "Y70",
+                                        "Z07 Performance Package": "Z07",
+                                        "Watkins Glen IMSA Edition": "ZLE",
+                                        "Sebring IMSA Edition": "ZLD",
+                                        "Road Atlanta IMSA Edition": "ZLG",
+                                        "Arrival Edition": "ZLK",
+                                        "Impact Edition": "ZLJ",
+                                        "Elevation Edition": "ZLR",
+                                        "120th Anniversary Edition": "ABQ",
+                                        "Pre-Production Vehicle": "OAR",
+                                        "Show Vehicle": "R7V",
+                                        "Hertz / Hendrick Motorsports Edition": "PEH",
+                                        "20th Anniversary of V-Series Special Edition": "ZLT",
+                                        "ZTK Track Performance Package": "ZTK",
+                                        "Extreme Off-Road Package": "Z6X",
+                                        "Omega Edition": "WFP",
+                                        "Quail Silver Limited Edition": "ZRA",
+                                        "Stars & Steel Limited Edition": "USA",
+                                        "Precision Package": "V8V",
+                                        "Deep Ocean Appearance Package": "PCK1",
+                                        "Grand Sport Launch Edition": "Z25",
+                                        "Z52 Sport Performance Package": "FEB",
+                                        "Z52 Track Performance Package": "FEY"
+                                    };
+                                %>
                                 <% if (specialKeys.length === 0) { %>
                                     <p class="text-muted mt-3 text-center">No special editions processed today.</p>
                                 <% } else { %>
@@ -167,7 +200,22 @@
                                             <tbody>
                                                 <% specialKeys.forEach(function(key) { %>
                                                     <tr>
-                                                        <td><%= key %></td>
+                                                        <td style="text-align: center;">
+                                                            <% const mappedRpo = specialToRpoMap[key]; %>
+                                                            <% if (mappedRpo) { %>
+                                                                <% 
+                                                                    let pkgLink = `/vehicles?date=${stats.current_date}&rpo=${mappedRpo}`;
+                                                                    if (selectedModel) {
+                                                                        pkgLink += `&model=${encodeURIComponent(selectedModel)}`;
+                                                                    }
+                                                                %>
+                                                                <a href="<%= pkgLink %>" style="color: #0d6efd; text-decoration: none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
+                                                                    <%= key %>
+                                                                </a>
+                                                            <% } else { %>
+                                                                <%= key %>
+                                                            <% } %>
+                                                        </td>
                                                         <td class="fw-bold"><%= formatCurrency(stats.specialedition[key]) %></td>
                                                     </tr>
                                                 <% }); %>
@@ -189,38 +237,24 @@
         const rawData = <%- JSON.stringify(stats) %>;
         
         // Define uniform styling for chart text
-        Chart.defaults.color = '#e0e0e0'; // Slightly softer white for readability
+        Chart.defaults.color = '#e0e0e0';
         Chart.defaults.font.family = "'Inter', sans-serif";
 
-        // Muted, accessible color palette for standard charts
-        // These are desaturated to reduce eye strain while maintaining distinction
         const mutedPalette = [
-            '#6b8eb3', // Muted Blue
-            '#7b9b7a', // Muted Green
-            '#b36b6b', // Muted Red
-            '#b3a36b', // Muted Gold
-            '#6bb3a3', // Muted Teal
-            '#9b7a9b', // Muted Purple
-            '#b38e6b', // Muted Orange
-            '#7a899b', // Muted Slate
-            '#8e6bb3'  // Muted Violet
+            '#6b8eb3', '#7b9b7a', '#b36b6b', '#b3a36b', '#6bb3a3', '#9b7a9b', '#b38e6b', '#7a899b', '#8e6bb3'
         ];
 
-        // Custom Hex Map for GM Exterior Colors based on RPO codes
         const rpoHexMap = {
-            // Blacks & Darks
             'GBA': '#1a1a1a', 'GB8': '#383838', 'GLK': '#2b282b', 'GNW': '#2b3136', 
             'G7W': '#778580', 'GAB': '#301518', 'GJI': '#4c5962', 'GXN': '#403a28',
             'GLU': '#252c38', 'GAI': '#2c323a', 'GXP': '#254258', 'GXF': '#353942',
             'GUI': '#65594b', 'GS6': '#7d7875', 'GRW': '#acaba7', 'GEC': '#35393f',
             'GAR': '#303134', 'BLACK MEETS KETTLE': '#161617',
             
-            // Whites
             'GAZ': '#c4ced1', 'G8G': '#cdd1d5', 'G1W': '#b0b2b2', 'G4J': '#e0e3e7',
             'ABALONE WHITE': '#bcbcbc', 'GSJ': '#b1b6be', 'G9T': '#b7d3e7',
             'G7X': '#b6c6d0',
             
-            // Silvers & Greys
             'GAN': '#b3bcc2', 'GXD': '#737778', 'G9K': '#70767e', 'G9F': '#bac6cf', 
             'GA7': '#727873', 'GXA': '#525a5f', 'G7Q': '#323535', 'GKA': '#686c70', 
             'GRF': '#989da3', 'GNO': '#6d7276', 'GBL': '#6e7474', 'G6M': '#414346',
@@ -229,34 +263,28 @@
             'GCI': '#4b5053', 'G35': '#404c5b', 'COPPERTINO METALLIC': '#a29388',
             'BARB WIRE': '#5a616a',
             
-            // Reds
             'G7C': '#b61c1d', 'GKZ': '#c62222', 'G7E': '#bf2a32', 'G1E': '#91353d', 
             'GPH': '#6f1011', 'GNT': '#902124', 'GSK': '#a4292c', 'GPJ': '#ba4e58',
             'TACTICAL TINT': '#c42f33', 'GLR': '#351c1c', 'GLL': '#913f38',
             'GHX': '#922a26', 'G48': '#59322a',
             
-            // Blues
             'GMO': '#238ff7', 'GKK': '#24365c', 'GJV': '#0158af', 'GS7': '#235fac', 
             'GTR': '#2a416d', 'GLG': '#536475', 'GXE': '#316982', 'GLD': '#374b68',
             'GLN': '#4f666c', 'G3Y': '#24328e', 'SEYCHELLES METALLIC': '#3592a4',
             'SEEKER METALLIC': '#113446', 'GXU': '#4b5764', 'G9M': '#11151d',
             'G8L': '#16118b', 'G6I': '#1b3034', 'G1M': '#374357',
             
-            // Yellows & Golds
             'GC6': '#eed025', 'GD0': '#e5e245', 'GBK': '#bd921d', 'GCP': '#b5a12d',
             'GKO': '#b6d13a',
             
-            // Oranges
             'GC5': '#c36224', 'G26': '#e96122', 'G16': '#e25a39', 'GCF': '#953f15',
             'GAG': '#c62c1a', 'HIGH VOLTAGE TINT': '#d2653b',
             
-            // Greens
             'GVR': '#7d8a78', 'GJ0': '#1f4229', 'G4Z': '#3b812c', 'G9E': '#4c5e46',
             'GOG': '#00727e', 'KIMONO METALLIC': '#123e30', 'GXR': '#808d80',
             'GJ0': '#222724', 'GBW': '#214843', 'CHARTREUSE METALLIC': '#a3b752',
             'CHARTREUSE MATTE': '#a5b067',
             
-            // Purples/Others
             'GXL': '#1a153a', 'GGA': '#3e3248', 'G8T': '#4c4f54', 'G42': '#b3a492',
             'GMU': '#8f8983', 'GMF': '#bd4836', 'G9N': '#9a9082', 'G8X': '#40354c',
         };
@@ -271,24 +299,19 @@
             const showLegend = ['pie', 'doughnut'].includes(type);
             const hasScales = ['bar', 'line'].includes(type);
 
-            // Determine Background Colors dynamically
             let bgColors = mutedPalette;
             let borderColors = '#2b2b2b';
             let borderWidth = 1;
 
             if (ctxId === 'colorChart') {
-                // Generate the exact color for the exterior color chart
                 bgColors = labels.map(label => {
                     const rpo = label.split(' - ')[0]; 
-                    // Fallback to a neutral grey if RPO is missing from the map
                     return rpoHexMap[rpo] || rpoHexMap[label] || '#6c757d'; 
                 });
                 
-                // Add a subtle border to the color bars so whites/blacks don't blend into background
                 borderColors = 'rgba(255,255,255,0.15)'; 
                 borderWidth = 2;
             } else if (!showLegend) {
-                // If it's a standard bar chart, we can just map the palette over and over
                 bgColors = labels.map((_, i) => mutedPalette[i % mutedPalette.length]);
             }
 
@@ -297,13 +320,18 @@
                 maintainAspectRatio: false,
                 interaction: {
                     mode: 'index',
-                    intersect: false, // Ensures hover tooltips appear even if cursor is on empty space near a bar
+                    intersect: false, 
                 },
                 plugins: {
                     legend: { 
                         display: showLegend, 
-                        position: 'right',
-                        labels: { color: '#e0e0e0' }
+                        // Set legend to bottom permanently for Pie/Doughnuts to prevent cutoffs on smaller screens
+                        position: 'bottom', 
+                        labels: { 
+                            color: '#e0e0e0',
+                            boxWidth: 12, // Reduced box width to make elements fit tighter
+                            padding: 15
+                        }
                     }
                 },
                 ...overrideOptions
@@ -312,7 +340,7 @@
             if (hasScales) {
                 chartOptions.scales = {
                     x: {
-                        grid: { color: 'rgba(255, 255, 255, 0.1)' }, // Softer grid lines
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
                         ticks: { color: '#e0e0e0' },
                         ...(overrideOptions.scales?.x || {})
                     },
@@ -329,7 +357,7 @@
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'Count', // Makes the tooltip read "Count: X" instead of just "X"
+                        label: 'Count', 
                         data: dataValues,
                         backgroundColor: bgColors,
                         borderWidth: borderWidth,
@@ -348,28 +376,25 @@
             createChart('transChart', 'doughnut', rawData.trans);
             createChart('drivetrainChart', 'pie', rawData.drivetrain);
             
-            // 1. Dynamic Height for Trim (Prevents squishing on mobile if many trims)
             const trimCount = Object.keys(rawData.trim).length;
             if (trimCount > 6) {
                 document.getElementById('trimChart').parentElement.style.height = `${trimCount * 35}px`;
             }
             createChart('trimChart', 'bar', rawData.trim, {
-                indexAxis: 'y', // Makes the bar chart horizontal
+                indexAxis: 'y', 
                 scales: { 
-                    y: { ticks: { color: '#e0e0e0', autoSkip: false } } // Prevents Chart.js from hiding labels
+                    y: { ticks: { color: '#e0e0e0', autoSkip: false } } 
                 }
             });
 
-            // 2. Dynamic Height for Colors + Horizontal formatting
             const colorCount = Object.keys(rawData.color).length;
             if (colorCount > 6) {
-                // Expands the container height by 35px per color so labels never overlap
                 document.getElementById('colorChart').parentElement.style.height = `${colorCount * 35}px`;
             }
             createChart('colorChart', 'bar', rawData.color, {
-                indexAxis: 'y', // Makes the bar chart horizontal for long color names
+                indexAxis: 'y', 
                 scales: { 
-                    y: { ticks: { color: '#e0e0e0', autoSkip: false } } // Prevents Chart.js from hiding labels
+                    y: { ticks: { color: '#e0e0e0', autoSkip: false } } 
                 }
             });
         }

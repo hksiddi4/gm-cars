@@ -37,10 +37,18 @@
                         %>
                         <h1 style="font-weight: bold;" class="mb-0"><%= formattedDate %></h1>
                         
-                        <!-- Invisible Date Picker directly overlaid on the Icon -->
-                        <div class="position-relative ms-3 mt-1" style="width: 32px; height: 32px;">
+                        <!-- Fixed Calendar Picker -->
+                        <div class="position-relative ms-3 mt-1 d-flex align-items-center">
+                            <!-- Clickable Icon -->
+                            <i class="bi bi-calendar-date fs-3 text-white" 
+                               style="cursor: pointer; transition: color 0.2s ease;" 
+                               onmouseover="this.style.color='#0d6efd'" 
+                               onmouseout="this.style.color='white'"
+                               onclick="try { document.getElementById('dailyDatePicker').showPicker(); } catch(e) { document.getElementById('dailyDatePicker').focus(); }"></i>
+                            
+                            <!-- Hidden Native Input -->
                             <input type="date" id="dailyDatePicker" 
-                                   style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 10;"
+                                   style="position: absolute; opacity: 0; width: 1px; height: 1px; border: none; padding: 0; pointer-events: none;"
                                    value="<%= stats.current_date %>"
                                    onchange="
                                        const url = new URL(window.location.href);
@@ -48,10 +56,6 @@
                                        else url.searchParams.delete('date');
                                        window.location.href = url.toString();
                                    ">
-                            <i class="bi bi-calendar-date fs-3 text-white position-absolute" 
-                               style="top: 0; left: 0; transition: color 0.2s ease; z-index: 1;" 
-                               onmouseover="this.style.color='#0d6efd'" 
-                               onmouseout="this.style.color='white'"></i>
                         </div>
                     </div>
                     
@@ -215,7 +219,7 @@
                                     <p class="text-muted mt-3 text-center">No special editions processed today.</p>
                                 <% } else { %>
                                     <div class="table-responsive mt-3">
-                                        <table class="table-stats-veh table-hover">
+                                        <table class="table-stats-veh table-hover border">
                                             <thead>
                                                 <tr>
                                                     <th>Package / Edition</th>
@@ -234,17 +238,10 @@
                                                             }
                                                         }
                                                     %>
-                                                    <% if (pkgLink) { %>
-                                                        <tr style="cursor: pointer;" onclick="window.location.href='<%= pkgLink %>'">
-                                                            <td style="text-align: center; color: #0d6efd;"><%= key %></td>
-                                                            <td class="fw-bold"><%= formatCurrency(stats.specialedition[key]) %></td>
-                                                        </tr>
-                                                    <% } else { %>
-                                                        <tr>
-                                                            <td style="text-align: center;"><%= key %></td>
-                                                            <td class="fw-bold"><%= formatCurrency(stats.specialedition[key]) %></td>
-                                                        </tr>
-                                                    <% } %>
+                                                    <tr <%= pkgLink ? `style="cursor: pointer;" onclick="window.location.href='${pkgLink}'"` : '' %>>
+                                                        <td style="text-align: center;"><%= key %></td>
+                                                        <td class="fw-bold"><%= formatCurrency(stats.specialedition[key]) %></td>
+                                                    </tr>
                                                 <% }); %>
                                             </tbody>
                                         </table>
@@ -347,7 +344,7 @@
                 maintainAspectRatio: false,
                 interaction: {
                     mode: 'index',
-                    axis: isHorizontal ? 'y' : 'x', // FIX: Forces tooltips to properly track mouse on horizontal charts
+                    axis: isHorizontal ? 'y' : 'x', 
                     intersect: false, 
                 },
                 plugins: {

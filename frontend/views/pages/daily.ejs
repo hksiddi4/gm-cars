@@ -19,6 +19,32 @@
             height: 300px;
             width: 100%;
         }
+        
+        /* Responsive Formatting for Header Row */
+        .daily-title {
+            font-weight: bold;
+            font-size: 2rem;
+        }
+        .daily-veh-btn {
+            font-size: 1.25rem;
+            padding: 0.5rem 1.5rem;
+        }
+        .daily-cal-icon {
+            font-size: 1.75rem;
+        }
+        
+        @media (max-width: 768px) {
+            .daily-title {
+                font-size: 1.15rem;
+            }
+            .daily-veh-btn {
+                font-size: 0.75rem !important;
+                padding: 0.4rem 0.7rem !important;
+            }
+            .daily-cal-icon {
+                font-size: 1.35rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -28,31 +54,34 @@
             <div class="container-fluid">
                 
                 <!-- Title and Button Row -->
-                <div class="d-flex justify-content-between align-items-center mt-4 mb-2">
-                    <div class="d-flex align-items-center">
-                        <% 
-                            const targetDateStr = stats.current_date ? stats.current_date + "T00:00:00" : new Date().toISOString();
-                            const dateObj = new Date(targetDateStr);
-                            const formattedDate = dateObj.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-                        %>
-                        <h1 style="font-weight: bold;" class="mb-0"><%= formattedDate %></h1>
-                        
-                        <!-- Clickable Calendar Icon with off-screen native input for 100% browser compatibility -->
-                        <i class="bi bi-calendar-date fs-3 text-white ms-3 mt-1" 
-                           style="cursor: pointer; transition: color 0.2s ease;" 
-                           onmouseover="this.style.color='#0d6efd'" 
-                           onmouseout="this.style.color='white'"
-                           onclick="document.getElementById('dailyDatePicker').showPicker()"></i>
-                        
-                        <input type="date" id="dailyDatePicker" 
-                               style="position: absolute; left: -9999px; width: 0; height: 0; border: none;"
-                               value="<%= stats.current_date %>"
-                               onchange="
-                                   const params = new URLSearchParams(window.location.search);
-                                   if (this.value) params.set('date', this.value);
-                                   else params.delete('date');
-                                   window.location.search = params.toString();
-                               ">
+                <div class="d-flex justify-content-between align-items-center mt-4 mb-3 gap-2 flex-nowrap">
+                    <% 
+                        const targetDateStr = stats.current_date ? stats.current_date + "T00:00:00" : new Date().toISOString();
+                        const dateObj = new Date(targetDateStr);
+                        const formattedDate = dateObj.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                    %>
+                    <h1 class="daily-title mb-0 text-nowrap"><%= formattedDate %></h1>
+                    
+                    <!-- Centered Calendar Picker -->
+                    <div class="d-flex justify-content-center flex-grow-1">
+                        <div class="position-relative d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <!-- Visible Icon -->
+                            <i class="bi bi-calendar-date daily-cal-icon text-white position-absolute" 
+                               style="transition: color 0.2s ease; z-index: 1;"></i>
+                            
+                            <!-- Invisible Touch-Target Input -->
+                            <input type="date" id="dailyDatePicker" 
+                                   style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 2;"
+                                   value="<%= stats.current_date %>"
+                                   onmouseover="this.previousElementSibling.style.color='#0d6efd'"
+                                   onmouseout="this.previousElementSibling.style.color='white'"
+                                   onchange="
+                                       const params = new URLSearchParams(window.location.search);
+                                       if (this.value) params.set('date', this.value);
+                                       else params.delete('date');
+                                       window.location.search = params.toString();
+                                   ">
+                        </div>
                     </div>
                     
                     <% 
@@ -61,7 +90,7 @@
                             vehLink += `&model=${encodeURIComponent(selectedModel)}`;
                         }
                     %>
-                    <a href="<%= vehLink %>" class="model-btn px-4 py-2 fs-5 text-white text-decoration-none shadow-sm">
+                    <a href="<%= vehLink %>" class="model-btn daily-veh-btn text-white text-decoration-none shadow-sm text-nowrap">
                         <span class="fw-bold me-1"><%= formatCurrency(stats.total) %></span> 
                         <span class="fw-normal">Vehicles Added</span>
                     </a>
@@ -88,9 +117,9 @@
                 </div>
 
                 <% if (stats.total === 0) { %>
-                    <div class="alert alert-warning text-center mt-5" role="alert">
-                        <h4>No new vehicles were added to the database on <%= formattedDate %>.</h4>
-                        <p class="mb-0">Try selecting another date from the calendar icon above.</p>
+                    <div class="dashboard-card text-center mt-5 mx-auto" style="max-width: 600px;">
+                        <h4 class="text-white mb-3">No new vehicles were added to the database on <%= formattedDate %>.</h4>
+                        <p class="text-muted mb-0">Try selecting another date from the calendar icon above.</p>
                     </div>
                 <% } else { %>
                     <div class="row g-4">
@@ -234,7 +263,6 @@
                                                             }
                                                         }
                                                     %>
-                                                    <!-- Clean block ensures row is perfectly clickable without messing up text color -->
                                                     <% if (pkgLink) { %>
                                                         <tr style="cursor: pointer;" onclick="window.location.href='<%- pkgLink %>'">
                                                     <% } else { %>
@@ -362,16 +390,17 @@
                 ...overrideOptions
             };
 
+            // Smartly merge the custom scales formatting without losing the overrides
             if (hasScales) {
                 chartOptions.scales = {
                     x: {
-                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                        ticks: { color: '#e0e0e0' },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)', ...(overrideOptions.scales?.x?.grid || {}) },
+                        ticks: { color: '#e0e0e0', ...(overrideOptions.scales?.x?.ticks || {}) },
                         ...(overrideOptions.scales?.x || {})
                     },
                     y: {
-                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                        ticks: { color: '#e0e0e0' },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)', ...(overrideOptions.scales?.y?.grid || {}) },
+                        ticks: { color: '#e0e0e0', ...(overrideOptions.scales?.y?.ticks || {}) },
                         ...(overrideOptions.scales?.y || {})
                     }
                 };
@@ -401,6 +430,10 @@
             createChart('transChart', 'doughnut', rawData.trans);
             createChart('drivetrainChart', 'pie', rawData.drivetrain);
             
+            // Check for mobile layout to shrink horizontal label fonts
+            const isMobile = window.innerWidth < 768;
+            const chartFontSize = isMobile ? 8 : 12;
+
             const trimCount = Object.keys(rawData.trim).length;
             if (trimCount > 6) {
                 document.getElementById('trimChart').parentElement.style.height = `${trimCount * 35}px`;
@@ -408,7 +441,7 @@
             createChart('trimChart', 'bar', rawData.trim, {
                 indexAxis: 'y', 
                 scales: { 
-                    y: { ticks: { color: '#e0e0e0', autoSkip: false } } 
+                    y: { ticks: { autoSkip: false, font: { size: chartFontSize } } } 
                 }
             });
 
@@ -419,7 +452,7 @@
             createChart('colorChart', 'bar', rawData.color, {
                 indexAxis: 'y', 
                 scales: { 
-                    y: { ticks: { color: '#e0e0e0', autoSkip: false } } 
+                    y: { ticks: { autoSkip: false, font: { size: chartFontSize } } } 
                 }
             });
         }

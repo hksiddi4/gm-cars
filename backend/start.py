@@ -506,25 +506,33 @@ def sort_price():
 @app.route('/daily-stats', methods=['GET'])
 def daily_stats():
     model_filter = request.args.get('model')
+    date_filter = request.args.get('date')  # <-- Capture date from frontend
     conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
     
-    # 1. Grab DB's strict current date
-    date_rows = execute_read_query(conn, "SELECT DATE_FORMAT(CURRENT_DATE(), '%Y-%m-%d') as curr_date")
-    curr_date_str = date_rows[0]['curr_date'] if date_rows else None
+    # 1. Determine target date (Defaults to DB's current date if none provided)
+    if date_filter:
+        curr_date_str = date_filter
+        date_condition = "DATE(o.creation_date) = %s"
+        base_params = [date_filter]
+    else:
+        date_rows = execute_read_query(conn, "SELECT DATE_FORMAT(CURRENT_DATE(), '%Y-%m-%d') as curr_date")
+        curr_date_str = date_rows[0]['curr_date'] if date_rows else None
+        date_condition = "DATE(o.creation_date) = CURRENT_DATE()"
+        base_params = []
 
-    # 2. Find all distinct models that were produced today to populate the dropdown
-    models_sql = """
+    # 2. Find all distinct models produced on that specific date
+    models_sql = f"""
         SELECT DISTINCT v.model 
         FROM Vehicles v 
         JOIN Orders o ON v.order_id = o.order_id 
-        WHERE DATE(o.creation_date) = CURRENT_DATE() AND v.model IS NOT NULL 
+        WHERE {date_condition} AND v.model IS NOT NULL 
         ORDER BY v.model ASC
     """
-    model_rows = execute_read_query(conn, models_sql)
+    model_rows = execute_read_query(conn, models_sql, base_params if date_filter else None)
     available_models = [r['model'] for r in model_rows] if model_rows else []
 
-    # 3. Build main query for today's stats (FIXED JOIN AND ADDED RPOs)
-    sqlStatement = """
+    # 3. Main stats query
+    sqlStatement = f"""
         SELECT v.modelYear, v.model, v.body, v.trim, e.engine_type, e.engine_rpo,
                t.transmission_type, d.drivetrain_type, c.color_name, c.rpo_code,
                GROUP_CONCAT(DISTINCT se.special_desc SEPARATOR ', ') AS special_desc
@@ -535,9 +543,10 @@ def daily_stats():
         LEFT JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id
         LEFT JOIN Colors c ON v.color_id = c.color_id
         LEFT JOIN SpecialEditions se ON v.vehicle_id = se.vehicle_id
-        WHERE DATE(o.creation_date) = CURRENT_DATE()
+        WHERE {date_condition}
     """
-    params = []
+    
+    params = list(base_params)
 
     # Apply dropdown filter if passed
     if model_filter:
@@ -572,7 +581,6 @@ def daily_stats():
             bdy = r['body'] or 'Unknown'
             trm = r['trim'] or 'Unknown'
             
-            # Extract and format RPO + Name for Engines and Colors
             eng_type = r['engine_type'] or 'Unknown'
             eng_rpo = r['engine_rpo']
             eng = f"{eng_rpo} - {eng_type}" if eng_rpo and eng_rpo != 'N/A' else eng_type
@@ -597,7 +605,6 @@ def daily_stats():
                 for sp in r['special_desc'].split(', '):
                     stats['specialedition'][sp] = stats['specialedition'].get(sp, 0) + 1
 
-    # Sort dictionary counts descending, skipping metadata keys
     for key in stats:
         if key not in ['total', 'current_date', 'available_models']:
             stats[key] = dict(sorted(stats[key].items(), key=lambda item: item[1], reverse=True))

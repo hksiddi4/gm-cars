@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <%- include('../partials/head'); %>
-    <title>Daily Production Stats - GM Build Counts</title>
+    <title>Daily Production Stats</title>
     <!-- Load Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -29,11 +29,34 @@
                 
                 <!-- Title and Button Row -->
                 <div class="d-flex justify-content-between align-items-center mt-4 mb-2">
-                    <% 
-                        const today = new Date();
-                        const formattedDate = today.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-                    %>
-                    <h1 style="font-weight: bold;" class="mb-0"><%= formattedDate %></h1>
+                    <div class="d-flex align-items-center">
+                        <% 
+                            // Add T00:00:00 to prevent JS from shifting timezone into the previous day
+                            const targetDateStr = stats.current_date ? stats.current_date + "T00:00:00" : new Date().toISOString();
+                            const dateObj = new Date(targetDateStr);
+                            const formattedDate = dateObj.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                        %>
+                        <h1 style="font-weight: bold;" class="mb-0"><%= formattedDate %></h1>
+                        
+                        <!-- Hidden Date Picker activated by the Icon -->
+                        <div class="position-relative ms-3 mt-1">
+                            <input type="date" id="dailyDatePicker" 
+                                   class="position-absolute invisible" 
+                                   style="width: 0; height: 0; top: 50%; left: 50%;"
+                                   value="<%= stats.current_date %>"
+                                   onchange="
+                                       const url = new URL(window.location.href);
+                                       if (this.value) url.searchParams.set('date', this.value);
+                                       else url.searchParams.delete('date');
+                                       window.location.href = url.toString();
+                                   ">
+                            <i class="bi bi-calendar-date fs-3 text-white" 
+                               style="cursor: pointer; transition: color 0.2s ease;" 
+                               onmouseover="this.style.color='#0d6efd'" 
+                               onmouseout="this.style.color='white'"
+                               onclick="document.getElementById('dailyDatePicker').showPicker()"></i>
+                        </div>
+                    </div>
                     
                     <% 
                         let vehLink = `/vehicles?date=${stats.current_date}`;
@@ -51,7 +74,13 @@
                 <div class="d-flex flex-wrap gap-2 mb-4 w-100">
                     <% if (stats.available_models && stats.available_models.length > 0) { %>
                         <div class="statsDropdown" style="max-width: 300px;">
-                            <select id="modelFilter" class="form-select small-dropdown <%= selectedModel ? 'active-filter' : '' %>" onchange="window.location.href = this.value ? '/daily?model=' + encodeURIComponent(this.value) : '/daily';">
+                            <select id="modelFilter" class="form-select small-dropdown <%= selectedModel ? 'active-filter' : '' %>" 
+                                    onchange="
+                                        const url = new URL(window.location.href);
+                                        if (this.value) url.searchParams.set('model', this.value);
+                                        else url.searchParams.delete('model');
+                                        window.location.href = url.toString();
+                                    ">
                                 <option value="">All Models</option>
                                 <% stats.available_models.forEach(function(m) { %>
                                     <option value="<%= m %>" <%= selectedModel === m ? 'selected' : '' %>><%= m %></option>
@@ -63,8 +92,8 @@
 
                 <% if (stats.total === 0) { %>
                     <div class="alert alert-warning text-center mt-5" role="alert">
-                        <h4>No new vehicles have been added to the database today.</h4>
-                        <p class="mb-0">Check back later once the data sync process has run.</p>
+                        <h4>No new vehicles were added to the database on <%= formattedDate %>.</h4>
+                        <p class="mb-0">Try selecting another date from the calendar icon above.</p>
                     </div>
                 <% } else { %>
                     <div class="row g-4">
@@ -148,13 +177,12 @@
                             </div>
                         </div>
 
-                        <!-- Special Editions (Linked to /vehicles) -->
+                        <!-- Special Editions (Row-level Clicks) -->
                         <div class="col-12">
                             <div class="dashboard-card">
                                 <h5 class="text-white fw-bold mb-3 text-center">Packages/Editions</h5>
                                 <% 
                                     const specialKeys = Object.keys(stats.specialedition); 
-                                    // Reverse lookup map to turn DB descriptions into valid RPO codes for the vehicles filter
                                     const specialToRpoMap = {
                                         "1LE": "A1Y",
                                         "Collectors Edition": "Z4B",
@@ -190,7 +218,7 @@
                                     <p class="text-muted mt-3 text-center">No special editions processed today.</p>
                                 <% } else { %>
                                     <div class="table-responsive mt-3">
-                                        <table class="table-stats-veh">
+                                        <table class="table-stats-veh table-hover">
                                             <thead>
                                                 <tr>
                                                     <th>Package / Edition</th>
@@ -199,23 +227,18 @@
                                             </thead>
                                             <tbody>
                                                 <% specialKeys.forEach(function(key) { %>
-                                                    <tr>
-                                                        <td style="text-align: center;">
-                                                            <% const mappedRpo = specialToRpoMap[key]; %>
-                                                            <% if (mappedRpo) { %>
-                                                                <% 
-                                                                    let pkgLink = `/vehicles?date=${stats.current_date}&rpo=${mappedRpo}`;
-                                                                    if (selectedModel) {
-                                                                        pkgLink += `&model=${encodeURIComponent(selectedModel)}`;
-                                                                    }
-                                                                %>
-                                                                <a href="<%= pkgLink %>" style="color: #0d6efd; text-decoration: none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
-                                                                    <%= key %>
-                                                                </a>
-                                                            <% } else { %>
-                                                                <%= key %>
-                                                            <% } %>
-                                                        </td>
+                                                    <% 
+                                                        const mappedRpo = specialToRpoMap[key]; 
+                                                        let pkgLink = '';
+                                                        if (mappedRpo) {
+                                                            pkgLink = `/vehicles?date=${stats.current_date}&rpo=${mappedRpo}`;
+                                                            if (selectedModel) {
+                                                                pkgLink += `&model=${encodeURIComponent(selectedModel)}`;
+                                                            }
+                                                        }
+                                                    %>
+                                                    <tr <%= pkgLink ? `style="cursor: pointer;" onclick="window.location.href='${pkgLink}'"` : '' %>>
+                                                        <td style="text-align: center;"><%= key %></td>
                                                         <td class="fw-bold"><%= formatCurrency(stats.specialedition[key]) %></td>
                                                     </tr>
                                                 <% }); %>
@@ -325,11 +348,10 @@
                 plugins: {
                     legend: { 
                         display: showLegend, 
-                        // Set legend to bottom permanently for Pie/Doughnuts to prevent cutoffs on smaller screens
                         position: 'bottom', 
                         labels: { 
                             color: '#e0e0e0',
-                            boxWidth: 12, // Reduced box width to make elements fit tighter
+                            boxWidth: 12, 
                             padding: 15
                         }
                     }

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <%- include('../partials/head'); %>
-    <title>Daily Production Stats</title>
+    <title>Daily Production Stats - GM Build Counts</title>
     <!-- Load Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -37,19 +37,18 @@
                         %>
                         <h1 style="font-weight: bold;" class="mb-0"><%= formattedDate %></h1>
                         
-                        <!-- Fixed Calendar Picker -->
-                        <div class="position-relative ms-3 mt-1 d-flex align-items-center">
-                            <!-- Clickable Icon -->
-                            <i class="bi bi-calendar-date fs-3 text-white" 
-                               style="cursor: pointer; transition: color 0.2s ease;" 
-                               onmouseover="this.style.color='#0d6efd'" 
-                               onmouseout="this.style.color='white'"
-                               onclick="try { document.getElementById('dailyDatePicker').showPicker(); } catch(e) { document.getElementById('dailyDatePicker').focus(); }"></i>
+                        <!-- Fixed Native Calendar Picker -->
+                        <div class="position-relative ms-3 mt-1 d-flex align-items-center" style="width: 32px; height: 32px;">
+                            <!-- Visible Icon -->
+                            <i class="bi bi-calendar-date fs-3 text-white position-absolute" 
+                               style="top: 0; left: 0; transition: color 0.2s ease; z-index: 1;"></i>
                             
-                            <!-- Hidden Native Input -->
+                            <!-- Invisible Input stretched perfectly over the icon -->
                             <input type="date" id="dailyDatePicker" 
-                                   style="position: absolute; opacity: 0; width: 1px; height: 1px; border: none; padding: 0; pointer-events: none;"
+                                   style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 2;"
                                    value="<%= stats.current_date %>"
+                                   onmouseover="this.previousElementSibling.style.color='#0d6efd'"
+                                   onmouseout="this.previousElementSibling.style.color='white'"
                                    onchange="
                                        const url = new URL(window.location.href);
                                        if (this.value) url.searchParams.set('date', this.value);
@@ -82,7 +81,7 @@
                                         else url.searchParams.delete('model');
                                         window.location.href = url.toString();
                                     ">
-                                <option value="">All Models</option>
+                                <option value="">Model</option>
                                 <% stats.available_models.forEach(function(m) { %>
                                     <option value="<%= m %>" <%= selectedModel === m ? 'selected' : '' %>><%= m %></option>
                                 <% }); %>
@@ -238,10 +237,17 @@
                                                             }
                                                         }
                                                     %>
-                                                    <tr <%= pkgLink ? `style="cursor: pointer;" onclick="window.location.href='${pkgLink}'"` : '' %>>
-                                                        <td style="text-align: center;"><%= key %></td>
-                                                        <td class="fw-bold"><%= formatCurrency(stats.specialedition[key]) %></td>
-                                                    </tr>
+                                                    <% if (pkgLink) { %>
+                                                        <tr style="cursor: pointer;" onclick="window.location.href='<%- pkgLink %>'">
+                                                            <td style="text-align: center;"><%= key %></td>
+                                                            <td class="fw-bold"><%= formatCurrency(stats.specialedition[key]) %></td>
+                                                        </tr>
+                                                    <% } else { %>
+                                                        <tr>
+                                                            <td style="text-align: center;"><%= key %></td>
+                                                            <td class="fw-bold"><%= formatCurrency(stats.specialedition[key]) %></td>
+                                                        </tr>
+                                                    <% } %>
                                                 <% }); %>
                                             </tbody>
                                         </table>

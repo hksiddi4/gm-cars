@@ -223,7 +223,7 @@
                                 <div class="dropdown-container">
                                     <% const rpo = Array.isArray(selectedRPO) ? selectedRPO[0] : selectedRPO; %>
                                     <select id="rpoSelect" class="form-select small-dropdown <%= rpo ? 'active-filter' : '' %>">
-                                        <option value="" <% if (!rpo) { %>selected<% } %>>Package/Option</option>
+                                        <option value="" <% if (!rpo) { %>selected<% } %>>Package/Edition</option>
                                         <optgroup label="Camaro">
                                             <option value="Z4B" <% if (rpo === 'Z4B') { %>selected<% } %>>Collector's Edition</option>
                                             <option value="ZL4B" <% if (rpo === 'ZL4B') { %>selected<% } %>>ZL1 Collector's Edition</option>

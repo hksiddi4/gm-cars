@@ -509,14 +509,16 @@ def daily_stats():
     date_filter = request.args.get('date')
     conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
     
+    from datetime import date
+    today_str = date.today().strftime('%Y-%m-%d')
+    
     # 1. Determine target date
     if date_filter:
         curr_date_str = date_filter
         date_condition = "DATE(o.creation_date) = %s"
         base_params = [date_filter]
     else:
-        date_rows = execute_read_query(conn, "SELECT DATE_FORMAT(CURRENT_DATE(), '%%Y-%%m-%%d') as curr_date")
-        curr_date_str = date_rows[0]['curr_date'] if date_rows else None
+        curr_date_str = today_str
         date_condition = "DATE(o.creation_date) = CURRENT_DATE()"
         base_params = []
 
@@ -527,7 +529,7 @@ def daily_stats():
         bounds_params.append(model_filter)
     else:
         bounds_sql = "SELECT DATE_FORMAT(MIN(creation_date), '%%Y-%%m-%%d') as min_date, DATE_FORMAT(MAX(creation_date), '%%Y-%%m-%%d') as max_date FROM Orders WHERE creation_date IS NOT NULL"
-
+    
     bounds_rows = execute_read_query(conn, bounds_sql, bounds_params)
     min_date = bounds_rows[0]['min_date'] if bounds_rows else None
     max_date = bounds_rows[0]['max_date'] if bounds_rows else None

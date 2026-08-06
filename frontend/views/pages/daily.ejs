@@ -26,38 +26,39 @@
     <div class="custom-container mb-5">
         <div class="content">
             <div class="container-fluid">
-                <div class="d-flex justify-content-between align-items-center mt-4 mb-4">
-                    <div>
-                        <% 
-                            const today = new Date();
-                            const formattedDate = today.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-                        %>
-                        <h1 class="mb-1"><%= formattedDate %> Production</h1>
-                        
-                        <% if (stats.available_models && stats.available_models.length > 0) { %>
-                            <select id="modelFilter" class="form-select form-select-sm w-auto bg-dark text-white border-secondary" style="font-size: 0.9rem; padding: 4px 30px 4px 10px;" onchange="window.location.href = '/daily?model=' + encodeURIComponent(this.value)">
+                
+                <!-- Title and Button Row -->
+                <div class="d-flex justify-content-between align-items-center mt-4 mb-2">
+                    <% 
+                        const today = new Date();
+                        const formattedDate = today.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                    %>
+                    <h1 style="font-weight: bold;" class="mb-0"><%= formattedDate %> Production</h1>
+                    
+                    <% 
+                        let vehLink = `/vehicles?date=${stats.current_date}`;
+                        if (selectedModel) {
+                            vehLink += `&model=${encodeURIComponent(selectedModel)}`;
+                        }
+                    %>
+                    <a href="<%= vehLink %>" class="model-btn px-4 py-2 fs-5 text-white text-decoration-none shadow-sm">
+                        <span class="fw-bold me-1"><%= formatCurrency(stats.total) %></span> 
+                        <span class="fw-normal">Vehicles Added</span>
+                    </a>
+                </div>
+
+                <!-- Filters Row (Styled identical to stats.ejs) -->
+                <div class="d-flex flex-wrap gap-2 mb-4 w-100">
+                    <% if (stats.available_models && stats.available_models.length > 0) { %>
+                        <div class="statsDropdown" style="max-width: 300px;">
+                            <select id="modelFilter" class="form-select small-dropdown <%= selectedModel ? 'active-filter' : '' %>" onchange="window.location.href = '/daily?model=' + encodeURIComponent(this.value)">
                                 <option value="">All Models</option>
                                 <% stats.available_models.forEach(function(m) { %>
                                     <option value="<%= m %>" <%= selectedModel === m ? 'selected' : '' %>><%= m %></option>
                                 <% }); %>
                             </select>
-                        <% } %>
-                    </div>
-                    
-                    <% 
-                        // Generates the strict DB date URL matching parameter (e.g. "?date=2026-08-08")
-                        let vehLink = `/vehicles?date=${stats.current_date}`;
-                        
-                        // Pass the model directly into the vehicles filter if one is selected
-                        if (selectedModel) {
-                            vehLink += `&model=${encodeURIComponent(selectedModel)}`;
-                        }
-                    %>
-                    <!-- Vehicles link is now a fully functioning clickable button -->
-                    <a href="<%= vehLink %>" class="model-btn px-4 py-2 fs-5 text-white text-decoration-none shadow-sm">
-                        <span class="fw-bold me-1"><%= formatCurrency(stats.total) %></span> 
-                        <span class="fw-normal">Vehicles Added</span>
-                    </a>
+                        </div>
+                    <% } %>
                 </div>
 
                 <% if (stats.total === 0) { %>
@@ -70,7 +71,7 @@
                         <!-- Model (Bar) -->
                         <div class="col-12 col-lg-6">
                             <div class="dashboard-card">
-                                <h5 class="text-white fw-bold mb-3 text-center">Model</h5>
+                                <h5 class="text-white fw-bold mb-3 text-center">By Model</h5>
                                 <div class="chart-container">
                                     <canvas id="modelChart"></canvas>
                                 </div>
@@ -80,7 +81,7 @@
                         <!-- Year (Doughnut) -->
                         <div class="col-12 col-md-6 col-lg-3">
                             <div class="dashboard-card">
-                                <h5 class="text-white fw-bold mb-3 text-center">Year</h5>
+                                <h5 class="text-white fw-bold mb-3 text-center">By Model Year</h5>
                                 <div class="chart-container">
                                     <canvas id="yearChart"></canvas>
                                 </div>
@@ -90,7 +91,7 @@
                         <!-- Body (Doughnut) -->
                         <div class="col-12 col-md-6 col-lg-3">
                             <div class="dashboard-card">
-                                <h5 class="text-white fw-bold mb-3 text-center">Body</h5>
+                                <h5 class="text-white fw-bold mb-3 text-center">By Body Style</h5>
                                 <div class="chart-container">
                                     <canvas id="bodyChart"></canvas>
                                 </div>
@@ -100,7 +101,7 @@
                         <!-- Trim (Horizontal Bar) -->
                         <div class="col-12 col-lg-6">
                             <div class="dashboard-card">
-                                <h5 class="text-white fw-bold mb-3 text-center">Trim</h5>
+                                <h5 class="text-white fw-bold mb-3 text-center">By Trim Level</h5>
                                 <div class="chart-container">
                                     <canvas id="trimChart"></canvas>
                                 </div>
@@ -110,7 +111,7 @@
                         <!-- Colors (Bar) -->
                         <div class="col-12 col-lg-6">
                             <div class="dashboard-card">
-                                <h5 class="text-white fw-bold mb-3 text-center">Exterior Color</h5>
+                                <h5 class="text-white fw-bold mb-3 text-center">By Exterior Color</h5>
                                 <div class="chart-container">
                                     <canvas id="colorChart"></canvas>
                                 </div>
@@ -120,7 +121,7 @@
                         <!-- Engine (Pie) -->
                         <div class="col-12 col-md-4">
                             <div class="dashboard-card">
-                                <h5 class="text-white fw-bold mb-3 text-center">Engine</h5>
+                                <h5 class="text-white fw-bold mb-3 text-center">By Engine</h5>
                                 <div class="chart-container">
                                     <canvas id="engineChart"></canvas>
                                 </div>
@@ -130,7 +131,7 @@
                         <!-- Transmission (Pie) -->
                         <div class="col-12 col-md-4">
                             <div class="dashboard-card">
-                                <h5 class="text-white fw-bold mb-3 text-center">Transmission</h5>
+                                <h5 class="text-white fw-bold mb-3 text-center">By Transmission</h5>
                                 <div class="chart-container">
                                     <canvas id="transChart"></canvas>
                                 </div>
@@ -140,7 +141,7 @@
                         <!-- Drivetrain (Pie) -->
                         <div class="col-12 col-md-4">
                             <div class="dashboard-card">
-                                <h5 class="text-white fw-bold mb-3 text-center">Drivetrain</h5>
+                                <h5 class="text-white fw-bold mb-3 text-center">By Drivetrain</h5>
                                 <div class="chart-container">
                                     <canvas id="drivetrainChart"></canvas>
                                 </div>
@@ -150,7 +151,7 @@
                         <!-- Special Editions (Table matching main.css styles) -->
                         <div class="col-12">
                             <div class="dashboard-card">
-                                <h5 class="text-white fw-bold mb-3 text-center">Package/Option</h5>
+                                <h5 class="text-white fw-bold mb-3 text-center">Special Editions & Packages Triggered Today</h5>
                                 <% const specialKeys = Object.keys(stats.specialedition); %>
                                 <% if (specialKeys.length === 0) { %>
                                     <p class="text-muted mt-3 text-center">No special editions processed today.</p>
@@ -207,17 +208,13 @@
             const showLegend = ['pie', 'doughnut'].includes(type);
             const hasScales = ['bar', 'line'].includes(type);
 
-            // Base options mapping
             let chartOptions = {
                 responsive: true,
                 maintainAspectRatio: false,
-                
-                // --> ADD THIS INTERACTION BLOCK <--
                 interaction: {
                     mode: 'index',
-                    intersect: false, // Triggers tooltip when hovering empty space next to bar
+                    intersect: false, // Ensures hover tooltips appear even if cursor is on an empty space near a bar
                 },
-                
                 plugins: {
                     legend: { 
                         display: showLegend, 
@@ -228,8 +225,6 @@
                 ...overrideOptions
             };
 
-            // Dynamically inject grid scales only if it's a bar/line chart
-            // Applies the grey/whitish grid line styling per your request
             if (hasScales) {
                 chartOptions.scales = {
                     x: {
@@ -268,7 +263,6 @@
             createChart('transChart', 'doughnut', rawData.trans);
             createChart('drivetrainChart', 'pie', rawData.drivetrain);
             
-            // Trim uses a Horizontal Bar
             createChart('trimChart', 'bar', rawData.trim, {
                 indexAxis: 'y'
             });

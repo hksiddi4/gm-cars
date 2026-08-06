@@ -19,10 +19,6 @@
             height: 300px;
             width: 100%;
         }
-        .stat-highlight {
-            color: #0d6efd;
-            font-weight: bold;
-        }
     </style>
 </head>
 <body>
@@ -31,11 +27,19 @@
         <div class="content">
             <div class="container-fluid">
                 
-                <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
-                    <h1>Today's Production</h1>
-                    <h3 class="bg-primary bg-opacity-25 border border-primary px-3 py-2 rounded">
-                        <span class="stat-highlight"><%= formatCurrency(stats.total) %></span> Vehicles Added
-                    </h3>
+                <div class="d-flex justify-content-between align-items-center mt-4 mb-4">
+                    <% 
+                        // Generate the date string like "August 8, 2026"
+                        const today = new Date();
+                        const formattedDate = today.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                    %>
+                    <h1><%= formattedDate %> Production</h1>
+                    
+                    <!-- Uses Camaro button styling (.model-btn) with requested text formatting -->
+                    <div class="model-btn px-4 py-2 fs-5 text-white" style="cursor: default; pointer-events: none;">
+                        <span class="fw-bold me-1"><%= formatCurrency(stats.total) %></span> 
+                        <span class="fw-normal">Vehicles Added</span>
+                    </div>
                 </div>
 
                 <% if (stats.total === 0) { %>
@@ -48,7 +52,7 @@
                         <!-- Model (Bar) -->
                         <div class="col-12 col-lg-6">
                             <div class="dashboard-card">
-                                <h5>By Model</h5>
+                                <h5 class="text-white fw-bold mb-3 text-center">By Model</h5>
                                 <div class="chart-container">
                                     <canvas id="modelChart"></canvas>
                                 </div>
@@ -58,7 +62,7 @@
                         <!-- Year (Doughnut) -->
                         <div class="col-12 col-md-6 col-lg-3">
                             <div class="dashboard-card">
-                                <h5>By Model Year</h5>
+                                <h5 class="text-white fw-bold mb-3 text-center">By Model Year</h5>
                                 <div class="chart-container">
                                     <canvas id="yearChart"></canvas>
                                 </div>
@@ -68,7 +72,7 @@
                         <!-- Body (Doughnut) -->
                         <div class="col-12 col-md-6 col-lg-3">
                             <div class="dashboard-card">
-                                <h5>By Body Style</h5>
+                                <h5 class="text-white fw-bold mb-3 text-center">By Body Style</h5>
                                 <div class="chart-container">
                                     <canvas id="bodyChart"></canvas>
                                 </div>
@@ -78,7 +82,7 @@
                         <!-- Trim (Horizontal Bar) -->
                         <div class="col-12 col-lg-6">
                             <div class="dashboard-card">
-                                <h5>By Trim Level</h5>
+                                <h5 class="text-white fw-bold mb-3 text-center">By Trim Level</h5>
                                 <div class="chart-container">
                                     <canvas id="trimChart"></canvas>
                                 </div>
@@ -88,7 +92,7 @@
                         <!-- Colors (Bar) -->
                         <div class="col-12 col-lg-6">
                             <div class="dashboard-card">
-                                <h5>By Exterior Color</h5>
+                                <h5 class="text-white fw-bold mb-3 text-center">By Exterior Color</h5>
                                 <div class="chart-container">
                                     <canvas id="colorChart"></canvas>
                                 </div>
@@ -98,7 +102,7 @@
                         <!-- Engine (Pie) -->
                         <div class="col-12 col-md-4">
                             <div class="dashboard-card">
-                                <h5>By Engine</h5>
+                                <h5 class="text-white fw-bold mb-3 text-center">By Engine</h5>
                                 <div class="chart-container">
                                     <canvas id="engineChart"></canvas>
                                 </div>
@@ -108,7 +112,7 @@
                         <!-- Transmission (Pie) -->
                         <div class="col-12 col-md-4">
                             <div class="dashboard-card">
-                                <h5>By Transmission</h5>
+                                <h5 class="text-white fw-bold mb-3 text-center">By Transmission</h5>
                                 <div class="chart-container">
                                     <canvas id="transChart"></canvas>
                                 </div>
@@ -118,34 +122,34 @@
                         <!-- Drivetrain (Pie) -->
                         <div class="col-12 col-md-4">
                             <div class="dashboard-card">
-                                <h5>By Drivetrain</h5>
+                                <h5 class="text-white fw-bold mb-3 text-center">By Drivetrain</h5>
                                 <div class="chart-container">
                                     <canvas id="drivetrainChart"></canvas>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Special Editions (Table format to look neat) -->
+                        <!-- Special Editions (Table matching main.css styles) -->
                         <div class="col-12">
                             <div class="dashboard-card">
-                                <h5>Special Editions & Packages Triggered Today</h5>
+                                <h5 class="text-white fw-bold mb-3 text-center">Special Editions & Packages Triggered Today</h5>
                                 <% const specialKeys = Object.keys(stats.specialedition); %>
                                 <% if (specialKeys.length === 0) { %>
-                                    <p class="text-muted mt-3">No special editions processed today.</p>
+                                    <p class="text-muted mt-3 text-center">No special editions processed today.</p>
                                 <% } else { %>
                                     <div class="table-responsive mt-3">
-                                        <table class="table table-dark table-striped table-hover">
+                                        <table class="table-stats-veh">
                                             <thead>
                                                 <tr>
                                                     <th>Package / Edition</th>
-                                                    <th class="text-end">Count</th>
+                                                    <th>Count</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 <% specialKeys.forEach(function(key) { %>
                                                     <tr>
                                                         <td><%= key %></td>
-                                                        <td class="text-end fw-bold text-primary"><%= formatCurrency(stats.specialedition[key]) %></td>
+                                                        <td class="fw-bold"><%= formatCurrency(stats.specialedition[key]) %></td>
                                                     </tr>
                                                 <% }); %>
                                             </tbody>
@@ -163,15 +167,16 @@
 
     <!-- Chart Configuration Script -->
     <script>
-        // Load JSON data provided by backend
         const rawData = <%- JSON.stringify(stats) %>;
         
-        // Define uniform styling for charts
-        Chart.defaults.color = '#d4d4d4';
+        // Define uniform styling for chart text
+        Chart.defaults.color = '#ffffff';
+        Chart.defaults.font.family = "'Inter', sans-serif";
+
         const colorPalette = [
-            'rgba(13, 110, 253, 0.7)', 'rgba(25, 135, 84, 0.7)', 'rgba(220, 53, 69, 0.7)',
-            'rgba(255, 193, 7, 0.7)', 'rgba(13, 202, 240, 0.7)', 'rgba(214, 51, 132, 0.7)',
-            'rgba(111, 66, 193, 0.7)', 'rgba(32, 201, 151, 0.7)', 'rgba(253, 126, 20, 0.7)'
+            'rgba(13, 110, 253, 0.8)', 'rgba(25, 135, 84, 0.8)', 'rgba(220, 53, 69, 0.8)',
+            'rgba(255, 193, 7, 0.8)', 'rgba(13, 202, 240, 0.8)', 'rgba(214, 51, 132, 0.8)',
+            'rgba(111, 66, 193, 0.8)', 'rgba(32, 201, 151, 0.8)', 'rgba(253, 126, 20, 0.8)'
         ];
 
         function createChart(ctxId, type, dataObj, overrideOptions = {}) {
@@ -181,8 +186,39 @@
             const labels = Object.keys(dataObj);
             const dataValues = Object.values(dataObj);
 
-            // Hide Legend for bar charts to save space, show for Doughnuts
             const showLegend = ['pie', 'doughnut'].includes(type);
+            const hasScales = ['bar', 'line'].includes(type);
+
+            // Base options mapping
+            let chartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { 
+                        display: showLegend, 
+                        position: 'right',
+                        labels: { color: '#ffffff' }
+                    }
+                },
+                ...overrideOptions
+            };
+
+            // Dynamically inject grid scales only if it's a bar/line chart
+            // Applies the grey/whitish grid line styling per your request
+            if (hasScales) {
+                chartOptions.scales = {
+                    x: {
+                        grid: { color: 'rgba(255, 255, 255, 0.15)' },
+                        ticks: { color: '#ffffff' },
+                        ...(overrideOptions.scales?.x || {})
+                    },
+                    y: {
+                        grid: { color: 'rgba(255, 255, 255, 0.15)' },
+                        ticks: { color: '#ffffff' },
+                        ...(overrideOptions.scales?.y || {})
+                    }
+                };
+            }
 
             new Chart(ctx, {
                 type: type,
@@ -195,19 +231,11 @@
                         borderColor: '#2b2b2b'
                     }]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: showLegend, position: 'right' }
-                    },
-                    ...overrideOptions
-                }
+                options: chartOptions
             });
         }
 
         if (rawData && rawData.total > 0) {
-            // Initialize All Charts
             createChart('modelChart', 'bar', rawData.model);
             createChart('yearChart', 'doughnut', rawData.modelYear);
             createChart('bodyChart', 'doughnut', rawData.body);
@@ -215,12 +243,11 @@
             createChart('transChart', 'doughnut', rawData.trans);
             createChart('drivetrainChart', 'pie', rawData.drivetrain);
             
-            // Trim uses a Horizontal Bar for better readability
+            // Trim uses a Horizontal Bar
             createChart('trimChart', 'bar', rawData.trim, {
                 indexAxis: 'y'
             });
 
-            // Color gets a standard bar chart
             createChart('colorChart', 'bar', rawData.color);
         }
     </script>

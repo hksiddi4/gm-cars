@@ -197,6 +197,7 @@ def sort_price():
     rpo = request.args.get('rpo')
     color = request.args.get('color')
     country = request.args.get('country')
+    date = request.args.get('date')
     order = request.args.get('order')
     page = int(request.args.get('page', 1))
     limit = int(request.args.get('limit', 100))
@@ -257,6 +258,9 @@ def sort_price():
     if country:
         conditions.append("o.country = %s")
         params.append(country_map.get(country, 'USA'))
+    if date:
+        conditions.append("DATE(o.creation_date) = %s")
+        params.append(date)
 
     # 2. RPO HANDLING
     if rpo:
@@ -501,8 +505,25 @@ def sort_price():
 
 @app.route('/daily-stats', methods=['GET'])
 def daily_stats():
+    model_filter = request.args.get('model')
     conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
     
+    # 1. Grab DB's strict current date (Ensures it perfectly matches database timezone logic at midnight)
+    date_rows = execute_read_query(conn, "SELECT DATE_FORMAT(CURRENT_DATE(), '%Y-%m-%d') as curr_date")
+    curr_date_str = date_rows[0]['curr_date'] if date_rows else None
+
+    # 2. Find all distinct models that were produced today to populate the dropdown
+    models_sql = """
+        SELECT DISTINCT v.model 
+        FROM Vehicles v 
+        JOIN Orders o ON v.order_id = o.order_id 
+        WHERE DATE(o.creation_date) = CURRENT_DATE() AND v.model IS NOT NULL 
+        ORDER BY v.model ASC
+    """
+    model_rows = execute_read_query(conn, models_sql)
+    available_models = [r['model'] for r in model_rows] if model_rows else []
+
+    # 3. Build main query for today's stats
     sqlStatement = """
         SELECT v.modelYear, v.model, v.body, v.trim, e.engine_type, 
                t.transmission_type, d.drivetrain_type, c.color_name, 
@@ -515,23 +536,38 @@ def daily_stats():
         LEFT JOIN Colors c ON v.color_id = c.color_id
         LEFT JOIN SpecialEditions se ON v.vehicle_id = se.vehicle_id
         WHERE DATE(o.creation_date) = CURRENT_DATE()
+    """
+    params = []
+
+    # Apply dropdown filter if passed
+    if model_filter:
+        sqlStatement += " AND v.model = %s"
+        params.append(model_filter)
+        
+    sqlStatement += """
         GROUP BY v.vehicle_id, v.modelYear, v.model, v.body, v.trim, 
                  e.engine_type, t.transmission_type, d.drivetrain_type, c.color_name
     """
     
-    rows = execute_read_query(conn, sqlStatement)
+    # Execute with or without params depending on if model_filter was present
+    if params:
+        rows = execute_read_query(conn, sqlStatement, params)
+    else:
+        rows = execute_read_query(conn, sqlStatement)
+        
     close_connection(conn)
 
     # Initialize stats payload
     stats = {
         'total': len(rows) if rows else 0,
+        'current_date': curr_date_str,
+        'available_models': available_models,
         'modelYear': {}, 'model': {}, 'body': {}, 'trim': {},
         'engine': {}, 'trans': {}, 'drivetrain': {}, 'color': {}, 'specialedition': {}
     }
 
     if rows:
         for r in rows:
-            # Handle potential None values smoothly
             my = str(r['modelYear']) if r['modelYear'] else 'Unknown'
             mod = r['model'] or 'Unknown'
             bdy = r['body'] or 'Unknown'
@@ -554,9 +590,9 @@ def daily_stats():
                 for sp in r['special_desc'].split(', '):
                     stats['specialedition'][sp] = stats['specialedition'].get(sp, 0) + 1
 
-    # Sort each dictionary by count descending
+    # Sort dictionary counts descending, skipping metadata keys
     for key in stats:
-        if key != 'total':
+        if key not in ['total', 'current_date', 'available_models']:
             stats[key] = dict(sorted(stats[key].items(), key=lambda item: item[1], reverse=True))
 
     return jsonify(stats)

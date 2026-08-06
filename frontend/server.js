@@ -397,9 +397,11 @@ app.get('/search', searchLimiter, async (req, res) => {
 
 app.get('/daily', async (req, res) => {
     try {
-        const response = await axiosInstance.get(`${baseURL}/daily-stats`);
+        // req.query is automatically appended to the request so '?model=X' routes to Python correctly
+        const response = await axiosInstance.get(`${baseURL}/daily-stats`, { params: req.query });
         res.render('pages/daily', {
             stats: response.data,
+            selectedModel: req.query.model || '',
             pagePath: '/daily',
             canonicalPath: '/daily'
         });

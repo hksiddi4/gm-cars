@@ -26,20 +26,38 @@
     <div class="custom-container mb-5">
         <div class="content">
             <div class="container-fluid">
-                
                 <div class="d-flex justify-content-between align-items-center mt-4 mb-4">
-                    <% 
-                        // Generate the date string like "August 8, 2026"
-                        const today = new Date();
-                        const formattedDate = today.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-                    %>
-                    <h1><%= formattedDate %> Production</h1>
+                    <div>
+                        <% 
+                            const today = new Date();
+                            const formattedDate = today.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                        %>
+                        <h1 class="mb-1"><%= formattedDate %> Production</h1>
+                        
+                        <% if (stats.available_models && stats.available_models.length > 0) { %>
+                            <select id="modelFilter" class="form-select form-select-sm w-auto bg-dark text-white border-secondary" style="font-size: 0.9rem; padding: 4px 30px 4px 10px;" onchange="window.location.href = '/daily?model=' + encodeURIComponent(this.value)">
+                                <option value="">All Models</option>
+                                <% stats.available_models.forEach(function(m) { %>
+                                    <option value="<%= m %>" <%= selectedModel === m ? 'selected' : '' %>><%= m %></option>
+                                <% }); %>
+                            </select>
+                        <% } %>
+                    </div>
                     
-                    <!-- Uses Camaro button styling (.model-btn) with requested text formatting -->
-                    <div class="model-btn px-4 py-2 fs-5 text-white" style="cursor: default; pointer-events: none;">
+                    <% 
+                        // Generates the strict DB date URL matching parameter (e.g. "?date=2026-08-08")
+                        let vehLink = `/vehicles?date=${stats.current_date}`;
+                        
+                        // Pass the model directly into the vehicles filter if one is selected
+                        if (selectedModel) {
+                            vehLink += `&model=${encodeURIComponent(selectedModel)}`;
+                        }
+                    %>
+                    <!-- Vehicles link is now a fully functioning clickable button -->
+                    <a href="<%= vehLink %>" class="model-btn px-4 py-2 fs-5 text-white text-decoration-none shadow-sm">
                         <span class="fw-bold me-1"><%= formatCurrency(stats.total) %></span> 
                         <span class="fw-normal">Vehicles Added</span>
-                    </div>
+                    </a>
                 </div>
 
                 <% if (stats.total === 0) { %>

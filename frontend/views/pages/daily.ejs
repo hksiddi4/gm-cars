@@ -51,7 +51,7 @@
                 <div class="d-flex flex-wrap gap-2 mb-4 w-100">
                     <% if (stats.available_models && stats.available_models.length > 0) { %>
                         <div class="statsDropdown" style="max-width: 300px;">
-                            <select id="modelFilter" class="form-select small-dropdown <%= selectedModel ? 'active-filter' : '' %>" onchange="window.location.href = '/daily?model=' + encodeURIComponent(this.value)">
+                            <select id="modelFilter" class="form-select small-dropdown <%= selectedModel ? 'active-filter' : '' %>" onchange="window.location.href = this.value ? '/daily?model=' + encodeURIComponent(this.value) : '/daily';">
                                 <option value="">All Models</option>
                                 <% stats.available_models.forEach(function(m) { %>
                                     <option value="<%= m %>" <%= selectedModel === m ? 'selected' : '' %>><%= m %></option>
@@ -189,14 +189,65 @@
         const rawData = <%- JSON.stringify(stats) %>;
         
         // Define uniform styling for chart text
-        Chart.defaults.color = '#ffffff';
+        Chart.defaults.color = '#e0e0e0'; // Slightly softer white for readability
         Chart.defaults.font.family = "'Inter', sans-serif";
 
-        const colorPalette = [
-            'rgba(13, 110, 253, 0.8)', 'rgba(25, 135, 84, 0.8)', 'rgba(220, 53, 69, 0.8)',
-            'rgba(255, 193, 7, 0.8)', 'rgba(13, 202, 240, 0.8)', 'rgba(214, 51, 132, 0.8)',
-            'rgba(111, 66, 193, 0.8)', 'rgba(32, 201, 151, 0.8)', 'rgba(253, 126, 20, 0.8)'
+        // Muted, accessible color palette for standard charts
+        // These are desaturated to reduce eye strain while maintaining distinction
+        const mutedPalette = [
+            '#6b8eb3', // Muted Blue
+            '#7b9b7a', // Muted Green
+            '#b36b6b', // Muted Red
+            '#b3a36b', // Muted Gold
+            '#6bb3a3', // Muted Teal
+            '#9b7a9b', // Muted Purple
+            '#b38e6b', // Muted Orange
+            '#7a899b', // Muted Slate
+            '#8e6bb3'  // Muted Violet
         ];
+
+        // Custom Hex Map for GM Exterior Colors based on RPO codes
+        const rpoHexMap = {
+            // Blacks & Darks
+            'GBA': '#111111', 'GB8': '#1a1c1a', 'GLK': '#1f1f1f', 'GNW': '#222222', 
+            'G7W': '#1b241e', 'GAB': '#2a1618', 'GJI': '#383b3e', 'GXN': '#2b231d',
+            'GLU': '#1c1e24', 'GAI': '#1a2436', 'GXP': '#151e2b',
+            
+            // Whites
+            'GAZ': '#f4f4f4', 'G8G': '#fcfcfc', 'G1W': '#f5f5f0', 'G4J': '#fafafa',
+            'ABALONE WHITE': '#f0efe8',
+            
+            // Silvers & Greys
+            'GAN': '#a5a7a9', 'GXD': '#8c9194', 'G9K': '#7a7e80', 'G9F': '#cbd1d3', 
+            'GA7': '#5e6163', 'GXA': '#656b6c', 'G7Q': '#474b4e', 'GKA': '#aab0b5', 
+            'GRF': '#949596', 'GNO': '#494c4e', 'GBL': '#83888b', 'G6M': '#565658',
+            'G5D': '#a3998f', 'GAE': '#9e9fa3', 'GBD': '#70706b',
+            
+            // Reds
+            'G7C': '#c82323', 'GKZ': '#d31c1c', 'G7E': '#8a1820', 'G1E': '#66141a', 
+            'GPH': '#932228', 'GNT': '#a4232a', 'GSK': '#76151c', 'GPJ': '#b33036',
+            
+            // Blues
+            'GMO': '#2071d4', 'GKK': '#18478c', 'GJV': '#1d5a9c', 'GS7': '#12397a', 
+            'GTR': '#162854', 'GLG': '#2b3e59', 'GXE': '#316982', 'GLD': '#355b85',
+            'GLN': '#6896b5', 'G3Y': '#173663',
+            
+            // Yellows & Golds
+            'GC6': '#e6ba1e', 'GD0': '#d6cf38', 'GBK': '#dfc322', 'GCP': '#d1b919',
+            'GKO': '#c5db3b',
+            
+            // Oranges
+            'GC5': '#d9641e', 'G26': '#c95116', 'G16': '#de4f18', 'GCF': '#cc5016',
+            'GAG': '#c4511d',
+            
+            // Greens
+            'GVR': '#7d8a78', 'GJ0': '#1f4229', 'G4Z': '#3a4f3b', 'G9E': '#4c5e46',
+            'GOG': '#1f382a',
+            
+            // Purples/Others
+            'GXL': '#3a2452', 'GGA': '#291b36', 'G8T': '#b4b7ba', 'G42': '#b3a492',
+            'GMU': '#8a7761', 'GMF': '#2c696e'
+        };
 
         function createChart(ctxId, type, dataObj, overrideOptions = {}) {
             const ctx = document.getElementById(ctxId);
@@ -208,18 +259,39 @@
             const showLegend = ['pie', 'doughnut'].includes(type);
             const hasScales = ['bar', 'line'].includes(type);
 
+            // Determine Background Colors dynamically
+            let bgColors = mutedPalette;
+            let borderColors = '#2b2b2b';
+            let borderWidth = 1;
+
+            if (ctxId === 'colorChart') {
+                // Generate the exact color for the exterior color chart
+                bgColors = labels.map(label => {
+                    const rpo = label.split(' - ')[0]; 
+                    // Fallback to a neutral grey if RPO is missing from the map
+                    return rpoHexMap[rpo] || rpoHexMap[label] || '#6c757d'; 
+                });
+                
+                // Add a subtle border to the color bars so whites/blacks don't blend into background
+                borderColors = 'rgba(255,255,255,0.15)'; 
+                borderWidth = 2;
+            } else if (!showLegend) {
+                // If it's a standard bar chart, we can just map the palette over and over
+                bgColors = labels.map((_, i) => mutedPalette[i % mutedPalette.length]);
+            }
+
             let chartOptions = {
                 responsive: true,
                 maintainAspectRatio: false,
                 interaction: {
                     mode: 'index',
-                    intersect: false, // Ensures hover tooltips appear even if cursor is on an empty space near a bar
+                    intersect: false, // Ensures hover tooltips appear even if cursor is on empty space near a bar
                 },
                 plugins: {
                     legend: { 
                         display: showLegend, 
                         position: 'right',
-                        labels: { color: '#ffffff' }
+                        labels: { color: '#e0e0e0' }
                     }
                 },
                 ...overrideOptions
@@ -228,13 +300,13 @@
             if (hasScales) {
                 chartOptions.scales = {
                     x: {
-                        grid: { color: 'rgba(255, 255, 255, 0.15)' },
-                        ticks: { color: '#ffffff' },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' }, // Softer grid lines
+                        ticks: { color: '#e0e0e0' },
                         ...(overrideOptions.scales?.x || {})
                     },
                     y: {
-                        grid: { color: 'rgba(255, 255, 255, 0.15)' },
-                        ticks: { color: '#ffffff' },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                        ticks: { color: '#e0e0e0' },
                         ...(overrideOptions.scales?.y || {})
                     }
                 };
@@ -245,10 +317,11 @@
                 data: {
                     labels: labels,
                     datasets: [{
+                        label: 'Count', // Makes the tooltip read "Count: X" instead of just "X"
                         data: dataValues,
-                        backgroundColor: colorPalette,
-                        borderWidth: 1,
-                        borderColor: '#2b2b2b'
+                        backgroundColor: bgColors,
+                        borderWidth: borderWidth,
+                        borderColor: borderColors
                     }]
                 },
                 options: chartOptions

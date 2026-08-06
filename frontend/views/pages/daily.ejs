@@ -70,7 +70,7 @@
                         <!-- Model (Bar) -->
                         <div class="col-12 col-lg-6">
                             <div class="dashboard-card">
-                                <h5 class="text-white fw-bold mb-3 text-center">By Model</h5>
+                                <h5 class="text-white fw-bold mb-3 text-center">Model</h5>
                                 <div class="chart-container">
                                     <canvas id="modelChart"></canvas>
                                 </div>
@@ -80,7 +80,7 @@
                         <!-- Year (Doughnut) -->
                         <div class="col-12 col-md-6 col-lg-3">
                             <div class="dashboard-card">
-                                <h5 class="text-white fw-bold mb-3 text-center">By Model Year</h5>
+                                <h5 class="text-white fw-bold mb-3 text-center">Year</h5>
                                 <div class="chart-container">
                                     <canvas id="yearChart"></canvas>
                                 </div>
@@ -90,7 +90,7 @@
                         <!-- Body (Doughnut) -->
                         <div class="col-12 col-md-6 col-lg-3">
                             <div class="dashboard-card">
-                                <h5 class="text-white fw-bold mb-3 text-center">By Body Style</h5>
+                                <h5 class="text-white fw-bold mb-3 text-center">Body</h5>
                                 <div class="chart-container">
                                     <canvas id="bodyChart"></canvas>
                                 </div>
@@ -100,7 +100,7 @@
                         <!-- Trim (Horizontal Bar) -->
                         <div class="col-12 col-lg-6">
                             <div class="dashboard-card">
-                                <h5 class="text-white fw-bold mb-3 text-center">By Trim Level</h5>
+                                <h5 class="text-white fw-bold mb-3 text-center">Trim</h5>
                                 <div class="chart-container">
                                     <canvas id="trimChart"></canvas>
                                 </div>
@@ -110,7 +110,7 @@
                         <!-- Colors (Bar) -->
                         <div class="col-12 col-lg-6">
                             <div class="dashboard-card">
-                                <h5 class="text-white fw-bold mb-3 text-center">By Exterior Color</h5>
+                                <h5 class="text-white fw-bold mb-3 text-center">Exterior Color</h5>
                                 <div class="chart-container">
                                     <canvas id="colorChart"></canvas>
                                 </div>
@@ -120,7 +120,7 @@
                         <!-- Engine (Pie) -->
                         <div class="col-12 col-md-4">
                             <div class="dashboard-card">
-                                <h5 class="text-white fw-bold mb-3 text-center">By Engine</h5>
+                                <h5 class="text-white fw-bold mb-3 text-center">Engine</h5>
                                 <div class="chart-container">
                                     <canvas id="engineChart"></canvas>
                                 </div>
@@ -130,7 +130,7 @@
                         <!-- Transmission (Pie) -->
                         <div class="col-12 col-md-4">
                             <div class="dashboard-card">
-                                <h5 class="text-white fw-bold mb-3 text-center">By Transmission</h5>
+                                <h5 class="text-white fw-bold mb-3 text-center">Transmission</h5>
                                 <div class="chart-container">
                                     <canvas id="transChart"></canvas>
                                 </div>
@@ -140,7 +140,7 @@
                         <!-- Drivetrain (Pie) -->
                         <div class="col-12 col-md-4">
                             <div class="dashboard-card">
-                                <h5 class="text-white fw-bold mb-3 text-center">By Drivetrain</h5>
+                                <h5 class="text-white fw-bold mb-3 text-center">Drivetrain</h5>
                                 <div class="chart-container">
                                     <canvas id="drivetrainChart"></canvas>
                                 </div>
@@ -150,7 +150,7 @@
                         <!-- Special Editions (Table matching main.css styles) -->
                         <div class="col-12">
                             <div class="dashboard-card">
-                                <h5 class="text-white fw-bold mb-3 text-center">Special Editions & Packages Triggered Today</h5>
+                                <h5 class="text-white fw-bold mb-3 text-center">Package/Option</h5>
                                 <% const specialKeys = Object.keys(stats.specialedition); %>
                                 <% if (specialKeys.length === 0) { %>
                                     <p class="text-muted mt-3 text-center">No special editions processed today.</p>
@@ -211,6 +211,13 @@
             let chartOptions = {
                 responsive: true,
                 maintainAspectRatio: false,
+                
+                // --> ADD THIS INTERACTION BLOCK <--
+                interaction: {
+                    mode: 'index',
+                    intersect: false, // Triggers tooltip when hovering empty space next to bar
+                },
+                
                 plugins: {
                     legend: { 
                         display: showLegend, 

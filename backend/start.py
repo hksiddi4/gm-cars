@@ -508,7 +508,7 @@ def daily_stats():
     model_filter = request.args.get('model')
     conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
     
-    # 1. Grab DB's strict current date (Ensures it perfectly matches database timezone logic at midnight)
+    # 1. Grab DB's strict current date
     date_rows = execute_read_query(conn, "SELECT DATE_FORMAT(CURRENT_DATE(), '%Y-%m-%d') as curr_date")
     curr_date_str = date_rows[0]['curr_date'] if date_rows else None
 
@@ -523,16 +523,16 @@ def daily_stats():
     model_rows = execute_read_query(conn, models_sql)
     available_models = [r['model'] for r in model_rows] if model_rows else []
 
-    # 3. Build main query for today's stats
+    # 3. Build main query for today's stats (FIXED JOIN AND ADDED RPOs)
     sqlStatement = """
-        SELECT v.modelYear, v.model, v.body, v.trim, e.engine_type, 
-               t.transmission_type, d.drivetrain_type, c.color_name, 
+        SELECT v.modelYear, v.model, v.body, v.trim, e.engine_type, e.engine_rpo,
+               t.transmission_type, d.drivetrain_type, c.color_name, c.rpo_code,
                GROUP_CONCAT(DISTINCT se.special_desc SEPARATOR ', ') AS special_desc
         FROM Vehicles v
         JOIN Orders o ON v.order_id = o.order_id
         LEFT JOIN Engines e ON v.engine_id = e.engine_id
         LEFT JOIN Transmissions t ON v.transmission_id = t.transmission_id
-        LEFT JOIN Drivetrains d ON d.drivetrain_id = d.drivetrain_id
+        LEFT JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id
         LEFT JOIN Colors c ON v.color_id = c.color_id
         LEFT JOIN SpecialEditions se ON v.vehicle_id = se.vehicle_id
         WHERE DATE(o.creation_date) = CURRENT_DATE()
@@ -546,10 +546,9 @@ def daily_stats():
         
     sqlStatement += """
         GROUP BY v.vehicle_id, v.modelYear, v.model, v.body, v.trim, 
-                 e.engine_type, t.transmission_type, d.drivetrain_type, c.color_name
+                 e.engine_type, e.engine_rpo, t.transmission_type, d.drivetrain_type, c.color_name, c.rpo_code
     """
     
-    # Execute with or without params depending on if model_filter was present
     if params:
         rows = execute_read_query(conn, sqlStatement, params)
     else:
@@ -572,10 +571,18 @@ def daily_stats():
             mod = r['model'] or 'Unknown'
             bdy = r['body'] or 'Unknown'
             trm = r['trim'] or 'Unknown'
-            eng = r['engine_type'] or 'Unknown'
+            
+            # Extract and format RPO + Name for Engines and Colors
+            eng_type = r['engine_type'] or 'Unknown'
+            eng_rpo = r['engine_rpo']
+            eng = f"{eng_rpo} - {eng_type}" if eng_rpo and eng_rpo != 'N/A' else eng_type
+            
+            clr_name = r['color_name'] or 'Unknown'
+            clr_rpo = r['rpo_code']
+            clr = f"{clr_rpo} - {clr_name}" if clr_rpo and clr_rpo != 'N/A' else clr_name
+
             trn = r['transmission_type'] or 'Unknown'
             drv = r['drivetrain_type'] or 'Unknown'
-            clr = r['color_name'] or 'Unknown'
 
             stats['modelYear'][my] = stats['modelYear'].get(my, 0) + 1
             stats['model'][mod] = stats['model'].get(mod, 0) + 1

@@ -506,10 +506,10 @@ def sort_price():
 @app.route('/daily-stats', methods=['GET'])
 def daily_stats():
     model_filter = request.args.get('model')
-    date_filter = request.args.get('date')  # <-- Capture date from frontend
+    date_filter = request.args.get('date')
     conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
     
-    # 1. Determine target date (Defaults to DB's current date if none provided)
+    # 1. Determine target date
     if date_filter:
         curr_date_str = date_filter
         date_condition = "DATE(o.creation_date) = %s"
@@ -520,7 +520,19 @@ def daily_stats():
         date_condition = "DATE(o.creation_date) = CURRENT_DATE()"
         base_params = []
 
-    # 2. Find all distinct models produced on that specific date
+    # 2. Find MIN and MAX bounds for the calendar picker based on filters
+    bounds_params = []
+    if model_filter:
+        bounds_sql = "SELECT DATE_FORMAT(MIN(o.creation_date), '%Y-%m-%d') as min_date, DATE_FORMAT(MAX(o.creation_date), '%Y-%m-%d') as max_date FROM Orders o JOIN Vehicles v ON o.order_id = v.order_id WHERE v.model = %s AND o.creation_date IS NOT NULL"
+        bounds_params.append(model_filter)
+    else:
+        bounds_sql = "SELECT DATE_FORMAT(MIN(creation_date), '%Y-%m-%d') as min_date, DATE_FORMAT(MAX(creation_date), '%Y-%m-%d') as max_date FROM Orders WHERE creation_date IS NOT NULL"
+    
+    bounds_rows = execute_read_query(conn, bounds_sql, bounds_params)
+    min_date = bounds_rows[0]['min_date'] if bounds_rows else None
+    max_date = bounds_rows[0]['max_date'] if bounds_rows else None
+
+    # 3. Find all distinct models produced on that specific date
     models_sql = f"""
         SELECT DISTINCT v.model 
         FROM Vehicles v 
@@ -531,7 +543,7 @@ def daily_stats():
     model_rows = execute_read_query(conn, models_sql, base_params if date_filter else None)
     available_models = [r['model'] for r in model_rows] if model_rows else []
 
-    # 3. Main stats query
+    # 4. Main stats query
     sqlStatement = f"""
         SELECT v.modelYear, v.model, v.body, v.trim, e.engine_type, e.engine_rpo,
                t.transmission_type, d.drivetrain_type, c.color_name, c.rpo_code,
@@ -569,6 +581,8 @@ def daily_stats():
     stats = {
         'total': len(rows) if rows else 0,
         'current_date': curr_date_str,
+        'min_date': min_date,
+        'max_date': max_date,
         'available_models': available_models,
         'modelYear': {}, 'model': {}, 'body': {}, 'trim': {},
         'engine': {}, 'trans': {}, 'drivetrain': {}, 'color': {}, 'specialedition': {}
@@ -606,7 +620,7 @@ def daily_stats():
                     stats['specialedition'][sp] = stats['specialedition'].get(sp, 0) + 1
 
     for key in stats:
-        if key not in ['total', 'current_date', 'available_models']:
+        if key not in ['total', 'current_date', 'min_date', 'max_date', 'available_models']:
             stats[key] = dict(sorted(stats[key].items(), key=lambda item: item[1], reverse=True))
 
     return jsonify(stats)

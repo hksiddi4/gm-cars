@@ -33,7 +33,7 @@
             font-size: 1.75rem;
         }
         
-        @media (max-width: 750px) {
+        @media (max-width: 768px) {
             .daily-title {
                 font-size: 1.15rem;
             }
@@ -62,19 +62,21 @@
                     %>
                     <h1 class="daily-title mb-0 text-nowrap"><%= formattedDate %></h1>
                     
-                    <!-- Centered Calendar Picker with correct pointer cursor & interaction -->
+                    <!-- Centered Calendar Picker -->
                     <div class="d-flex justify-content-center flex-grow-1">
-                        <div class="position-relative d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; cursor: pointer;">
-                            <i class="bi bi-calendar-date daily-cal-icon text-white position-absolute" 
-                               style="transition: color 0.2s ease; pointer-events: none;" 
+                        <div class="position-relative d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                            <i class="bi bi-calendar-date daily-cal-icon text-white" 
+                               style="cursor: pointer; transition: color 0.2s ease; z-index: 2;" 
                                onmouseover="this.style.color='#0d6efd'" 
-                               onmouseout="this.style.color='white'"></i>
+                               onmouseout="this.style.color='white'"
+                               onclick="document.getElementById('dailyDatePicker').showPicker()"></i>
                             
+                            <!-- Restricted Date Input -->
                             <input type="date" id="dailyDatePicker" 
-                                   style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 5;"
+                                   style="position: absolute; top: 50%; left: 50%; width: 1px; height: 1px; opacity: 0; border: none; padding: 0; z-index: 1;"
                                    value="<%= stats.current_date %>"
-                                   onmouseover="this.previousElementSibling.style.color='#0d6efd'"
-                                   onmouseout="this.previousElementSibling.style.color='white'"
+                                   <% if (stats.min_date) { %> min="<%= stats.min_date %>" <% } %>
+                                   <% if (stats.max_date) { %> max="<%= stats.max_date %>" <% } %>
                                    onchange="
                                        const params = new URLSearchParams(window.location.search);
                                        if (this.value) params.set('date', this.value);
@@ -119,7 +121,7 @@
                 <% if (stats.total === 0) { %>
                     <div class="dashboard-card text-center mt-5 mx-auto" style="max-width: 600px;">
                         <h4 class="text-white mb-3">No new vehicles were added to the database on <%= formattedDate %>.</h4>
-                        <p class="text-muted mb-0">Try selecting another date from the calendar icon above.</p>
+                        <p class="text-white mb-0">Try selecting another date from the calendar icon above.</p>
                     </div>
                 <% } else { %>
                     <div class="row g-4">
@@ -348,7 +350,8 @@
             const labels = Object.keys(dataObj);
             const dataValues = Object.values(dataObj);
 
-            const showLegend = ['pie', 'doughnut'].includes(type);
+            // True if radial graph (pie, doughnut)
+            const isRadial = ['pie', 'doughnut'].includes(type);
             const hasScales = ['bar', 'line'].includes(type);
             const isHorizontal = overrideOptions.indexAxis === 'y';
 
@@ -361,24 +364,29 @@
                     const rpo = label.split(' - ')[0]; 
                     return rpoHexMap[rpo] || rpoHexMap[label] || '#6c757d'; 
                 });
-                
                 borderColors = 'rgba(255,255,255,0.15)'; 
                 borderWidth = 2;
-            } else if (!showLegend) {
+            } else if (!isRadial) {
                 bgColors = labels.map((_, i) => mutedPalette[i % mutedPalette.length]);
             }
+
+            // Cleanly separated hover tracking fixes the math bug on circular charts
+            const interactionConfig = isRadial ? {
+                mode: 'nearest',
+                intersect: true
+            } : {
+                mode: 'index',
+                axis: isHorizontal ? 'y' : 'x', 
+                intersect: false, 
+            };
 
             let chartOptions = {
                 responsive: true,
                 maintainAspectRatio: false,
-                interaction: {
-                    mode: 'index',
-                    axis: isHorizontal ? 'y' : 'x', 
-                    intersect: false, 
-                },
+                interaction: interactionConfig,
                 plugins: {
                     legend: { 
-                        display: showLegend, 
+                        display: isRadial, 
                         position: 'bottom', 
                         labels: { 
                             color: '#e0e0e0',
@@ -429,7 +437,7 @@
             createChart('transChart', 'doughnut', rawData.trans);
             createChart('drivetrainChart', 'pie', rawData.drivetrain);
             
-            const isMobile = window.innerWidth < 750;
+            const isMobile = window.innerWidth < 768;
             const chartFontSize = isMobile ? 8 : 12;
 
             const trimCount = Object.keys(rawData.trim).length;

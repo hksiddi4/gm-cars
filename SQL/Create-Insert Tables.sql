@@ -6,6 +6,41 @@ grant all privileges on vehicles.* to 'hussain'@'%';
 select * from Vehicles limit 10;
 select count(*) from Vehicles;
 
+show create table Vehicles;
+select * from Vehicles limit 10;
+
+select * from staging_allGM;
+
+SELECT 
+    trx.trx_id, 
+    trx.trx_state, 
+    trx.trx_started, 
+    trx.trx_query, 
+    pl.id AS process_id, 
+    pl.user, 
+    pl.host, 
+    pl.db, 
+    pl.time, 
+    pl.state
+FROM information_schema.innodb_trx trx
+JOIN information_schema.processlist pl ON trx.trx_mysql_thread_id = pl.id;
+
+SELECT v.vin AS VIN, v.modelYear AS Year, v.model AS Model, v.body AS Body, v.trim AS Trim, e.engine_type AS Engine, t.transmission_type AS Trans, d.drivetrain_type AS Drivetrain, c.color_name AS Exterior_Color, v.msrp AS MSRP, IFNULL(GROUP_CONCAT(DISTINCT se.special_desc), '') AS Package_Option, o.country AS Country
+FROM Vehicles v
+JOIN Colors c ON v.color_id = c.color_id
+JOIN Engines e ON v.engine_id = e.engine_id
+JOIN Transmissions t ON v.transmission_id = t.transmission_id
+JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id
+JOIN Orders o ON v.order_id = o.order_id
+JOIN SpecialEditions se ON v.vehicle_id = se.vehicle_id
+WHERE v.modelYear BETWEEN 2022 AND 2024
+  AND v.model = 'CAMARO'
+  AND v.trim = 'ZL1'
+  AND c.color_name LIKE '%BLUE%'
+  AND SpecialEditions LIKE '%1LE%'
+GROUP BY v.vehicle_id
+LIMIT 100;
+
 -- staging_allGM
 CREATE TABLE IF NOT EXISTS staging_allGM (
 	vin varchar(17) PRIMARY KEY,
@@ -230,6 +265,7 @@ CROSS JOIN (
     UNION ALL SELECT 'ZLR', 'Elevation Edition'
     UNION ALL SELECT 'ABQ', '120th Anniversary Edition'
     UNION ALL SELECT 'OAR', 'Pre-Production Vehicle'
+    UNION ALL SELECT 'R7V', 'Show Vehicle'
     UNION ALL SELECT 'PEH', 'Hertz / Hendrick Motorsports Edition'
     UNION ALL SELECT 'ZLT', '20th Anniversary of V-Series Special Edition'
     UNION ALL SELECT 'ZLV', '20th Anniversary of V-Series Special Edition'
@@ -439,6 +475,7 @@ UPDATE Colors SET rpo_code = 'G9M' WHERE color_name = 'CASPIA TRICOAT';
 UPDATE Colors SET rpo_code = 'GGA' WHERE color_name = 'DEEP AMETHYST METALLIC';
 UPDATE Colors SET rpo_code = 'GHG' WHERE color_name = 'CARNELIAN METALLIC';
 UPDATE Colors SET rpo_code = 'G8X' WHERE color_name = 'BOYSENBERRY METALLIC';
+UPDATE Colors SET rpo_code = 'GEC' WHERE color_name = 'PITCH GRAY METALLIC';
 
 UPDATE Colors SET rpo_code = 'G' WHERE color_name = '';
 SELECT * FROM Colors;
@@ -455,7 +492,7 @@ FROM
 JOIN 
     Vehicles v ON o.vehicle_id = v.vehicle_id
 WHERE 
-    v.model = 'ESCALADE IQ'
+    v.model = 'CORVETTE ZR1X'
 ORDER BY 
     o.option_code;
 
@@ -466,9 +503,142 @@ WHERE o.creation_date = (SELECT MAX(creation_date) FROM Orders)
 GROUP BY v.model;
 
 SELECT * FROM Vehicles v 
-WHERE SUBSTRING(v.vin, 5, 4) = '9RRL';
+WHERE SUBSTRING(v.vin, 5, 4) = 'F5RL'
+AND modelYear = 2026;
+
+SELECT 
+    SUBSTRING(v.vin, 5, 4) AS vin_segment, 
+    v.trim,
+    v.model
+FROM Vehicles v
+WHERE model IN ('CT4', 'CT5')
+AND modelYear = 2026
+GROUP BY 
+    SUBSTRING(v.vin, 5, 4), 
+    v.trim,
+    v.model;
 
 SELECT v.*
 FROM Vehicles v
 JOIN Orders o ON v.order_id = o.order_id
 WHERE o.creation_date = '2021-12-31';
+
+SELECT 
+    v.vin,
+    v.modelYear,
+    v.model,
+    v.body,
+    v.trim,
+    e.engine_type,
+    t.transmission_type,
+    c.color_name,
+    v.msrp,
+    o.creation_date,
+    o.country
+FROM Orders o
+JOIN Vehicles v ON o.order_id = v.order_id
+JOIN Engines e ON v.engine_id = e.engine_id
+JOIN Transmissions t ON v.transmission_id = t.transmission_id
+JOIN Colors c ON v.color_id = c.color_id
+WHERE o.creation_date = CURRENT_DATE;
+
+SELECT 
+    v.modelYear,
+    v.model,
+    v.body,
+    v.trim,
+    e.engine_type,
+    t.transmission_type,
+    c.color_name,
+    COUNT(*) AS total_vehicles,
+    MIN(v.msrp) AS min_msrp,
+    MAX(v.msrp) AS max_msrp
+FROM Orders o
+JOIN Vehicles v ON o.order_id = v.order_id
+JOIN Engines e ON v.engine_id = e.engine_id
+JOIN Transmissions t ON v.transmission_id = t.transmission_id
+JOIN Colors c ON v.color_id = c.color_id
+WHERE o.creation_date = CURRENT_DATE
+GROUP BY 
+    v.modelYear,
+    v.model,
+    v.body,
+    v.trim,
+    e.engine_type,
+    t.transmission_type,
+    c.color_name
+ORDER BY 
+    total_vehicles DESC, 
+    v.model, 
+    v.trim;
+    
+-- Model Summary (Total per Model)
+SELECT 
+    'Model Summary' AS category, 
+    v.model AS model, 
+    'ALL' AS attribute_value, 
+    COUNT(*) AS total
+FROM Orders o
+JOIN Vehicles v ON o.order_id = v.order_id
+WHERE o.creation_date = CURRENT_DATE
+GROUP BY v.model
+
+UNION ALL
+
+-- Model Year per Model
+SELECT 
+    'Model Year' AS category, 
+    v.model AS model, 
+    CAST(v.modelYear AS CHAR) AS attribute_value, 
+    COUNT(*) AS total
+FROM Orders o
+JOIN Vehicles v ON o.order_id = v.order_id
+WHERE o.creation_date = CURRENT_DATE
+GROUP BY v.model, v.modelYear
+
+UNION ALL
+
+-- Trim per Model
+SELECT 
+    'Trim' AS category, 
+    v.model AS model, 
+    v.trim AS attribute_value, 
+    COUNT(*) AS total
+FROM Orders o
+JOIN Vehicles v ON o.order_id = v.order_id
+WHERE o.creation_date = CURRENT_DATE
+GROUP BY v.model, v.trim
+
+UNION ALL
+
+-- Engine per Model
+SELECT 
+    'Engine' AS category, 
+    v.model AS model, 
+    e.engine_type AS attribute_value, 
+    COUNT(*) AS total
+FROM Orders o
+JOIN Vehicles v ON o.order_id = v.order_id
+JOIN Engines e ON v.engine_id = e.engine_id
+WHERE o.creation_date = CURRENT_DATE
+GROUP BY v.model, e.engine_type
+
+UNION ALL
+
+-- Color per Model
+SELECT 
+    'Color' AS category, 
+    v.model AS model, 
+    c.color_name AS attribute_value, 
+    COUNT(*) AS total
+FROM Orders o
+JOIN Vehicles v ON o.order_id = v.order_id
+JOIN Colors c ON v.color_id = c.color_id
+WHERE o.creation_date = CURRENT_DATE
+GROUP BY v.model, c.color_name
+
+ORDER BY category, model, total DESC;
+
+-- Finding missing VINs
+select vin from Vehicles where modelYear = '2027' and model = 'CORVETTE STINGRAY' limit 2000;
+SELECT * FROM Vehicles WHERE modelYear = '2027' and vin LIKE '%C2D4%';

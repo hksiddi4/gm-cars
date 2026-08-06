@@ -499,6 +499,68 @@ def sort_price():
         'country': country_list
     })
 
+@app.route('/daily-stats', methods=['GET'])
+def daily_stats():
+    conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
+    
+    sqlStatement = """
+        SELECT v.modelYear, v.model, v.body, v.trim, e.engine_type, 
+               t.transmission_type, d.drivetrain_type, c.color_name, 
+               GROUP_CONCAT(DISTINCT se.special_desc SEPARATOR ', ') AS special_desc
+        FROM Vehicles v
+        JOIN Orders o ON v.order_id = o.order_id
+        LEFT JOIN Engines e ON v.engine_id = e.engine_id
+        LEFT JOIN Transmissions t ON v.transmission_id = t.transmission_id
+        LEFT JOIN Drivetrains d ON d.drivetrain_id = d.drivetrain_id
+        LEFT JOIN Colors c ON v.color_id = c.color_id
+        LEFT JOIN SpecialEditions se ON v.vehicle_id = se.vehicle_id
+        WHERE DATE(o.creation_date) = CURRENT_DATE()
+        GROUP BY v.vehicle_id, v.modelYear, v.model, v.body, v.trim, 
+                 e.engine_type, t.transmission_type, d.drivetrain_type, c.color_name
+    """
+    
+    rows = execute_read_query(conn, sqlStatement)
+    close_connection(conn)
+
+    # Initialize stats payload
+    stats = {
+        'total': len(rows) if rows else 0,
+        'modelYear': {}, 'model': {}, 'body': {}, 'trim': {},
+        'engine': {}, 'trans': {}, 'drivetrain': {}, 'color': {}, 'specialedition': {}
+    }
+
+    if rows:
+        for r in rows:
+            # Handle potential None values smoothly
+            my = str(r['modelYear']) if r['modelYear'] else 'Unknown'
+            mod = r['model'] or 'Unknown'
+            bdy = r['body'] or 'Unknown'
+            trm = r['trim'] or 'Unknown'
+            eng = r['engine_type'] or 'Unknown'
+            trn = r['transmission_type'] or 'Unknown'
+            drv = r['drivetrain_type'] or 'Unknown'
+            clr = r['color_name'] or 'Unknown'
+
+            stats['modelYear'][my] = stats['modelYear'].get(my, 0) + 1
+            stats['model'][mod] = stats['model'].get(mod, 0) + 1
+            stats['body'][bdy] = stats['body'].get(bdy, 0) + 1
+            stats['trim'][trm] = stats['trim'].get(trm, 0) + 1
+            stats['engine'][eng] = stats['engine'].get(eng, 0) + 1
+            stats['trans'][trn] = stats['trans'].get(trn, 0) + 1
+            stats['drivetrain'][drv] = stats['drivetrain'].get(drv, 0) + 1
+            stats['color'][clr] = stats['color'].get(clr, 0) + 1
+            
+            if r['special_desc']:
+                for sp in r['special_desc'].split(', '):
+                    stats['specialedition'][sp] = stats['specialedition'].get(sp, 0) + 1
+
+    # Sort each dictionary by count descending
+    for key in stats:
+        if key != 'total':
+            stats[key] = dict(sorted(stats[key].items(), key=lambda item: item[1], reverse=True))
+
+    return jsonify(stats)
+
 @app.route('/stats', methods=['GET'])
 def stats():
     category = request.args.get('category', '').strip() or None

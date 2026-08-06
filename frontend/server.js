@@ -395,6 +395,20 @@ app.get('/search', searchLimiter, async (req, res) => {
     }
 });
 
+app.get('/daily', async (req, res) => {
+    try {
+        const response = await axiosInstance.get(`${baseURL}/daily-stats`);
+        res.render('pages/daily', {
+            stats: response.data,
+            pagePath: '/daily',
+            canonicalPath: '/daily'
+        });
+    } catch (error) {
+        console.error("Daily Route Error:", error);
+        res.status(500).render('pages/errors/500', { pagePath: '/daily', canonicalPath: '/daily' });
+    }
+});
+
 app.get('/stats', async (req, res) => {
     try {
         const response = await axiosInstance.get(`${baseURL}/stats`, { params: req.query });

@@ -515,7 +515,7 @@ def daily_stats():
         date_condition = "DATE(o.creation_date) = %s"
         base_params = [date_filter]
     else:
-        date_rows = execute_read_query(conn, "SELECT DATE_FORMAT(CURRENT_DATE(), '%Y-%m-%d') as curr_date")
+        date_rows = execute_read_query(conn, "SELECT DATE_FORMAT(CURRENT_DATE(), '%%Y-%%m-%%d') as curr_date")
         curr_date_str = date_rows[0]['curr_date'] if date_rows else None
         date_condition = "DATE(o.creation_date) = CURRENT_DATE()"
         base_params = []
@@ -523,11 +523,11 @@ def daily_stats():
     # 2. Find MIN and MAX bounds for the calendar picker based on filters
     bounds_params = []
     if model_filter:
-        bounds_sql = "SELECT DATE_FORMAT(MIN(o.creation_date), '%Y-%m-%d') as min_date, DATE_FORMAT(MAX(o.creation_date), '%Y-%m-%d') as max_date FROM Orders o JOIN Vehicles v ON o.order_id = v.order_id WHERE v.model = %s AND o.creation_date IS NOT NULL"
+        bounds_sql = "SELECT DATE_FORMAT(MIN(o.creation_date), '%%Y-%%m-%%d') as min_date, DATE_FORMAT(MAX(o.creation_date), '%%Y-%%m-%%d') as max_date FROM Orders o JOIN Vehicles v ON o.order_id = v.order_id WHERE v.model = %s AND o.creation_date IS NOT NULL"
         bounds_params.append(model_filter)
     else:
-        bounds_sql = "SELECT DATE_FORMAT(MIN(creation_date), '%Y-%m-%d') as min_date, DATE_FORMAT(MAX(creation_date), '%Y-%m-%d') as max_date FROM Orders WHERE creation_date IS NOT NULL"
-    
+        bounds_sql = "SELECT DATE_FORMAT(MIN(creation_date), '%%Y-%%m-%%d') as min_date, DATE_FORMAT(MAX(creation_date), '%%Y-%%m-%%d') as max_date FROM Orders WHERE creation_date IS NOT NULL"
+
     bounds_rows = execute_read_query(conn, bounds_sql, bounds_params)
     min_date = bounds_rows[0]['min_date'] if bounds_rows else None
     max_date = bounds_rows[0]['max_date'] if bounds_rows else None

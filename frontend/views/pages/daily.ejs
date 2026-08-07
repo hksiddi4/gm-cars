@@ -289,8 +289,9 @@
                                                 <% 
                                                     let matrixModels = [...all_models];
                                                     if (matrixModels.filter(m => m.startsWith('CORVETTE')).length > 1 && !matrixModels.includes('CORVETTE (C8)')) {
-                                                        matrixModels.unshift('CORVETTE (C8)');
+                                                        matrixModels.push('CORVETTE (C8)');
                                                     }
+                                                    matrixModels.sort((a, b) => a.localeCompare(b));
                                                     matrixModels.forEach(function(m) { 
                                                 %>
                                                     <option value="<%= m %>" <%= selectedModel === m ? 'selected' : '' %>><%= m %></option>
@@ -346,8 +347,9 @@
                                 <% 
                                     let dailyModels = [...stats.available_models];
                                     if (dailyModels.filter(m => m.startsWith('CORVETTE')).length > 1 && !dailyModels.includes('CORVETTE (C8)')) {
-                                        dailyModels.unshift('CORVETTE (C8)');
+                                        dailyModels.push('CORVETTE (C8)');
                                     }
+                                    dailyModels.sort((a, b) => a.localeCompare(b));
                                     dailyModels.forEach(function(m) { 
                                 %>
                                     <option value="<%= m %>" <%= selectedModel === m ? 'selected' : '' %>><%= m %></option>

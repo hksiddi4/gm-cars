@@ -80,6 +80,19 @@ const apiLimiter = rateLimit({
     legacyHeaders: false,
 });
 
+// --- Security Middleware to block direct API access ---
+const blockDirectApiAccess = (req, res, next) => {
+    // Check if the request is an AJAX call or comes from the same site
+    const isAjax = req.headers['x-requested-with'] === 'XMLHttpRequest';
+    const isSameOrigin = req.headers['sec-fetch-site'] === 'same-origin';
+    
+    if (isAjax || isSameOrigin) {
+        next(); // Allow access
+    } else {
+        res.status(403).json({ error: 'Forbidden: Direct API access is restricted.' });
+    }
+};
+
 const requireAdmin = basicAuth({
     users: {
         [process.env.ADMIN_USER]: process.env.ADMIN_PASS
@@ -420,7 +433,7 @@ app.get('/daily', async (req, res) => {
     }
 });
 
-app.get('/calendar-activity', async (req, res) => {
+app.get('/calendar-activity', blockDirectApiAccess, async (req, res) => {
     try {
         const response = await axiosInstance.get(`${baseURL}/calendar-activity`, { params: req.query });
         res.json(response.data);
@@ -430,7 +443,7 @@ app.get('/calendar-activity', async (req, res) => {
     }
 });
 
-app.get('/daily-stats', async (req, res) => {
+app.get('/daily-stats', blockDirectApiAccess, async (req, res) => {
     try {
         const response = await axiosInstance.get(`${baseURL}/daily-stats`, { params: req.query });
         res.json(response.data);
@@ -440,7 +453,7 @@ app.get('/daily-stats', async (req, res) => {
     }
 });
 
-app.get('/model-bounds', async (req, res) => {
+app.get('/model-bounds', blockDirectApiAccess, async (req, res) => {
     try {
         const response = await axiosInstance.get(`${baseURL}/model-bounds`, { params: req.query });
         res.json(response.data);

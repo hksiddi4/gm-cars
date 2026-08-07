@@ -281,15 +281,23 @@
                             <div class="annual-header">
                                 <div class="annual-title-container">
                                     <h4 class="mb-0 fw-bold annual-title">Production Matrix</h4>
-                                    <!-- Dynamic Model Selector for the Matrix -->
-                                    <select id="matrixModelSelect" class="form-select form-select-sm bg-dark text-white border-secondary shadow-none" style="width: auto; min-width: 140px;">
-                                        <option value="">All Models</option>
-                                        <% if (typeof all_models !== 'undefined') { %>
-                                            <% all_models.forEach(function(m) { %>
-                                                <option value="<%= m %>" <%= selectedModel === m ? 'selected' : '' %>><%= m %></option>
-                                            <% }); %>
-                                        <% } %>
-                                    </select>
+                                    <!-- Dynamic Model Selector for the Matrix with standard UI styling -->
+                                    <div class="statsDropdown">
+                                        <select id="matrixModelSelect" class="form-select small-dropdown <%= selectedModel ? 'active-filter' : '' %>" style="width: auto; min-width: 140px;">
+                                            <option value="">All Models</option>
+                                            <% if (typeof all_models !== 'undefined') { %>
+                                                <% 
+                                                    let matrixModels = [...all_models];
+                                                    if (matrixModels.filter(m => m.startsWith('CORVETTE')).length > 1 && !matrixModels.includes('CORVETTE (C8)')) {
+                                                        matrixModels.unshift('CORVETTE (C8)');
+                                                    }
+                                                    matrixModels.forEach(function(m) { 
+                                                %>
+                                                    <option value="<%= m %>" <%= selectedModel === m ? 'selected' : '' %>><%= m %></option>
+                                                <% }); %>
+                                            <% } %>
+                                        </select>
+                                    </div>
                                 </div>
                                 <div class="annual-nav-container">
                                     <button type="button" class="btn-close btn-close-white" onclick="closeAnnualCalendar()"></button>
@@ -335,7 +343,13 @@
                                         window.location.search = params.toString();
                                     ">
                                 <option value="">All Models</option>
-                                <% stats.available_models.forEach(function(m) { %>
+                                <% 
+                                    let dailyModels = [...stats.available_models];
+                                    if (dailyModels.filter(m => m.startsWith('CORVETTE')).length > 1 && !dailyModels.includes('CORVETTE (C8)')) {
+                                        dailyModels.unshift('CORVETTE (C8)');
+                                    }
+                                    dailyModels.forEach(function(m) { 
+                                %>
                                     <option value="<%= m %>" <%= selectedModel === m ? 'selected' : '' %>><%= m %></option>
                                 <% }); %>
                             </select>
@@ -703,11 +717,13 @@
         let annualFetchController = null;
 
         // Fetch exact model bounds and active years
+        // Fetch exact model bounds and active years
         async function fetchModelBounds(model) {
             try {
-                // Always fetch so we have an exact map of active years
                 const url = model ? `/model-bounds?model=${encodeURIComponent(model)}` : `/model-bounds`;
-                const res = await fetch(url);
+                const res = await fetch(url, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
                 const data = await res.json();
 
                 if (data.active_years && data.active_years.length > 0) {
@@ -726,6 +742,13 @@
         // Listener for the internal Matrix model select
         document.getElementById('matrixModelSelect').addEventListener('change', async function() {
             matrixSelectedModel = this.value;
+            
+            // Toggle the blue active-filter class
+            if (matrixSelectedModel) {
+                this.classList.add('active-filter');
+            } else {
+                this.classList.remove('active-filter');
+            }
             
             await fetchModelBounds(matrixSelectedModel);
             // Jump exactly to the absolute latest active year the model has
@@ -836,8 +859,11 @@
                 try {
                     let url = `/calendar-activity?year=${currentAnnualYear}`;
                     if (matrixSelectedModel) url += `&model=${encodeURIComponent(matrixSelectedModel)}`;
-                    
-                    const res = await fetch(url, { signal: annualFetchController.signal });
+
+                    const res = await fetch(url, { 
+                        signal: annualFetchController.signal,
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    });
                     activityMap = await res.json();
                     
                     annualActivityCache[cacheKey] = activityMap;

@@ -234,9 +234,20 @@ def sort_price():
         conditions.append("v.modelYear = %s")
         params.append(year)
     if models_list:
-        placeholders = ', '.join(['%s'] * len(models_list))
-        conditions.append(f"v.model IN ({placeholders})")
-        params.extend(models_list)
+        if "CORVETTE (C8)" in models_list:
+            models_list.remove("CORVETTE (C8)")
+            # Convert the virtual label into a wildcard SQL search
+            c8_cond = "(v.model LIKE 'CORVETTE%%' AND v.modelYear >= '2020')"
+            if models_list:
+                placeholders = ', '.join(['%s'] * len(models_list))
+                conditions.append(f"({c8_cond} OR v.model IN ({placeholders}))")
+                params.extend(models_list)
+            else:
+                conditions.append(c8_cond)
+        else:
+            placeholders = ', '.join(['%s'] * len(models_list))
+            conditions.append(f"v.model IN ({placeholders})")
+            params.extend(models_list)
     if body:
         conditions.append("v.body = %s")
         params.append(body)
@@ -519,8 +530,12 @@ def calendar_activity():
     
     if model_filter:
         model_join = "JOIN Vehicles v ON o.order_id = v.order_id"
-        model_cond = "AND v.model = %s"
-        params.append(model_filter)
+        if model_filter == 'CORVETTE (C8)':
+            model_cond = "AND v.model LIKE %s AND v.modelYear >= '2020'"
+            params.append('CORVETTE%')
+        else:
+            model_cond = "AND v.model = %s"
+            params.append(model_filter)
         
     sqlStatement = f"""
         SELECT DATE_FORMAT(o.creation_date, '%%Y-%%m-%%d') as prod_date, COUNT(o.order_id) as count
@@ -544,13 +559,16 @@ def model_bounds():
     if not model_filter:
         sql_bounds = "SELECT CAST(MIN(creation_date) AS CHAR) as min_date, CAST(MAX(creation_date) AS CHAR) as max_date FROM Orders WHERE creation_date IS NOT NULL"
         bounds_rows = execute_read_query(conn, sql_bounds)
-        
         sql_years = "SELECT DISTINCT YEAR(creation_date) as year FROM Orders WHERE creation_date IS NOT NULL ORDER BY year ASC"
         year_rows = execute_read_query(conn, sql_years)
+    elif model_filter == 'CORVETTE (C8)':
+        sql_bounds = "SELECT CAST(MIN(o.creation_date) AS CHAR) as min_date, CAST(MAX(o.creation_date) AS CHAR) as max_date FROM Orders o JOIN Vehicles v ON o.order_id = v.order_id WHERE v.model LIKE %s AND v.modelYear >= '2020' AND o.creation_date IS NOT NULL"
+        bounds_rows = execute_read_query(conn, sql_bounds, ['CORVETTE%'])
+        sql_years = "SELECT DISTINCT YEAR(o.creation_date) as year FROM Orders o JOIN Vehicles v ON o.order_id = v.order_id WHERE v.model LIKE %s AND v.modelYear >= '2020' AND o.creation_date IS NOT NULL ORDER BY year ASC"
+        year_rows = execute_read_query(conn, sql_years, ['CORVETTE%'])
     else:
         sql_bounds = "SELECT CAST(MIN(o.creation_date) AS CHAR) as min_date, CAST(MAX(o.creation_date) AS CHAR) as max_date FROM Orders o JOIN Vehicles v ON o.order_id = v.order_id WHERE v.model = %s AND o.creation_date IS NOT NULL"
         bounds_rows = execute_read_query(conn, sql_bounds, [model_filter])
-        
         sql_years = "SELECT DISTINCT YEAR(o.creation_date) as year FROM Orders o JOIN Vehicles v ON o.order_id = v.order_id WHERE v.model = %s AND o.creation_date IS NOT NULL ORDER BY year ASC"
         year_rows = execute_read_query(conn, sql_years, [model_filter])
         
@@ -573,10 +591,13 @@ def daily_stats():
     # 1. Find MIN and MAX bounds first based on filters
     bounds_params = []
     if model_filter:
-        bounds_sql = "SELECT DATE_FORMAT(MIN(o.creation_date), '%%Y-%%m-%%d') as min_date, DATE_FORMAT(MAX(o.creation_date), '%%Y-%%m-%%d') as max_date FROM Orders o JOIN Vehicles v ON o.order_id = v.order_id WHERE v.model = %s AND o.creation_date IS NOT NULL"
-        bounds_params.append(model_filter)
+        if model_filter == 'CORVETTE (C8)':
+            bounds_sql = "SELECT DATE_FORMAT(MIN(o.creation_date), '%%Y-%%m-%%d') as min_date, DATE_FORMAT(MAX(o.creation_date), '%%Y-%%m-%%d') as max_date FROM Orders o JOIN Vehicles v ON o.order_id = v.order_id WHERE v.model LIKE %s AND v.modelYear >= '2020' AND o.creation_date IS NOT NULL"
+            bounds_params.append('CORVETTE%')
+        else:
+            bounds_sql = "SELECT DATE_FORMAT(MIN(o.creation_date), '%%Y-%%m-%%d') as min_date, DATE_FORMAT(MAX(o.creation_date), '%%Y-%%m-%%d') as max_date FROM Orders o JOIN Vehicles v ON o.order_id = v.order_id WHERE v.model = %s AND o.creation_date IS NOT NULL"
+            bounds_params.append(model_filter)
     else:
-        # Use single % here since bounds_params is empty and PyMySQL won't do python-side formatting
         bounds_sql = "SELECT DATE_FORMAT(MIN(creation_date), '%Y-%m-%d') as min_date, DATE_FORMAT(MAX(creation_date), '%Y-%m-%d') as max_date FROM Orders WHERE creation_date IS NOT NULL"
         bounds_params = None
     
@@ -619,8 +640,12 @@ def daily_stats():
 
     # Apply dropdown filter if passed
     if model_filter:
-        sqlStatement += " AND v.model = %s"
-        params.append(model_filter)
+        if model_filter == 'CORVETTE (C8)':
+            sqlStatement += " AND v.model LIKE %s AND v.modelYear >= '2020'"
+            params.append('CORVETTE%')
+        else:
+            sqlStatement += " AND v.model = %s"
+            params.append(model_filter)
         
     sqlStatement += """
         GROUP BY v.vehicle_id, v.modelYear, v.model, v.body, v.trim, 

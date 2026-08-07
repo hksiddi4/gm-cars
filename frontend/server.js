@@ -430,7 +430,7 @@ app.get('/calendar-activity', async (req, res) => {
     }
 });
 
-app.get('/api/daily-stats', async (req, res) => {
+app.get('/daily-stats', async (req, res) => {
     try {
         const response = await axiosInstance.get(`${baseURL}/daily-stats`, { params: req.query });
         res.json(response.data);
@@ -440,7 +440,7 @@ app.get('/api/daily-stats', async (req, res) => {
     }
 });
 
-app.get('/api/model-bounds', async (req, res) => {
+app.get('/model-bounds', async (req, res) => {
     try {
         const response = await axiosInstance.get(`${baseURL}/model-bounds`, { params: req.query });
         res.json(response.data);

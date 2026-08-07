@@ -700,7 +700,7 @@
                 return;
             }
             try {
-                const res = await fetch(`/api/model-bounds?model=${encodeURIComponent(model)}`);
+                const res = await fetch(`/model-bounds?model=${encodeURIComponent(model)}`);
                 const data = await res.json();
                 
                 if (data.min_date) {

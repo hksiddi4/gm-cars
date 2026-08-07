@@ -8,7 +8,7 @@ const fs = require('fs');
 const path = require('path');
 
 const basicAuth = require('express-basic-auth');
-const rateLimit = require('express-rate-limit');
+const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
 
 const authLimiter = rateLimit({
     windowMs: 5 * 60 * 1000,
@@ -16,7 +16,8 @@ const authLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     keyGenerator: (req, res) => {
-        return req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.ip;
+        const ip = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.ip;
+        return ipKeyGenerator(ip);
     },
     handler: (req, res) => {
         res.status(429).send(`
@@ -55,8 +56,9 @@ const searchLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     keyGenerator: (req, res) => {
-        return req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.ip;
-    }
+        const ip = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.ip;
+        return ipKeyGenerator(ip);
+    },
 });
 
 const apiLimiter = rateLimit({
@@ -65,7 +67,8 @@ const apiLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     keyGenerator: (req, res) => {
-        return req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.ip;
+        const ip = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.ip;
+        return ipKeyGenerator(ip);
     },
     handler: (req, res) => {
         res.status(429).json({ 

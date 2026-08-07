@@ -21,7 +21,7 @@
         }
 
         .calendar-wrapper:hover .daily-cal-icon {
-            color: #0d6efd !important;
+            color: #1d1e1e !important;
         }
         
         /* Responsive Formatting for Header Row */
@@ -76,9 +76,9 @@
                         <div class="calendar-wrapper position-relative d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; cursor: pointer;">
                             <!-- Visible Calendar Icon underneath -->
                             <i class="bi bi-calendar-date daily-cal-icon text-white" 
-                            style="transition: color 0.2s ease; z-index: 1;"></i>
+                            style="z-index: 1; cursor: pointer;"></i>
                             
-                            <!-- Transparent Native Date Input directly on top capturing all clicks/touches -->
+                            <!-- Transparent Native Date Input directly on top covering the entire area with a pointer -->
                             <input type="date" id="dailyDatePicker" 
                                 style="position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; border: none; padding: 0; cursor: pointer; z-index: 2;"
                                 value="<%= stats.current_date %>"

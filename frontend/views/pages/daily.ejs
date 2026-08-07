@@ -33,7 +33,7 @@
             padding: 0 1rem;
         }
         .annual-modal-overlay.show {
-            display: block; /* Changed from flex to block to prevent mobile top-clipping */
+            display: block; 
         }
         .annual-modal-content {
             background-color: #2b2b2b;
@@ -41,7 +41,7 @@
             border-radius: 8px;
             width: 100%;
             max-width: 1200px;
-            margin: 2rem auto; /* Ensures space above and safely centers */
+            margin: 2rem auto; 
             padding: 1.5rem;
             color: #e0e0e0;
             box-shadow: 0 8px 24px rgba(0,0,0,0.5);
@@ -687,20 +687,18 @@
 
         let activeMinYear = 2019;
         let activeMaxYear = new Date().getFullYear();
+        let activeYearsList = []; // Array holding only the specific years that have data
 
         let matrixSelectedModel = "<%= selectedModel %>";
         const annualActivityCache = {};
         let annualFetchController = null;
 
-        // NEW: Fast Endpoint Fetch
+        // Fetch exact model bounds and active years
         async function fetchModelBounds(model) {
-            if (!model) {
-                activeMinYear = 2019;
-                activeMaxYear = new Date().getFullYear();
-                return;
-            }
             try {
-                const res = await fetch(`/model-bounds?model=${encodeURIComponent(model)}`);
+                // Always fetch so we have an exact map of active years
+                const url = model ? `/model-bounds?model=${encodeURIComponent(model)}` : `/model-bounds`;
+                const res = await fetch(url);
                 const data = await res.json();
                 
                 if (data.min_date) {
@@ -714,10 +712,19 @@
                 } else {
                     activeMaxYear = new Date().getFullYear();
                 }
+
+                if (data.active_years && data.active_years.length > 0) {
+                    activeYearsList = data.active_years;
+                } else {
+                    activeYearsList = [];
+                    for(let y = activeMinYear; y <= activeMaxYear; y++) activeYearsList.push(y);
+                }
             } catch(e) {
                 console.error("Failed to fetch model bounds", e);
                 activeMinYear = 2019;
                 activeMaxYear = new Date().getFullYear();
+                activeYearsList = [];
+                for(let y = activeMinYear; y <= activeMaxYear; y++) activeYearsList.push(y);
             }
         }
 
@@ -735,8 +742,11 @@
             document.getElementById('annualModal').classList.add('show');
             
             await fetchModelBounds(matrixSelectedModel);
-            if (currentAnnualYear > activeMaxYear) currentAnnualYear = activeMaxYear;
-            if (currentAnnualYear < activeMinYear) currentAnnualYear = activeMinYear;
+            
+            // Validate the current year. If it doesn't have data for this model, push to max year.
+            if (!activeYearsList.includes(currentAnnualYear)) {
+                currentAnnualYear = activeMaxYear;
+            }
             
             renderAnnualMatrix(true, false); 
         }
@@ -745,10 +755,21 @@
             document.getElementById('annualModal').classList.remove('show');
         }
 
+        // Arrow buttons now iterate cleanly through the array to skip gaps!
         function changeAnnualYear(direction) {
-            currentAnnualYear += direction;
-            if (currentAnnualYear < activeMinYear) currentAnnualYear = activeMinYear;
-            if (currentAnnualYear > activeMaxYear) currentAnnualYear = activeMaxYear;
+            if (!activeYearsList || activeYearsList.length === 0) return;
+            
+            let currentIndex = activeYearsList.indexOf(currentAnnualYear);
+            if (currentIndex === -1) {
+                currentIndex = direction > 0 ? 0 : activeYearsList.length - 1;
+            } else {
+                currentIndex += direction;
+            }
+            
+            if (currentIndex < 0) currentIndex = 0;
+            if (currentIndex >= activeYearsList.length) currentIndex = activeYearsList.length - 1;
+            
+            currentAnnualYear = activeYearsList[currentIndex];
             renderAnnualMatrix();
         }
 
@@ -763,17 +784,22 @@
             const prevBtn = document.getElementById('annualPrevBtn');
             const nextBtn = document.getElementById('annualNextBtn');
             
-            if (currentAnnualYear <= activeMinYear) prevBtn.classList.add('invisible-btn');
+            // Check boundaries using our array index
+            const currentIndex = activeYearsList.indexOf(currentAnnualYear);
+            
+            if (currentIndex <= 0) prevBtn.classList.add('invisible-btn');
             else prevBtn.classList.remove('invisible-btn');
 
-            if (currentAnnualYear >= activeMaxYear) nextBtn.classList.add('invisible-btn');
+            if (currentIndex === -1 || currentIndex >= activeYearsList.length - 1) nextBtn.classList.add('invisible-btn');
             else nextBtn.classList.remove('invisible-btn');
 
+            // Render Year Filter Pills exclusively from our active array
             const yearsBar = document.getElementById('annualYearsBar');
             yearsBar.innerHTML = '';
             let activePill = null;
 
-            for (let y = activeMinYear; y <= activeMaxYear; y++) {
+            for (let i = 0; i < activeYearsList.length; i++) {
+                const y = activeYearsList[i];
                 const pill = document.createElement('button');
                 pill.type = 'button';
                 pill.className = `annual-year-pill ${y === currentAnnualYear ? 'active' : ''}`;

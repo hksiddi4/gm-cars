@@ -539,16 +539,28 @@ def calendar_activity():
 @app.route('/model-bounds', methods=['GET'])
 def model_bounds():
     model_filter = request.args.get('model')
-    if not model_filter:
-        return jsonify({'min_date': None, 'max_date': None})
-        
     conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
-    # Using CAST to CHAR guarantees standard YYYY-MM-DD without messing with % formatting
-    sql = "SELECT CAST(MIN(o.creation_date) AS CHAR) as min_date, CAST(MAX(o.creation_date) AS CHAR) as max_date FROM Orders o JOIN Vehicles v ON o.order_id = v.order_id WHERE v.model = %s AND o.creation_date IS NOT NULL"
-    rows = execute_read_query(conn, sql, [model_filter])
+    
+    if not model_filter:
+        sql_bounds = "SELECT CAST(MIN(creation_date) AS CHAR) as min_date, CAST(MAX(creation_date) AS CHAR) as max_date FROM Orders WHERE creation_date IS NOT NULL"
+        bounds_rows = execute_read_query(conn, sql_bounds)
+        
+        sql_years = "SELECT DISTINCT YEAR(creation_date) as year FROM Orders WHERE creation_date IS NOT NULL ORDER BY year ASC"
+        year_rows = execute_read_query(conn, sql_years)
+    else:
+        sql_bounds = "SELECT CAST(MIN(o.creation_date) AS CHAR) as min_date, CAST(MAX(o.creation_date) AS CHAR) as max_date FROM Orders o JOIN Vehicles v ON o.order_id = v.order_id WHERE v.model = %s AND o.creation_date IS NOT NULL"
+        bounds_rows = execute_read_query(conn, sql_bounds, [model_filter])
+        
+        sql_years = "SELECT DISTINCT YEAR(o.creation_date) as year FROM Orders o JOIN Vehicles v ON o.order_id = v.order_id WHERE v.model = %s AND o.creation_date IS NOT NULL ORDER BY year ASC"
+        year_rows = execute_read_query(conn, sql_years, [model_filter])
+        
     close_connection(conn)
     
-    return jsonify(rows[0] if rows else {'min_date': None, 'max_date': None})
+    return jsonify({
+        'min_date': bounds_rows[0]['min_date'] if bounds_rows else None,
+        'max_date': bounds_rows[0]['max_date'] if bounds_rows else None,
+        'active_years': [r['year'] for r in year_rows] if year_rows else []
+    })
 
 @app.route('/daily-stats', methods=['GET'])
 def daily_stats():

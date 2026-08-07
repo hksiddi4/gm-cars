@@ -20,6 +20,140 @@
             width: 100%;
         }
 
+        /* Custom Annual Production Matrix Modal */
+        .annual-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px);
+            z-index: 2000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+        .annual-modal-overlay.show {
+            display: flex;
+        }
+        .annual-modal-content {
+            background-color: #2b2b2b;
+            border: 1px solid #444;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 1200px;
+            padding: 1.5rem;
+            color: #e0e0e0;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .annual-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #444;
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+        }
+        .annual-year-bar {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding-bottom: 6px;
+            margin-bottom: 1.2rem;
+        }
+        .annual-year-pill {
+            background: #222;
+            border: 1px solid #444;
+            color: #aaa;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .annual-year-pill:hover {
+            background: #444;
+            color: white;
+        }
+        .annual-year-pill.active {
+            background: #0d6efd;
+            border-color: #0d6efd;
+            color: white;
+            font-weight: bold;
+        }
+        .annual-months-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1rem;
+        }
+        .annual-month-card {
+            background: #222;
+            border: 1px solid #383838;
+            border-radius: 6px;
+            padding: 0.75rem;
+        }
+        .annual-month-title {
+            text-align: center;
+            font-weight: bold;
+            font-size: 0.85rem;
+            color: #6b8eb3;
+            margin-bottom: 6px;
+            letter-spacing: 1px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 4px;
+        }
+        .annual-days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+            text-align: center;
+            font-size: 0.7rem;
+        }
+        .annual-day-header {
+            color: #777;
+            font-weight: bold;
+            padding-bottom: 2px;
+        }
+        .annual-day-cell {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 3px;
+            color: #666;
+            background: #1a1a1a;
+        }
+        .annual-day-cell.has-activity {
+            background: #333;
+            color: #fff;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .annual-day-cell.has-activity:hover {
+            background: #0d6efd;
+        }
+        .annual-day-cell.selected-date {
+            background: #0d6efd !important;
+            color: white;
+            outline: 1.5px solid #fff;
+        }
+        .annual-activity-dot {
+            width: 4px;
+            height: 4px;
+            background-color: #6b8eb3;
+            border-radius: 50%;
+            margin-top: 1px;
+        }
+        .annual-day-cell.selected-date .annual-activity-dot {
+            background-color: white;
+        }
+        .annual-day-cell.empty {
+            background: transparent;
+        }
+
         .calendar-wrapper:hover .daily-cal-icon {
             color: #444 !important;
         }
@@ -35,79 +169,6 @@
         }
         .daily-cal-icon {
             font-size: 1.75rem;
-        }
-
-        /* Interactive Calendar Component */
-        .calendar-dropdown {
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #2b2b2b;
-            border: 1px solid #444;
-            border-radius: 8px;
-            padding: 1rem;
-            width: 320px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-            z-index: 1000;
-            display: none;
-        }
-        .calendar-dropdown.show {
-            display: block;
-        }
-        .cal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-            color: white;
-            font-weight: bold;
-        }
-        .cal-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 4px;
-            text-align: center;
-        }
-        .cal-day-name {
-            font-size: 0.75rem;
-            color: #888;
-            padding-bottom: 4px;
-        }
-        .cal-cell {
-            aspect-ratio: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            border-radius: 4px;
-            cursor: pointer;
-            color: #ddd;
-            font-size: 0.85rem;
-            position: relative;
-            transition: background 0.2s;
-        }
-        .cal-cell:hover:not(.empty) {
-            background: #444;
-        }
-        .cal-cell.selected {
-            background: #0d6efd !important;
-            color: white;
-            font-weight: bold;
-        }
-        .cal-cell.empty {
-            cursor: default;
-            opacity: 0.2;
-        }
-        .activity-dot {
-            width: 5px;
-            height: 5px;
-            background-color: #0d6efd;
-            border-radius: 50%;
-            margin-top: 2px;
-        }
-        .cal-cell.selected .activity-dot {
-            background-color: white;
         }
         
         @media (max-width: 768px) {
@@ -143,29 +204,33 @@
                     %>
                     <h1 class="daily-title mb-0 text-nowrap"><%= formattedDate %></h1>
                     
-                    <!-- Interactive Custom Calendar Picker -->
+                    <!-- Custom Annual Calendar Trigger -->
                     <div class="d-flex justify-content-center flex-grow-1 position-relative">
-                        <div class="calendar-wrapper d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; cursor: pointer;" onclick="toggleCalendarDropdown(event)">
+                        <div class="calendar-wrapper d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; cursor: pointer;" onclick="openAnnualCalendar()" title="View Full Year Matrix">
                             <i class="bi bi-calendar-date daily-cal-icon text-white"></i>
                         </div>
-                        
-                        <!-- Dropdown Popup Container -->
-                        <div id="customCalendarDropdown" class="calendar-dropdown" onclick="event.stopPropagation()">
-                            <div class="cal-header">
-                                <button type="button" class="btn btn-sm btn-dark" onclick="changeMonth(-1)"><i class="bi bi-chevron-left"></i></button>
-                                <span id="calMonthYearTitle">Month Year</span>
-                                <button type="button" class="btn btn-sm btn-dark" onclick="changeMonth(1)"><i class="bi bi-chevron-right"></i></button>
+                    </div>
+
+                    <!-- Full Year Production Matrix Modal -->
+                    <div id="annualModal" class="annual-modal-overlay" onclick="closeAnnualCalendar()">
+                        <div class="annual-modal-content" onclick="event.stopPropagation()">
+                            <div class="annual-header">
+                                <div class="d-flex align-items-center gap-3">
+                                    <h4 class="mb-0 fw-bold">Production Matrix</h4>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <button type="button" class="btn btn-sm btn-dark border-secondary" onclick="changeAnnualYear(-1)"><i class="bi bi-chevron-left"></i></button>
+                                        <span id="annualModalYear" class="fs-5 fw-bold text-primary">2026</span>
+                                        <button type="button" class="btn btn-sm btn-dark border-secondary" onclick="changeAnnualYear(1)"><i class="bi bi-chevron-right"></i></button>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn-close btn-close-white" onclick="closeAnnualCalendar()"></button>
                             </div>
-                            <div class="cal-grid">
-                                <div class="cal-day-name">Su</div>
-                                <div class="cal-day-name">Mo</div>
-                                <div class="cal-day-name">Tu</div>
-                                <div class="cal-day-name">We</div>
-                                <div class="cal-day-name">Th</div>
-                                <div class="cal-day-name">Fr</div>
-                                <div class="cal-day-name">Sa</div>
-                            </div>
-                            <div id="calDaysGrid" class="cal-grid mt-1"></div>
+                            
+                            <!-- Quick Year Selection Bar -->
+                            <div id="annualYearsBar" class="annual-year-bar"></div>
+
+                            <!-- 12 Months Grid Container -->
+                            <div id="annualMonthsContainer" class="annual-months-grid"></div>
                         </div>
                     </div>
                     
@@ -547,103 +612,132 @@
         }
     </script>
 
-    <!-- Interactive Calendar Controller Script -->
+    <!-- Annual Production Matrix Controller Script -->
     <script>
-        let currentCalDate = new Date("<%= stats.current_date %>T00:00:00");
-        if (isNaN(currentCalDate)) currentCalDate = new Date();
-        
-        const minDateStr = "<%= stats.min_date || '' %>";
-        const maxDateStr = "<%= stats.max_date || '' %>";
-        const minDate = minDateStr ? new Date(minDateStr + "T00:00:00") : null;
-        const maxDate = maxDateStr ? new Date(maxDateStr + "T00:00:00") : null;
+        let currentAnnualYear = new Date("<%= stats.current_date %>T00:00:00").getFullYear();
+        if (isNaN(currentAnnualYear)) currentAnnualYear = new Date().getFullYear();
 
-        function toggleCalendarDropdown(event) {
-            event.stopPropagation();
-            const dropdown = document.getElementById('customCalendarDropdown');
-            dropdown.classList.toggle('show');
-            if (dropdown.classList.contains('show')) {
-                renderCalendar();
+        const minYearRange = 2019;
+        const maxYearRange = new Date().getFullYear();
+
+        function openAnnualCalendar() {
+            document.getElementById('annualModal').classList.add('show');
+            renderAnnualMatrix();
+        }
+
+        function closeAnnualCalendar() {
+            document.getElementById('annualModal').classList.remove('show');
+        }
+
+        function changeAnnualYear(direction) {
+            currentAnnualYear += direction;
+            if (currentAnnualYear < minYearRange) currentAnnualYear = minYearRange;
+            if (currentAnnualYear > maxYearRange) currentAnnualYear = maxYearRange;
+            renderAnnualMatrix();
+        }
+
+        function selectAnnualYear(yr) {
+            currentAnnualYear = yr;
+            renderAnnualMatrix();
+        }
+
+        async function renderAnnualMatrix() {
+            document.getElementById('annualModalYear').innerText = currentAnnualYear;
+
+            // Render Year Filter Pills Bar
+            const yearsBar = document.getElementById('annualYearsBar');
+            yearsBar.innerHTML = '';
+            for (let y = minYearRange; y <= maxYearRange; y++) {
+                const pill = document.createElement('button');
+                pill.type = 'button';
+                pill.className = `annual-year-pill ${y === currentAnnualYear ? 'active' : ''}`;
+                pill.innerText = y;
+                pill.onclick = () => selectAnnualYear(y);
+                yearsBar.appendChild(pill);
             }
-        }
 
-        document.addEventListener('click', function() {
-            const dropdown = document.getElementById('customCalendarDropdown');
-            if (dropdown) dropdown.classList.remove('show');
-        });
-
-        function changeMonth(direction) {
-            currentCalDate.setMonth(currentCalDate.getMonth() + direction);
-            renderCalendar();
-        }
-
-        async function renderCalendar() {
-            const year = currentCalDate.getFullYear();
-            const month = currentCalDate.getMonth(); // 0-indexed
-            
-            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-            document.getElementById('calMonthYearTitle').innerText = `${monthNames[month]} ${year}`;
-            
+            // Fetch full year activity dataset
             const modelParam = "<%= selectedModel %>";
-            let url = `/calendar-activity?year=${year}&month=${month + 1}`;
-            if (modelParam) url += `&model=${encodeURIComponent(modelParam)}`;
-
             let activityMap = {};
             try {
+                let url = `/calendar-activity?year=${currentAnnualYear}`;
+                if (modelParam) url += `&model=${encodeURIComponent(modelParam)}`;
                 const res = await fetch(url);
                 activityMap = await res.json();
             } catch (err) {
-                console.error("Failed to fetch calendar activity", err);
+                console.error("Failed to load production matrix activity", err);
             }
 
-            const firstDayIndex = new Date(year, month, 1).getDay();
-            const totalDays = new Date(year, month + 1, 0).getDate();
-            
-            const daysGrid = document.getElementById('calDaysGrid');
-            daysGrid.innerHTML = '';
+            const container = document.getElementById('annualMonthsContainer');
+            container.innerHTML = '';
 
-            for (let i = 0; i < firstDayIndex; i++) {
-                const emptyCell = document.createElement('div');
-                emptyCell.className = 'cal-cell empty';
-                daysGrid.appendChild(emptyCell);
-            }
+            const monthLabels = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
+            const activeDateStr = "<%= stats.current_date %>";
 
-            const selectedDateStr = "<%= stats.current_date %>";
+            for (let m = 0; m < 12; m++) {
+                const card = document.createElement('div');
+                card.className = 'annual-month-card';
 
-            for (let day = 1; day <= totalDays; day++) {
-                const cell = document.createElement('div');
-                cell.className = 'cal-cell';
-                
-                const mm = String(month + 1).padStart(2, '0');
-                const dd = String(day).padStart(2, '0');
-                const dateStr = `${year}-${mm}-${dd}`;
-                
-                cell.innerText = day;
+                const title = document.createElement('div');
+                title.className = 'annual-month-title';
+                title.innerText = monthLabels[m];
+                card.appendChild(title);
 
-                const cellDate = new Date(dateStr + "T00:00:00");
-                const isDisabled = (minDate && cellDate < minDate) || (maxDate && cellDate > maxDate);
+                const daysGrid = document.createElement('div');
+                daysGrid.className = 'annual-days-grid';
 
-                if (isDisabled) {
-                    cell.style.opacity = '0.3';
-                    cell.style.cursor = 'not-allowed';
-                } else {
-                    if (dateStr === selectedDateStr) {
-                        cell.classList.add('selected');
-                    }
+                ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].forEach(dName => {
+                    const dHead = document.createElement('div');
+                    dHead.className = 'annual-day-header';
+                    dHead.innerText = dName;
+                    daysGrid.appendChild(dHead);
+                });
 
-                    if (activityMap[dateStr] && activityMap[dateStr] > 0) {
-                        const dot = document.createElement('div');
-                        dot.className = 'activity-dot';
-                        cell.appendChild(dot);
-                    }
+                const firstDayIndex = new Date(currentAnnualYear, m, 1).getDay();
+                const totalDaysInMonth = new Date(currentAnnualYear, m + 1, 0).getDate();
 
-                    cell.addEventListener('click', () => {
-                        const params = new URLSearchParams(window.location.search);
-                        params.set('date', dateStr);
-                        window.location.search = params.toString();
-                    });
+                // Offset padding for starting day of the week
+                for (let i = 0; i < firstDayIndex; i++) {
+                    const emptyCell = document.createElement('div');
+                    emptyCell.className = 'annual-day-cell empty';
+                    daysGrid.appendChild(emptyCell);
                 }
 
-                daysGrid.appendChild(cell);
+                // Populate days
+                for (let day = 1; day <= totalDaysInMonth; day++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'annual-day-cell';
+                    
+                    const mm = String(m + 1).padStart(2, '0');
+                    const dd = String(day).padStart(2, '0');
+                    const formattedDateKey = `${currentAnnualYear}-${mm}-${dd}`;
+
+                    cell.innerText = day;
+
+                    const count = activityMap[formattedDateKey] || 0;
+                    if (count > 0) {
+                        cell.classList.add('has-activity');
+                        const dot = document.createElement('div');
+                        dot.className = 'annual-activity-dot';
+                        cell.appendChild(dot);
+                        
+                        cell.title = `${count} vehicles added on ${formattedDateKey}`;
+                        cell.onclick = () => {
+                            const queryParams = new URLSearchParams(window.location.search);
+                            queryParams.set('date', formattedDateKey);
+                            window.location.search = queryParams.toString();
+                        };
+                    }
+
+                    if (formattedDateKey === activeDateStr) {
+                        cell.classList.add('selected-date');
+                    }
+
+                    daysGrid.appendChild(cell);
+                }
+
+                card.appendChild(daysGrid);
+                container.appendChild(card);
             }
         }
     </script>

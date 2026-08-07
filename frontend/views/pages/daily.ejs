@@ -55,6 +55,8 @@
             border-bottom: 1px solid #444;
             padding-bottom: 1rem;
             margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 10px;
         }
         .annual-year-bar {
             display: flex;
@@ -72,6 +74,7 @@
             font-size: 0.8rem;
             cursor: pointer;
             transition: all 0.2s;
+            white-space: nowrap;
         }
         .annual-year-pill:hover {
             background: #444;
@@ -125,6 +128,7 @@
             border-radius: 3px;
             color: #666;
             background: #1a1a1a;
+            position: relative;
         }
         .annual-day-cell.has-activity {
             background: #333;
@@ -133,12 +137,22 @@
             font-weight: bold;
         }
         .annual-day-cell.has-activity:hover {
-            opacity: 0.85; /* Soft hover effect when custom colors are applied */
+            opacity: 0.85; 
         }
         .annual-day-cell.selected-date {
             outline: 3px solid #fff !important;
             outline-offset: -3px;
-            z-index: 2; /* Ensures the outline overlays adjacent cells cleanly */
+            z-index: 2;
+        }
+        .annual-activity-dot {
+            width: 4px;
+            height: 4px;
+            background-color: #6b8eb3;
+            border-radius: 50%;
+            margin-top: 1px;
+        }
+        .annual-day-cell.selected-date .annual-activity-dot {
+            background-color: white;
         }
         .annual-day-cell.empty {
             background: transparent;
@@ -205,13 +219,17 @@
                     <div id="annualModal" class="annual-modal-overlay" onclick="closeAnnualCalendar()">
                         <div class="annual-modal-content" onclick="event.stopPropagation()">
                             <div class="annual-header">
-                                <div class="d-flex align-items-center gap-3">
-                                    <h4 class="mb-0 fw-bold">Production Matrix</h4>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <button type="button" class="btn btn-sm btn-dark border-secondary" onclick="changeAnnualYear(-1)"><i class="bi bi-chevron-left"></i></button>
-                                        <span id="annualModalYear" class="fs-5 fw-bold text-white">2026</span>
-                                        <button type="button" class="btn btn-sm btn-dark border-secondary" onclick="changeAnnualYear(1)"><i class="bi bi-chevron-right"></i></button>
-                                    </div>
+                                <div class="d-flex align-items-center gap-2 gap-md-3">
+                                    <h4 class="mb-0 fw-bold d-none d-md-block">Production Matrix</h4>
+                                    <!-- Dynamic Model Selector for the Matrix -->
+                                    <select id="matrixModelSelect" class="form-select form-select-sm bg-dark text-white border-secondary shadow-none" style="width: auto; min-width: 140px; font-size: 0.85rem;">
+                                        <option value="">All Models</option>
+                                    </select>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <button type="button" class="btn btn-sm btn-dark border-secondary" onclick="changeAnnualYear(-1)"><i class="bi bi-chevron-left"></i></button>
+                                    <span id="annualModalYear" class="fs-5 fw-bold text-white" style="min-width: 50px; text-align: center;">2026</span>
+                                    <button type="button" class="btn btn-sm btn-dark border-secondary" onclick="changeAnnualYear(1)"><i class="bi bi-chevron-right"></i></button>
                                 </div>
                                 <button type="button" class="btn-close btn-close-white" onclick="closeAnnualCalendar()"></button>
                             </div>
@@ -610,14 +628,54 @@
         const minYearRange = 2019;
         const maxYearRange = new Date().getFullYear();
 
-        // Cache and AbortController to prevent Nginx/Database query spam
+        let matrixSelectedModel = "<%= selectedModel %>";
         const annualActivityCache = {};
         let annualFetchController = null;
 
+        async function loadMatrixModels() {
+            const select = document.getElementById('matrixModelSelect');
+            try {
+                const res = await fetch('/wheels');
+                const data = await res.json();
+                data.model.forEach(m => {
+                    const opt = document.createElement('option');
+                    opt.value = m;
+                    opt.innerText = m;
+                    select.appendChild(opt);
+                });
+                select.value = matrixSelectedModel;
+                select.dataset.loaded = "true";
+            } catch(e) {
+                console.error("Failed to load models for matrix", e);
+            }
+        }
+
+        // Listener for the internal Matrix model select
+        document.getElementById('matrixModelSelect').addEventListener('change', async function() {
+            matrixSelectedModel = this.value;
+            
+            if (matrixSelectedModel) {
+                try {
+                    // Fetch the stats for this model to find its max_date
+                    const res = await fetch(`/daily-stats?model=${encodeURIComponent(matrixSelectedModel)}`);
+                    const data = await res.json();
+                    if (data.max_date) {
+                        currentAnnualYear = new Date(data.max_date + "T00:00:00").getFullYear();
+                    }
+                } catch(e) {
+                    console.error("Failed to fetch model bounds", e);
+                }
+            }
+            
+            renderAnnualMatrix(false, true); 
+        });
+
         function openAnnualCalendar() {
             document.getElementById('annualModal').classList.add('show');
-            // Pass 'true' to signal this is the initial opening so it auto-scrolls down
-            renderAnnualMatrix(true); 
+            if (!document.getElementById('matrixModelSelect').dataset.loaded) {
+                loadMatrixModels();
+            }
+            renderAnnualMatrix(true, false); 
         }
 
         function closeAnnualCalendar() {
@@ -636,7 +694,7 @@
             renderAnnualMatrix();
         }
 
-        async function renderAnnualMatrix(isInitialOpen = false) {
+        async function renderAnnualMatrix(isInitialOpen = false, isModelChange = false) {
             document.getElementById('annualModalYear').innerText = currentAnnualYear;
 
             // Render Year Filter Pills Bar
@@ -665,16 +723,13 @@
                 }, 10);
             }
 
-            const modelParam = "<%= selectedModel %>";
-            const cacheKey = `${currentAnnualYear}-${modelParam}`;
+            const cacheKey = `${currentAnnualYear}-${matrixSelectedModel}`;
             let activityMap = {};
 
-            // 1. Check if we already fetched this year to instantly load it
             if (annualActivityCache[cacheKey]) {
                 activityMap = annualActivityCache[cacheKey];
-                buildAnnualGrid(activityMap, isInitialOpen);
+                buildAnnualGrid(activityMap, isInitialOpen, isModelChange);
             } else {
-                // 2. Cancel any pending/in-flight requests if the user clicks rapidly
                 if (annualFetchController) {
                     annualFetchController.abort();
                 }
@@ -682,18 +737,15 @@
 
                 try {
                     let url = `/calendar-activity?year=${currentAnnualYear}`;
-                    if (modelParam) url += `&model=${encodeURIComponent(modelParam)}`;
+                    if (matrixSelectedModel) url += `&model=${encodeURIComponent(matrixSelectedModel)}`;
                     
-                    // Trigger fetch with the abort signal attached
                     const res = await fetch(url, { signal: annualFetchController.signal });
                     activityMap = await res.json();
                     
-                    // Save successful fetch to cache
                     annualActivityCache[cacheKey] = activityMap;
                     
-                    buildAnnualGrid(activityMap, isInitialOpen);
+                    buildAnnualGrid(activityMap, isInitialOpen, isModelChange);
                 } catch (err) {
-                    // Ignore the error if it was intentionally aborted by user clicking fast
                     if (err.name !== 'AbortError') {
                         console.error("Failed to load production matrix activity", err);
                     }
@@ -701,9 +753,7 @@
             }
         }
 
-        // Helper function extracted to allow for caching logic
-        function buildAnnualGrid(activityMap, isInitialOpen) {
-            // Calculate max count for the color scale relative to this year
+        function buildAnnualGrid(activityMap, isInitialOpen, isModelChange) {
             const counts = Object.values(activityMap);
             const maxCount = counts.length > 0 ? Math.max(...counts) : 1;
 
@@ -735,14 +785,12 @@
                 const firstDayIndex = new Date(currentAnnualYear, m, 1).getDay();
                 const totalDaysInMonth = new Date(currentAnnualYear, m + 1, 0).getDate();
 
-                // Offset padding for starting day of the week
                 for (let i = 0; i < firstDayIndex; i++) {
                     const emptyCell = document.createElement('div');
                     emptyCell.className = 'annual-day-cell empty';
                     daysGrid.appendChild(emptyCell);
                 }
 
-                // Populate days
                 for (let day = 1; day <= totalDaysInMonth; day++) {
                     const cell = document.createElement('div');
                     cell.className = 'annual-day-cell';
@@ -768,6 +816,11 @@
                         cell.onclick = () => {
                             const queryParams = new URLSearchParams(window.location.search);
                             queryParams.set('date', formattedDateKey);
+                            if (matrixSelectedModel) {
+                                queryParams.set('model', matrixSelectedModel);
+                            } else {
+                                queryParams.delete('model');
+                            }
                             window.location.search = queryParams.toString();
                         };
                     }
@@ -783,15 +836,24 @@
                 container.appendChild(card);
             }
 
-            // Auto-scroll the modal down to the selected date's month
-            if (isInitialOpen) {
-                setTimeout(() => {
+            // Scrolling behavior
+            setTimeout(() => {
+                if (isModelChange) {
+                    const activityCells = container.querySelectorAll('.has-activity');
+                    if (activityCells.length > 0) {
+                        const latestCell = activityCells[activityCells.length - 1]; // Scroll to the very last active day
+                        latestCell.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    } else {
+                        // If no activity this year, scroll to top
+                        container.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
+                } else if (isInitialOpen) {
                     const selectedCell = container.querySelector('.selected-date');
                     if (selectedCell) {
                         selectedCell.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }
-                }, 100);
-            }
+                }
+            }, 100);
         }
     </script>
 </body>

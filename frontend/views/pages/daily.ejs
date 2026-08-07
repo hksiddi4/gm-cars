@@ -274,7 +274,7 @@
                 <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4 w-100">
                     <div class="d-flex align-items-center gap-3 flex-grow-1" style="max-width: max-content;">
                         <% if (stats.available_models && stats.available_models.length > 0) { %>
-                            <div class="statsDropdown" style="width: 220px;"> <!-- Dropdown shortened -->
+                            <div class="statsDropdown" style="width: 220px;">
                                 <select id="modelFilter" class="form-select small-dropdown <%= selectedModel ? 'active-filter' : '' %>" 
                                         onchange="
                                             const params = new URLSearchParams(window.location.search);
@@ -360,45 +360,6 @@
                             <div id="annualMonthsContainer" class="annual-months-grid"></div>
                         </div>
                     </div>
-                </div>
-                <% 
-                    let vehLink = `/vehicles?date=${stats.current_date}`;
-                    if (selectedModel) {
-                        vehLink += `&model=${encodeURIComponent(selectedModel)}`;
-                    }
-                %>
-                <!-- Vehicles Added Button -->
-                <a href="<%= vehLink %>" class="model-btn daily-veh-btn text-white text-decoration-none shadow-sm text-nowrap mt-1">
-                    <span class="fw-bold me-1"><%= formatCurrency(stats.total) %></span> 
-                    <span class="fw-normal">Vehicles Added</span>
-                </a>
-            </div>
-
-                <!-- Filters Row -->
-                <div class="d-flex flex-wrap gap-2 mb-4 w-100">
-                    <% if (stats.available_models && stats.available_models.length > 0) { %>
-                        <div class="statsDropdown" style="max-width: 300px;">
-                            <select id="modelFilter" class="form-select small-dropdown <%= selectedModel ? 'active-filter' : '' %>" 
-                                    onchange="
-                                        const params = new URLSearchParams(window.location.search);
-                                        if (this.value) params.set('model', this.value);
-                                        else params.delete('model');
-                                        window.location.search = params.toString();
-                                    ">
-                                <option value="">All Models</option>
-                                <% 
-                                    let dailyModels = [...stats.available_models];
-                                    if (dailyModels.filter(m => m.startsWith('CORVETTE')).length > 1 && !dailyModels.includes('CORVETTE (C8)')) {
-                                        dailyModels.push('CORVETTE (C8)');
-                                    }
-                                    dailyModels.sort((a, b) => a.localeCompare(b));
-                                    dailyModels.forEach(function(m) { 
-                                %>
-                                    <option value="<%= m %>" <%= selectedModel === m ? 'selected' : '' %>><%= m %></option>
-                                <% }); %>
-                            </select>
-                        </div>
-                    <% } %>
                 </div>
 
                 <% if (stats.total === 0) { %>
@@ -761,9 +722,9 @@
         let annualFetchController = null;
 
         // Fetch exact model bounds and active years
-        // Fetch exact model bounds and active years
         async function fetchModelBounds(model) {
             try {
+                // Always fetch so we have an exact map of active years
                 const url = model ? `/model-bounds?model=${encodeURIComponent(model)}` : `/model-bounds`;
                 const res = await fetch(url, {
                     headers: { 'X-Requested-With': 'XMLHttpRequest' }
@@ -981,7 +942,7 @@
                         
                         cell.title = `${count.toLocaleString()} vehicles added on ${formattedDateKey}`;
                         cell.onclick = () => {
-                            const queryParams = new URLSearchParams(window.location.search);
+                            const queryParams = newSearchParams(window.location.search);
                             queryParams.set('date', formattedDateKey);
                             if (matrixSelectedModel) {
                                 queryParams.set('model', matrixSelectedModel);

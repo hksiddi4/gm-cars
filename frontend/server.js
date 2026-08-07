@@ -415,6 +415,16 @@ app.get('/daily', async (req, res) => {
     }
 });
 
+app.get('/calendar-activity', async (req, res) => {
+    try {
+        const response = await axiosInstance.get(`${baseURL}/calendar-activity`, { params: req.query });
+        res.json(response.data);
+    } catch (error) {
+        console.error("Calendar Activity Error:", error);
+        res.status(500).json({ error: 'Failed to fetch calendar activity' });
+    }
+});
+
 app.get('/stats', async (req, res) => {
     try {
         const response = await axiosInstance.get(`${baseURL}/stats`, { params: req.query });

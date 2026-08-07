@@ -668,6 +668,10 @@
                 console.error("Failed to load production matrix activity", err);
             }
 
+            // Calculate max count for the color scale relative to this year
+            const counts = Object.values(activityMap);
+            const maxCount = counts.length > 0 ? Math.max(...counts) : 1;
+
             const container = document.getElementById('annualMonthsContainer');
             container.innerHTML = '';
 
@@ -717,11 +721,13 @@
                     const count = activityMap[formattedDateKey] || 0;
                     if (count > 0) {
                         cell.classList.add('has-activity');
-                        const dot = document.createElement('div');
-                        dot.className = 'annual-activity-dot';
-                        cell.appendChild(dot);
                         
-                        cell.title = `${count} vehicles added on ${formattedDateKey}`;
+                        // Heatmap coloring: Calculate opacity from 0.25 (lowest activity) to 1.0 (highest)
+                        const intensity = Math.max(0.25, count / maxCount);
+                        cell.style.backgroundColor = `rgba(13, 110, 253, ${intensity})`;
+                        cell.style.color = '#fff';
+                        
+                        cell.title = `${count.toLocaleString()} vehicles added on ${formattedDateKey}`;
                         cell.onclick = () => {
                             const queryParams = new URLSearchParams(window.location.search);
                             queryParams.set('date', formattedDateKey);
@@ -731,6 +737,7 @@
 
                     if (formattedDateKey === activeDateStr) {
                         cell.classList.add('selected-date');
+                        cell.style.backgroundColor = '#0d6efd'; // Override with solid blue for the selected date
                     }
 
                     daysGrid.appendChild(cell);

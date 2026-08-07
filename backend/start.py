@@ -517,7 +517,9 @@ def daily_stats():
         bounds_sql = "SELECT DATE_FORMAT(MIN(o.creation_date), '%%Y-%%m-%%d') as min_date, DATE_FORMAT(MAX(o.creation_date), '%%Y-%%m-%%d') as max_date FROM Orders o JOIN Vehicles v ON o.order_id = v.order_id WHERE v.model = %s AND o.creation_date IS NOT NULL"
         bounds_params.append(model_filter)
     else:
-        bounds_sql = "SELECT DATE_FORMAT(MIN(creation_date), '%%Y-%%m-%%d') as min_date, DATE_FORMAT(MAX(creation_date), '%%Y-%%m-%%d') as max_date FROM Orders WHERE creation_date IS NOT NULL"
+        # Use single % here since bounds_params is empty and PyMySQL won't do python-side formatting
+        bounds_sql = "SELECT DATE_FORMAT(MIN(creation_date), '%Y-%m-%d') as min_date, DATE_FORMAT(MAX(creation_date), '%Y-%m-%d') as max_date FROM Orders WHERE creation_date IS NOT NULL"
+        bounds_params = None
     
     bounds_rows = execute_read_query(conn, bounds_sql, bounds_params)
     min_date = bounds_rows[0]['min_date'] if bounds_rows else None

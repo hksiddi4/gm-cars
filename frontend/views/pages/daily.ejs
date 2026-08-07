@@ -56,9 +56,9 @@
                 <!-- Title and Button Row -->
                 <div class="d-flex justify-content-between align-items-center mt-4 mb-3 gap-2 flex-nowrap">
                     <% 
-                        let formattedDate = stats.current_date;
+                        let formattedDate = stats.current_date || new Date().toISOString().split('T')[0];
                         try {
-                            const [y, m, d] = stats.current_date.split('-');
+                            const [y, m, d] = formattedDate.split('-');
                             const dateObj = new Date(y, m - 1, d);
                             formattedDate = dateObj.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
                         } catch (e) {

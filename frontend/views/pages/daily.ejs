@@ -50,11 +50,11 @@
             flex-direction: column;
         }
         
-        /* Restructured Matrix Header for zero dead space */
+        /* Aggressively tightened header spacing to remove dead space */
         .annual-header {
             border-bottom: 1px solid #333;
-            padding-bottom: 0.75rem;
-            margin-bottom: 0.75rem;
+            padding-bottom: 0.4rem;
+            margin-bottom: 0.4rem;
             flex-shrink: 0;
         }
         .annual-title {
@@ -71,7 +71,7 @@
             gap: 6px;
             overflow-x: auto;
             padding-bottom: 2px;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.4rem;
             flex-shrink: 0;
         }
 
@@ -189,18 +189,16 @@
             background: transparent;
         }
 
-        /* Calendar Icon Button Animation */
+        /* Calendar Icon Hover Color Transition Animation */
         .calendar-wrapper {
-            transition: transform 0.2s ease;
+            transition: color 0.2s ease, background-color 0.2s ease;
+            border-radius: 4px;
         }
-        .calendar-wrapper:hover {
-            transform: translateY(-2px);
-        }
-        .calendar-wrapper:active {
-            transform: translateY(0);
+        .calendar-wrapper .daily-cal-icon {
+            transition: color 0.2s ease;
         }
         .calendar-wrapper:hover .daily-cal-icon {
-            color: #444 !important;
+            color: #adb5bd !important; /* Smooth color transition like a button hover */
         }
         
         /* Responsive Formatting */
@@ -270,7 +268,6 @@
                 <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4 w-100">
                     <div class="d-flex align-items-center gap-3 flex-grow-1" style="max-width: max-content;">
                         <% if (stats.available_models && stats.available_models.length > 0) { %>
-                            <!-- Added m-0 to strip inherited margins -->
                             <div class="statsDropdown m-0" style="width: 220px;">
                                 <select id="modelFilter" class="form-select small-dropdown m-0 <%= selectedModel ? 'active-filter' : '' %>" 
                                         onchange="
@@ -293,14 +290,14 @@
                                 </select>
                             </div>
                         <% } %>
-
-                        <!-- Custom Annual Calendar Trigger (Added mt-1 for optical alignment) -->
-                        <div class="calendar-wrapper d-flex align-items-center justify-content-center mt-1" style="width: 36px; height: 36px; cursor: pointer;" onclick="openAnnualCalendar()" title="View Full Year Matrix">
-                            <i class="bi bi-calendar-date daily-cal-icon text-white"></i>
-                        </div>
+                    </div>
+                    
+                    <!-- Custom Annual Calendar Trigger (with smooth color transition hover) -->
+                    <div class="calendar-wrapper d-flex align-items-center justify-content-center mt-1" style="width: 36px; height: 36px; cursor: pointer;" onclick="openAnnualCalendar()" title="View Full Year Matrix">
+                        <i class="bi bi-calendar-date daily-cal-icon text-white"></i>
                     </div>
 
-                    <!-- Right Side: Vehicles Added Button (Added mt-1 for optical alignment) -->
+                    <!-- Right Side: Vehicles Added Button -->
                     <div>
                         <% 
                             let vehLink = `/vehicles?date=${stats.current_date}`;
@@ -319,7 +316,7 @@
                 <div id="annualModal" class="annual-modal-overlay" onclick="closeAnnualCalendar()">
                     <div class="annual-modal-content position-relative" onclick="event.stopPropagation()">
                         
-                        <!-- Pinned Close Button to prevent height stretching -->
+                        <!-- Pinned Close Button -->
                         <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 mt-3 me-3" onclick="closeAnnualCalendar()"></button>
 
                         <div class="annual-header pe-4">

@@ -50,20 +50,20 @@
             flex-direction: column;
         }
         
-        /* Redesigned Header for Mobile */
+        /* Tightened Header Spacing */
         .annual-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
             border-bottom: 1px solid #444;
-            padding-bottom: 1rem;
-            margin-bottom: 1rem;
+            padding-bottom: 0.5rem; /* Reduced from 1rem */
+            margin-bottom: 0.5rem;  /* Reduced from 1rem */
             flex-shrink: 0;
         }
         .annual-title-container {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 4px; /* Reduced gap between title and dropdown */
         }
         .annual-title {
             font-size: 1.5rem;
@@ -84,10 +84,11 @@
             display: flex;
             gap: 6px;
             overflow-x: auto;
-            padding-bottom: 6px;
-            margin-bottom: 1rem;
+            padding-bottom: 4px;
+            margin-bottom: 0.75rem; /* Reduced from 1rem */
             flex-shrink: 0;
         }
+
         .annual-year-pill {
             background: #222;
             border: 1px solid #444;
@@ -210,6 +211,7 @@
         .daily-title {
             font-weight: bold;
             font-size: 2rem;
+            line-height: 1;
         }
         .daily-veh-btn {
             font-size: 1.25rem;
@@ -268,7 +270,7 @@
                     <h1 class="daily-title mb-0 text-nowrap"><%= formattedDate %></h1>
                     
                     <!-- Custom Annual Calendar Trigger -->
-                    <div class="d-flex justify-content-center flex-grow-1 position-relative">
+                    <div class="d-flex justify-content-center flex-grow-1 position-relative mt-1">
                         <div class="calendar-wrapper d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; cursor: pointer;" onclick="openAnnualCalendar()" title="View Full Year Matrix">
                             <i class="bi bi-calendar-date daily-cal-icon text-white"></i>
                         </div>
@@ -326,7 +328,8 @@
                             vehLink += `&model=${encodeURIComponent(selectedModel)}`;
                         }
                     %>
-                    <a href="<%= vehLink %>" class="model-btn daily-veh-btn text-white text-decoration-none shadow-sm text-nowrap">
+                    <!-- Vehicles Added Button -->
+                    <a href="<%= vehLink %>" class="model-btn daily-veh-btn text-white text-decoration-none shadow-sm text-nowrap mt-1">
                         <span class="fw-bold me-1"><%= formatCurrency(stats.total) %></span> 
                         <span class="fw-normal">Vehicles Added</span>
                     </a>

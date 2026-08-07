@@ -644,6 +644,7 @@
         const annualActivityCache = {};
         let annualFetchController = null;
 
+        // NEW: Fetch Model Bounds Helper
         async function fetchModelBounds(model) {
             if (!model) {
                 activeMinYear = 2019;
@@ -653,11 +654,13 @@
             try {
                 const res = await fetch(`/api/daily-stats?model=${encodeURIComponent(model)}`);
                 const data = await res.json();
+                
                 if (data.min_date) {
                     activeMinYear = new Date(data.min_date + "T00:00:00").getFullYear();
                 } else {
                     activeMinYear = 2019;
                 }
+                
                 if (data.max_date) {
                     activeMaxYear = new Date(data.max_date + "T00:00:00").getFullYear();
                 } else {
@@ -682,9 +685,12 @@
 
         async function openAnnualCalendar() {
             document.getElementById('annualModal').classList.add('show');
+            
+            // Fetch bounds on open so the pills accurately reflect the main page's selected model
             await fetchModelBounds(matrixSelectedModel);
             if (currentAnnualYear > activeMaxYear) currentAnnualYear = activeMaxYear;
             if (currentAnnualYear < activeMinYear) currentAnnualYear = activeMinYear;
+            
             renderAnnualMatrix(true, false); 
         }
 
@@ -707,7 +713,6 @@
         async function renderAnnualMatrix(isInitialOpen = false, isModelChange = false) {
             document.getElementById('annualModalYear').innerText = currentAnnualYear;
             
-            // Manage left/right arrow visibility based on model bounds
             const prevBtn = document.getElementById('annualPrevBtn');
             const nextBtn = document.getElementById('annualNextBtn');
             
@@ -717,7 +722,6 @@
             if (currentAnnualYear >= activeMaxYear) nextBtn.classList.add('invisible-btn');
             else nextBtn.classList.remove('invisible-btn');
 
-            // Render Year Filter Pills Bar constrained strictly to model bounds
             const yearsBar = document.getElementById('annualYearsBar');
             yearsBar.innerHTML = '';
             let activePill = null;
@@ -735,7 +739,6 @@
                 }
             }
 
-            // Auto-scroll the years bar to center the active year on mobile
             if (activePill) {
                 setTimeout(() => {
                     const scrollPos = activePill.offsetLeft - (yearsBar.clientWidth / 2) + (activePill.clientWidth / 2);
@@ -784,6 +787,7 @@
             const activeDateStr = "<%= stats.current_date %>";
 
             for (let m = 0; m < 12; m++) {
+                // DOM manipulation for grid setup
                 const card = document.createElement('div');
                 card.className = 'annual-month-card';
 
@@ -825,7 +829,6 @@
                     if (count > 0) {
                         cell.classList.add('has-activity');
                         
-                        // Heatmap coloring: Green (low) -> Yellow (mid) -> Red (high)
                         const ratio = count / maxCount;
                         const hue = 120 - (ratio * 120);
                         cell.style.backgroundColor = `hsl(${hue}, 70%, 50%)`;
@@ -856,23 +859,30 @@
                 container.appendChild(card);
             }
 
-            // Scrolling behavior
+            // Smooth scrolling
             setTimeout(() => {
+                const scrollContainer = document.querySelector('.annual-modal-content');
                 if (isModelChange) {
                     const activityCells = container.querySelectorAll('.has-activity');
                     if (activityCells.length > 0) {
-                        const latestCell = activityCells[activityCells.length - 1]; // Scroll to the last active day
-                        latestCell.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        const latestCell = activityCells[activityCells.length - 1]; 
+                        scrollContainer.scrollTo({
+                            top: latestCell.offsetTop - (scrollContainer.clientHeight / 2),
+                            behavior: 'smooth'
+                        });
                     } else {
-                        container.scrollTo({ top: 0, behavior: 'smooth' });
+                        scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
                     }
                 } else if (isInitialOpen) {
                     const selectedCell = container.querySelector('.selected-date');
                     if (selectedCell) {
-                        selectedCell.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        scrollContainer.scrollTo({
+                            top: selectedCell.offsetTop - (scrollContainer.clientHeight / 2),
+                            behavior: 'smooth'
+                        });
                     }
                 }
-            }, 100);
+            }, 150);
         }
     </script>
 </body>

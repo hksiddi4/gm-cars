@@ -55,15 +55,15 @@
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            border-bottom: 1px solid #444;
-            padding-bottom: 0.5rem; /* Reduced from 1rem */
-            margin-bottom: 0.5rem;  /* Reduced from 1rem */
+            border-bottom: 1px solid #333;
+            padding-bottom: 0.5rem;
+            margin-bottom: 0.5rem;
             flex-shrink: 0;
         }
         .annual-title-container {
             display: flex;
             flex-direction: column;
-            gap: 4px; /* Reduced gap between title and dropdown */
+            gap: 2px;
         }
         .annual-title {
             font-size: 1.5rem;
@@ -84,8 +84,8 @@
             display: flex;
             gap: 6px;
             overflow-x: auto;
-            padding-bottom: 4px;
-            margin-bottom: 0.75rem; /* Reduced from 1rem */
+            padding-bottom: 2px;
+            margin-bottom: 0.5rem;
             flex-shrink: 0;
         }
 
@@ -255,8 +255,8 @@
     <div class="custom-container mb-5">
         <div class="content">
             <div class="container-fluid">
-                <!-- Title and Button Row -->
-                <div class="d-flex justify-content-between align-items-center mt-4 mb-3 gap-2 flex-nowrap">
+                <!-- Title Row -->
+                <div class="mt-4 mb-2">
                     <% 
                         let formattedDate = stats.current_date || new Date().toISOString().split('T')[0];
                         try {
@@ -268,72 +268,111 @@
                         }
                     %>
                     <h1 class="daily-title mb-0 text-nowrap"><%= formattedDate %></h1>
-                    
-                    <!-- Custom Annual Calendar Trigger -->
-                    <div class="d-flex justify-content-center flex-grow-1 position-relative mt-1">
+                </div>
+
+                <!-- Filters & Actions Row -->
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4 w-100">
+                    <div class="d-flex align-items-center gap-3 flex-grow-1" style="max-width: max-content;">
+                        <% if (stats.available_models && stats.available_models.length > 0) { %>
+                            <div class="statsDropdown" style="width: 220px;"> <!-- Dropdown shortened -->
+                                <select id="modelFilter" class="form-select small-dropdown <%= selectedModel ? 'active-filter' : '' %>" 
+                                        onchange="
+                                            const params = new URLSearchParams(window.location.search);
+                                            if (this.value) params.set('model', this.value);
+                                            else params.delete('model');
+                                            window.location.search = params.toString();
+                                        ">
+                                    <option value="">All Models</option>
+                                    <% 
+                                        let dailyModels = [...stats.available_models];
+                                        if (dailyModels.filter(m => m.startsWith('CORVETTE')).length > 1 && !dailyModels.includes('CORVETTE (C8)')) {
+                                            dailyModels.push('CORVETTE (C8)');
+                                        }
+                                        dailyModels.sort((a, b) => a.localeCompare(b));
+                                        dailyModels.forEach(function(m) { 
+                                    %>
+                                        <option value="<%= m %>" <%= selectedModel === m ? 'selected' : '' %>><%= m %></option>
+                                    <% }); %>
+                                </select>
+                            </div>
+                        <% } %>
+
+                        <!-- Custom Annual Calendar Trigger -->
                         <div class="calendar-wrapper d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; cursor: pointer;" onclick="openAnnualCalendar()" title="View Full Year Matrix">
                             <i class="bi bi-calendar-date daily-cal-icon text-white"></i>
                         </div>
                     </div>
 
-                    <!-- Full Year Production Matrix Modal -->
-                    <div id="annualModal" class="annual-modal-overlay" onclick="closeAnnualCalendar()">
-                        <div class="annual-modal-content" onclick="event.stopPropagation()">
-                            
-                            <div class="annual-header">
-                                <div class="annual-title-container">
-                                    <h4 class="mb-0 fw-bold annual-title">Production Matrix</h4>
-                                    <!-- Dynamic Model Selector for the Matrix with standard UI styling -->
-                                    <div class="statsDropdown">
-                                        <select id="matrixModelSelect" class="form-select small-dropdown <%= selectedModel ? 'active-filter' : '' %>" style="width: auto; min-width: 140px;">
-                                            <option value="">All Models</option>
-                                            <% if (typeof all_models !== 'undefined') { %>
-                                                <% 
-                                                    let matrixModels = [...all_models];
-                                                    if (matrixModels.filter(m => m.startsWith('CORVETTE')).length > 1 && !matrixModels.includes('CORVETTE (C8)')) {
-                                                        matrixModels.push('CORVETTE (C8)');
-                                                    }
-                                                    matrixModels.sort((a, b) => a.localeCompare(b));
-                                                    matrixModels.forEach(function(m) { 
-                                                %>
-                                                    <option value="<%= m %>" <%= selectedModel === m ? 'selected' : '' %>><%= m %></option>
-                                                <% }); %>
-                                            <% } %>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="annual-nav-container">
-                                    <button type="button" class="btn-close btn-close-white" onclick="closeAnnualCalendar()"></button>
-                                    <div class="annual-year-controls">
-                                        <button id="annualPrevBtn" type="button" class="btn btn-sm btn-dark border-secondary px-2" onclick="changeAnnualYear(-1)"><i class="bi bi-chevron-left"></i></button>
-                                        <span id="annualModalYear" class="fs-6 fw-bold text-white annual-year-text" style="min-width: 45px; text-align: center;">2026</span>
-                                        <button id="annualNextBtn" type="button" class="btn btn-sm btn-dark border-secondary px-2" onclick="changeAnnualYear(1)"><i class="bi bi-chevron-right"></i></button>
-                                    </div>
+                    <!-- Right Side: Vehicles Added Button -->
+                    <div>
+                        <% 
+                            let vehLink = `/vehicles?date=${stats.current_date}`;
+                            if (selectedModel) {
+                                vehLink += `&model=${encodeURIComponent(selectedModel)}`;
+                            }
+                        %>
+                        <a href="<%= vehLink %>" class="model-btn daily-veh-btn text-white text-decoration-none shadow-sm text-nowrap m-0">
+                            <span class="fw-bold me-1"><%= formatCurrency(stats.total) %></span> 
+                            <span class="fw-normal">Vehicles Added</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Full Year Production Matrix Modal (Hidden in background) -->
+                <div id="annualModal" class="annual-modal-overlay" onclick="closeAnnualCalendar()">
+                    <div class="annual-modal-content" onclick="event.stopPropagation()">
+                        <div class="annual-header">
+                            <div class="annual-title-container">
+                                <h4 class="mb-0 fw-bold annual-title">Production Matrix</h4>
+                                <div class="statsDropdown">
+                                    <select id="matrixModelSelect" class="form-select small-dropdown <%= selectedModel ? 'active-filter' : '' %>" style="width: auto; min-width: 140px;">
+                                        <option value="">All Models</option>
+                                        <% if (typeof all_models !== 'undefined') { %>
+                                            <% 
+                                                let matrixModels = [...all_models];
+                                                if (matrixModels.filter(m => m.startsWith('CORVETTE')).length > 1 && !matrixModels.includes('CORVETTE (C8)')) {
+                                                    matrixModels.push('CORVETTE (C8)');
+                                                }
+                                                matrixModels.sort((a, b) => a.localeCompare(b));
+                                                matrixModels.forEach(function(m) { 
+                                            %>
+                                                <option value="<%= m %>" <%= selectedModel === m ? 'selected' : '' %>><%= m %></option>
+                                            <% }); %>
+                                        <% } %>
+                                    </select>
                                 </div>
                             </div>
-                            
-                            <!-- Quick Year Selection Bar -->
-                            <div id="annualYearsBar" class="annual-year-bar"></div>
-
-                            <!-- Scrollable 12 Months Grid Container -->
-                            <div class="annual-months-scroll-container">
-                                <div id="annualMonthsContainer" class="annual-months-grid"></div>
+                            <div class="annual-nav-container">
+                                <button type="button" class="btn-close btn-close-white" onclick="closeAnnualCalendar()"></button>
+                                <div class="annual-year-controls">
+                                    <button id="annualPrevBtn" type="button" class="btn btn-sm btn-dark border-secondary px-2" onclick="changeAnnualYear(-1)"><i class="bi bi-chevron-left"></i></button>
+                                    <span id="annualModalYear" class="fs-6 fw-bold text-white annual-year-text" style="min-width: 45px; text-align: center;">2026</span>
+                                    <button id="annualNextBtn" type="button" class="btn btn-sm btn-dark border-secondary px-2" onclick="changeAnnualYear(1)"><i class="bi bi-chevron-right"></i></button>
+                                </div>
                             </div>
                         </div>
+                        
+                        <!-- Quick Year Selection Bar -->
+                        <div id="annualYearsBar" class="annual-year-bar"></div>
+
+                        <!-- Scrollable 12 Months Grid Container -->
+                        <div class="annual-months-scroll-container">
+                            <div id="annualMonthsContainer" class="annual-months-grid"></div>
+                        </div>
                     </div>
-                    
-                    <% 
-                        let vehLink = `/vehicles?date=${stats.current_date}`;
-                        if (selectedModel) {
-                            vehLink += `&model=${encodeURIComponent(selectedModel)}`;
-                        }
-                    %>
-                    <!-- Vehicles Added Button -->
-                    <a href="<%= vehLink %>" class="model-btn daily-veh-btn text-white text-decoration-none shadow-sm text-nowrap mt-1">
-                        <span class="fw-bold me-1"><%= formatCurrency(stats.total) %></span> 
-                        <span class="fw-normal">Vehicles Added</span>
-                    </a>
                 </div>
+                <% 
+                    let vehLink = `/vehicles?date=${stats.current_date}`;
+                    if (selectedModel) {
+                        vehLink += `&model=${encodeURIComponent(selectedModel)}`;
+                    }
+                %>
+                <!-- Vehicles Added Button -->
+                <a href="<%= vehLink %>" class="model-btn daily-veh-btn text-white text-decoration-none shadow-sm text-nowrap mt-1">
+                    <span class="fw-bold me-1"><%= formatCurrency(stats.total) %></span> 
+                    <span class="fw-normal">Vehicles Added</span>
+                </a>
+            </div>
 
                 <!-- Filters Row -->
                 <div class="d-flex flex-wrap gap-2 mb-4 w-100">

@@ -401,10 +401,15 @@ app.get('/search', searchLimiter, async (req, res) => {
 
 app.get('/daily', async (req, res) => {
     try {
-        // req.query is automatically appended to the request so '?model=X' routes to Python correctly
-        const response = await axiosInstance.get(`${baseURL}/daily-stats`, { params: req.query });
+        // Fetch both daily stats and the full model list concurrently
+        const [statsResponse, wheelsResponse] = await Promise.all([
+            axiosInstance.get(`${baseURL}/daily-stats`, { params: req.query }),
+            axiosInstance.get(`${baseURL}/wheels`)
+        ]);
+        
         res.render('pages/daily', {
-            stats: response.data,
+            stats: statsResponse.data,
+            all_models: wheelsResponse.data.model, // Inject all models here
             selectedModel: req.query.model || '',
             pagePath: '/daily',
             canonicalPath: '/daily'

@@ -637,6 +637,8 @@
             // Render Year Filter Pills Bar
             const yearsBar = document.getElementById('annualYearsBar');
             yearsBar.innerHTML = '';
+            let activePill = null; // Track the active button for scrolling
+
             for (let y = minYearRange; y <= maxYearRange; y++) {
                 const pill = document.createElement('button');
                 pill.type = 'button';
@@ -644,6 +646,19 @@
                 pill.innerText = y;
                 pill.onclick = () => selectAnnualYear(y);
                 yearsBar.appendChild(pill);
+                
+                if (y === currentAnnualYear) {
+                    activePill = pill;
+                }
+            }
+
+            // Auto-scroll the years bar to center the active year on mobile
+            if (activePill) {
+                // Short timeout ensures the buttons are rendered before calculating widths
+                setTimeout(() => {
+                    const scrollPos = activePill.offsetLeft - (yearsBar.clientWidth / 2) + (activePill.clientWidth / 2);
+                    yearsBar.scrollTo({ left: Math.max(0, scrollPos), behavior: 'smooth' });
+                }, 10);
             }
 
             // Fetch full year activity dataset

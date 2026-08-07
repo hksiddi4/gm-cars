@@ -28,12 +28,12 @@
             backdrop-filter: blur(4px);
             z-index: 2000;
             display: none;
-            justify-content: center;
-            align-items: center;
-            padding: 1rem;
+            overflow-x: hidden;
+            overflow-y: auto;
+            padding: 0 1rem;
         }
         .annual-modal-overlay.show {
-            display: flex;
+            display: block; /* Changed from flex to block to prevent mobile top-clipping */
         }
         .annual-modal-content {
             background-color: #2b2b2b;
@@ -41,22 +41,45 @@
             border-radius: 8px;
             width: 100%;
             max-width: 1200px;
+            margin: 2rem auto; /* Ensures space above and safely centers */
             padding: 1.5rem;
             color: #e0e0e0;
             box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-            max-height: 95vh;
+            max-height: calc(100vh - 4rem);
             display: flex;
             flex-direction: column;
         }
+        
+        /* Redesigned Header for Mobile */
         .annual-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
             border-bottom: 1px solid #444;
             padding-bottom: 1rem;
             margin-bottom: 1rem;
             flex-shrink: 0;
         }
+        .annual-title-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
         .annual-title {
             font-size: 1.5rem;
         }
+        .annual-nav-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 12px;
+        }
+        .annual-year-controls {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
         .annual-year-bar {
             display: flex;
             gap: 6px;
@@ -174,7 +197,7 @@
             color: #444 !important;
         }
         
-        /* Responsive Formatting for Header Row */
+        /* Responsive Formatting */
         .daily-title {
             font-weight: bold;
             font-size: 2rem;
@@ -200,7 +223,8 @@
             }
             .annual-modal-content {
                 padding: 1rem;
-                max-height: 98vh;
+                margin: 1rem auto;
+                max-height: calc(100vh - 2rem);
             }
             .annual-title {
                 font-size: 1.15rem;
@@ -246,28 +270,24 @@
                         <div class="annual-modal-content" onclick="event.stopPropagation()">
                             
                             <div class="annual-header">
-                                <div class="d-flex justify-content-between align-items-start w-100">
-                                    <!-- Left side: Title + Dropdown -->
-                                    <div class="d-flex flex-column gap-2">
-                                        <h4 class="mb-0 fw-bold annual-title">Production Matrix</h4>
-                                        <select id="matrixModelSelect" class="form-select form-select-sm bg-dark text-white border-secondary shadow-none" style="width: auto; min-width: 140px; font-size: 0.85rem;">
-                                            <option value="">All Models</option>
-                                            <% if (typeof all_models !== 'undefined') { %>
-                                                <% all_models.forEach(function(m) { %>
-                                                    <option value="<%= m %>" <%= selectedModel === m ? 'selected' : '' %>><%= m %></option>
-                                                <% }); %>
-                                            <% } %>
-                                        </select>
-                                    </div>
-                        
-                                    <!-- Right side: Nav + Close -->
-                                    <div class="d-flex flex-column align-items-end gap-2">
-                                        <button type="button" class="btn-close btn-close-white" onclick="closeAnnualCalendar()"></button>
-                                        <div class="d-flex align-items-center gap-1 mt-1">
-                                            <button id="annualPrevBtn" type="button" class="btn btn-sm btn-dark border-secondary px-2" onclick="changeAnnualYear(-1)"><i class="bi bi-chevron-left"></i></button>
-                                            <span id="annualModalYear" class="fs-6 fw-bold text-white annual-year-text" style="min-width: 45px; text-align: center;">2026</span>
-                                            <button id="annualNextBtn" type="button" class="btn btn-sm btn-dark border-secondary px-2" onclick="changeAnnualYear(1)"><i class="bi bi-chevron-right"></i></button>
-                                        </div>
+                                <div class="annual-title-container">
+                                    <h4 class="mb-0 fw-bold annual-title">Production Matrix</h4>
+                                    <!-- Dynamic Model Selector for the Matrix -->
+                                    <select id="matrixModelSelect" class="form-select form-select-sm bg-dark text-white border-secondary shadow-none" style="width: auto; min-width: 140px;">
+                                        <option value="">All Models</option>
+                                        <% if (typeof all_models !== 'undefined') { %>
+                                            <% all_models.forEach(function(m) { %>
+                                                <option value="<%= m %>" <%= selectedModel === m ? 'selected' : '' %>><%= m %></option>
+                                            <% }); %>
+                                        <% } %>
+                                    </select>
+                                </div>
+                                <div class="annual-nav-container">
+                                    <button type="button" class="btn-close btn-close-white" onclick="closeAnnualCalendar()"></button>
+                                    <div class="annual-year-controls">
+                                        <button id="annualPrevBtn" type="button" class="btn btn-sm btn-dark border-secondary px-2" onclick="changeAnnualYear(-1)"><i class="bi bi-chevron-left"></i></button>
+                                        <span id="annualModalYear" class="fs-6 fw-bold text-white annual-year-text" style="min-width: 45px; text-align: center;">2026</span>
+                                        <button id="annualNextBtn" type="button" class="btn btn-sm btn-dark border-secondary px-2" onclick="changeAnnualYear(1)"><i class="bi bi-chevron-right"></i></button>
                                     </div>
                                 </div>
                             </div>
@@ -672,7 +692,7 @@
         const annualActivityCache = {};
         let annualFetchController = null;
 
-        // NEW: Fetch Model Bounds Helper
+        // NEW: Fast Endpoint Fetch
         async function fetchModelBounds(model) {
             if (!model) {
                 activeMinYear = 2019;
@@ -680,7 +700,7 @@
                 return;
             }
             try {
-                const res = await fetch(`/api/daily-stats?model=${encodeURIComponent(model)}`);
+                const res = await fetch(`/api/model-bounds?model=${encodeURIComponent(model)}`);
                 const data = await res.json();
                 
                 if (data.min_date) {
@@ -706,7 +726,7 @@
             matrixSelectedModel = this.value;
             
             await fetchModelBounds(matrixSelectedModel);
-            currentAnnualYear = activeMaxYear; // Instantly jump to latest available year for this model
+            currentAnnualYear = activeMaxYear; // Jump exactly to the year the model died or peaked
             
             renderAnnualMatrix(false, true); 
         });
@@ -714,7 +734,6 @@
         async function openAnnualCalendar() {
             document.getElementById('annualModal').classList.add('show');
             
-            // Fetch bounds on open so the pills accurately reflect the main page's selected model
             await fetchModelBounds(matrixSelectedModel);
             if (currentAnnualYear > activeMaxYear) currentAnnualYear = activeMaxYear;
             if (currentAnnualYear < activeMinYear) currentAnnualYear = activeMinYear;
@@ -815,7 +834,6 @@
             const activeDateStr = "<%= stats.current_date %>";
 
             for (let m = 0; m < 12; m++) {
-                // DOM manipulation for grid setup
                 const card = document.createElement('div');
                 card.className = 'annual-month-card';
 
@@ -887,22 +905,24 @@
                 container.appendChild(card);
             }
 
-            // Smooth scrolling
             setTimeout(() => {
                 const scrollContainer = document.querySelector('.annual-months-scroll-container');
+                if (!scrollContainer) return;
+
                 if (isModelChange) {
                     const activityCells = container.querySelectorAll('.has-activity');
                     if (activityCells.length > 0) {
                         const latestCell = activityCells[activityCells.length - 1]; 
-                        // Scroll to the very last active day
-                        latestCell.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        const offset = latestCell.offsetTop - (scrollContainer.clientHeight / 2);
+                        scrollContainer.scrollTo({ top: offset, behavior: 'smooth' });
                     } else {
                         scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
                     }
                 } else if (isInitialOpen) {
                     const selectedCell = container.querySelector('.selected-date');
                     if (selectedCell) {
-                        selectedCell.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        const offset = selectedCell.offsetTop - (scrollContainer.clientHeight / 2);
+                        scrollContainer.scrollTo({ top: offset, behavior: 'smooth' });
                     } else {
                         scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
                     }

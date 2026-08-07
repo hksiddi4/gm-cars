@@ -536,6 +536,20 @@ def calendar_activity():
     activity_map = {r['prod_date']: r['count'] for r in rows} if rows else {}
     return jsonify(activity_map)
 
+@app.route('/model-bounds', methods=['GET'])
+def model_bounds():
+    model_filter = request.args.get('model')
+    if not model_filter:
+        return jsonify({'min_date': None, 'max_date': None})
+        
+    conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
+    # Using CAST to CHAR guarantees standard YYYY-MM-DD without messing with % formatting
+    sql = "SELECT CAST(MIN(o.creation_date) AS CHAR) as min_date, CAST(MAX(o.creation_date) AS CHAR) as max_date FROM Orders o JOIN Vehicles v ON o.order_id = v.order_id WHERE v.model = %s AND o.creation_date IS NOT NULL"
+    rows = execute_read_query(conn, sql, [model_filter])
+    close_connection(conn)
+    
+    return jsonify(rows[0] if rows else {'min_date': None, 'max_date': None})
+
 @app.route('/daily-stats', methods=['GET'])
 def daily_stats():
     model_filter = request.args.get('model')

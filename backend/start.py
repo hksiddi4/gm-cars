@@ -523,15 +523,10 @@ def daily_stats():
     min_date = bounds_rows[0]['min_date'] if bounds_rows else None
     max_date = bounds_rows[0]['max_date'] if bounds_rows else None
 
-    # 2. Determine target date (default to max_date if no filter is provided)
-    if date_filter:
-        curr_date_str = date_filter
-        date_condition = "DATE(o.creation_date) = %s"
-        base_params = [date_filter]
-    else:
-        curr_date_str = max_date or date.today().strftime('%Y-%m-%d')
-        date_condition = "DATE(o.creation_date) = %s"
-        base_params = [curr_date_str]
+    # 2. Determine target date and always set base_params
+    curr_date_str = date_filter or max_date or date.today().strftime('%Y-%m-%d')
+    date_condition = "DATE(o.creation_date) = %s"
+    base_params = [curr_date_str]
 
     # 3. Find all distinct models produced on that specific date
     models_sql = f"""
@@ -541,7 +536,7 @@ def daily_stats():
         WHERE {date_condition} AND v.model IS NOT NULL 
         ORDER BY v.model ASC
     """
-    model_rows = execute_read_query(conn, models_sql, base_params if date_filter else None)
+    model_rows = execute_read_query(conn, models_sql, base_params)
     available_models = [r['model'] for r in model_rows] if model_rows else []
 
     # 4. Main stats query

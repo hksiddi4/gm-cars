@@ -503,6 +503,40 @@ def sort_price():
         'country': country_list
     })
 
+@app.route('/calendar-activity', methods=['GET'])
+def calendar_activity():
+    year = request.args.get('year')
+    month = request.args.get('month')
+    model_filter = request.args.get('model')
+    
+    if not year or not month:
+        return jsonify({'error': 'Year and month required'}), 400
+
+    conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
+    
+    params = [year, month]
+    model_join = ""
+    model_cond = ""
+    
+    if model_filter:
+        model_join = "JOIN Vehicles v ON o.order_id = v.order_id"
+        model_cond = "AND v.model = %s"
+        params.append(model_filter)
+        
+    sqlStatement = f"""
+        SELECT DATE_FORMAT(o.creation_date, '%%Y-%%m-%%d') as prod_date, COUNT(o.order_id) as count
+        FROM Orders o
+        {model_join}
+        WHERE YEAR(o.creation_date) = %s AND MONTH(o.creation_date) = %s {model_cond} AND o.creation_date IS NOT NULL
+        GROUP BY prod_date
+    """
+    
+    rows = execute_read_query(conn, sqlStatement, params)
+    close_connection(conn)
+    
+    activity_map = {r['prod_date']: r['count'] for r in rows} if rows else {}
+    return jsonify(activity_map)
+
 @app.route('/daily-stats', methods=['GET'])
 def daily_stats():
     model_filter = request.args.get('model')

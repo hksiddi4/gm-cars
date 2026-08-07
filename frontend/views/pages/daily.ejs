@@ -36,6 +36,79 @@
         .daily-cal-icon {
             font-size: 1.75rem;
         }
+
+        /* Interactive Calendar Component */
+        .calendar-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2b2b2b;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 1rem;
+            width: 320px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            z-index: 1000;
+            display: none;
+        }
+        .calendar-dropdown.show {
+            display: block;
+        }
+        .cal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            color: white;
+            font-weight: bold;
+        }
+        .cal-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            text-align: center;
+        }
+        .cal-day-name {
+            font-size: 0.75rem;
+            color: #888;
+            padding-bottom: 4px;
+        }
+        .cal-cell {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #ddd;
+            font-size: 0.85rem;
+            position: relative;
+            transition: background 0.2s;
+        }
+        .cal-cell:hover:not(.empty) {
+            background: #444;
+        }
+        .cal-cell.selected {
+            background: #0d6efd !important;
+            color: white;
+            font-weight: bold;
+        }
+        .cal-cell.empty {
+            cursor: default;
+            opacity: 0.2;
+        }
+        .activity-dot {
+            width: 5px;
+            height: 5px;
+            background-color: #0d6efd;
+            border-radius: 50%;
+            margin-top: 2px;
+        }
+        .cal-cell.selected .activity-dot {
+            background-color: white;
+        }
         
         @media (max-width: 768px) {
             .daily-title {
@@ -56,7 +129,6 @@
     <div class="custom-container mb-5">
         <div class="content">
             <div class="container-fluid">
-                
                 <!-- Title and Button Row -->
                 <div class="d-flex justify-content-between align-items-center mt-4 mb-3 gap-2 flex-nowrap">
                     <% 
@@ -71,35 +143,29 @@
                     %>
                     <h1 class="daily-title mb-0 text-nowrap"><%= formattedDate %></h1>
                     
-                    <!-- Centered Calendar Picker -->
-                    <div class="d-flex justify-content-center flex-grow-1">
-                        <div class="calendar-wrapper position-relative d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; cursor: pointer;">
-                            <!-- Visible Calendar Icon underneath -->
-                            <i class="bi bi-calendar-date daily-cal-icon text-white" 
-                            style="z-index: 1; cursor: pointer;"></i>
-                            
-                            <!-- Transparent Native Date Input directly on top covering the entire area with a pointer -->
-                            <input type="date" id="dailyDatePicker" 
-                                style="position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; border: none; padding: 0; cursor: pointer; z-index: 2;"
-                                value="<%= stats.current_date %>"
-                                <% if (stats.min_date) { %> min="<%= stats.min_date %>" <% } %>
-                                <% if (stats.max_date) { %> max="<%= stats.max_date %>" <% } %>
-                                onchange="
-                                    const val = this.value;
-                                    const min = this.min;
-                                    const max = this.max;
-                                    
-                                    // Enforce min/max bounds for mobile browsers that ignore HTML attributes
-                                    if ((min && val < min) || (max && val > max)) {
-                                        this.value = '<%= stats.current_date %>';
-                                        return;
-                                    }
-                                    
-                                    const params = new URLSearchParams(window.location.search);
-                                    if (val) params.set('date', val);
-                                    else params.delete('date');
-                                    window.location.search = params.toString();
-                                ">
+                    <!-- Interactive Custom Calendar Picker -->
+                    <div class="d-flex justify-content-center flex-grow-1 position-relative">
+                        <div class="calendar-wrapper d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; cursor: pointer;" onclick="toggleCalendarDropdown(event)">
+                            <i class="bi bi-calendar-date daily-cal-icon text-white"></i>
+                        </div>
+                        
+                        <!-- Dropdown Popup Container -->
+                        <div id="customCalendarDropdown" class="calendar-dropdown" onclick="event.stopPropagation()">
+                            <div class="cal-header">
+                                <button type="button" class="btn btn-sm btn-dark" onclick="changeMonth(-1)"><i class="bi bi-chevron-left"></i></button>
+                                <span id="calMonthYearTitle">Month Year</span>
+                                <button type="button" class="btn btn-sm btn-dark" onclick="changeMonth(1)"><i class="bi bi-chevron-right"></i></button>
+                            </div>
+                            <div class="cal-grid">
+                                <div class="cal-day-name">Su</div>
+                                <div class="cal-day-name">Mo</div>
+                                <div class="cal-day-name">Tu</div>
+                                <div class="cal-day-name">We</div>
+                                <div class="cal-day-name">Th</div>
+                                <div class="cal-day-name">Fr</div>
+                                <div class="cal-day-name">Sa</div>
+                            </div>
+                            <div id="calDaysGrid" class="cal-grid mt-1"></div>
                         </div>
                     </div>
                     
@@ -478,6 +544,107 @@
                     y: { ticks: { autoSkip: false, font: { size: chartFontSize } } } 
                 }
             });
+        }
+    </script>
+
+    <!-- Interactive Calendar Controller Script -->
+    <script>
+        let currentCalDate = new Date("<%= stats.current_date %>T00:00:00");
+        if (isNaN(currentCalDate)) currentCalDate = new Date();
+        
+        const minDateStr = "<%= stats.min_date || '' %>";
+        const maxDateStr = "<%= stats.max_date || '' %>";
+        const minDate = minDateStr ? new Date(minDateStr + "T00:00:00") : null;
+        const maxDate = maxDateStr ? new Date(maxDateStr + "T00:00:00") : null;
+
+        function toggleCalendarDropdown(event) {
+            event.stopPropagation();
+            const dropdown = document.getElementById('customCalendarDropdown');
+            dropdown.classList.toggle('show');
+            if (dropdown.classList.contains('show')) {
+                renderCalendar();
+            }
+        }
+
+        document.addEventListener('click', function() {
+            const dropdown = document.getElementById('customCalendarDropdown');
+            if (dropdown) dropdown.classList.remove('show');
+        });
+
+        function changeMonth(direction) {
+            currentCalDate.setMonth(currentCalDate.getMonth() + direction);
+            renderCalendar();
+        }
+
+        async function renderCalendar() {
+            const year = currentCalDate.getFullYear();
+            const month = currentCalDate.getMonth(); // 0-indexed
+            
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            document.getElementById('calMonthYearTitle').innerText = `${monthNames[month]} ${year}`;
+            
+            const modelParam = "<%= selectedModel %>";
+            let url = `/calendar-activity?year=${year}&month=${month + 1}`;
+            if (modelParam) url += `&model=${encodeURIComponent(modelParam)}`;
+
+            let activityMap = {};
+            try {
+                const res = await fetch(url);
+                activityMap = await res.json();
+            } catch (err) {
+                console.error("Failed to fetch calendar activity", err);
+            }
+
+            const firstDayIndex = new Date(year, month, 1).getDay();
+            const totalDays = new Date(year, month + 1, 0).getDate();
+            
+            const daysGrid = document.getElementById('calDaysGrid');
+            daysGrid.innerHTML = '';
+
+            for (let i = 0; i < firstDayIndex; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = 'cal-cell empty';
+                daysGrid.appendChild(emptyCell);
+            }
+
+            const selectedDateStr = "<%= stats.current_date %>";
+
+            for (let day = 1; day <= totalDays; day++) {
+                const cell = document.createElement('div');
+                cell.className = 'cal-cell';
+                
+                const mm = String(month + 1).padStart(2, '0');
+                const dd = String(day).padStart(2, '0');
+                const dateStr = `${year}-${mm}-${dd}`;
+                
+                cell.innerText = day;
+
+                const cellDate = new Date(dateStr + "T00:00:00");
+                const isDisabled = (minDate && cellDate < minDate) || (maxDate && cellDate > maxDate);
+
+                if (isDisabled) {
+                    cell.style.opacity = '0.3';
+                    cell.style.cursor = 'not-allowed';
+                } else {
+                    if (dateStr === selectedDateStr) {
+                        cell.classList.add('selected');
+                    }
+
+                    if (activityMap[dateStr] && activityMap[dateStr] > 0) {
+                        const dot = document.createElement('div');
+                        dot.className = 'activity-dot';
+                        cell.appendChild(dot);
+                    }
+
+                    cell.addEventListener('click', () => {
+                        const params = new URLSearchParams(window.location.search);
+                        params.set('date', dateStr);
+                        window.location.search = params.toString();
+                    });
+                }
+
+                daysGrid.appendChild(cell);
+            }
         }
     </script>
 </body>

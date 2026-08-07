@@ -50,29 +50,15 @@
             flex-direction: column;
         }
         
-        /* Tightened Header Spacing */
+        /* Restructured Matrix Header for zero dead space */
         .annual-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
             border-bottom: 1px solid #333;
-            padding-bottom: 0.5rem;
-            margin-bottom: 0.5rem;
+            padding-bottom: 0.75rem;
+            margin-bottom: 0.75rem;
             flex-shrink: 0;
-        }
-        .annual-title-container {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
         }
         .annual-title {
             font-size: 1.5rem;
-        }
-        .annual-nav-container {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 12px;
         }
         .annual-year-controls {
             display: flex;
@@ -203,6 +189,16 @@
             background: transparent;
         }
 
+        /* Calendar Icon Button Animation */
+        .calendar-wrapper {
+            transition: transform 0.2s ease;
+        }
+        .calendar-wrapper:hover {
+            transform: translateY(-2px);
+        }
+        .calendar-wrapper:active {
+            transform: translateY(0);
+        }
         .calendar-wrapper:hover .daily-cal-icon {
             color: #444 !important;
         }
@@ -274,8 +270,9 @@
                 <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4 w-100">
                     <div class="d-flex align-items-center gap-3 flex-grow-1" style="max-width: max-content;">
                         <% if (stats.available_models && stats.available_models.length > 0) { %>
-                            <div class="statsDropdown" style="width: 220px;">
-                                <select id="modelFilter" class="form-select small-dropdown <%= selectedModel ? 'active-filter' : '' %>" 
+                            <!-- Added m-0 to strip inherited margins -->
+                            <div class="statsDropdown m-0" style="width: 220px;">
+                                <select id="modelFilter" class="form-select small-dropdown m-0 <%= selectedModel ? 'active-filter' : '' %>" 
                                         onchange="
                                             const params = new URLSearchParams(window.location.search);
                                             if (this.value) params.set('model', this.value);
@@ -296,14 +293,14 @@
                                 </select>
                             </div>
                         <% } %>
+
+                        <!-- Custom Annual Calendar Trigger (Added mt-1 for optical alignment) -->
+                        <div class="calendar-wrapper d-flex align-items-center justify-content-center mt-1" style="width: 36px; height: 36px; cursor: pointer;" onclick="openAnnualCalendar()" title="View Full Year Matrix">
+                            <i class="bi bi-calendar-date daily-cal-icon text-white"></i>
+                        </div>
                     </div>
 
-                    <!-- Custom Annual Calendar Trigger -->
-                    <div class="calendar-wrapper d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; cursor: pointer;" onclick="openAnnualCalendar()" title="View Full Year Matrix">
-                        <i class="bi bi-calendar-date daily-cal-icon text-white"></i>
-                    </div>
-
-                    <!-- Right Side: Vehicles Added Button -->
+                    <!-- Right Side: Vehicles Added Button (Added mt-1 for optical alignment) -->
                     <div>
                         <% 
                             let vehLink = `/vehicles?date=${stats.current_date}`;
@@ -311,44 +308,50 @@
                                 vehLink += `&model=${encodeURIComponent(selectedModel)}`;
                             }
                         %>
-                        <a href="<%= vehLink %>" class="model-btn daily-veh-btn text-white text-decoration-none shadow-sm text-nowrap m-0">
+                        <a href="<%= vehLink %>" class="model-btn daily-veh-btn text-white text-decoration-none shadow-sm text-nowrap m-0 mt-1">
                             <span class="fw-bold me-1"><%= formatCurrency(stats.total) %></span> 
                             <span class="fw-normal">Vehicles Added</span>
                         </a>
                     </div>
                 </div>
 
-                <!-- Full Year Production Matrix Modal (Hidden in background) -->
+                <!-- Full Year Production Matrix Modal -->
                 <div id="annualModal" class="annual-modal-overlay" onclick="closeAnnualCalendar()">
-                    <div class="annual-modal-content" onclick="event.stopPropagation()">
-                        <div class="annual-header">
-                            <div class="annual-title-container">
-                                <h4 class="mb-0 fw-bold annual-title">Production Matrix</h4>
-                                <div class="statsDropdown">
-                                    <select id="matrixModelSelect" class="form-select small-dropdown <%= selectedModel ? 'active-filter' : '' %>" style="width: auto; min-width: 140px;">
-                                        <option value="">All Models</option>
-                                        <% if (typeof all_models !== 'undefined') { %>
-                                            <% 
-                                                let matrixModels = [...all_models];
-                                                if (matrixModels.filter(m => m.startsWith('CORVETTE')).length > 1 && !matrixModels.includes('CORVETTE (C8)')) {
-                                                    matrixModels.push('CORVETTE (C8)');
-                                                }
-                                                matrixModels.sort((a, b) => a.localeCompare(b));
-                                                matrixModels.forEach(function(m) { 
-                                            %>
-                                                <option value="<%= m %>" <%= selectedModel === m ? 'selected' : '' %>><%= m %></option>
-                                            <% }); %>
-                                        <% } %>
-                                    </select>
+                    <div class="annual-modal-content position-relative" onclick="event.stopPropagation()">
+                        
+                        <!-- Pinned Close Button to prevent height stretching -->
+                        <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 mt-3 me-3" onclick="closeAnnualCalendar()"></button>
+
+                        <div class="annual-header pe-4">
+                            <div class="d-flex flex-wrap align-items-center justify-content-between w-100 gap-3">
+                                
+                                <div class="d-flex align-items-center gap-3 flex-wrap">
+                                    <h4 class="mb-0 fw-bold annual-title">Production Matrix</h4>
+                                    <div class="statsDropdown m-0">
+                                        <select id="matrixModelSelect" class="form-select small-dropdown m-0 <%= selectedModel ? 'active-filter' : '' %>" style="width: auto; min-width: 140px;">
+                                            <option value="">All Models</option>
+                                            <% if (typeof all_models !== 'undefined') { %>
+                                                <% 
+                                                    let matrixModels = [...all_models];
+                                                    if (matrixModels.filter(m => m.startsWith('CORVETTE')).length > 1 && !matrixModels.includes('CORVETTE (C8)')) {
+                                                        matrixModels.push('CORVETTE (C8)');
+                                                    }
+                                                    matrixModels.sort((a, b) => a.localeCompare(b));
+                                                    matrixModels.forEach(function(m) { 
+                                                %>
+                                                    <option value="<%= m %>" <%= selectedModel === m ? 'selected' : '' %>><%= m %></option>
+                                                <% }); %>
+                                            <% } %>
+                                        </select>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="annual-nav-container">
-                                <button type="button" class="btn-close btn-close-white" onclick="closeAnnualCalendar()"></button>
-                                <div class="annual-year-controls">
+                                
+                                <div class="annual-year-controls m-0">
                                     <button id="annualPrevBtn" type="button" class="btn btn-sm btn-dark border-secondary px-2" onclick="changeAnnualYear(-1)"><i class="bi bi-chevron-left"></i></button>
                                     <span id="annualModalYear" class="fs-6 fw-bold text-white annual-year-text" style="min-width: 45px; text-align: center;">2026</span>
                                     <button id="annualNextBtn" type="button" class="btn btn-sm btn-dark border-secondary px-2" onclick="changeAnnualYear(1)"><i class="bi bi-chevron-right"></i></button>
                                 </div>
+
                             </div>
                         </div>
                         
@@ -942,7 +945,7 @@
                         
                         cell.title = `${count.toLocaleString()} vehicles added on ${formattedDateKey}`;
                         cell.onclick = () => {
-                            const queryParams = newSearchParams(window.location.search);
+                            const queryParams = new URLSearchParams(window.location.search);
                             queryParams.set('date', formattedDateKey);
                             if (matrixSelectedModel) {
                                 queryParams.set('model', matrixSelectedModel);

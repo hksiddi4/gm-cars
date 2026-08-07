@@ -78,9 +78,9 @@
             color: white;
         }
         .annual-year-pill.active {
-            background: #0d6efd;
-            border-color: #0d6efd;
-            color: white;
+            background: #d1d1d1;
+            border-color: #d1d1d1;
+            color: black;
             font-weight: bold;
         }
         .annual-months-grid {
@@ -133,22 +133,13 @@
             font-weight: bold;
         }
         .annual-day-cell.has-activity:hover {
-            background: #0d6efd;
+            opacity: 0.85; /* Soft hover effect when custom colors are applied */
         }
         .annual-day-cell.selected-date {
             background: #0d6efd !important;
             color: white;
-            outline: 1.5px solid #fff;
-        }
-        .annual-activity-dot {
-            width: 4px;
-            height: 4px;
-            background-color: #6b8eb3;
-            border-radius: 50%;
-            margin-top: 1px;
-        }
-        .annual-day-cell.selected-date .annual-activity-dot {
-            background-color: white;
+            outline: 2px solid #fff;
+            outline-offset: -2px;
         }
         .annual-day-cell.empty {
             background: transparent;
@@ -219,7 +210,7 @@
                                     <h4 class="mb-0 fw-bold">Production Matrix</h4>
                                     <div class="d-flex align-items-center gap-2">
                                         <button type="button" class="btn btn-sm btn-dark border-secondary" onclick="changeAnnualYear(-1)"><i class="bi bi-chevron-left"></i></button>
-                                        <span id="annualModalYear" class="fs-5 fw-bold text-primary">2026</span>
+                                        <span id="annualModalYear" class="fs-5 fw-bold text-white">2026</span>
                                         <button type="button" class="btn btn-sm btn-dark border-secondary" onclick="changeAnnualYear(1)"><i class="bi bi-chevron-right"></i></button>
                                     </div>
                                 </div>
@@ -722,10 +713,12 @@
                     if (count > 0) {
                         cell.classList.add('has-activity');
                         
-                        // Heatmap coloring: Calculate opacity from 0.25 (lowest activity) to 1.0 (highest)
-                        const intensity = Math.max(0.25, count / maxCount);
-                        cell.style.backgroundColor = `rgba(13, 110, 253, ${intensity})`;
+                        // Heatmap coloring: Green (low) -> Yellow (mid) -> Red (high)
+                        const ratio = count / maxCount;
+                        const hue = 120 - (ratio * 120);
+                        cell.style.backgroundColor = `hsl(${hue}, 70%, 50%)`;
                         cell.style.color = '#fff';
+                        cell.style.textShadow = '0px 1px 2px rgba(0,0,0,0.8)';
                         
                         cell.title = `${count.toLocaleString()} vehicles added on ${formattedDateKey}`;
                         cell.onclick = () => {
@@ -737,7 +730,6 @@
 
                     if (formattedDateKey === activeDateStr) {
                         cell.classList.add('selected-date');
-                        cell.style.backgroundColor = '#0d6efd'; // Override with solid blue for the selected date
                     }
 
                     daysGrid.appendChild(cell);

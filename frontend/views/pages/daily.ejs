@@ -239,9 +239,9 @@
                                     </select>
                                 </div>
                                 <div class="d-flex align-items-center gap-2">
-                                    <button type="button" class="btn btn-sm btn-dark border-secondary" onclick="changeAnnualYear(-1)"><i class="bi bi-chevron-left"></i></button>
+                                    <button id="annualPrevBtn" type="button" class="btn btn-sm btn-dark border-secondary" onclick="changeAnnualYear(-1)"><i class="bi bi-chevron-left"></i></button>
                                     <span id="annualModalYear" class="fs-5 fw-bold text-white" style="min-width: 50px; text-align: center;">2026</span>
-                                    <button type="button" class="btn btn-sm btn-dark border-secondary" onclick="changeAnnualYear(1)"><i class="bi bi-chevron-right"></i></button>
+                                    <button id="annualNextBtn" type="button" class="btn btn-sm btn-dark border-secondary" onclick="changeAnnualYear(1)"><i class="bi bi-chevron-right"></i></button>
                                 </div>
                                 <button type="button" class="btn-close btn-close-white" onclick="closeAnnualCalendar()"></button>
                             </div>
@@ -651,7 +651,7 @@
             if (matrixSelectedModel) {
                 try {
                     // Fetch the stats for this model to find its max_date
-                    const res = await fetch(`/daily-stats?model=${encodeURIComponent(matrixSelectedModel)}`);
+                    const res = await fetch(`/api/daily-stats?model=${encodeURIComponent(matrixSelectedModel)}`);
                     const data = await res.json();
                     if (data.max_date) {
                         currentAnnualYear = new Date(data.max_date + "T00:00:00").getFullYear();

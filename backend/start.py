@@ -510,19 +510,8 @@ def daily_stats():
     conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
     
     from datetime import date
-    today_str = date.today().strftime('%Y-%m-%d')
     
-    # 1. Determine target date
-    if date_filter:
-        curr_date_str = date_filter
-        date_condition = "DATE(o.creation_date) = %s"
-        base_params = [date_filter]
-    else:
-        curr_date_str = today_str
-        date_condition = "DATE(o.creation_date) = CURRENT_DATE()"
-        base_params = []
-
-    # 2. Find MIN and MAX bounds for the calendar picker based on filters
+    # 1. Find MIN and MAX bounds first based on filters
     bounds_params = []
     if model_filter:
         bounds_sql = "SELECT DATE_FORMAT(MIN(o.creation_date), '%%Y-%%m-%%d') as min_date, DATE_FORMAT(MAX(o.creation_date), '%%Y-%%m-%%d') as max_date FROM Orders o JOIN Vehicles v ON o.order_id = v.order_id WHERE v.model = %s AND o.creation_date IS NOT NULL"
@@ -533,6 +522,16 @@ def daily_stats():
     bounds_rows = execute_read_query(conn, bounds_sql, bounds_params)
     min_date = bounds_rows[0]['min_date'] if bounds_rows else None
     max_date = bounds_rows[0]['max_date'] if bounds_rows else None
+
+    # 2. Determine target date (default to max_date if no filter is provided)
+    if date_filter:
+        curr_date_str = date_filter
+        date_condition = "DATE(o.creation_date) = %s"
+        base_params = [date_filter]
+    else:
+        curr_date_str = max_date or date.today().strftime('%Y-%m-%d')
+        date_condition = "DATE(o.creation_date) = %s"
+        base_params = [curr_date_str]
 
     # 3. Find all distinct models produced on that specific date
     models_sql = f"""

@@ -610,9 +610,14 @@
         const minYearRange = 2019;
         const maxYearRange = new Date().getFullYear();
 
+        // Cache and AbortController to prevent Nginx/Database query spam
+        const annualActivityCache = {};
+        let annualFetchController = null;
+
         function openAnnualCalendar() {
             document.getElementById('annualModal').classList.add('show');
-            renderAnnualMatrix();
+            // Pass 'true' to signal this is the initial opening so it auto-scrolls down
+            renderAnnualMatrix(true); 
         }
 
         function closeAnnualCalendar() {
@@ -631,13 +636,13 @@
             renderAnnualMatrix();
         }
 
-        async function renderAnnualMatrix() {
+        async function renderAnnualMatrix(isInitialOpen = false) {
             document.getElementById('annualModalYear').innerText = currentAnnualYear;
 
             // Render Year Filter Pills Bar
             const yearsBar = document.getElementById('annualYearsBar');
             yearsBar.innerHTML = '';
-            let activePill = null; // Track the active button for scrolling
+            let activePill = null;
 
             for (let y = minYearRange; y <= maxYearRange; y++) {
                 const pill = document.createElement('button');
@@ -654,25 +659,50 @@
 
             // Auto-scroll the years bar to center the active year on mobile
             if (activePill) {
-                // Short timeout ensures the buttons are rendered before calculating widths
                 setTimeout(() => {
                     const scrollPos = activePill.offsetLeft - (yearsBar.clientWidth / 2) + (activePill.clientWidth / 2);
                     yearsBar.scrollTo({ left: Math.max(0, scrollPos), behavior: 'smooth' });
                 }, 10);
             }
 
-            // Fetch full year activity dataset
             const modelParam = "<%= selectedModel %>";
+            const cacheKey = `${currentAnnualYear}-${modelParam}`;
             let activityMap = {};
-            try {
-                let url = `/calendar-activity?year=${currentAnnualYear}`;
-                if (modelParam) url += `&model=${encodeURIComponent(modelParam)}`;
-                const res = await fetch(url);
-                activityMap = await res.json();
-            } catch (err) {
-                console.error("Failed to load production matrix activity", err);
-            }
 
+            // 1. Check if we already fetched this year to instantly load it
+            if (annualActivityCache[cacheKey]) {
+                activityMap = annualActivityCache[cacheKey];
+                buildAnnualGrid(activityMap, isInitialOpen);
+            } else {
+                // 2. Cancel any pending/in-flight requests if the user clicks rapidly
+                if (annualFetchController) {
+                    annualFetchController.abort();
+                }
+                annualFetchController = new AbortController();
+
+                try {
+                    let url = `/calendar-activity?year=${currentAnnualYear}`;
+                    if (modelParam) url += `&model=${encodeURIComponent(modelParam)}`;
+                    
+                    // Trigger fetch with the abort signal attached
+                    const res = await fetch(url, { signal: annualFetchController.signal });
+                    activityMap = await res.json();
+                    
+                    // Save successful fetch to cache
+                    annualActivityCache[cacheKey] = activityMap;
+                    
+                    buildAnnualGrid(activityMap, isInitialOpen);
+                } catch (err) {
+                    // Ignore the error if it was intentionally aborted by user clicking fast
+                    if (err.name !== 'AbortError') {
+                        console.error("Failed to load production matrix activity", err);
+                    }
+                }
+            }
+        }
+
+        // Helper function extracted to allow for caching logic
+        function buildAnnualGrid(activityMap, isInitialOpen) {
             // Calculate max count for the color scale relative to this year
             const counts = Object.values(activityMap);
             const maxCount = counts.length > 0 ? Math.max(...counts) : 1;
@@ -751,6 +781,16 @@
 
                 card.appendChild(daysGrid);
                 container.appendChild(card);
+            }
+
+            // Auto-scroll the modal down to the selected date's month
+            if (isInitialOpen) {
+                setTimeout(() => {
+                    const selectedCell = container.querySelector('.selected-date');
+                    if (selectedCell) {
+                        selectedCell.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }, 100);
             }
         }
     </script>

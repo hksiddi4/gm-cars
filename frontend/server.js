@@ -430,16 +430,6 @@ app.get('/calendar-activity', async (req, res) => {
     }
 });
 
-app.get('/api/model-bounds', async (req, res) => {
-    try {
-        const response = await axiosInstance.get(`${baseURL}/model-bounds`, { params: req.query });
-        res.json(response.data);
-    } catch (error) {
-        console.error("Model Bounds API Error:", error);
-        res.status(500).json({ error: 'Failed to fetch bounds' });
-    }
-});
-
 app.get('/api/daily-stats', async (req, res) => {
     try {
         const response = await axiosInstance.get(`${baseURL}/daily-stats`, { params: req.query });
@@ -447,6 +437,16 @@ app.get('/api/daily-stats', async (req, res) => {
     } catch (error) {
         console.error("Daily Stats API Error:", error);
         res.status(500).json({ error: 'Failed to fetch daily stats' });
+    }
+});
+
+app.get('/api/model-bounds', async (req, res) => {
+    try {
+        const response = await axiosInstance.get(`${baseURL}/model-bounds`, { params: req.query });
+        res.json(response.data);
+    } catch (error) {
+        console.error("Model Bounds API Error:", error);
+        res.status(500).json({ error: 'Failed to fetch bounds' });
     }
 });
 

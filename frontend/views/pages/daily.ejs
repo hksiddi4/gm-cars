@@ -136,10 +136,9 @@
             opacity: 0.85; /* Soft hover effect when custom colors are applied */
         }
         .annual-day-cell.selected-date {
-            background: #0d6efd !important;
-            color: white;
-            outline: 2px solid #fff;
-            outline-offset: -2px;
+            outline: 3px solid #fff !important;
+            outline-offset: -3px;
+            z-index: 2; /* Ensures the outline overlays adjacent cells cleanly */
         }
         .annual-day-cell.empty {
             background: transparent;

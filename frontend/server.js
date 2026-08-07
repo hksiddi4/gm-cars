@@ -304,6 +304,7 @@ app.get('/vehicles', async (req, res) => {
             selectedColor: req.query.color,
             selectedCountry: req.query.country,
             selectedOrder: req.query.order,
+            selectedDate: req.query.date,
             selectedRPO: typeof req.query.rpo === 'string' ? req.query.rpo.split(',') : (req.query.rpo || []),
             selectedModels: Array.isArray(req.query.model) ? req.query.model : (req.query.model ? [req.query.model] : []),
             pagePath: '/vehicles',

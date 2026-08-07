@@ -31,7 +31,6 @@
             justify-content: center;
             align-items: center;
             padding: 1rem;
-            overflow-y: auto;
         }
         .annual-modal-overlay.show {
             display: flex;
@@ -45,25 +44,26 @@
             padding: 1.5rem;
             color: #e0e0e0;
             box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-            max-height: 90vh;
-            overflow-y: auto;
+            max-height: 95vh;
+            display: flex;
+            flex-direction: column;
         }
         .annual-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
             border-bottom: 1px solid #444;
             padding-bottom: 1rem;
             margin-bottom: 1rem;
-            flex-wrap: wrap;
-            gap: 10px;
+            flex-shrink: 0;
+        }
+        .annual-title {
+            font-size: 1.5rem;
         }
         .annual-year-bar {
             display: flex;
             gap: 6px;
             overflow-x: auto;
             padding-bottom: 6px;
-            margin-bottom: 1.2rem;
+            margin-bottom: 1rem;
+            flex-shrink: 0;
         }
         .annual-year-pill {
             background: #222;
@@ -92,6 +92,11 @@
         .invisible-btn {
             opacity: 0;
             pointer-events: none;
+        }
+        .annual-months-scroll-container {
+            overflow-y: auto;
+            flex-grow: 1;
+            padding-right: 5px;
         }
         .annual-months-grid {
             display: grid;
@@ -193,6 +198,20 @@
             .daily-cal-icon {
                 font-size: 1.35rem;
             }
+            .annual-modal-content {
+                padding: 1rem;
+                max-height: 98vh;
+            }
+            .annual-title {
+                font-size: 1.15rem;
+            }
+            .annual-year-text {
+                font-size: 0.95rem !important;
+            }
+            #matrixModelSelect {
+                font-size: 0.75rem !important;
+                padding: 0.25rem 0.5rem;
+            }
         }
     </style>
 </head>
@@ -225,32 +244,41 @@
                     <!-- Full Year Production Matrix Modal -->
                     <div id="annualModal" class="annual-modal-overlay" onclick="closeAnnualCalendar()">
                         <div class="annual-modal-content" onclick="event.stopPropagation()">
+                            
                             <div class="annual-header">
-                                <div class="d-flex align-items-center gap-2 gap-md-3">
-                                    <h4 class="mb-0 fw-bold d-none d-md-block">Production Matrix</h4>
-                                    <!-- Dynamic Model Selector for the Matrix -->
-                                    <select id="matrixModelSelect" class="form-select form-select-sm bg-dark text-white border-secondary shadow-none" style="width: auto; min-width: 140px; font-size: 0.85rem;">
-                                        <option value="">All Models</option>
-                                        <% if (typeof all_models !== 'undefined') { %>
-                                            <% all_models.forEach(function(m) { %>
-                                                <option value="<%= m %>" <%= selectedModel === m ? 'selected' : '' %>><%= m %></option>
-                                            <% }); %>
-                                        <% } %>
-                                    </select>
+                                <div class="d-flex justify-content-between align-items-start w-100">
+                                    <!-- Left side: Title + Dropdown -->
+                                    <div class="d-flex flex-column gap-2">
+                                        <h4 class="mb-0 fw-bold annual-title">Production Matrix</h4>
+                                        <select id="matrixModelSelect" class="form-select form-select-sm bg-dark text-white border-secondary shadow-none" style="width: auto; min-width: 140px; font-size: 0.85rem;">
+                                            <option value="">All Models</option>
+                                            <% if (typeof all_models !== 'undefined') { %>
+                                                <% all_models.forEach(function(m) { %>
+                                                    <option value="<%= m %>" <%= selectedModel === m ? 'selected' : '' %>><%= m %></option>
+                                                <% }); %>
+                                            <% } %>
+                                        </select>
+                                    </div>
+                        
+                                    <!-- Right side: Nav + Close -->
+                                    <div class="d-flex flex-column align-items-end gap-2">
+                                        <button type="button" class="btn-close btn-close-white" onclick="closeAnnualCalendar()"></button>
+                                        <div class="d-flex align-items-center gap-1 mt-1">
+                                            <button id="annualPrevBtn" type="button" class="btn btn-sm btn-dark border-secondary px-2" onclick="changeAnnualYear(-1)"><i class="bi bi-chevron-left"></i></button>
+                                            <span id="annualModalYear" class="fs-6 fw-bold text-white annual-year-text" style="min-width: 45px; text-align: center;">2026</span>
+                                            <button id="annualNextBtn" type="button" class="btn btn-sm btn-dark border-secondary px-2" onclick="changeAnnualYear(1)"><i class="bi bi-chevron-right"></i></button>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="d-flex align-items-center gap-2">
-                                    <button id="annualPrevBtn" type="button" class="btn btn-sm btn-dark border-secondary" onclick="changeAnnualYear(-1)"><i class="bi bi-chevron-left"></i></button>
-                                    <span id="annualModalYear" class="fs-5 fw-bold text-white" style="min-width: 50px; text-align: center;">2026</span>
-                                    <button id="annualNextBtn" type="button" class="btn btn-sm btn-dark border-secondary" onclick="changeAnnualYear(1)"><i class="bi bi-chevron-right"></i></button>
-                                </div>
-                                <button type="button" class="btn-close btn-close-white" onclick="closeAnnualCalendar()"></button>
                             </div>
                             
                             <!-- Quick Year Selection Bar -->
                             <div id="annualYearsBar" class="annual-year-bar"></div>
 
-                            <!-- 12 Months Grid Container -->
-                            <div id="annualMonthsContainer" class="annual-months-grid"></div>
+                            <!-- Scrollable 12 Months Grid Container -->
+                            <div class="annual-months-scroll-container">
+                                <div id="annualMonthsContainer" class="annual-months-grid"></div>
+                            </div>
                         </div>
                     </div>
                     
@@ -861,25 +889,22 @@
 
             // Smooth scrolling
             setTimeout(() => {
-                const scrollContainer = document.querySelector('.annual-modal-content');
+                const scrollContainer = document.querySelector('.annual-months-scroll-container');
                 if (isModelChange) {
                     const activityCells = container.querySelectorAll('.has-activity');
                     if (activityCells.length > 0) {
                         const latestCell = activityCells[activityCells.length - 1]; 
-                        scrollContainer.scrollTo({
-                            top: latestCell.offsetTop - (scrollContainer.clientHeight / 2),
-                            behavior: 'smooth'
-                        });
+                        // Scroll to the very last active day
+                        latestCell.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     } else {
                         scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
                     }
                 } else if (isInitialOpen) {
                     const selectedCell = container.querySelector('.selected-date');
                     if (selectedCell) {
-                        scrollContainer.scrollTo({
-                            top: selectedCell.offsetTop - (scrollContainer.clientHeight / 2),
-                            behavior: 'smooth'
-                        });
+                        selectedCell.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    } else {
+                        scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
                     }
                 }
             }, 150);

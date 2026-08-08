@@ -475,7 +475,8 @@
                 // Re-add all existing params from current URL except page
                 for (const [key, val] of currentUrlParams.entries()) {
                     if (key !== 'page' && key !== paramName) {
-                        url.searchParams.set(key, val);
+                        // Use .append() instead of .set() so multiple 'model' keys are preserved
+                        url.searchParams.append(key, val); 
                     }
                 }
 

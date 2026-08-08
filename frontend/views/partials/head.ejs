@@ -30,25 +30,33 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#515151">
 
-<link rel="icon" type="image/png" href="/img/favicon.png" sizes="192x192">
-<link rel="apple-touch-icon" href="/img/favicon.png">
+<!-- Web Icons & Touch Icons -->
+<link rel="icon" type="image/png" sizes="32x32" href="/img/favicon.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/img/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/img/icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="/img/icon-512.png">
 
 <meta name="description" content="<%= customDescription %>">
 <meta name="keywords" content="GM, General Motors, build counts, vehicle statistics, Chevrolet, Cadillac, production numbers">
 <meta name="robots" content="index, follow">
 
 <link rel="canonical" href="https://www.gmbuildcounts.com<%= typeof canonicalPath !== 'undefined' ? canonicalPath : '' %>">
+
+<!-- Open Graph / Social Sharing Image (1200x630) -->
 <meta property="og:title" content="<%= pageTitle %>">
 <meta property="og:description" content="<%= customDescription %>">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://www.gmbuildcounts.com<%= typeof canonicalPath !== 'undefined' ? canonicalPath : '' %>">
-<meta property="og:image" content="https://www.gmbuildcounts.com/img/favicon.png">
+<meta property="og:image" content="https://www.gmbuildcounts.com/img/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta property="og:site_name" content="GM Build Counts">
 
-<meta name="twitter:card" content="summary">
+<!-- Twitter / Discord Card Configuration -->
+<meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="<%= pageTitle %>">
 <meta name="twitter:description" content="<%= customDescription %>">
-<meta name="twitter:image" content="https://www.gmbuildcounts.com/img/favicon.png">
+<meta name="twitter:image" content="https://www.gmbuildcounts.com/img/og-image.png">
 
 <script type="application/ld+json">
 {
@@ -70,12 +78,13 @@
   "@context": "https://schema.org",
   "@type": "Organization",
   "url": "https://www.gmbuildcounts.com",
-  "logo": "https://www.gmbuildcounts.com/img/favicon.png", 
+  "logo": "https://www.gmbuildcounts.com/img/icon-192.png", 
   "name": "GM Build Counts",
   "sameAs": [],
   "contactPoint": {
     "@type": "ContactPoint",
     "contactType": "customer support",
+    "email": "feedback@gmbuildcounts.com",
     "url": "https://www.gmbuildcounts.com"
   }
 }

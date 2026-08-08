@@ -1,3 +1,6 @@
+from gevent import monkey
+monkey.patch_all()
+
 import sql
 import flask
 import requests

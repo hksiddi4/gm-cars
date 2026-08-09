@@ -22,43 +22,43 @@
                     </form>
                 </li>
                 <li class="nav-item mb-2">
-                    <a href="/vehicles" class="nav-link">
+                    <a href="/vehicles" class="nav-link <%= pagePath === '/vehicles' ? 'active' : '' %>">
                         <i class="fs-4 bi bi-car-front-fill me-2"></i>
                         Vehicles
                     </a>
                 </li>
                 <li class="nav-item mb-2">
-                    <a href="/daily" class="nav-link">
+                    <a href="/daily" class="nav-link <%= pagePath === '/daily' ? 'active' : '' %>">
                         <i class="fs-4 bi bi-calendar3 me-2"></i>
                         Daily
                     </a>
                 </li>
                 <li class="nav-item mb-2">
-                    <a href="/stats" class="nav-link">
+                    <a href="/stats" class="nav-link <%= pagePath === '/stats' ? 'active' : '' %>">
                         <i class="fs-4 bi bi-list-ol me-2"></i>
                         Stats
                     </a>
                 </li>
                 <li class="nav-item mb-2">
-                    <a href="/wheels" class="nav-link">
+                    <a href="/wheels" class="nav-link <%= pagePath === '/wheels' ? 'active' : '' %>">
                         <i class="fs-4 bi bi-fan me-2"></i>
                         Wheels
                     </a>
                 </li>
                 <li class="nav-item mb-2">
-                    <a href="/rpos" class="nav-link">
+                    <a href="/rpos" class="nav-link <%= pagePath === '/rpos' ? 'active' : '' %>">
                         <i class="fs-4 bi bi-database-fill me-2"></i>
                         RPOs
                     </a>
                 </li>
                 <li class="nav-item mb-2">
-                    <a href="/about" class="nav-link">
+                    <a href="/about" class="nav-link <%= pagePath === '/about' ? 'active' : '' %>">
                         <i class="fs-4 bi bi-info-lg me-2"></i>
                         About
                     </a>
                 </li>
                 <li class="nav-item mb-2">
-                    <a href="/query" class="nav-link">
+                    <a href="/query" class="nav-link <%= pagePath === '/query' ? 'active' : '' %>">
                         <i class="fs-4 bi bi-stars me-2"></i>
                         <em>Beta</em>&nbsp;Query
                     </a>
@@ -75,17 +75,6 @@
         var randomIndex = Math.floor(Math.random() * imageURLs.length);
 
         document.querySelector('.header-background').style.backgroundImage = 'url(' + imageURLs[randomIndex] + ')';
-
-        var path = window.location.pathname;
-        var navLinks = document.querySelectorAll('.nav-link');
-
-        navLinks.forEach(function(link) {
-            if (link.getAttribute('href') === path) {
-                link.classList.add('active');
-            } else {
-                link.classList.remove('active');
-            }
-        });
 
         const header = document.getElementById('main-header');
         const sidebar = document.getElementById('sidebar');
@@ -110,7 +99,7 @@
             lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
         }
 
-        window.addEventListener('scroll', handleHeaderScroll);
+        window.addEventListener('scroll', handleHeaderScroll, { passive: true });
 
         document.addEventListener('click', function(event) {
             const isClickInsideSidebar = sidebar.contains(event.target);

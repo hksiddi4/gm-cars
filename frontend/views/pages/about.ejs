@@ -4,136 +4,135 @@
     <%- include('../partials/head'); %>
     <title>About</title>
     <%- include('../partials/analytics'); %>
+    <style>
+        .table-veh th, .table-veh td {
+            text-align: center;
+            vertical-align: middle;
+            font-size: 0.7rem;
+            padding: 8px 4px;
+        }
+        .table-veh th:first-child, .table-veh td:first-child {
+            text-align: left;
+            font-weight: bold;
+        }
+
+        .table-secondary-tag {
+            color: white;
+            text-align: left;
+            font-weight: bold;
+            background-color: #696969;
+            font-size: 0.8rem !important;
+            padding: 3px !important;
+        }
+
+        /* Clickable Cells */
+        .table-veh th.clickable-header,
+        .table-veh td.clickable-model,
+        .table-veh td[class*="green"],
+        .table-veh td[class*="yellow"] {
+            cursor: pointer !important;
+        }
+
+        /* Hover Effects */
+        .table-veh th.clickable-header:hover,
+        .table-veh td.clickable-model:hover,
+        .table-veh td[class*="green"]:hover,
+        .table-veh td[class*="yellow"]:hover {
+            filter: brightness(0.9);
+            background-color: rgba(0,0,0,0.05);
+        }
+
+        /* Base Colors */
+        .cell-green { background-color: #28a745 !important; color: white; }
+        .cell-yellow { background-color: #ffc107 !important; color: black; }
+        .cell-na { background-color: #5e5e5e !important; color: #6c757d; }
+        .cell-crossed { background: repeating-linear-gradient(135deg, #adb5bd 0, #adb5bd 1px, transparent 1px, transparent 2.5px) !important; }
+
+        /* Split Styles: Crossed Only (2019 w/ no progress) */
+        .cell-split65-crossed-only {
+            background: repeating-linear-gradient(135deg, #adb5bd 0, #adb5bd 1px, transparent 1px, transparent 2.5px) !important;
+            -webkit-mask-image: linear-gradient(to right, black 65%, transparent 65%);
+            mask-image: linear-gradient(to right, black 65%, transparent 65%);
+        }
+
+        /* Split Styles: 65% Yellow/Crossed (2019 in progress) */
+        .cell-split65-yellow-crossed {
+            background-image: 
+                linear-gradient(#ffc107, #ffc107),
+                repeating-linear-gradient(135deg, #adb5bd 0, #adb5bd 1px, transparent 1px, transparent 2.5px) !important;
+            background-size: 35% 100%, 65% 100% !important;
+            background-position: right top, left top !important;
+            background-repeat: no-repeat !important;
+        }
+
+        /* Split Styles: 65% Green/Crossed (2019 completed) */
+        .cell-split65-green-crossed {
+            background-image: 
+                linear-gradient(#28a745, #28a745),
+                repeating-linear-gradient(135deg, #adb5bd 0, #adb5bd 1px, transparent 1px, transparent 2.5px) !important;
+            background-size: 35% 100%, 65% 100% !important;
+            background-position: right top, left top !important;
+            background-repeat: no-repeat !important;
+        }
+
+        /* Split Styles: 65% Crossed/NA (2019 N/A) */
+        .cell-split65-crossed-na {
+            background-image: 
+                linear-gradient(#5e5e5e, #5e5e5e),
+                repeating-linear-gradient(135deg, #adb5bd 0, #adb5bd 1px, transparent 1px, transparent 2.5px) !important;
+            background-size: 35% 100%, 65% 100% !important;
+            background-position: right top, left top !important;
+            background-repeat: no-repeat !important;
+        }
+
+        /* Split Styles: Crossed Only (2020 w/ no progress) */
+        .cell-split5-crossed-only {
+            background: repeating-linear-gradient(135deg, #adb5bd 0, #adb5bd 1px, transparent 1px, transparent 2.5px) !important;
+            -webkit-mask-image: linear-gradient(to right, black 5%, transparent 5%);
+            mask-image: linear-gradient(to right, black 5%, transparent 5%);
+        }
+
+        /* Split Styles: 5% Green/Crossed (2020 completed) */
+        .cell-split5-green-crossed {
+            background-image: 
+                linear-gradient(#28a745, #28a745),
+                repeating-linear-gradient(135deg, #adb5bd 0, #adb5bd 1px, transparent 1px, transparent 2.5px) !important;
+            background-size: 95% 100%, 5% 100% !important;
+            background-position: right top, left top !important;
+            background-repeat: no-repeat !important;
+        }
+
+        /* Split Styles: 5% Yellow/Crossed (2020 in progress) */
+        .cell-split5-yellow-crossed {
+            background-image: 
+                linear-gradient(#ffc107, #ffc107),
+                repeating-linear-gradient(135deg, #adb5bd 0, #adb5bd 1px, transparent 1px, transparent 2.5px) !important;
+            background-size: 95% 100%, 5% 100% !important;
+            background-position: right top, left top !important;
+            background-repeat: no-repeat !important;
+        }
+        
+        /* Split Styles: 5% Crossed/NA (Used 2020 N/A) */
+        .cell-split5-crossed-na {
+            background-image: 
+                linear-gradient(#5e5e5e, #5e5e5e),
+                repeating-linear-gradient(135deg, #adb5bd 0, #adb5bd 1px, transparent 1px, transparent 2.5px) !important;
+            background-size: 95% 100%, 5% 100% !important;
+            background-position: right top, left top !important;
+            background-repeat: no-repeat !important;
+        }
+
+        .legend-container { display: flex; align-items: center; padding: 5px 0 0 0; }
+        .legend-item { display: flex; align-items: center; }
+        .legend-box { display: inline-block; width: 15px; height: 15px; margin-right: 5px; border-radius: 3px; border: 1px solid #dee2e6; }
+        .legend-label { font-size: 0.8rem; font-weight: 500; color: #ffffff; }
+    </style>
 </head>
 <body>
     <%- include('../partials/header'); %>
     <div class="custom-container about-page">
         <div class="content">
-            <div class="container-fluid">                
-                <style>
-                    .table-veh th, .table-veh td {
-                        text-align: center;
-                        vertical-align: middle;
-                        font-size: 0.7rem;
-                        padding: 8px 4px;
-                    }
-                    .table-veh th:first-child, .table-veh td:first-child {
-                        text-align: left;
-                        font-weight: bold;
-                    }
-
-                    .table-secondary-tag {
-                        color: white;
-                        text-align: left;
-                        font-weight: bold;
-                        background-color: #696969;
-                        font-size: 0.8rem !important;
-                        padding: 3px !important;
-                    }
-
-                    /* Clickable Cells */
-                    .table-veh th.clickable-header,
-                    .table-veh td.clickable-model,
-                    .table-veh td[class*="green"],
-                    .table-veh td[class*="yellow"] {
-                        cursor: pointer !important;
-                    }
-
-                    /* Hover Effects */
-                    .table-veh th.clickable-header:hover,
-                    .table-veh td.clickable-model:hover,
-                    .table-veh td[class*="green"]:hover,
-                    .table-veh td[class*="yellow"]:hover {
-                        filter: brightness(0.9);
-                        background-color: rgba(0,0,0,0.05);
-                    }
-
-                    /* Base Colors */
-                    .cell-green { background-color: #28a745 !important; color: white; }
-                    .cell-yellow { background-color: #ffc107 !important; color: black; }
-                    .cell-na { background-color: #5e5e5e !important; color: #6c757d; }
-                    .cell-crossed { background: repeating-linear-gradient(135deg, #adb5bd 0, #adb5bd 1px, transparent 1px, transparent 2.5px) !important; }
-
-                    /* Split Styles: Crossed Only (2019 w/ no progress) */
-                    .cell-split65-crossed-only {
-                        background: repeating-linear-gradient(135deg, #adb5bd 0, #adb5bd 1px, transparent 1px, transparent 2.5px) !important;
-                        -webkit-mask-image: linear-gradient(to right, black 65%, transparent 65%);
-                        mask-image: linear-gradient(to right, black 65%, transparent 65%);
-                    }
-
-                    /* Split Styles: 65% Yellow/Crossed (2019 in progress) */
-                    .cell-split65-yellow-crossed {
-                        background-image: 
-                            linear-gradient(#ffc107, #ffc107),
-                            repeating-linear-gradient(135deg, #adb5bd 0, #adb5bd 1px, transparent 1px, transparent 2.5px) !important;
-                        background-size: 35% 100%, 65% 100% !important;
-                        background-position: right top, left top !important;
-                        background-repeat: no-repeat !important;
-                    }
-
-                    /* Split Styles: 65% Green/Crossed (2019 completed) */
-                    .cell-split65-green-crossed {
-                        background-image: 
-                            linear-gradient(#28a745, #28a745),
-                            repeating-linear-gradient(135deg, #adb5bd 0, #adb5bd 1px, transparent 1px, transparent 2.5px) !important;
-                        background-size: 35% 100%, 65% 100% !important;
-                        background-position: right top, left top !important;
-                        background-repeat: no-repeat !important;
-                    }
-
-                    /* Split Styles: 65% Crossed/NA (2019 N/A) */
-                    .cell-split65-crossed-na {
-                        background-image: 
-                            linear-gradient(#5e5e5e, #5e5e5e),
-                            repeating-linear-gradient(135deg, #adb5bd 0, #adb5bd 1px, transparent 1px, transparent 2.5px) !important;
-                        background-size: 35% 100%, 65% 100% !important;
-                        background-position: right top, left top !important;
-                        background-repeat: no-repeat !important;
-                    }
-
-                    /* Split Styles: Crossed Only (2020 w/ no progress) */
-                    .cell-split5-crossed-only {
-                        background: repeating-linear-gradient(135deg, #adb5bd 0, #adb5bd 1px, transparent 1px, transparent 2.5px) !important;
-                        -webkit-mask-image: linear-gradient(to right, black 5%, transparent 5%);
-                        mask-image: linear-gradient(to right, black 5%, transparent 5%);
-                    }
-
-                    /* Split Styles: 5% Green/Crossed (2020 completed) */
-                    .cell-split5-green-crossed {
-                        background-image: 
-                            linear-gradient(#28a745, #28a745),
-                            repeating-linear-gradient(135deg, #adb5bd 0, #adb5bd 1px, transparent 1px, transparent 2.5px) !important;
-                        background-size: 95% 100%, 5% 100% !important;
-                        background-position: right top, left top !important;
-                        background-repeat: no-repeat !important;
-                    }
-
-                    /* Split Styles: 5% Yellow/Crossed (2020 in progress) */
-                    .cell-split5-yellow-crossed {
-                        background-image: 
-                            linear-gradient(#ffc107, #ffc107),
-                            repeating-linear-gradient(135deg, #adb5bd 0, #adb5bd 1px, transparent 1px, transparent 2.5px) !important;
-                        background-size: 95% 100%, 5% 100% !important;
-                        background-position: right top, left top !important;
-                        background-repeat: no-repeat !important;
-                    }
-                    
-                    /* Split Styles: 5% Crossed/NA (Used 2020 N/A) */
-                    .cell-split5-crossed-na {
-                        background-image: 
-                            linear-gradient(#5e5e5e, #5e5e5e),
-                            repeating-linear-gradient(135deg, #adb5bd 0, #adb5bd 1px, transparent 1px, transparent 2.5px) !important;
-                        background-size: 95% 100%, 5% 100% !important;
-                        background-position: right top, left top !important;
-                        background-repeat: no-repeat !important;
-                    }
-
-                    .legend-container { display: flex; align-items: center; padding: 5px 0 0 0; }
-                    .legend-item { display: flex; align-items: center; }
-                    .legend-box { display: inline-block; width: 15px; height: 15px; margin-right: 5px; border-radius: 3px; border: 1px solid #dee2e6; }
-                    .legend-label { font-size: 0.8rem; font-weight: 500; color: #ffffff; }
-                </style>
-
+            <div class="container-fluid">
                 <div class="legend-container d-flex mb-1">
                     <div class="legend-item me-4">
                         <span class="legend-box cell-green"></span>

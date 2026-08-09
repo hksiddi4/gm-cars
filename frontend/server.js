@@ -139,7 +139,6 @@ const axiosInstance = axios.create({ timeout: 240000 });
 
 // App Configuration
 app.use(compression());
-app.use(express.urlencoded({ extended: true }));
 app.set('trust proxy', 1);
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());

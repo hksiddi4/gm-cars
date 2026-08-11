@@ -1,6 +1,7 @@
 <% 
   let pageTitle = "GM Build Counts | Production & Statistics";
   let customDescription = "View build counts and statistics for GM vehicles.";
+  let ogImage = "https://www.gmbuildcounts.com/img/og-image.png";
 
   if (typeof vin_data !== 'undefined' && vin_data && vin_data.length > 0) {
       const v = vin_data[0];
@@ -10,8 +11,74 @@
       const specialDesc = (v.special_descs && v.special_descs !== 'NA') 
         ? v.special_descs.split(', ').join(', ') 
         : '';
-      pageTitle = `${year} ${model} ${trim} Build Counts | GM Build Counts`.trim();
-      customDescription = `Production data and RPO specifications for the ${year} ${model} ${trim}. ${specialDesc}`.trim();
+      
+      // 1. Updated Title
+      pageTitle = `${year} ${model} ${trim} | GM Build Counts`.trim();
+      customDescription = `Production data and RPO specifications for ${year} ${model} ${trim}. ${specialDesc}`.trim();
+
+      // 2. Generate the CGI Image URL for Social Sharing
+      try {
+          const mmc_code = v.mmc_code;
+          let options = v.rpo_codes || [];
+          let cgiTrim = (typeof mmc !== 'undefined' && mmc[mmc_code]) ? mmc[mmc_code] : '';
+          const modelUpper = model.toUpperCase();
+          
+          if (["1AJ37", "1AJ67"].includes(mmc_code) && year > 2019 && options.includes("1LZ")) {
+              cgiTrim = "1LZ"; options = options.filter(c => c !== "T3S");
+          } else if (["1YC07", "1YC67", "1YY07", "1YY67", "1YW07", "1YW67", "1YX07", "1YX67", "1YE07", "1YE67"].includes(mmc_code)) {
+              cgiTrim = options.find(opt => ["1LT", "2LT", "3LT"].includes(opt)) || cgiTrim;
+          } else if (["1YH07", "1YH67", "1YG07", "1YG67", "1YR07", "1YR67", "1YZ07", "1YZ67", "1YS07", "1YS67"].includes(mmc_code)) {
+              cgiTrim = options.find(opt => ["1LZ", "2LZ", "3LZ"].includes(opt)) || cgiTrim;
+          } else if (["1YV07", "1YV67"].includes(mmc_code)) {
+              cgiTrim = options.find(opt => ["1ZR", "3ZR"].includes(opt)) || cgiTrim;
+          } else if (["1AH37", "1AH67"].includes(mmc_code)) {
+              cgiTrim = options.find(opt => ["3LT"].includes(opt)) || cgiTrim;
+          } else if (["1AG37", "1AG67"].includes(mmc_code) && year < 2024) {
+              cgiTrim = options.find(opt => ["1LS"].includes(opt)) || cgiTrim;
+          } else if (["TT35743", "TT35526"].includes(mmc_code)) {
+              cgiTrim = options.find(opt => ["1SE", "1SF", "1SG", "1SB", "1SC", "1SD"].includes(opt)) || cgiTrim;
+          } else if (["CT35843"].includes(mmc_code)) {
+              cgiTrim = options.find(opt => ["2WT", "3WT", "4WT", "5WT", "8WT", "3LT", "2SP", "3SP"].includes(opt)) || cgiTrim;
+          } else if (["TT35843"].includes(mmc_code)) {
+              cgiTrim = options.find(opt => ["5SD", "5SB", "5SC", "3SB", "3SC", "4SC", "4SD"].includes(opt)) || cgiTrim;
+          } else if (["6T35726"].includes(mmc_code)) {
+              cgiTrim = options.find(opt => ["1SC", "1SF", "1SD", "1SG"].includes(opt)) || cgiTrim;
+          } else if (["6C10706", "6K10706", "6C10906", "6K10906"].includes(mmc_code)) {
+              cgiTrim = options.find(opt => ["1SA", "1SB", "1SC", "1SG", "1SH", "1SD"].includes(opt)) || cgiTrim;
+          }
+
+          if (modelUpper === 'CAMARO' && year >= 2020 && (options.includes('A1Y') || options.includes('A1Z'))) {
+              options = options.filter(c => c !== 'DD1' && c !== 'DG7');
+          }
+
+          let rpos = options.join('_');
+          let color = (typeof colorMap !== 'undefined') ? options.find(opt => Object.values(colorMap).includes(opt)) : null;
+
+          if (v.color_name === 'BLADE SILVER METALLIC' && year >= 2026 && color === 'GAN') {
+              color = 'GKA';
+          }
+          if (year === 2025 && cgiTrim === '1SV' && color === 'GBL') {
+              color = 'GXD'; rpos = rpos.replace(/GBL/g, 'GXD');
+          }
+          if (color === 'GKA' && modelUpper === 'CT4' && year >= 2024) {
+              color = 'GXD';
+          } else if (color === 'GBA') {
+              const specialColors = {
+                  'ABALONE WHITE': 'GAZ', 'BAEGE METALLIC': 'GAZ', 'TACTICAL TINT': 'G7C',
+                  'BARB WIRE': 'GXD', 'HYPERSONIC METALLIC': 'GXD', 'SEEKER METALLIC': 'GJV', 'SEYCHELLES METALLIC': 'GJV'
+              };
+              if (specialColors[v.color_name]) {
+                  color = specialColors[v.color_name];
+                  rpos = rpos.replace(new RegExp("GBA", 'g'), color);
+              }
+          }
+
+          if (modelUpper !== 'CELESTIQ' && !(year === 2024 && ['3WT', '4WT'].includes(v.trim)) && year && mmc_code && cgiTrim && color) {
+              ogImage = `https://www.gmbuildcounts.com/gm-images/mmgprod-us/dynres/prove/image.gen?i=${year}/${mmc_code}/${mmc_code}__${cgiTrim}/${color}_${rpos}gmds10.png&v=deg01&std=true&country=US&send404=true&transparentBackgroundPng=true`;
+          }
+      } catch (e) {
+          // Gracefully fallback to og-image.png if parsing fails
+      }
   }
   else if (typeof pagePath !== 'undefined' && pagePath !== '/') {
       const pathSegment = pagePath.substring(1); 
@@ -47,7 +114,7 @@
 <meta property="og:description" content="<%= customDescription %>">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://www.gmbuildcounts.com<%= typeof canonicalPath !== 'undefined' ? canonicalPath : '' %>">
-<meta property="og:image" content="https://www.gmbuildcounts.com/img/og-image.png">
+<meta property="og:image" content="<%= ogImage %>">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:site_name" content="GM Build Counts">
@@ -56,7 +123,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="<%= pageTitle %>">
 <meta name="twitter:description" content="<%= customDescription %>">
-<meta name="twitter:image" content="https://www.gmbuildcounts.com/img/og-image.png">
+<meta name="twitter:image" content="<%= ogImage %>">
 
 <script type="application/ld+json">
 {

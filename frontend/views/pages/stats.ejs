@@ -229,6 +229,7 @@
     </main>
     <%- include('../partials/footer'); %>
     
+    <script src="/js/scroll-sync.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const statsSelect = document.getElementById('selectedStats');
@@ -288,35 +289,6 @@
                 }, 0);
                 const countEl = document.getElementById('totalCount');
                 if (countEl) countEl.textContent = `Retrieved: ${totalCount.toLocaleString()} vehicles`;
-
-                // 4. Scroll Sync Logic (Only if table exists)
-                const topScroll = document.getElementById('top-scroll-wrapper');
-                const bottomScroll = document.getElementById('bottom-scroll-wrapper');
-                if (topScroll && bottomScroll) {
-                    let isSyncingTop = false;
-                    let isSyncingBottom = false;
-                    topScroll.addEventListener('scroll', () => {
-                        if (!isSyncingTop) {
-                            isSyncingBottom = true;
-                            bottomScroll.scrollLeft = topScroll.scrollLeft;
-                        }
-                        isSyncingTop = false;
-                    });
-                    bottomScroll.addEventListener('scroll', () => {
-                        if (!isSyncingBottom) {
-                            isSyncingTop = true;
-                            topScroll.scrollLeft = bottomScroll.scrollLeft;
-                        }
-                        isSyncingBottom = false;
-                    });
-                    const table = document.querySelector('.table-stats-veh');
-                    if (table) {
-                        requestAnimationFrame(() => {
-                            const scrollInner = document.getElementById('top-scroll');
-                            if (scrollInner) scrollInner.style.width = table.scrollWidth + 'px';
-                        });
-                    }
-                }
 
                 const ctx = document.getElementById('barChart').getContext('2d');
                 let config;

@@ -246,7 +246,7 @@
 </head>
 <body>
     <%- include('../partials/header'); %>
-    <div class="custom-container mb-5">
+    <main id="main-content" class="custom-container mb-5">
         <div class="content">
             <div class="container-fluid">
                 <!-- Title Row -->
@@ -269,7 +269,7 @@
                     <div class="d-flex align-items-center gap-3 flex-grow-1" style="max-width: max-content;">
                         <% if (stats.available_models && stats.available_models.length > 0) { %>
                             <div class="statsDropdown m-0" style="width: 220px;">
-                                <select id="modelFilter" class="form-select small-dropdown m-0 <%= selectedModel ? 'active-filter' : '' %>" 
+                                <select id="modelFilter" class="form-select small-dropdown m-0 <%= selectedModel ? 'active-filter' : '' %>" aria-label="Filter by model"
                                         onchange="
                                             const params = new URLSearchParams(window.location.search);
                                             if (this.value) params.set('model', this.value);
@@ -325,7 +325,7 @@
                                 <div class="d-flex align-items-center gap-3 flex-wrap">
                                     <h4 class="mb-0 fw-bold annual-title">Production Matrix</h4>
                                     <div class="statsDropdown m-0">
-                                        <select id="matrixModelSelect" class="form-select small-dropdown m-0 <%= selectedModel ? 'active-filter' : '' %>" style="width: auto; min-width: 140px;">
+                                        <select id="matrixModelSelect" class="form-select small-dropdown m-0 <%= selectedModel ? 'active-filter' : '' %>" aria-label="Filter by model" style="width: auto; min-width: 140px;">
                                             <option value="">All Models</option>
                                             <% if (typeof all_models !== 'undefined') { %>
                                                 <% 
@@ -528,7 +528,7 @@
                 <% } %>
             </div>
         </div>
-    </div>
+    </main>
     <%- include('../partials/footer'); %>
 
     <!-- Chart Configuration Script -->

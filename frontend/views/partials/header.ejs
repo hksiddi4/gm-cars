@@ -1,4 +1,5 @@
 <header id="main-header" style="background-color: transparent;" data-nosnippet>
+    <a href="#main-content" class="visually-hidden-focusable p-2 bg-primary text-white position-absolute top-0 start-0 z-3">Skip to main content</a>
     <div class="header-background" style="background-image: url('<%= currentHeaderImage %>');"></div>
     <div class="container-fluid" style="height: 100%; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);">
         <div class="d-flex align-items-center" style="height: 100%;">
@@ -13,11 +14,11 @@
                 <a href="/" class="text-white" style="text-decoration: none;">GM Build Counts</a>
             </h1>
         </div>
-        <div class="collapse" id="sidebar">
+        <nav class="collapse" id="sidebar" aria-label="Main Navigation">
             <ul class="nav flex-column mt-2">
                 <li class="nav-item mb-3">
                     <form id="searchVIN" action="/search" method="GET" class="d-flex">
-                        <input type="text" id="searchInput" name="vin" class="form-control" placeholder="Search VIN...">
+                        <input type="text" id="searchInput" name="vin" class="form-control" placeholder="Search VIN..." aria-label="Search by Vehicle Identification Number (VIN)">
                         <button type="submit" class="btn btn-secondary ms-2">Search</button>
                     </form>
                 </li>

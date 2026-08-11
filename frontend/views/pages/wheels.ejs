@@ -7,7 +7,7 @@
 </head>
 <body>
     <%- include('../partials/header'); %>
-    <div class="container">
+    <main id="main-content" class="container">
         <div class="row pt-4">
             <div class="col">
                 <h1 style="font-weight: bold;">Wheels</h1>
@@ -21,7 +21,7 @@
                     combinedModels.sort((a, b) => a.localeCompare(b));
                 %>
                 <div class="statsDropdown">
-                    <select id="filterModel" class="form-select small-dropdown">
+                    <select id="filterModel" class="form-select small-dropdown" aria-label="Filter by model">
                         <option value="">Model</option>
                         <% combinedModels.forEach(m => { %>
                             <option value="<%= m %>"><%= m %></option>
@@ -45,7 +45,7 @@
                 <tbody></tbody>
             </table>
         </div>
-    </div>
+    </main>
     <%- include('../partials/footer'); %>
     
     <script>

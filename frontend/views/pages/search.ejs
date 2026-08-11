@@ -23,904 +23,906 @@
 </head>
 <body>
   <%- include('../partials/header'); %>
+  <main id="main-content">
     <div class="custom-container">
-        <div class="row">
-          <% if (vin_data && vin_data.length > 0) { %>
-            <h1 style="padding-top: 20px;">
-              <%= vin.modelYear || 'N/A' %>
-              <%= vin.model || 'N/A' %>
-              <%= vin.trim || 'N/A' %>
-            </h1>
-            <% if (vin.special_descs && vin.special_descs !== 'NA') { %>
-              <div>
-                <h4>
-                  <em>
-                    <% 
-                      // Split the special_descs by comma and iterate over each description
-                      const specialDescs = vin.special_descs.split(', ');
-                      specialDescs.forEach(desc => { 
-                    %>
-                      <div><%= desc %></div>
-                    <% }); %>
-                  </em>
-                </h4>
-              </div>
-            <% } %>
-        </div>
-        <div class="flex-row-wrap">
-            <div id="image-warning"></div>
-            <div id="carousel-container">
-              <div id="loading-animation" class="shimmer">
-                <div class="shimmer-box"></div>
-              </div>
-              <img id="carousel-image" alt="Vehicle Image">
-              <button id="prev" style="display: none;">&#10094;</button>
-              <button id="next" style="display: none;">&#10095;</button>
-              <div style="display: flex; justify-content: center;">
-                <div id="image-gallery-shimmer"></div>
-                <div id="image-gallery"></div>
-              </div>
-            </div>
-            <div class="table-responsive no-mobile-scroll" style="text-align: left; justify-content: flex-start;">
-              <table class="table-veh table-hover border shadow" id="vinTable">
-                <tbody>
-                    <% vin_data.forEach(function(data) { %>
-                    <tr>
-                      <td class="label-column"><strong>VIN</strong></td>
-                       <td><%= data.vin.slice(0, 9) %><strong><%= data.vin.slice(9) %></strong></td>
-                    </tr>
-                    <tr>
-                      <td class="label-column"><strong>ORDER NUMBER</strong></td>
-                      <td><%= data.order_number || 'N/A' %></td>
-                    </tr>
-                    <tr>
-                      <td class="label-column"><strong>STICKER CREATION DATE</strong></td>
-                      <td>
-                        <%= data.formatted_date || 'N/A' %>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td class="label-column"><strong>YEAR</strong></td>
-                      <td><%= data.modelYear || 'N/A' %></td>
-                    </tr>
-                    <tr>
-                      <td class="label-column"><strong>MODEL</strong></td>
-                      <td><%= data.model || 'N/A' %></td>
-                    </tr>
-                    <tr>
-                      <td class="label-column"><strong>TRIM</strong></td>
-                      <td><%= data.trim || 'N/A' %></td>
-                    </tr>
-                    <tr>
-                      <td class="label-column"><strong>BODY</strong></td>
-                      <td><%= data.body || 'N/A' %></td>
-                    </tr>
-                    <tr>
-                      <td class="label-column"><strong>ENGINE</strong></td>
-                      <td><%= data.engine_type || 'N/A' %></td>
-                    </tr>
-                    <tr>
-                      <td class="label-column"><strong>TRANSMISSION</strong></td>
-                      <td><%= data.transmission_type || 'N/A' %></td>
-                    </tr>
-                    <tr>
-                      <td class="label-column"><strong>DRIVETRAIN</strong></td>
-                      <td><%= data.drivetrain_type || 'N/A' %></td>
-                    </tr>
-                    <tr>
-                      <td class="label-column"><strong>EXTERIOR COLOR</strong></td>
-                      <td id="extColorCell"><%= data.color_name || 'N/A' %></td>
-                    </tr>
-                    <% if (data.rpo_codes) { %>
-                      <%
-                        let matchedIntColor = 'N/A';
-                        let matchedSeat = 'N/A';
-                        data.rpo_codes.forEach(function(rpo) {
-                          if (intColor[rpo]) {
-                            matchedIntColor = intColor[rpo];
-                          }
-                          if (seatCode[rpo]) {
-                            matchedSeat = seatCode[rpo];
-                          }
-                        });
-
-                        if (data.model === 'Escalade IQ' && matchedSeat === 'AQ9') {
-                          matchedSeat = 'Front bucket';
-                        }
-                        if (data.model === 'CT4' && matchedSeat === 'AQJ') {
-                          matchedSeat = 'Front bucket high-performance';
-                        }
-                        if (data.model === 'SIERRA EV' && matchedSeat === 'AR9') {
-                          matchedSeat = 'Front bucket seats with center console';
-                        }
-                      %>
-                    <tr>
-                      <td class="label-column"><strong>INTERIOR COLOR</strong></td>
-                      <td id="intColorCell"><%= matchedIntColor.toUpperCase() %></td>
-                    </tr>
-                    <tr>
-                      <td class="label-column"><strong>SEAT</strong></td>
-                      <td><%= matchedSeat.toUpperCase() %></td>
-                    </tr>
-                    <% } %>
-                    <tr>
-                      <td class="label-column"><strong>MSRP</strong></td>
-                      <td><%= (!data.msrp || data.msrp == 0) ? 'N/A' : `$${data.msrp}` %></td>
-                    </tr>                  
-                    <tr>
-                      <td class="label-column"><strong>DEALER</strong></td>
-                      <td><%= data.dealer_name || 'N/A' %></td>
-                    </tr>
-                    <tr>
-                      <td class="label-column"><strong>LOCATION</strong></td>
-                      <td><%= data.location || 'N/A' %></td>
-                    </tr>
-                    <tr>
-                      <td class="label-column"><strong>COUNTRY</strong></td>
-                      <td>
-                        <% if (data.country) { %>
-                          <% if (data.country === 'CANADA') { %>
-                            <img src="/img/flags/canada_flag.webp" alt="Canada Flag" width="30" style="margin-right: 5px;">CANADA
-                          <% } else if (data.country === 'USA') { %>
-                            <img src="/img/flags/usa_flag.webp" alt="USA Flag" width="30" style="margin-right: 5px;">UNITED STATES
-                          <% } else if (data.country === 'MEXICO') { %>
-                            <img src="/img/flags/mexico_flag.webp" alt="Mexico Flag" width="30" style="margin-right: 5px;">Mexico
-                          <% } %>
-                        <% } %>
-                      </td>
-                    </tr>
-                    <% }) %>
-                </tbody>
-              </table>
-            </div>
-        </div>
-    </div>
-    <div class="custom-container">
-        <div style="display: flex;">
-            <div id="sticker-container" style="display: flex; justify-content: center; width: 100%;">
-              <% if (hasSticker) { %>
-                <div id="sticker-wrapper" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
-                  <div style="margin-bottom: 10px;">
-                    <a href="<%= stickerPath %>" target="_blank" class="btn btn-sm btn-outline-secondary">
-                      Open Window Sticker in New Tab
-                    </a>
-                  </div>
-                  <div style="width: 100%; overflow: hidden; aspect-ratio: 11 / 8.5;">
-                    <object data="<%= stickerPath %>#view=Fit" type="application/pdf" width="100%" height="100%" style="border: none;">
-                      <iframe src="<%= stickerPath %>#view=Fit" width="100%" height="100%" style="border: none;"></iframe>
-                    </object>
-                  </div>
-                </div>
-              <% } else { %>
-                <div style="display: flex; justify-content: center; align-items: center; height: 400px;">
-                  <h2>No window sticker available</h2>
-                </div>
-              <% } %>
-            </div>
-        </div>
-        <div class="rpo-container" id="rpoImageContainer"></div>
-        <div class="table-responsive no-mobile-scroll" style="text-align: left; justify-content: flex-start; margin-top: 10px;">
-          <table class="table-veh table-hover border border shadow" id="rpoTable">
-            <thead>
-              <tr>
-                <th scope="col">RPO Code</th>
-                <th scope="col">Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% vin_data.forEach(function(data) { %>
-                <% if (data.rpo_codes) { %>
+      <div class="row">
+        <% if (vin_data && vin_data.length > 0) { %>
+          <h1 style="padding-top: 20px;">
+            <%= vin.modelYear || 'N/A' %>
+            <%= vin.model || 'N/A' %>
+            <%= vin.trim || 'N/A' %>
+          </h1>
+          <% if (vin.special_descs && vin.special_descs !== 'NA') { %>
+            <div>
+              <h4>
+                <em>
                   <% 
-                  const sortedRpoCodes = [...data.rpo_codes].sort(); 
-                  sortedRpoCodes.forEach(function(rpo) { 
+                    // Split the special_descs by comma and iterate over each description
+                    const specialDescs = vin.special_descs.split(', ');
+                    specialDescs.forEach(desc => { 
                   %>
-                    <% if (rpo) { %>
-                      <tr style="cursor: pointer;" onmousedown="handleMouseDown(event);" data-url="/vehicles?rpo=<%= rpo %>">
-                        <td class="<%= rpo.includes('OAR') ? 'highlight' : '' %> <%= rpo.includes('R7V') ? 'text-highlight' : '' %>"><%= rpo %></td>
-                        <td class="rpo-description" data-code="<%= rpo %>" style="text-align: left;"></td>
-                      </tr>
-                    <% } %>
+                    <div><%= desc %></div>
                   <% }); %>
-                <% } else { %>
+                </em>
+              </h4>
+            </div>
+          <% } %>
+      </div>
+      <div class="flex-row-wrap">
+          <div id="image-warning"></div>
+          <div id="carousel-container">
+            <div id="loading-animation" class="shimmer">
+              <div class="shimmer-box"></div>
+            </div>
+            <div aria-live="polite" aria-atomic="true">
+              <img id="carousel-image" alt="Selected Vehicle View">
+            </div>
+            <button id="prev" style="display: none;" aria-label="Previous Image">&#10094;</button>
+            <button id="next" style="display: none;" aria-label="Next Image">&#10095;</button>
+            <div style="display: flex; justify-content: center;">
+              <div id="image-gallery-shimmer"></div>
+              <div id="image-gallery"></div>
+            </div>
+          </div>
+          <div class="table-responsive no-mobile-scroll" style="text-align: left; justify-content: flex-start;">
+            <table class="table-veh table-hover border shadow" id="vinTable">
+              <tbody>
+                  <% vin_data.forEach(function(data) { %>
                   <tr>
-                    <td colspan="2">No data available</td>
+                    <th scope="row" class="label-column"><strong>VIN</strong></th>
+                    <td><%= data.vin.slice(0, 9) %><strong><%= data.vin.slice(9) %></strong></td>
                   </tr>
-                <% } %>
-              <% }) %>
-            </tbody>
-          </table>
-        </div>
-        <% } else { %>
-          <h1>No VIN data found</h1>
-        <% } %>
-      <%- include('../partials/footer'); %>
+                  <tr>
+                    <th scope="row" class="label-column"><strong>ORDER NUMBER</strong></th>
+                    <td><%= data.order_number || 'N/A' %></td>
+                  </tr>
+                  <tr>
+                    <th scope="row" class="label-column"><strong>STICKER CREATION DATE</strong></th>
+                    <td><%= data.formatted_date || 'N/A' %></td>
+                  </tr>
+                  <tr>
+                    <th scope="row" class="label-column"><strong>YEAR</strong></th>
+                    <td><%= data.modelYear || 'N/A' %></td>
+                  </tr>
+                  <tr>
+                    <th scope="row" class="label-column"><strong>MODEL</strong></th>
+                    <td><%= data.model || 'N/A' %></td>
+                  </tr>
+                  <tr>
+                    <th scope="row" class="label-column"><strong>TRIM</strong></th>
+                    <td><%= data.trim || 'N/A' %></td>
+                  </tr>
+                  <tr>
+                    <th scope="row" class="label-column"><strong>BODY</strong></th>
+                    <td><%= data.body || 'N/A' %></td>
+                  </tr>
+                  <tr>
+                    <th scope="row" class="label-column"><strong>ENGINE</strong></th>
+                    <td><%= data.engine_type || 'N/A' %></td>
+                  </tr>
+                  <tr>
+                    <th scope="row" class="label-column"><strong>TRANSMISSION</strong></th>
+                    <td><%= data.transmission_type || 'N/A' %></td>
+                  </tr>
+                  <tr>
+                    <th scope="row" class="label-column"><strong>DRIVETRAIN</strong></th>
+                    <td><%= data.drivetrain_type || 'N/A' %></td>
+                  </tr>
+                  <tr>
+                    <th scope="row" class="label-column"><strong>EXTERIOR COLOR</strong></th>
+                    <td id="extColorCell"><%= data.color_name || 'N/A' %></td>
+                  </tr>
+                  <% if (data.rpo_codes) { %>
+                    <%
+                      let matchedIntColor = 'N/A';
+                      let matchedSeat = 'N/A';
+                      data.rpo_codes.forEach(function(rpo) {
+                        if (intColor[rpo]) {
+                          matchedIntColor = intColor[rpo];
+                        }
+                        if (seatCode[rpo]) {
+                          matchedSeat = seatCode[rpo];
+                        }
+                      });
+
+                      if (data.model === 'Escalade IQ' && matchedSeat === 'AQ9') {
+                        matchedSeat = 'Front bucket';
+                      }
+                      if (data.model === 'CT4' && matchedSeat === 'AQJ') {
+                        matchedSeat = 'Front bucket high-performance';
+                      }
+                      if (data.model === 'SIERRA EV' && matchedSeat === 'AR9') {
+                        matchedSeat = 'Front bucket seats with center console';
+                      }
+                    %>
+                  <tr>
+                    <th scope="row" class="label-column"><strong>INTERIOR COLOR</strong></th>
+                    <td id="intColorCell"><%= matchedIntColor.toUpperCase() %></td>
+                  </tr>
+                  <tr>
+                    <th scope="row" class="label-column"><strong>SEAT</strong></th>
+                    <td><%= matchedSeat.toUpperCase() %></td>
+                  </tr>
+                  <% } %>
+                  <tr>
+                    <th scope="row" class="label-column"><strong>MSRP</strong></th>
+                    <td><%= (!data.msrp || data.msrp == 0) ? 'N/A' : `$${data.msrp}` %></td>
+                  </tr>                  
+                  <tr>
+                    <th scope="row" class="label-column"><strong>DEALER</strong></th>
+                    <td><%= data.dealer_name || 'N/A' %></td>
+                  </tr>
+                  <tr>
+                    <th scope="row" class="label-column"><strong>LOCATION</strong></th>
+                    <td><%= data.location || 'N/A' %></td>
+                  </tr>
+                  <tr>
+                    <th scope="row" class="label-column"><strong>COUNTRY</strong></th>
+                    <td>
+                      <% if (data.country) { %>
+                        <% if (data.country === 'CANADA') { %>
+                          <img src="/img/flags/canada_flag.webp" alt="Canada Flag" width="30" style="margin-right: 5px;">CANADA
+                        <% } else if (data.country === 'USA') { %>
+                          <img src="/img/flags/usa_flag.webp" alt="USA Flag" width="30" style="margin-right: 5px;">UNITED STATES
+                        <% } else if (data.country === 'MEXICO') { %>
+                          <img src="/img/flags/mexico_flag.webp" alt="Mexico Flag" width="30" style="margin-right: 5px;">Mexico
+                        <% } %>
+                      <% } %>
+                    </td>
+                  </tr>
+                  <% }) %>
+              </tbody>
+            </table>
+          </div>
+      </div>
     </div>
-    <script>
-      function handleMouseDown(event) {
-        startX = event.clientX;
+    <div class="custom-container">
+      <div style="display: flex;">
+        <div id="sticker-container" style="display: flex; justify-content: center; width: 100%;">
+          <% if (hasSticker) { %>
+            <div id="sticker-wrapper" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+              <div style="margin-bottom: 10px;">
+                <a href="<%= stickerPath %>" target="_blank" class="btn btn-sm btn-outline-secondary">
+                  Open Window Sticker in New Tab
+                </a>
+              </div>
+              <div style="width: 100%; overflow: hidden; aspect-ratio: 11 / 8.5;">
+                <object data="<%= stickerPath %>#view=Fit" type="application/pdf" width="100%" height="100%" style="border: none;">
+                  <iframe src="<%= stickerPath %>#view=Fit" width="100%" height="100%" style="border: none;"></iframe>
+                </object>
+              </div>
+            </div>
+          <% } else { %>
+            <div style="display: flex; justify-content: center; align-items: center; height: 400px;">
+              <h2>No window sticker available</h2>
+            </div>
+          <% } %>
+        </div>
+      </div>
+      <div class="rpo-container" id="rpoImageContainer"></div>
+      <div class="table-responsive no-mobile-scroll" style="text-align: left; justify-content: flex-start; margin-top: 10px;">
+        <table class="table-veh table-hover border border shadow" id="rpoTable">
+          <thead>
+            <tr>
+              <th scope="col">RPO Code</th>
+              <th scope="col">Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% vin_data.forEach(function(data) { %>
+              <% if (data.rpo_codes) { %>
+                <% 
+                const sortedRpoCodes = [...data.rpo_codes].sort(); 
+                sortedRpoCodes.forEach(function(rpo) { 
+                %>
+                  <% if (rpo) { %>
+                    <tr style="cursor: pointer;" onmousedown="handleMouseDown(event);" data-url="/vehicles?rpo=<%= rpo %>">
+                      <td class="<%= rpo.includes('OAR') ? 'highlight' : '' %> <%= rpo.includes('R7V') ? 'text-highlight' : '' %>"><%= rpo %></td>
+                      <td class="rpo-description" data-code="<%= rpo %>" style="text-align: left;"></td>
+                    </tr>
+                  <% } %>
+                <% }); %>
+              <% } else { %>
+                <tr>
+                  <td colspan="2">No data available</td>
+                </tr>
+              <% } %>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+      <% } else { %>
+        <h1>No VIN data found</h1>
+      <% } %>
+    </div>
+  </main>
+  <%- include('../partials/footer'); %>
+  
+  <script>
+    function handleMouseDown(event) {
+      startX = event.clientX;
+    }
+
+    function getSafeNavigationUrl(rawUrl) {
+      if (!rawUrl || typeof rawUrl !== 'string') return null;
+
+      try {
+        const parsed = new URL(rawUrl, window.location.origin);
+        const isHttp = parsed.protocol === 'http:' || parsed.protocol === 'https:';
+        const isSameOrigin = parsed.origin === window.location.origin;
+
+        if (!isHttp || !isSameOrigin) return null;
+        if (!parsed.pathname.startsWith('/')) return null;
+
+        const safeUrl = parsed.pathname + parsed.search + parsed.hash;
+        if (/%0d|%0a/i.test(safeUrl)) return null;
+
+        return safeUrl;
+      } catch (e) {
+        return null;
       }
+    }
 
-      function getSafeNavigationUrl(rawUrl) {
-        if (!rawUrl || typeof rawUrl !== 'string') return null;
+    function handleRowClick(url, event) {
+      const distance = Math.abs(event.clientX - startX);
+      if (distance > 5) return;
 
-        try {
-          const parsed = new URL(rawUrl, window.location.origin);
-          const isHttp = parsed.protocol === 'http:' || parsed.protocol === 'https:';
-          const isSameOrigin = parsed.origin === window.location.origin;
+      const safeUrl = getSafeNavigationUrl(url);
+      if (!safeUrl) return;
 
-          if (!isHttp || !isSameOrigin) return null;
-          if (!parsed.pathname.startsWith('/')) return null;
+      window.location.assign(safeUrl);
+    }
 
-          const safeUrl = parsed.pathname + parsed.search + parsed.hash;
-          if (/%0d|%0a/i.test(safeUrl)) return null;
-
-          return safeUrl;
-        } catch (e) {
-          return null;
-        }
-      }
-
-      function handleRowClick(url, event) {
-        const distance = Math.abs(event.clientX - startX);
-        if (distance > 5) return;
-
-        const safeUrl = getSafeNavigationUrl(url);
-        if (!safeUrl) return;
-
-        window.location.assign(safeUrl);
-      }
-
-      function loadImageWithRetry(url, retries = 3, delay = 1000) {
-        return new Promise((resolve, reject) => {
-          const img = new Image();
-          img.onload = () => resolve(url);
-          img.onerror = () => {
-            if (retries > 0) {
-              setTimeout(() => {
-                loadImageWithRetry(url, retries - 1, delay).then(resolve).catch(reject);
-              }, delay);
-            } else {
-              reject(url);
-            }
-          };
-          img.src = url;
-        });
-      }
-
-      document.addEventListener('DOMContentLoaded', () => {
-        const vin_data = <%- JSON.stringify(vin_data).replace(/</g, '\\u003c') %>;
-        const vin = vin_data[0];
-        const model = vin.model?.toUpperCase() || '';
-        const vehicleTrim = vin.trim || '';
-
-        const intColor = <%- JSON.stringify(intColor) %>;
-        const colorMap = <%- JSON.stringify(colorMap) %>;
-        const camaroRpo = <%- JSON.stringify(camaroRpo) %>;
-        const corvetteRpo = <%- JSON.stringify(corvetteRpo) %>;
-        const escaladeRpo = <%- JSON.stringify(escaladeRpo) %>;
-        const escaladeiqRpo = <%- JSON.stringify(escaladeiqRpo) %>;
-        const ct4Rpo = <%- JSON.stringify(ct4Rpo) %>;
-        const ct4vRpo = <%- JSON.stringify(ct4vRpo) %>;
-        const ct5Rpo = <%- JSON.stringify(ct5Rpo) %>;
-        const ct5vRpo = <%- JSON.stringify(ct5vRpo) %>;
-        const hummerRpo = <%- JSON.stringify(hummerRpo) %>;
-        const hummersuvRpo = <%- JSON.stringify(hummersuvRpo) %>;
-
-        const invertedColorMap = {};
-        for (const [name, code] of Object.entries(colorMap)) {
-          if (code && code.length === 3) { 
-            invertedColorMap[code] = name;
+    function loadImageWithRetry(url, retries = 3, delay = 1000) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(url);
+        img.onerror = () => {
+          if (retries > 0) {
+            setTimeout(() => {
+              loadImageWithRetry(url, retries - 1, delay).then(resolve).catch(reject);
+            }, delay);
           } else {
-            invertedColorMap[name] = name;
+            reject(url);
           }
-        }
-
-        const allRpoDescriptions = {
-          ...intColor,
-          ...invertedColorMap,
-          ...camaroRpo,
-          ...corvetteRpo,
-          ...escaladeRpo,
-          ...escaladeiqRpo,
-          ...ct4Rpo,
-          ...ct4vRpo,
-          ...ct5Rpo,
-          ...ct5vRpo,
-          ...hummerRpo,
-          ...hummersuvRpo
         };
+        img.src = url;
+      });
+    }
 
-        function renderRpoCards(vin, model) {
-          const container = document.getElementById('rpoImageContainer');
-          container.innerHTML = '';
+    document.addEventListener('DOMContentLoaded', () => {
+      const vin_data = <%- JSON.stringify(vin_data).replace(/</g, '\\u003c') %>;
+      const vin = vin_data[0];
+      const model = vin.model?.toUpperCase() || '';
+      const vehicleTrim = vin.trim || '';
 
-          // Fetch the pre-verified RPO images array compiled by server.js
-          const verifiedRpoImages = <%- JSON.stringify(verifiedRpoImages || []) %>;
+      const intColor = <%- JSON.stringify(intColor) %>;
+      const colorMap = <%- JSON.stringify(colorMap) %>;
+      const camaroRpo = <%- JSON.stringify(camaroRpo) %>;
+      const corvetteRpo = <%- JSON.stringify(corvetteRpo) %>;
+      const escaladeRpo = <%- JSON.stringify(escaladeRpo) %>;
+      const escaladeiqRpo = <%- JSON.stringify(escaladeiqRpo) %>;
+      const ct4Rpo = <%- JSON.stringify(ct4Rpo) %>;
+      const ct4vRpo = <%- JSON.stringify(ct4vRpo) %>;
+      const ct5Rpo = <%- JSON.stringify(ct5Rpo) %>;
+      const ct5vRpo = <%- JSON.stringify(ct5vRpo) %>;
+      const hummerRpo = <%- JSON.stringify(hummerRpo) %>;
+      const hummersuvRpo = <%- JSON.stringify(hummersuvRpo) %>;
 
-          if (!verifiedRpoImages.length) {
-            container.innerHTML = '<h4>No specific RPO images found for this vehicle.</h4>';
-            return;
-          }
-
-          // Sort the pre-filtered codes alphabetically
-          const sortedRpoCodes = [...verifiedRpoImages].sort();
-
-          sortedRpoCodes.forEach(rpoCode => {
-            const cardWrapper = document.createElement('div');
-            cardWrapper.className = 'rpo-wrapper';
-            container.appendChild(cardWrapper);
-
-            let imgSrc;
-            if (model.startsWith('CORVETTE')) {
-                imgSrc = `/img/rpos/corvette/${rpoCode}.webp`;
-            } else if (model === 'ESCALADE IQ') {
-                imgSrc = `/img/rpos/escaladeiq/${rpoCode}.webp`;
-            } else if (model === 'CT4' && vehicleTrim.startsWith('V-SERIES')) {
-                imgSrc = `/img/rpos/ct4v/${rpoCode}.webp`;
-            } else if (model === 'CT5' && vehicleTrim.startsWith('V-SERIES')) {
-                imgSrc = `/img/rpos/ct5v/${rpoCode}.webp`;
-            } else if (model === 'HUMMER EV PICKUP') {
-                imgSrc = `/img/rpos/hummer/${rpoCode}.webp`;
-            } else if (model === 'HUMMER EV SUV') {
-                imgSrc = `/img/rpos/hummersuv/${rpoCode}.webp`;
-            } else {
-                imgSrc = `/img/rpos/${model.toLowerCase()}/${rpoCode}.webp`;
-            }
-
-            const cardLink = document.createElement('a');
-            cardLink.href = `/vehicles?model=${encodeURIComponent(model)}&rpo=${encodeURIComponent(rpoCode)}`;
-            cardLink.className = 'rpo-card-link';
-
-            const card = document.createElement('div');
-            card.className = 'rpo-card';
-
-            let descText = 
-              (model === 'CAMARO' && camaroRpo[rpoCode]) ||
-              (model.startsWith('CORVETTE') && corvetteRpo[rpoCode]) ||
-              (model === 'ESCALADE' && escaladeRpo[rpoCode]) ||
-              (model === 'ESCALADE IQ' && escaladeiqRpo[rpoCode]) ||
-              (model === 'CT4' && ct4Rpo[rpoCode]) ||
-              (model === 'CT4' && vehicleTrim.startsWith('V-SERIES') && ct4vRpo[rpoCode]) ||
-              (model === 'CT5' && ct5Rpo[rpoCode]) ||
-              (model === 'CT5' && vehicleTrim.startsWith('V-SERIES') && ct5vRpo[rpoCode]) ||
-              (model === 'HUMMER EV PICKUP' && hummerRpo[rpoCode]) ||
-              (model === 'HUMMER EV SUV' && hummersuvRpo[rpoCode]) ||
-              invertedColorMap[rpoCode] ||
-              allRpoDescriptions[rpoCode];
-
-            const descHTML = descText 
-              ? `<div>${descText}</div>` 
-              : `<div style="color: gray; font-style: italic;">No description available</div>`;
-
-            card.innerHTML = `
-              <img src="${imgSrc}" alt="${rpoCode}">
-              <p>${rpoCode}</p>
-              <div class="rpo-description">${descHTML}</div>
-            `;
-
-            cardLink.appendChild(card);
-            cardWrapper.appendChild(cardLink);
-          });
-        }
-
-        if (vin.model && model !== 'CELESTIQ') {
-          renderRpoCards(vin, vin.model);
-        } else if (model === 'CELESTIQ') {
-          const rpoImgContainer = document.getElementById('rpoImageContainer');
-          if (rpoImgContainer) rpoImgContainer.style.display = 'none';
-        }
-
-        document.querySelectorAll('#rpoTable .rpo-description').forEach(element => {
-          const rpoCode = element.getAttribute('data-code');
-
-          if (model === 'CAMARO' && camaroRpo[rpoCode]) {
-            element.innerHTML = `<div>${camaroRpo[rpoCode]}</div>`;
-            return;
-          }
-          if (model.startsWith('CORVETTE') && corvetteRpo[rpoCode]) {
-            element.innerHTML = `<div>${corvetteRpo[rpoCode]}</div>`;
-            return;
-          }
-          if (model === 'ESCALADE' && escaladeRpo[rpoCode]) {
-            element.innerHTML = `<div>${escaladeRpo[rpoCode]}</div>`;
-            return;
-          }
-          if (model === 'ESCALADE IQ' && escaladeiqRpo[rpoCode]) {
-            element.innerHTML = `<div>${escaladeiqRpo[rpoCode]}</div>`;
-            return;
-          }
-          if (model === 'CT4' && ct4Rpo[rpoCode]) {
-            element.innerHTML = `<div>${ct4Rpo[rpoCode]}</div>`;
-            return;
-          }
-          if (model === 'CT4' && vehicleTrim.startsWith('V-SERIES') && ct4vRpo[rpoCode]) {
-            element.innerHTML = `<div>${ct4vRpo[rpoCode]}</div>`;
-            return;
-          }
-          if (model === 'CT5' && ct5Rpo[rpoCode]) {
-            element.innerHTML = `<div>${ct5Rpo[rpoCode]}</div>`;
-            return;
-          }
-          if (model === 'CT5' && vehicleTrim.startsWith('V-SERIES') && ct5vRpo[rpoCode]) {
-            element.innerHTML = `<div>${ct5vRpo[rpoCode]}</div>`;
-            return;
-          }
-          if (model === 'HUMMER EV PICKUP' && hummerRpo[rpoCode]) {
-            element.innerHTML = `<div>${hummerRpo[rpoCode]}</div>`;
-            return;
-          }
-          if (model === 'HUMMER EV SUV' && hummersuvRpo[rpoCode]) {
-            element.innerHTML = `<div>${hummersuvRpo[rpoCode]}</div>`;
-            return;
-          }
-
-          if (invertedColorMap[rpoCode]) {
-            element.innerHTML = `<div>${invertedColorMap[rpoCode]}</div>`;
-            return;
-          }
-
-          if (allRpoDescriptions[rpoCode]) {
-            element.innerHTML = `<div>${allRpoDescriptions[rpoCode]}</div>`;
-          } else {
-            element.innerHTML = `<div style="color: gray; font-style: italic;">No description available</div>`;
-          }
-        });
-
-        const carouselImage = document.getElementById('carousel-image');
-        const loadingAnimation = document.getElementById('loading-animation');
-        loadingAnimation.style.display = 'block';
-
-        const warningDiv = document.getElementById('image-warning');
-        const mmc = <%- JSON.stringify(mmc) %>;
-        const ghostImg = '/img/ghost-chevrolet-car-alt.webp';
-
-        if (model === 'CAMARO') fallbackImg = '/img/vehicleLogos/camaro.webp';
-        else if (model.startsWith('CT') || model === 'CELESTIQ' || model.startsWith('ESCALADE')) fallbackImg = '/img/vehicleLogos/cadillac.webp';
-        else if (model.startsWith('CORVETTE')) fallbackImg = '/img/vehicleLogos/corvette.webp';
-        else fallbackImg = ghostImg;
-        carouselImage.removeAttribute('src');
-        carouselImage.classList.add('shimmer');
-
-        const modelYear = vin_data[0].modelYear;
-        const mmc_code = vin_data[0].mmc_code;
-        let options = vin_data[0].rpo_codes || [];
-
-        let trim = mmc[mmc_code] || '';
-
-        // Fix 2022+ 1LE mirrors
-        if (model === 'CAMARO' && modelYear >= 2020 && (options.includes('A1Y') || options.includes('A1Z'))) {
-          options = options.filter(code => code !== 'DD1' && code !== 'DG7');
-        }
-        
-        if (["1AJ37", "1AJ67"].includes(mmc_code) && modelYear > 2019) {
-          if (options.includes("1LZ")) {
-            trim = "1LZ";
-            options = options.filter(code => code !== "T3S");
-          }
+      const invertedColorMap = {};
+      for (const [name, code] of Object.entries(colorMap)) {
+        if (code && code.length === 3) { 
+          invertedColorMap[code] = name;
         } else {
-          if (["1YC07", "1YC67", "1YY07", "1YY67", "1YW07", "1YW67", "1YX07", "1YX67", "1YE07", "1YE67"].includes(mmc_code)) { // Camaro/Corvette
-            trim = options.find(opt => ["1LT", "2LT", "3LT"].includes(opt)) || trim;
-          } else if (["1YH07", "1YH67", "1YG07", "1YG67", "1YR07", "1YR67", "1YZ07", "1YZ67", "1YS07", "1YS67"].includes(mmc_code)) { // Corvette Z06/E-Ray
-            trim = options.find(opt => ["1LZ", "2LZ", "3LZ"].includes(opt)) || trim;
-          } else if (["1YV07", "1YV67"].includes(mmc_code)) { // Corvette ZR1/ZR1X
-            trim = options.find(opt => ["1ZR", "3ZR"].includes(opt)) || trim;
-          } else if (["1AH37", "1AH67"].includes(mmc_code)) { // Camaro
-            trim = options.find(opt => ["3LT"].includes(opt)) || trim;
-          } else if (["1AG37", "1AG67"].includes(mmc_code) && modelYear < 2024) { // Camaro 2020-2023
-            trim = options.find(opt => ["1LS"].includes(opt)) || trim;
-          } else if (["TT35743", "TT35526"].includes(mmc_code)) { // CT4/CT5
-            trim = options.find(opt => ["1SE", "1SF", "1SG", "1SB", "1SC", "1SD"].includes(opt)) || trim;
-          } else if (["CT35843"].includes(mmc_code)) { // Trucks
-            trim = options.find(opt => ["2WT", "3WT", "4WT", "5WT", "8WT", "3LT", "2SP", "3SP"].includes(opt)) || trim;
-          } else if (["TT35843"].includes(mmc_code)) {
-            trim = options.find(opt => ["5SD", "5SB", "5SC", "3SB", "3SC", "4SC", "4SD"].includes(opt)) || trim;
-          } else if (["6T35726"].includes(mmc_code)) {
-            trim = options.find(opt => ["1SC", "1SF", "1SD", "1SG"].includes(opt)) || trim;
-          } else if (["6C10706", "6K10706"].includes(mmc_code)) { // Escalade
-            trim = options.find(opt => ["1SA", "1SB", "1SC", "1SG", "1SH", "1SD"].includes(opt)) || trim;
-          } else if (["6C10906", "6K10906"].includes(mmc_code)) { // Escalade ESV
-            trim = options.find(opt => ["1SA", "1SB", "1SC", "1SG", "1SH", "1SD"].includes(opt)) || trim;
+          invertedColorMap[name] = name;
+        }
+      }
+
+      const allRpoDescriptions = {
+        ...intColor,
+        ...invertedColorMap,
+        ...camaroRpo,
+        ...corvetteRpo,
+        ...escaladeRpo,
+        ...escaladeiqRpo,
+        ...ct4Rpo,
+        ...ct4vRpo,
+        ...ct5Rpo,
+        ...ct5vRpo,
+        ...hummerRpo,
+        ...hummersuvRpo
+      };
+
+      function renderRpoCards(vin, model) {
+        const container = document.getElementById('rpoImageContainer');
+        container.innerHTML = '';
+
+        // Fetch the pre-verified RPO images array compiled by server.js
+        const verifiedRpoImages = <%- JSON.stringify(verifiedRpoImages || []) %>;
+
+        if (!verifiedRpoImages.length) {
+          container.innerHTML = '<h4>No specific RPO images found for this vehicle.</h4>';
+          return;
+        }
+
+        // Sort the pre-filtered codes alphabetically
+        const sortedRpoCodes = [...verifiedRpoImages].sort();
+
+        sortedRpoCodes.forEach(rpoCode => {
+          const cardWrapper = document.createElement('div');
+          cardWrapper.className = 'rpo-wrapper';
+          container.appendChild(cardWrapper);
+
+          let imgSrc;
+          if (model.startsWith('CORVETTE')) {
+              imgSrc = `/img/rpos/corvette/${rpoCode}.webp`;
+          } else if (model === 'ESCALADE IQ') {
+              imgSrc = `/img/rpos/escaladeiq/${rpoCode}.webp`;
+          } else if (model === 'CT4' && vehicleTrim.startsWith('V-SERIES')) {
+              imgSrc = `/img/rpos/ct4v/${rpoCode}.webp`;
+          } else if (model === 'CT5' && vehicleTrim.startsWith('V-SERIES')) {
+              imgSrc = `/img/rpos/ct5v/${rpoCode}.webp`;
+          } else if (model === 'HUMMER EV PICKUP') {
+              imgSrc = `/img/rpos/hummer/${rpoCode}.webp`;
+          } else if (model === 'HUMMER EV SUV') {
+              imgSrc = `/img/rpos/hummersuv/${rpoCode}.webp`;
+          } else {
+              imgSrc = `/img/rpos/${model.toLowerCase()}/${rpoCode}.webp`;
           }
+
+          const cardLink = document.createElement('a');
+          cardLink.href = `/vehicles?model=${encodeURIComponent(model)}&rpo=${encodeURIComponent(rpoCode)}`;
+          cardLink.className = 'rpo-card-link';
+
+          const card = document.createElement('div');
+          card.className = 'rpo-card';
+
+          let descText = 
+            (model === 'CAMARO' && camaroRpo[rpoCode]) ||
+            (model.startsWith('CORVETTE') && corvetteRpo[rpoCode]) ||
+            (model === 'ESCALADE' && escaladeRpo[rpoCode]) ||
+            (model === 'ESCALADE IQ' && escaladeiqRpo[rpoCode]) ||
+            (model === 'CT4' && ct4Rpo[rpoCode]) ||
+            (model === 'CT4' && vehicleTrim.startsWith('V-SERIES') && ct4vRpo[rpoCode]) ||
+            (model === 'CT5' && ct5Rpo[rpoCode]) ||
+            (model === 'CT5' && vehicleTrim.startsWith('V-SERIES') && ct5vRpo[rpoCode]) ||
+            (model === 'HUMMER EV PICKUP' && hummerRpo[rpoCode]) ||
+            (model === 'HUMMER EV SUV' && hummersuvRpo[rpoCode]) ||
+            invertedColorMap[rpoCode] ||
+            allRpoDescriptions[rpoCode];
+
+          const descHTML = descText 
+            ? `<div>${descText}</div>` 
+            : `<div style="color: gray; font-style: italic;">No description available</div>`;
+
+          card.innerHTML = `
+            <img src="${imgSrc}" alt="${rpoCode}">
+            <p>${rpoCode}</p>
+            <div class="rpo-description">${descHTML}</div>
+          `;
+
+          cardLink.appendChild(card);
+          cardWrapper.appendChild(cardLink);
+        });
+      }
+
+      if (vin.model && model !== 'CELESTIQ') {
+        renderRpoCards(vin, vin.model);
+      } else if (model === 'CELESTIQ') {
+        const rpoImgContainer = document.getElementById('rpoImageContainer');
+        if (rpoImgContainer) rpoImgContainer.style.display = 'none';
+      }
+
+      document.querySelectorAll('#rpoTable .rpo-description').forEach(element => {
+        const rpoCode = element.getAttribute('data-code');
+
+        if (model === 'CAMARO' && camaroRpo[rpoCode]) {
+          element.innerHTML = `<div>${camaroRpo[rpoCode]}</div>`;
+          return;
+        }
+        if (model.startsWith('CORVETTE') && corvetteRpo[rpoCode]) {
+          element.innerHTML = `<div>${corvetteRpo[rpoCode]}</div>`;
+          return;
+        }
+        if (model === 'ESCALADE' && escaladeRpo[rpoCode]) {
+          element.innerHTML = `<div>${escaladeRpo[rpoCode]}</div>`;
+          return;
+        }
+        if (model === 'ESCALADE IQ' && escaladeiqRpo[rpoCode]) {
+          element.innerHTML = `<div>${escaladeiqRpo[rpoCode]}</div>`;
+          return;
+        }
+        if (model === 'CT4' && ct4Rpo[rpoCode]) {
+          element.innerHTML = `<div>${ct4Rpo[rpoCode]}</div>`;
+          return;
+        }
+        if (model === 'CT4' && vehicleTrim.startsWith('V-SERIES') && ct4vRpo[rpoCode]) {
+          element.innerHTML = `<div>${ct4vRpo[rpoCode]}</div>`;
+          return;
+        }
+        if (model === 'CT5' && ct5Rpo[rpoCode]) {
+          element.innerHTML = `<div>${ct5Rpo[rpoCode]}</div>`;
+          return;
+        }
+        if (model === 'CT5' && vehicleTrim.startsWith('V-SERIES') && ct5vRpo[rpoCode]) {
+          element.innerHTML = `<div>${ct5vRpo[rpoCode]}</div>`;
+          return;
+        }
+        if (model === 'HUMMER EV PICKUP' && hummerRpo[rpoCode]) {
+          element.innerHTML = `<div>${hummerRpo[rpoCode]}</div>`;
+          return;
+        }
+        if (model === 'HUMMER EV SUV' && hummersuvRpo[rpoCode]) {
+          element.innerHTML = `<div>${hummersuvRpo[rpoCode]}</div>`;
+          return;
         }
 
-        let rpos = options.join('_');
-        let color = options.find(opt => Object.values(colorMap).includes(opt));
-        let colorInt = options.find(opt => Object.keys(intColor).includes(opt));
-        
-        // --- ADDED VALIDATION CHECK FOR UNDEFINED/NULL ---
-        let missingVarsMsgs = [];
-        const requiredVars = { modelYear, mmc_code, trim, color, colorInt };
-        
-        for (const [key, value] of Object.entries(requiredVars)) {
-          if (value === undefined || value === null || value === '') {
-            missingVarsMsgs.push(`Error: ${key} is undefined/null`);
-          }
+        if (invertedColorMap[rpoCode]) {
+          element.innerHTML = `<div>${invertedColorMap[rpoCode]}</div>`;
+          return;
         }
 
-        if (missingVarsMsgs.length > 0) {
-          warningDiv.innerHTML += (warningDiv.innerHTML ? '<br>' : '') + missingVarsMsgs.join('<br>');
-          warningDiv.style.color = '#e57373';
+        if (allRpoDescriptions[rpoCode]) {
+          element.innerHTML = `<div>${allRpoDescriptions[rpoCode]}</div>`;
+        } else {
+          element.innerHTML = `<div style="color: gray; font-style: italic;">No description available</div>`;
         }
-        // -------------------------------------------------
+      });
 
-        const modelUpper = vin_data[0].model ? vin_data[0].model.toUpperCase() : '';
-        let extMax = 7;
-        let intMax = 4;
-              
-        if (modelUpper === 'CAMARO') {
+      const carouselImage = document.getElementById('carousel-image');
+      const loadingAnimation = document.getElementById('loading-animation');
+      loadingAnimation.style.display = 'block';
+
+      const warningDiv = document.getElementById('image-warning');
+      const mmc = <%- JSON.stringify(mmc) %>;
+      const ghostImg = '/img/ghost-chevrolet-car-alt.webp';
+
+      if (model === 'CAMARO') fallbackImg = '/img/vehicleLogos/camaro.webp';
+      else if (model.startsWith('CT') || model === 'CELESTIQ' || model.startsWith('ESCALADE')) fallbackImg = '/img/vehicleLogos/cadillac.webp';
+      else if (model.startsWith('CORVETTE')) fallbackImg = '/img/vehicleLogos/corvette.webp';
+      else fallbackImg = ghostImg;
+      carouselImage.removeAttribute('src');
+      carouselImage.classList.add('shimmer');
+
+      const modelYear = vin_data[0].modelYear;
+      const mmc_code = vin_data[0].mmc_code;
+      let options = vin_data[0].rpo_codes || [];
+
+      let trim = mmc[mmc_code] || '';
+
+      // Fix 2022+ 1LE mirrors
+      if (model === 'CAMARO' && modelYear >= 2020 && (options.includes('A1Y') || options.includes('A1Z'))) {
+        options = options.filter(code => code !== 'DD1' && code !== 'DG7');
+      }
+      
+      if (["1AJ37", "1AJ67"].includes(mmc_code) && modelYear > 2019) {
+        if (options.includes("1LZ")) {
+          trim = "1LZ";
+          options = options.filter(code => code !== "T3S");
+        }
+      } else {
+        if (["1YC07", "1YC67", "1YY07", "1YY67", "1YW07", "1YW67", "1YX07", "1YX67", "1YE07", "1YE67"].includes(mmc_code)) { // Camaro/Corvette
+          trim = options.find(opt => ["1LT", "2LT", "3LT"].includes(opt)) || trim;
+        } else if (["1YH07", "1YH67", "1YG07", "1YG67", "1YR07", "1YR67", "1YZ07", "1YZ67", "1YS07", "1YS67"].includes(mmc_code)) { // Corvette Z06/E-Ray
+          trim = options.find(opt => ["1LZ", "2LZ", "3LZ"].includes(opt)) || trim;
+        } else if (["1YV07", "1YV67"].includes(mmc_code)) { // Corvette ZR1/ZR1X
+          trim = options.find(opt => ["1ZR", "3ZR"].includes(opt)) || trim;
+        } else if (["1AH37", "1AH67"].includes(mmc_code)) { // Camaro
+          trim = options.find(opt => ["3LT"].includes(opt)) || trim;
+        } else if (["1AG37", "1AG67"].includes(mmc_code) && modelYear < 2024) { // Camaro 2020-2023
+          trim = options.find(opt => ["1LS"].includes(opt)) || trim;
+        } else if (["TT35743", "TT35526"].includes(mmc_code)) { // CT4/CT5
+          trim = options.find(opt => ["1SE", "1SF", "1SG", "1SB", "1SC", "1SD"].includes(opt)) || trim;
+        } else if (["CT35843"].includes(mmc_code)) { // Trucks
+          trim = options.find(opt => ["2WT", "3WT", "4WT", "5WT", "8WT", "3LT", "2SP", "3SP"].includes(opt)) || trim;
+        } else if (["TT35843"].includes(mmc_code)) {
+          trim = options.find(opt => ["5SD", "5SB", "5SC", "3SB", "3SC", "4SC", "4SD"].includes(opt)) || trim;
+        } else if (["6T35726"].includes(mmc_code)) {
+          trim = options.find(opt => ["1SC", "1SF", "1SD", "1SG"].includes(opt)) || trim;
+        } else if (["6C10706", "6K10706"].includes(mmc_code)) { // Escalade
+          trim = options.find(opt => ["1SA", "1SB", "1SC", "1SG", "1SH", "1SD"].includes(opt)) || trim;
+        } else if (["6C10906", "6K10906"].includes(mmc_code)) { // Escalade ESV
+          trim = options.find(opt => ["1SA", "1SB", "1SC", "1SG", "1SH", "1SD"].includes(opt)) || trim;
+        }
+      }
+
+      let rpos = options.join('_');
+      let color = options.find(opt => Object.values(colorMap).includes(opt));
+      let colorInt = options.find(opt => Object.keys(intColor).includes(opt));
+      
+      // --- ADDED VALIDATION CHECK FOR UNDEFINED/NULL ---
+      let missingVarsMsgs = [];
+      const requiredVars = { modelYear, mmc_code, trim, color, colorInt };
+      
+      for (const [key, value] of Object.entries(requiredVars)) {
+        if (value === undefined || value === null || value === '') {
+          missingVarsMsgs.push(`Error: ${key} is undefined/null`);
+        }
+      }
+
+      if (missingVarsMsgs.length > 0) {
+        warningDiv.innerHTML += (warningDiv.innerHTML ? '<br>' : '') + missingVarsMsgs.join('<br>');
+        warningDiv.style.color = '#e57373';
+      }
+      // -------------------------------------------------
+
+      const modelUpper = vin_data[0].model ? vin_data[0].model.toUpperCase() : '';
+      let extMax = 7;
+      let intMax = 4;
+            
+      if (modelUpper === 'CAMARO') {
+        intMax = 2;
+        extMax = modelYear >= 2023 ? 5 : 4;
+      } else if (modelUpper.startsWith('CORVETTE')) {
+        if (modelYear === 2019) {
+          extMax = 4;
           intMax = 2;
-          extMax = modelYear >= 2023 ? 5 : 4;
-        } else if (modelUpper.startsWith('CORVETTE')) {
-          if (modelYear === 2019) {
-            extMax = 4;
-            intMax = 2;
-          } else if (modelYear <= 2023) {
-            extMax = 6;
-          }
-        } else if (['CT4', 'CT5', 'CT6'].includes(modelUpper) && modelYear <= 2022) {
+        } else if (modelYear <= 2023) {
           extMax = 6;
-        } else if (['SILVERADO EV', 'SIERRA EV'].includes(modelUpper)) {
-          extMax = 5;
-          intMax = 2;
-        } else if (['HUMMER EV PICKUP', 'HUMMER EV SUV'].includes(modelUpper)) {
-          intMax = 2;
-          extMax = modelYear >= 2023 ? 5 : 4;
-        } else if (modelUpper === 'ESCALADE') {
-          intMax = 4;
-          extMax = modelYear >= 2026 ? 17 : 7;
         }
+      } else if (['CT4', 'CT5', 'CT6'].includes(modelUpper) && modelYear <= 2022) {
+        extMax = 6;
+      } else if (['SILVERADO EV', 'SIERRA EV'].includes(modelUpper)) {
+        extMax = 5;
+        intMax = 2;
+      } else if (['HUMMER EV PICKUP', 'HUMMER EV SUV'].includes(modelUpper)) {
+        intMax = 2;
+        extMax = modelYear >= 2023 ? 5 : 4;
+      } else if (modelUpper === 'ESCALADE') {
+        intMax = 4;
+        extMax = modelYear >= 2026 ? 17 : 7;
+      }
 
-        const shimmerContainer = document.getElementById('image-gallery-shimmer');
-        shimmerContainer.innerHTML = '';
+      const shimmerContainer = document.getElementById('image-gallery-shimmer');
+      shimmerContainer.innerHTML = '';
 
-        const totalBoxes = intMax + extMax;
-        for (let i = 0; i < totalBoxes; i++) {
-          const box = document.createElement('div');
-          box.classList.add('shimmer-box', 'shimmer');
-          box.style.width = '100px';
-          box.style.borderRadius = '4px';
-          shimmerContainer.appendChild(box);
+      const totalBoxes = intMax + extMax;
+      for (let i = 0; i < totalBoxes; i++) {
+        const box = document.createElement('div');
+        box.classList.add('shimmer-box', 'shimmer');
+        box.style.width = '100px';
+        box.style.borderRadius = '4px';
+        shimmerContainer.appendChild(box);
+      }
+
+      // GM Image Gen API doesn't have some codes so pick closest available option
+      let unsupportedColors = null;
+      const unsupportedColorNames = [
+        'BLACK MEETS KETTLE',
+        'COPPERTINO METALLIC',
+        'CHARTREUSE METALLIC',
+        'ABALONE WHITE',
+        'TACTICAL TINT',
+        'BARB WIRE',
+        'KIMONO METALLIC',
+        'SEEKER METALLIC',
+        'HIGH VOLTAGE TINT',
+        'BAEGE METALLIC',
+        'SEYCHELLES METALLIC',
+        'HYPERSONIC METALLIC',
+        'CHARTREUSE MATTE'
+      ];
+      let unsupportedInts = null;
+      const colorName = vin_data[0].color_name;
+
+      if (colorName === 'BLADE SILVER METALLIC' && modelYear >= 2026) {
+        if (color === 'GAN') {
+          color = 'GKA';
         }
+      }
 
-        // GM Image Gen API doesn't have some codes so pick closest available option
-        let unsupportedColors = null;
-        const unsupportedColorNames = [
-          'BLACK MEETS KETTLE',
-          'COPPERTINO METALLIC',
-          'CHARTREUSE METALLIC',
-          'ABALONE WHITE',
-          'TACTICAL TINT',
-          'BARB WIRE',
-          'KIMONO METALLIC',
-          'SEEKER METALLIC',
-          'HIGH VOLTAGE TINT',
-          'BAEGE METALLIC',
-          'SEYCHELLES METALLIC',
-          'HYPERSONIC METALLIC',
-          'CHARTREUSE MATTE'
-        ];
-        let unsupportedInts = null;
-        const colorName = vin_data[0].color_name;
+      // Force 2025 + 1SV + GBL → GXD
+      if (modelYear === 2025 && trim === '1SV' && color === 'GBL') {
+        unsupportedColors = 'GBL';
+        color = 'GXD';
+        rpos = rpos.replace(/GBL/g, 'GXD');
+      }
 
-        if (colorName === 'BLADE SILVER METALLIC' && modelYear >= 2026) {
-          if (color === 'GAN') {
-            color = 'GKA';
-          }
-        }
-
-        // Force 2025 + 1SV + GBL → GXD
-        if (modelYear === 2025 && trim === '1SV' && color === 'GBL') {
-          unsupportedColors = 'GBL';
-          color = 'GXD';
-          rpos = rpos.replace(/GBL/g, 'GXD');
-        }
-
-        if (color === 'GKA' && modelUpper === 'CT4' && modelYear >= 2024) {
-          unsupportedColors = color;
-          color = 'GXD';
-        } else if (color === 'GBA') {
-          const specialColors = {
-            'ABALONE WHITE': 'GAZ',
-            'BAEGE METALLIC': 'GAZ',
-            'TACTICAL TINT': 'G7C',
-            'BARB WIRE': 'GXD',
-            'HYPERSONIC METALLIC': 'GXD',
-            'SEEKER METALLIC': 'GJV',
-            'SEYCHELLES METALLIC': 'GJV'
-          };
-
-          if (specialColors.hasOwnProperty(colorName)) {
-            color = specialColors[colorName];
-            rpos = rpos.replace(new RegExp("GBA", 'g'), color);
-          }
-
-          if (unsupportedColorNames.includes(colorName)) {
-            unsupportedColors = unsupportedColors 
-              ? unsupportedColors + ', ' + colorName 
-              : colorName;
-          }
-          if (rpos.includes(unsupportedColors)) {
-            rpos = rpos.replace(new RegExp(unsupportedColors, 'g'), color);
-          }
-        }
-        const replacementMap = {
-          'E2D-CT5-1SV': 'HMR',
-          'E2B-CT5-1SV': 'HMR',
-          'E2G-CT5-1SV': 'HJD',
-          'E54-CT5-1SV': 'HMR',
-          'E2D-CT4-1SP': 'HEA',
-          'E2B-CT4-1SP': 'HEA',
-          'E2G-CT4-1SP': 'HEA',
-          'E54-CT4-1SP': 'HEA',
-          'EG1-CT5-1SV': 'HJD',
-          'EG1-CT4-1SP': 'HEB',
+      if (color === 'GKA' && modelUpper === 'CT4' && modelYear >= 2024) {
+        unsupportedColors = color;
+        color = 'GXD';
+      } else if (color === 'GBA') {
+        const specialColors = {
+          'ABALONE WHITE': 'GAZ',
+          'BAEGE METALLIC': 'GAZ',
+          'TACTICAL TINT': 'G7C',
+          'BARB WIRE': 'GXD',
+          'HYPERSONIC METALLIC': 'GXD',
+          'SEEKER METALLIC': 'GJV',
+          'SEYCHELLES METALLIC': 'GJV'
         };
 
-        const key = `${colorInt}-${model}-${trim}`;
-        if (replacementMap[key]) {
+        if (specialColors.hasOwnProperty(colorName)) {
+          color = specialColors[colorName];
+          rpos = rpos.replace(new RegExp("GBA", 'g'), color);
+        }
+
+        if (unsupportedColorNames.includes(colorName)) {
+          unsupportedColors = unsupportedColors 
+            ? unsupportedColors + ', ' + colorName 
+            : colorName;
+        }
+        if (rpos.includes(unsupportedColors)) {
+          rpos = rpos.replace(new RegExp(unsupportedColors, 'g'), color);
+        }
+      }
+      const replacementMap = {
+        'E2D-CT5-1SV': 'HMR',
+        'E2B-CT5-1SV': 'HMR',
+        'E2G-CT5-1SV': 'HJD',
+        'E54-CT5-1SV': 'HMR',
+        'E2D-CT4-1SP': 'HEA',
+        'E2B-CT4-1SP': 'HEA',
+        'E2G-CT4-1SP': 'HEA',
+        'E54-CT4-1SP': 'HEA',
+        'EG1-CT5-1SV': 'HJD',
+        'EG1-CT4-1SP': 'HEB',
+      };
+
+      const key = `${colorInt}-${model}-${trim}`;
+      if (replacementMap[key]) {
+        unsupportedInts = colorInt;
+        colorInt = replacementMap[key];
+      } else {
+        // Check generic pattern for CT5/CT4
+        const patternKey = key.split('-').slice(1).join('-');
+        if (replacementMap[patternKey]) {
           unsupportedInts = colorInt;
-          colorInt = replacementMap[key];
-        } else {
-          // Check generic pattern for CT5/CT4
-          const patternKey = key.split('-').slice(1).join('-');
-          if (replacementMap[patternKey]) {
-            unsupportedInts = colorInt;
-            colorInt = replacementMap[patternKey];
-          }
+          colorInt = replacementMap[patternKey];
         }
+      }
 
-        if (unsupportedColors || unsupportedInts) {
-          let msg = 'Image generation does not support the following: ';
-          if (unsupportedColors) {
-            msg += `Ext. Color <i>${unsupportedColors}</i>`;
-            const extCell = document.getElementById('extColorCell');
-            if (extCell) extCell.style.cssText = 'color:#e57373;';
-          }
-          if (unsupportedColors && unsupportedInts) {
-            msg += ', ';
-          }
-          if (unsupportedInts) {
-            msg += `Int. color <i>${unsupportedInts}</i>`;
-            const intCell = document.getElementById('intColorCell');
-            if (intCell) intCell.style.cssText = 'color:#e57373;';
-          }
-          msg += '. Closest available color/material match has been substituted.';
-          warningDiv.innerHTML = msg;
+      if (unsupportedColors || unsupportedInts) {
+        let msg = 'Image generation does not support the following: ';
+        if (unsupportedColors) {
+          msg += `Ext. Color <i>${unsupportedColors}</i>`;
+          const extCell = document.getElementById('extColorCell');
+          if (extCell) extCell.style.cssText = 'color:#e57373;';
         }
-
-        let urls = [];
-
-        // Troubleshooting imgGen
-        //console.log(`Model Year: ${modelYear}, MMC Code: ${mmc_code}, Trim: ${trim}, Color: ${color}, Interior Color: ${colorInt}`);
-        //console.log(`https://cgi.chevrolet.com/mmgprod-us/dynres/prove/image.gen?i=${modelYear}/${mmc_code}/${mmc_code}__${trim}/${color}_${rpos}gmds10.png&v=deg01&std=true&country=US&send404=true&transparentBackgroundPng=true`);
-        
-        if (model === 'CELESTIQ') {
-          warningDiv.innerHTML = 'Image generation does not support Celestiq.';
-          urls = [ghostImg];
-        } else if ((['3WT', '4WT'].includes(vehicleTrim)) && modelYear === 2024) {
-          warningDiv.innerHTML = 'Image generation does not support 2024 Silverado EV WT.';
-          urls = [ghostImg];
-        } else if (modelYear && mmc_code && trim && color && colorInt) {
-          for (let i = 1; i <= extMax; i++) {
-            urls.push(`/gm-images/mmgprod-us/dynres/prove/image.gen?i=${modelYear}/${mmc_code}/${mmc_code}__${trim}/${color}_${rpos}gmds10.png&v=deg${String(i).padStart(2, '0')}&std=true&country=US&send404=true&transparentBackgroundPng=true`);
-          }
-          for (let i = 1; i <= intMax; i++) {
-            urls.push(`/gm-images/mmgprod-us/dynres/prove/imageinterior.gen?i=${modelYear}/${mmc_code}/${mmc_code}__${trim}/${colorInt}_${rpos}gmds10.png&v=deg${String(i).padStart(2, '0')}&std=true&country=US&send404=true&transparentBackgroundPng=true`);
-          }
-        } else {
-          urls = [ghostImg];
+        if (unsupportedColors && unsupportedInts) {
+          msg += ', ';
         }
+        if (unsupportedInts) {
+          msg += `Int. color <i>${unsupportedInts}</i>`;
+          const intCell = document.getElementById('intColorCell');
+          if (intCell) intCell.style.cssText = 'color:#e57373;';
+        }
+        msg += '. Closest available color/material match has been substituted.';
+        warningDiv.innerHTML = msg;
+      }
 
-        const gallery = document.getElementById('image-gallery');
-        if (urls.length === 1 && urls[0] === ghostImg) {
-          document.getElementById('image-gallery').style.display = 'none';
-        } else {
-          urls.forEach((imgSrc, index) => {
-            const thumb = document.createElement('img');
-						thumb.src = imgSrc;
-            thumb.alt = `Thumbnail ${index + 1}`;
-            thumb.style.width = '100px';
-            thumb.style.cursor = 'pointer';
-            thumb.style.border = '1px solid transparent';
-            thumb.addEventListener('click', () => {
-              showImage(index);
-            });
-            gallery.appendChild(thumb);
+      let urls = [];
+
+      // Troubleshooting imgGen
+      //console.log(`Model Year: ${modelYear}, MMC Code: ${mmc_code}, Trim: ${trim}, Color: ${color}, Interior Color: ${colorInt}`);
+      //console.log(`https://cgi.chevrolet.com/mmgprod-us/dynres/prove/image.gen?i=${modelYear}/${mmc_code}/${mmc_code}__${trim}/${color}_${rpos}gmds10.png&v=deg01&std=true&country=US&send404=true&transparentBackgroundPng=true`);
+      
+      if (model === 'CELESTIQ') {
+        warningDiv.innerHTML = 'Image generation does not support Celestiq.';
+        urls = [ghostImg];
+      } else if ((['3WT', '4WT'].includes(vehicleTrim)) && modelYear === 2024) {
+        warningDiv.innerHTML = 'Image generation does not support 2024 Silverado EV WT.';
+        urls = [ghostImg];
+      } else if (modelYear && mmc_code && trim && color && colorInt) {
+        for (let i = 1; i <= extMax; i++) {
+          urls.push(`/gm-images/mmgprod-us/dynres/prove/image.gen?i=${modelYear}/${mmc_code}/${mmc_code}__${trim}/${color}_${rpos}gmds10.png&v=deg${String(i).padStart(2, '0')}&std=true&country=US&send404=true&transparentBackgroundPng=true`);
+        }
+        for (let i = 1; i <= intMax; i++) {
+          urls.push(`/gm-images/mmgprod-us/dynres/prove/imageinterior.gen?i=${modelYear}/${mmc_code}/${mmc_code}__${trim}/${colorInt}_${rpos}gmds10.png&v=deg${String(i).padStart(2, '0')}&std=true&country=US&send404=true&transparentBackgroundPng=true`);
+        }
+      } else {
+        urls = [ghostImg];
+      }
+
+      const gallery = document.getElementById('image-gallery');
+      if (urls.length === 1 && urls[0] === ghostImg) {
+        document.getElementById('image-gallery').style.display = 'none';
+      } else {
+        urls.forEach((imgSrc, index) => {
+          const thumb = document.createElement('img');
+          thumb.src = imgSrc;
+          thumb.alt = `Thumbnail ${index + 1}`;
+          thumb.style.width = '100px';
+          thumb.style.cursor = 'pointer';
+          thumb.style.border = '1px solid transparent';
+          thumb.addEventListener('click', () => {
+            showImage(index);
           });
+          gallery.appendChild(thumb);
+        });
+      }
+
+      let currentIndex = 0;
+      let initialLoad = true;
+
+      function preloadImage(src) {
+        const img = new Image();
+        img.src = src;
+      }
+
+      function showImage(index) {
+        // If clicking the current active image after initial load, do nothing
+        if (!initialLoad && index === currentIndex) {
+          return;
         }
 
-        let currentIndex = 0;
-        let initialLoad = true;
-
-        function preloadImage(src) {
-          const img = new Image();
-          img.src = src;
+        while (urls[index] === null) {
+          index = (index + 1) % urls.length;
+          if (index === currentIndex) break;
         }
+        currentIndex = index;
+        const imgSrc = urls[index];
 
-        function showImage(index) {
-          // If clicking the current active image after initial load, do nothing
-          if (!initialLoad && index === currentIndex) {
-            return;
-          }
+        if (initialLoad) {
+          carouselImage.onload = () => {
+            loadingAnimation.style.display = 'none';
+            carouselImage.style.display = 'block';
+            carouselImage.classList.remove('shimmer');
+            carouselImage.style.opacity = 1;
+            
+            if (urls.length > 1) {
+              document.getElementById('prev').style.display = 'block';
+              document.getElementById('next').style.display = 'block';
+            } else {
+              document.getElementById('prev').style.display = 'none';
+              document.getElementById('next').style.display = 'none';
+            }
+            
+            document.getElementById('image-gallery-shimmer').style.display = 'none';
+            
+            if (urls.length === 1 && urls[0] === ghostImg) {
+              document.getElementById('image-gallery').style.display = 'none';
+            } else {
+              document.getElementById('image-gallery').style.display = 'flex';
+            }
+            
+            initialLoad = false;
+          };
 
-          while (urls[index] === null) {
-            index = (index + 1) % urls.length;
-            if (index === currentIndex) break;
-          }
-          currentIndex = index;
-          const imgSrc = urls[index];
+          // Setup a safety 404 catch on the first load attempt
+          carouselImage.onerror = () => {
+            if (carouselImage.src.includes('ghost')) return; // Exit logic loop
+            
+            if (!warningDiv.innerHTML.includes('Image generation does not support')) {
+              warningDiv.innerHTML += (warningDiv.innerHTML ? '<br>' : '') + `Image generation does not support ${modelYear} ${vin.model || model}`;
+              warningDiv.style.color = '#e57373';
+            }
+            
+            // Clear array to stop indexing the 404 images
+            urls = [ghostImg];
+            currentIndex = 0;
+            gallery.innerHTML = ''; // Wipe pre-loaded thumbnails
+            carouselImage.src = ghostImg;
+          };
 
-          if (initialLoad) {
+          carouselImage.src = imgSrc;
+        } else {
+          carouselImage.style.opacity = 0;
+
+          setTimeout(() => {
             carouselImage.onload = () => {
-              loadingAnimation.style.display = 'none';
-              carouselImage.style.display = 'block';
-              carouselImage.classList.remove('shimmer');
               carouselImage.style.opacity = 1;
-              
-              if (urls.length > 1) {
-                document.getElementById('prev').style.display = 'block';
-                document.getElementById('next').style.display = 'block';
-              } else {
-                document.getElementById('prev').style.display = 'none';
-                document.getElementById('next').style.display = 'none';
-              }
-              
-              document.getElementById('image-gallery-shimmer').style.display = 'none';
-              
-              if (urls.length === 1 && urls[0] === ghostImg) {
-                document.getElementById('image-gallery').style.display = 'none';
-              } else {
-                document.getElementById('image-gallery').style.display = 'flex';
-              }
-              
-              initialLoad = false;
             };
-
-            // Setup a safety 404 catch on the first load attempt
+            
+            // Backup catch in case subsequent gallery items fail
             carouselImage.onerror = () => {
-              if (carouselImage.src.includes('ghost')) return; // Exit logic loop
-              
-              if (!warningDiv.innerHTML.includes('Image generation does not support')) {
-                warningDiv.innerHTML += (warningDiv.innerHTML ? '<br>' : '') + `Image generation does not support ${modelYear} ${vin.model || model}`;
-                warningDiv.style.color = '#e57373';
-              }
-              
-              // Clear array to stop indexing the 404 images
-              urls = [ghostImg];
-              currentIndex = 0;
-              gallery.innerHTML = ''; // Wipe pre-loaded thumbnails
-              carouselImage.src = ghostImg;
+              if (carouselImage.src.includes('ghost')) return;
+              carouselImage.src = ghostImg; 
+              carouselImage.style.opacity = 1;
             };
 
             carouselImage.src = imgSrc;
-          } else {
-            carouselImage.style.opacity = 0;
-
-            setTimeout(() => {
-              carouselImage.onload = () => {
-                carouselImage.style.opacity = 1;
-              };
-              
-              // Backup catch in case subsequent gallery items fail
-              carouselImage.onerror = () => {
-                if (carouselImage.src.includes('ghost')) return;
-                carouselImage.src = ghostImg; 
-                carouselImage.style.opacity = 1;
-              };
-
-              carouselImage.src = imgSrc;
-              carouselImage.alt = `Image ${index + 1}`;
-            }, 200);
-          }
-
-          [...gallery.children].forEach((img, i) => {
-            img.style.border = (i === index && urls[i]) ? '1px solid #141414' : '1px solid transparent';
-          });
-
-          const el = gallery.children[index];
-          if (el) {
-            const galleryRect = gallery.getBoundingClientRect();
-            const elRect = el.getBoundingClientRect();
-            
-            // Calculate how much to move to center the thumbnail
-            const offset = elRect.left - galleryRect.left - (galleryRect.width / 2) + (elRect.width / 2);
-            let targetScroll = gallery.scrollLeft + offset;
-            
-            // Clamp the scroll position to prevent the last item from centering in empty space
-            const maxScroll = gallery.scrollWidth - gallery.clientWidth;
-            targetScroll = Math.max(0, Math.min(targetScroll, maxScroll));
-            
-            gallery.scrollTo({ left: targetScroll, behavior: 'smooth' });
-          }
-
-          let nextIndex = (index + 1) % urls.length;
-          while (urls[nextIndex] === null && nextIndex !== index) {
-            nextIndex = (nextIndex + 1) % urls.length;
-          }
-          if (urls[nextIndex]) preloadImage(urls[nextIndex]);
+            carouselImage.alt = `Image ${index + 1}`;
+          }, 200);
         }
 
-        showImage(currentIndex);
+        [...gallery.children].forEach((img, i) => {
+          img.style.border = (i === index && urls[i]) ? '1px solid #141414' : '1px solid transparent';
+        });
 
-        document.getElementById('prev').addEventListener('click', () => {
+        const el = gallery.children[index];
+        if (el) {
+          const galleryRect = gallery.getBoundingClientRect();
+          const elRect = el.getBoundingClientRect();
+          
+          // Calculate how much to move to center the thumbnail
+          const offset = elRect.left - galleryRect.left - (galleryRect.width / 2) + (elRect.width / 2);
+          let targetScroll = gallery.scrollLeft + offset;
+          
+          // Clamp the scroll position to prevent the last item from centering in empty space
+          const maxScroll = gallery.scrollWidth - gallery.clientWidth;
+          targetScroll = Math.max(0, Math.min(targetScroll, maxScroll));
+          
+          gallery.scrollTo({ left: targetScroll, behavior: 'smooth' });
+        }
+
+        let nextIndex = (index + 1) % urls.length;
+        while (urls[nextIndex] === null && nextIndex !== index) {
+          nextIndex = (nextIndex + 1) % urls.length;
+        }
+        if (urls[nextIndex]) preloadImage(urls[nextIndex]);
+      }
+
+      showImage(currentIndex);
+
+      document.getElementById('prev').addEventListener('click', () => {
+        let prevIndex = currentIndex;
+        do {
+          prevIndex = (prevIndex === 0) ? urls.length - 1 : prevIndex - 1;
+        } while (urls[prevIndex] === null && prevIndex !== currentIndex);
+        showImage(prevIndex);
+      });
+
+      document.getElementById('next').addEventListener('click', () => {
+        let nextIndex = currentIndex;
+        do {
+          nextIndex = (nextIndex === urls.length - 1) ? 0 : nextIndex + 1;
+        } while (urls[nextIndex] === null && nextIndex !== currentIndex);
+        showImage(nextIndex);
+      });
+
+      document.querySelectorAll('#rpoTable tbody tr').forEach(row => {
+        row.addEventListener('mousedown', handleMouseDown);
+        row.addEventListener('click', (event) => {
+          const link = row.querySelector('a[href]');
+          if (!link) return;
+          handleRowClick(link.href, event);
+        });
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') return;
+
+        if (event.key === 'ArrowLeft') {
           let prevIndex = currentIndex;
           do {
             prevIndex = (prevIndex === 0) ? urls.length - 1 : prevIndex - 1;
           } while (urls[prevIndex] === null && prevIndex !== currentIndex);
           showImage(prevIndex);
-        });
-
-        document.getElementById('next').addEventListener('click', () => {
+        } else if (event.key === 'ArrowRight') {
           let nextIndex = currentIndex;
           do {
             nextIndex = (nextIndex === urls.length - 1) ? 0 : nextIndex + 1;
           } while (urls[nextIndex] === null && nextIndex !== currentIndex);
           showImage(nextIndex);
-        });
+        }
+      });
 
-        document.querySelectorAll('#rpoTable tbody tr').forEach(row => {
-          row.addEventListener('mousedown', handleMouseDown);
-          row.addEventListener('click', (event) => {
-            const link = row.querySelector('a[href]');
-            if (!link) return;
-            handleRowClick(link.href, event);
-          });
-        });
+      let touchStartX = 0;
+      let touchEndX = 0;
 
-        document.addEventListener('keydown', (event) => {
-          if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') return;
+      const handleSwipe = () => {
+        const swipeThreshold = 50; // Minimum pixels to count as a swipe
+        const swipeDistance = touchEndX - touchStartX;
 
-          if (event.key === 'ArrowLeft') {
-            let prevIndex = currentIndex;
-            do {
-              prevIndex = (prevIndex === 0) ? urls.length - 1 : prevIndex - 1;
-            } while (urls[prevIndex] === null && prevIndex !== currentIndex);
-            showImage(prevIndex);
-          } else if (event.key === 'ArrowRight') {
+        if (Math.abs(swipeDistance) > swipeThreshold) {
+          if (swipeDistance < 0) {
+            // Swiped Left -> Next Image
             let nextIndex = currentIndex;
             do {
               nextIndex = (nextIndex === urls.length - 1) ? 0 : nextIndex + 1;
             } while (urls[nextIndex] === null && nextIndex !== currentIndex);
             showImage(nextIndex);
+          } else {
+            // Swiped Right -> Previous Image
+            let prevIndex = currentIndex;
+            do {
+              prevIndex = (prevIndex === 0) ? urls.length - 1 : prevIndex - 1;
+            } while (urls[prevIndex] === null && prevIndex !== currentIndex);
+            showImage(prevIndex);
           }
-        });
+        }
+      };
 
-        let touchStartX = 0;
-        let touchEndX = 0;
+      carouselImage.addEventListener('touchstart', e => {
+        touchStartX = e.changedTouches[0].screenX;
+      }, { passive: true });
 
-        const handleSwipe = () => {
-          const swipeThreshold = 50; // Minimum pixels to count as a swipe
-          const swipeDistance = touchEndX - touchStartX;
-
-          if (Math.abs(swipeDistance) > swipeThreshold) {
-            if (swipeDistance < 0) {
-              // Swiped Left -> Next Image
-              let nextIndex = currentIndex;
-              do {
-                nextIndex = (nextIndex === urls.length - 1) ? 0 : nextIndex + 1;
-              } while (urls[nextIndex] === null && nextIndex !== currentIndex);
-              showImage(nextIndex);
-            } else {
-              // Swiped Right -> Previous Image
-              let prevIndex = currentIndex;
-              do {
-                prevIndex = (prevIndex === 0) ? urls.length - 1 : prevIndex - 1;
-              } while (urls[prevIndex] === null && prevIndex !== currentIndex);
-              showImage(prevIndex);
-            }
-          }
-        };
-
-        carouselImage.addEventListener('touchstart', e => {
-          touchStartX = e.changedTouches[0].screenX;
-        }, { passive: true });
-
-        carouselImage.addEventListener('touchend', e => {
-          touchEndX = e.changedTouches[0].screenX;
-          handleSwipe();
-        }, { passive: true });
-      });
-    </script>
+      carouselImage.addEventListener('touchend', e => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+      }, { passive: true });
+    });
+  </script>
 </body>
-
 </html>

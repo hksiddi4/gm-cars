@@ -104,7 +104,7 @@
 <body>
     <%- include('../partials/header'); %>
     
-    <div class="custom-container">
+    <main id="main-content" class="custom-container">
         <div class="row" style="padding-top: 20px;">
             <div class="col-12">
                 <h1>Natural Language Query</h1>
@@ -113,7 +113,7 @@
                 </p>
                 
                 <div class="p-3 mb-4" style="background-color: #333; border: 1px solid #444; border-radius: 8px;">
-                    <textarea id="promptInput" class="form-control mb-3" rows="3" placeholder="e.g., Show me all 2024 Camaros with a Panther Black Matte exterior..." style="background-color: #2b2b2b; color: white; border: 1px solid #555;"></textarea>
+                    <textarea id="promptInput" class="form-control mb-3" rows="3" aria-label="Natural language query input" placeholder="e.g., Show me all 2024 Camaros with a Panther Black Matte exterior..." style="background-color: #2b2b2b; color: white; border: 1px solid #555;"></textarea>
                     <button id="askBtn" class="btn btn-primary w-100">Run Query</button>
                     
                     <div id="loadingContainer">
@@ -149,8 +149,7 @@
                 </div>
             </div>
         </div>
-    </div>
-    
+    </main>
     <%- include('../partials/footer'); %>
 
     <script>

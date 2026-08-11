@@ -8,7 +8,7 @@
 </head>
 <body>
     <%- include('../partials/header'); %>
-    <div class="container">
+    <main id="main-content" class="container">
         <div class="row pt-4">
             <div class="col">
                 <h1 style="font-weight: bold;">Statistics</h1>
@@ -16,7 +16,7 @@
         </div>
         <div class="d-flex flex-wrap gap-2 mb-3">
             <div class="statsDropdown">
-                <select id="selectedStats" class="form-select small-dropdown <%= category ? 'active-filter' : '' %>">
+                <select id="selectedStats" class="form-select small-dropdown <%= category ? 'active-filter' : '' %>" aria-label="Select statistics category">
                     <option value="">Category</option>
                     <option value="color" <% if (category === 'color') { %> selected <% } %>>Color</option>
                     <option value="engine" <% if (category === 'engine') { %> selected <% } %>>Engine</option>
@@ -26,7 +26,7 @@
             <% if (category === 'color') { %>
             <div class="d-flex flex-wrap gap-2 mb-3 w-100">
                 <div class="statsDropdown">
-                    <select id="filterYear" class="form-select small-dropdown <%= selectedYear ? 'active-filter' : '' %>">
+                    <select id="filterYear" class="form-select small-dropdown <%= selectedYear ? 'active-filter' : '' %>" aria-label="Filter by year">
                         <option value="">Year</option>
                         <% year_list.forEach(y => { %>
                         <option value="<%= y %>" <%= selectedYear == y ? 'selected' : '' %>><%= y %></option>
@@ -39,7 +39,7 @@
                     combinedModels.sort((a, b) => a.localeCompare(b));
                 %>
                 <div class="statsDropdown">
-                    <select id="filterModel" class="form-select small-dropdown <%= selectedModel ? 'active-filter' : '' %>">
+                    <select id="filterModel" class="form-select small-dropdown <%= selectedModel ? 'active-filter' : '' %>" aria-label="Filter by model">
                         <option value="">Model</option>
                         <% combinedModels.forEach(m => { %>
                             <option value="<%= m %>" <%= selectedModel === m ? 'selected' : '' %>><%= m %></option>
@@ -47,7 +47,7 @@
                     </select>
                 </div>
                 <div class="statsDropdown">
-                    <select id="filterBody" class="form-select small-dropdown <%= selectedBody ? 'active-filter' : '' %>">
+                    <select id="filterBody" class="form-select small-dropdown <%= selectedBody ? 'active-filter' : '' %>" aria-label="Filter by body">
                         <option value="">Body</option>
                         <% body_list.forEach(y => { %>
                         <option value="<%= y %>" <%= selectedBody == y ? 'selected' : '' %>><%= y %></option>
@@ -55,7 +55,7 @@
                     </select>
                 </div>
                 <div class="statsDropdown">
-                    <select id="filterTrim" class="form-select small-dropdown <%= selectedTrim ? 'active-filter' : '' %>">
+                    <select id="filterTrim" class="form-select small-dropdown <%= selectedTrim ? 'active-filter' : '' %>" aria-label="Filter by trim">
                         <option value="">Trim</option>
                         <% trim_list.forEach(m => { %>
                         <option value="<%= m %>" <%= selectedTrim == m ? 'selected' : '' %>><%= m %></option>
@@ -63,7 +63,7 @@
                     </select>
                 </div>
                 <div class="statsDropdown">
-                    <select id="filterEngine" class="form-select small-dropdown <%= selectedEngine ? 'active-filter' : '' %>">
+                    <select id="filterEngine" class="form-select small-dropdown <%= selectedEngine ? 'active-filter' : '' %>" aria-label="Filter by engine">
                         <option value="">Engine</option>
                         <% engine_list.forEach(y => { %>
                         <option value="<%= y %>" <%= selectedEngine == y ? 'selected' : '' %>><%= y %></option>
@@ -71,7 +71,7 @@
                     </select>
                 </div>
                 <div class="statsDropdown">
-                    <select id="filterTrans" class="form-select small-dropdown <%= selectedTrans ? 'active-filter' : '' %>">
+                    <select id="filterTrans" class="form-select small-dropdown <%= selectedTrans ? 'active-filter' : '' %>" aria-label="Filter by transmission">
                         <option value="">Trans</option>
                         <% trans_list.forEach(m => { %>
                         <option value="<%= m %>" <%= selectedTrans == m ? 'selected' : '' %>><%= m %></option>
@@ -83,7 +83,7 @@
             <% if (category === 'engine') { %>
             <div class="d-flex flex-wrap gap-2 mb-3 w-100">
                 <div class="statsDropdown">
-                    <select id="filterYear" class="form-select small-dropdown <%= selectedYear ? 'active-filter' : '' %>">
+                    <select id="filterYear" class="form-select small-dropdown <%= selectedYear ? 'active-filter' : '' %>" aria-label="Filter by year">
                         <option value="">Year</option>
                         <% year_list.forEach(y => { %>
                         <option value="<%= y %>" <%= selectedYear == y ? 'selected' : '' %>><%= y %></option>
@@ -96,7 +96,7 @@
                     combinedModels.sort((a, b) => a.localeCompare(b));
                 %>
                 <div class="statsDropdown">
-                    <select id="filterModel" class="form-select small-dropdown <%= selectedModel ? 'active-filter' : '' %>">
+                    <select id="filterModel" class="form-select small-dropdown <%= selectedModel ? 'active-filter' : '' %>" aria-label="Filter by model">
                         <option value="">Model</option>
                         <% combinedModels.forEach(m => { %>
                             <option value="<%= m %>" <%= selectedModel === m ? 'selected' : '' %>><%= m %></option>
@@ -104,7 +104,7 @@
                     </select>
                 </div>
                 <div class="statsDropdown">
-                    <select id="filterBody" class="form-select small-dropdown <%= selectedBody ? 'active-filter' : '' %>">
+                    <select id="filterBody" class="form-select small-dropdown <%= selectedBody ? 'active-filter' : '' %>" aria-label="Filter by body">
                         <option value="">Body</option>
                         <% body_list.forEach(y => { %>
                         <option value="<%= y %>" <%= selectedBody == y ? 'selected' : '' %>><%= y %></option>
@@ -112,7 +112,7 @@
                     </select>
                 </div>
                 <div class="statsDropdown">
-                    <select id="filterTrim" class="form-select small-dropdown <%= selectedTrim ? 'active-filter' : '' %>">
+                    <select id="filterTrim" class="form-select small-dropdown <%= selectedTrim ? 'active-filter' : '' %>" aria-label="Filter by trim">
                         <option value="">Trim</option>
                         <% trim_list.forEach(m => { %>
                         <option value="<%= m %>" <%= selectedTrim == m ? 'selected' : '' %>><%= m %></option>
@@ -120,7 +120,7 @@
                     </select>
                 </div>
                 <div class="statsDropdown">
-                    <select id="filterTrans" class="form-select small-dropdown <%= selectedTrans ? 'active-filter' : '' %>">
+                    <select id="filterTrans" class="form-select small-dropdown <%= selectedTrans ? 'active-filter' : '' %>" aria-label="Filter by transmission">
                         <option value="">Trans</option>
                         <% trans_list.forEach(m => { %>
                         <option value="<%= m %>" <%= selectedTrans == m ? 'selected' : '' %>><%= m %></option>
@@ -132,7 +132,7 @@
             <% if (category === 'production') { %>
             <div class="d-flex flex-wrap gap-2 mb-3 w-100">
                 <div class="statsDropdown">
-                    <select id="filterYear" class="form-select small-dropdown <%= selectedYear ? 'active-filter' : '' %>">
+                    <select id="filterYear" class="form-select small-dropdown <%= selectedYear ? 'active-filter' : '' %>" aria-label="Filter by year">
                         <option value="" disabled>Year</option>
                         <% year_list.forEach(y => { %>
                         <option value="<%= y %>" <%= selectedYear == y ? 'selected' : '' %>><%= y %></option>
@@ -226,8 +226,9 @@
                 </div>
             </div>
         <% } %>
-    </div>
+    </main>
     <%- include('../partials/footer'); %>
+    
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const statsSelect = document.getElementById('selectedStats');

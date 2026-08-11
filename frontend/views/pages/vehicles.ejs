@@ -7,7 +7,7 @@
 </head>
 <body>
     <%- include('../partials/header'); %>
-    <div class="custom-container">
+    <main id="main-content" class="custom-container">
         <div class="row" style="padding-top: 20px;">
             <!-- Filters -->
             <div class="col-md-6">
@@ -48,6 +48,7 @@
                                                 type="checkbox" 
                                                 name ="model" id="model_<%= model %>" 
                                                 value="<%= model %>"
+                                                aria-label="Filter by model"
                                                 <%= selectedModels.includes(model) ? 'checked' : '' %>
                                             >
                                             <label class="form-check-label ms-2" for="model_<%= model %>">
@@ -68,7 +69,7 @@
             </div>
             <!-- RPO Search -->
             <div class="col-md-4 mt-2 position-relative">
-                <input type="text" id="rpoSearchInput" class="form-control" placeholder="Search RPOs..." />
+                <input type="text" id="rpoSearchInput" class="form-control" placeholder="Search RPOs..." aria-label="Search by RPO code">
                 <ul id="rpoResults" class="list-group mt-2"></ul>
                 <div id="selectedRPOs" class="selected-rpos mt-1"></div>
             </div>
@@ -77,7 +78,7 @@
                     Retrieved <%= totalItems.toLocaleString() %> vehicles in <%= elapsedTime.toLocaleString() %> seconds
                 </p>
                 <div class="dropdown-container">
-                    <select id="limitSelect" class="form-select small-dropdown">
+                    <select id="limitSelect" class="form-select small-dropdown" aria-label="Limit results">
                         <option value="100" <% if (limit === 100) { %>selected<% } %>>100</option>
                         <option value="150" <% if (limit === 150) { %>selected<% } %>>150</option>
                         <option value="200" <% if (limit === 200) { %>selected<% } %>>200</option>
@@ -139,13 +140,13 @@
                 <table class="table-veh table-hover border border shadow" id="allTable">
                     <thead>
                         <tr>
-                            <th scope="col" id="vinHeader" class="sortable" onclick="toggleVINOrder()" style="cursor: pointer;">
+                            <th scope="col" id="vinHeader" class="sortable" role="button" tabindex="0" aria-label="Sort by VIN" onclick="toggleVINOrder()" onkeydown="if(event.key === 'Enter' || event.key === ' '){ event.preventDefault(); toggleVINOrder(); }" style="cursor: pointer;">
                                 VIN
-                                <i class="bi bi-chevron-down" id="vinIcon" style="display: none;"></i>
+                                <i class="bi bi-chevron-down" id="vinIcon" style="display: none;" aria-hidden="true"></i>
                             </th>
                             <th scope="col">
                                 <div class="dropdown-container">
-                                    <select id="yearSelect" class="form-select small-dropdown <%= selectedYear ? 'active-filter' : '' %>">
+                                    <select id="yearSelect" class="form-select small-dropdown <%= selectedYear ? 'active-filter' : '' %>" aria-label="Filter by year">
                                         <option value="">Year</option>
                                         <% years.forEach(function(year) { %>
                                             <option value="<%= year %>" <% if (selectedYear === year.toString()) { %>selected<% } %>><%= year %></option>
@@ -156,7 +157,7 @@
                             <th scope="col">Model</th>
                             <th scope="col">
                                 <div class="dropdown-container">
-                                    <select id="bodySelect" class="form-select small-dropdown <%= selectedBody ? 'active-filter' : '' %>">
+                                    <select id="bodySelect" class="form-select small-dropdown <%= selectedBody ? 'active-filter' : '' %>" aria-label="Filter by body">
                                         <option value="">Body</option>
                                         <% bodys.forEach(function(body) { %>
                                             <option value="<%= body %>" <% if (selectedBody === body.toString()) { %>selected<% } %>><%= body %></option>
@@ -166,7 +167,7 @@
                             </th>
                             <th scope="col">
                                 <div class="dropdown-container">
-                                    <select id="trimSelect" class="form-select small-dropdown <%= selectedTrim ? 'active-filter' : '' %>">
+                                    <select id="trimSelect" class="form-select small-dropdown <%= selectedTrim ? 'active-filter' : '' %>" aria-label="Filter by trim">
                                         <option value="">Trim</option>
                                         <% trim.forEach(function(trim) { %>
                                             <option value="<%= trim %>" <% if (selectedTrim === trim) { %>selected<% } %>><%= trim %></option>
@@ -176,7 +177,7 @@
                             </th>
                             <th scope="col">
                                 <div class="dropdown-container">
-                                    <select id="engineSelect" class="form-select small-dropdown <%= selectedEngine ? 'active-filter' : '' %>">
+                                    <select id="engineSelect" class="form-select small-dropdown <%= selectedEngine ? 'active-filter' : '' %>" aria-label="Filter by engine">
                                         <option value="">Engine</option>
                                         <% engine.forEach(function(engine) { %>
                                             <option value="<%= engine.name %>" <% if (selectedEngine === engine.name) { %>selected<% } %>><%= engine.rpo ? engine.rpo + ' - ' : '' %><%= engine.name %></option>
@@ -186,7 +187,7 @@
                             </th>
                             <th scope="col">
                                 <div class="dropdown-container">
-                                    <select id="transSelect" class="form-select small-dropdown <%= selectedTrans ? 'active-filter' : '' %>">
+                                    <select id="transSelect" class="form-select small-dropdown <%= selectedTrans ? 'active-filter' : '' %>" aria-label="Filter by transmission">
                                         <option value="">Trans.</option>
                                         <% trans.forEach(function(trans) { %>
                                             <option value="<%= trans %>" <% if (selectedTrans === trans) { %>selected<% } %>><%= trans %></option>
@@ -196,7 +197,7 @@
                             </th>
                             <th scope="col">
                                 <div class="dropdown-container">
-                                    <select id="drivetrainSelect" class="form-select small-dropdown <%= selectedDrivetrain ? 'active-filter' : '' %>">
+                                    <select id="drivetrainSelect" class="form-select small-dropdown <%= selectedDrivetrain ? 'active-filter' : '' %>" aria-label="Filter by drivetrain">
                                         <option value="">Drivetrain</option>
                                         <% if (typeof drivetrains !== 'undefined') { %>
                                             <% drivetrains.forEach(function(dt) { %>
@@ -208,7 +209,7 @@
                             </th>
                             <th scope="col">
                                 <div class="dropdown-container">
-                                    <select id="colorSelect" class="form-select small-dropdown <%= selectedColor ? 'active-filter' : '' %>">
+                                    <select id="colorSelect" class="form-select small-dropdown <%= selectedColor ? 'active-filter' : '' %>" aria-label="Filter by exterior color">
                                         <option value="">Exterior Color</option>
                                         <% colors.forEach(function(color) { %>
                                             <option value="<%= color %>" <% if (selectedColor === color) { %>selected<% } %>><%= color %></option>
@@ -216,14 +217,14 @@
                                     </select>
                                 </div>
                             </th>
-                            <th scope="col" id="msrpHeader" class="sortable" onclick="toggleMSRPOrder()" style="cursor: pointer;">
+                            <th scope="col" id="msrpHeader" class="sortable" role="button" tabindex="0" aria-label="Sort by MSRP" onclick="toggleMSRPOrder()" onkeydown="if(event.key === 'Enter' || event.key === ' '){ event.preventDefault(); toggleMSRPOrder(); }" style="cursor: pointer;">
                                 MSRP
-                                <i class="bi bi-chevron-down" id="msrpIcon" style="display: none;"></i>
+                                <i class="bi bi-chevron-down" id="msrpIcon" style="display: none;" aria-hidden="true"></i>
                             </th>
                             <th scope="col">
                                 <div class="dropdown-container">
                                     <% const rpo = Array.isArray(selectedRPO) ? selectedRPO[0] : selectedRPO; %>
-                                    <select id="rpoSelect" class="form-select small-dropdown <%= rpo ? 'active-filter' : '' %>">
+                                    <select id="rpoSelect" class="form-select small-dropdown <%= rpo ? 'active-filter' : '' %>" aria-label="Filter by package/edition">
                                         <option value="" <% if (!rpo) { %>selected<% } %>>Package/Edition</option>
                                         <optgroup label="Camaro">
                                             <option value="Z4B" <% if (rpo === 'Z4B') { %>selected<% } %>>Collector's Edition</option>
@@ -278,7 +279,7 @@
                             </th>
                             <th scope="col">
                                 <div class="dropdown-container">
-                                    <select id="countrySelect" class="form-select small-dropdown <%= selectedCountry ? 'active-filter' : '' %>">
+                                    <select id="countrySelect" class="form-select small-dropdown <%= selectedCountry ? 'active-filter' : '' %>" aria-label="Filter by country">
                                         <option value="">Country</option>
                                         <option value="USA" <% if (selectedCountry === 'USA') { %>selected<% } %>>USA</option>
                                         <option value="CAN" <% if (selectedCountry === 'CAN') { %>selected<% } %>>Canada</option>
@@ -362,8 +363,9 @@
                 </div>
             <% } %>
         </div>
-    </div>
+    </main>
     <%- include('../partials/footer'); %>
+    
     <script>
         let startX;
         let selectedOrder = '';

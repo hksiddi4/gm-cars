@@ -15,7 +15,7 @@
             }
         }
     </style>
-    <div class="container">
+    <main id="main-content" class="container">
         <div class="row pt-4">
             <div class="col">
                 <h1 style="font-weight: bold;">RPOs</h1>
@@ -23,7 +23,7 @@
         </div>
         <div class="d-flex flex-wrap gap-2 mb-3">
             <div class="statsDropdown">
-                <select id="modelSelect" class="form-select small-dropdown">
+                <select id="modelSelect" class="form-select small-dropdown" aria-label="Filter by model">
                     <option value="">Select Model</option>
                     <option value="camaro">Camaro</option>
                     <option value="corvette">Corvette</option>
@@ -39,7 +39,7 @@
             </div>
         </div>
         <div class="rpo-container" id="rpoContainer"></div>
-    </div>
+    </main>
     <%- include('../partials/footer'); %>
 
     <script>

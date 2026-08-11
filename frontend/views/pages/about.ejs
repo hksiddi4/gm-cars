@@ -130,7 +130,7 @@
 </head>
 <body>
     <%- include('../partials/header'); %>
-    <div class="custom-container about-page">
+    <main id="main-content" class="custom-container about-page">
         <div class="content">
             <div class="container-fluid">
                 <div class="legend-container d-flex mb-1">
@@ -251,8 +251,9 @@
                 <p class="pt-4">GM Build Counts is an independent enthusiast project and is not affiliated with, sponsored by, or endorsed by General Motors (GM). All vehicle data is sourced from public-facing OEM records for informational and educational purposes only. All GM logos, brand names (including Chevrolet, GMC, Buick, and Cadillac), and trademarks are the property of General Motors.</p>
 		        </div>
         </div>
-    </div>
+    </main>
     <%- include('../partials/footer'); %>
+
     <script>
         const stats = <%- JSON.stringify(stats) %>;
 

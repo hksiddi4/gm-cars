@@ -320,7 +320,11 @@
                             <!-- Right Side: Vehicles Added Button -->
                             <div>
                                 <% 
-                                    let vehLink = `/vehicles?date=${stats.current_date}`;
+                                    let queryDate = stats.current_date || '';
+                                    if (activeCategory === 'monthly') queryDate = queryDate.substring(0, 7);
+                                    if (activeCategory === 'yearly') queryDate = queryDate.substring(0, 4);
+
+                                    let vehLink = `/vehicles?date=${queryDate}`;
                                     if (typeof selectedModel !== 'undefined' && selectedModel) {
                                         vehLink += `&model=${encodeURIComponent(selectedModel)}`;
                                     }
@@ -481,7 +485,7 @@
                                                                 const mappedRpo = specialToRpoMap[key]; 
                                                                 let pkgLink = '';
                                                                 if (mappedRpo) {
-                                                                    pkgLink = `/vehicles?date=${stats.current_date}&rpo=${mappedRpo}`;
+                                                                    pkgLink = `/vehicles?date=${queryDate}&rpo=${mappedRpo}`;
                                                                     if (typeof selectedModel !== 'undefined' && selectedModel) {
                                                                         pkgLink += `&model=${encodeURIComponent(selectedModel)}`;
                                                                     }

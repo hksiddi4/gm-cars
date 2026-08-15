@@ -273,7 +273,12 @@ def sort_price():
         conditions.append("o.country = %s")
         params.append(country_map.get(country, 'USA'))
     if date:
-        conditions.append("DATE(o.creation_date) = %s")
+        if len(date) == 4:
+            conditions.append("YEAR(o.creation_date) = %s")
+        elif len(date) == 7:
+            conditions.append("DATE_FORMAT(o.creation_date, '%%Y-%%m') = %s")
+        else:
+            conditions.append("DATE(o.creation_date) = %s")
         params.append(date)
 
     # 2. RPO HANDLING

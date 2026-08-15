@@ -28,12 +28,25 @@
                         Vehicles
                     </a>
                 </li>
+                
+                <!-- Collapsible Statistics Menu with Glow -->
                 <li class="nav-item mb-2">
-                    <a href="/stats" class="nav-link <%= pagePath === '/stats' ? 'active' : '' %>">
+                    <a href="#sidebarStatsMenu" data-bs-toggle="collapse" role="button" aria-expanded="<%= pagePath === '/stats' ? 'true' : 'false' %>" aria-controls="sidebarStatsMenu" class="nav-link glow-new-btn <%= pagePath === '/stats' ? 'active' : '' %>" style="border-radius: 8px;">
                         <i class="fs-4 bi bi-list-ol me-2"></i>
-                        Statistics
+                        Statistics <i class="bi bi-chevron-down ms-auto float-end mt-2" style="font-size: 0.8rem;"></i>
                     </a>
+                    <div class="collapse <%= pagePath === '/stats' ? 'show' : '' %>" id="sidebarStatsMenu">
+                        <ul class="nav flex-column ms-4 mt-2 border-start border-secondary ps-2">
+                            <li class="nav-item"><a href="/stats?category=daily" class="nav-link py-1 text-light fs-6">Daily Dashboard</a></li>
+                            <li class="nav-item"><a href="/stats?category=monthly" class="nav-link py-1 text-light fs-6">Monthly Dashboard</a></li>
+                            <li class="nav-item"><a href="/stats?category=yearly" class="nav-link py-1 text-light fs-6">Yearly Dashboard</a></li>
+                            <li class="nav-item"><a href="/stats?category=color" class="nav-link py-1 text-light fs-6">Color Rankings</a></li>
+                            <li class="nav-item"><a href="/stats?category=engine" class="nav-link py-1 text-light fs-6">Engine Rankings</a></li>
+                            <li class="nav-item"><a href="/stats?category=production" class="nav-link py-1 text-light fs-6">Production Trends</a></li>
+                        </ul>
+                    </div>
                 </li>
+
                 <li class="nav-item mb-2">
                     <a href="/wheels" class="nav-link <%= pagePath === '/wheels' ? 'active' : '' %>">
                         <i class="fs-4 bi bi-fan me-2"></i>
@@ -59,16 +72,14 @@
                     </a>
                 </li>
             </ul>
-        </div>
+        </nav>
     </div>
 </header>
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         var imageURLs = <%- JSON.stringify(headerImages) %>;
-
         var randomIndex = Math.floor(Math.random() * imageURLs.length);
-
         document.querySelector('.header-background').style.backgroundImage = 'url(' + imageURLs[randomIndex] + ')';
 
         const header = document.getElementById('main-header');
@@ -90,7 +101,6 @@
                     sidebar.classList.remove('header-minimized');
                 }
             }
-            
             lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
         }
 
@@ -100,25 +110,18 @@
             const isClickInsideSidebar = sidebar.contains(event.target);
             const toggler = document.querySelector('.navbar-toggler');
             const isClickOnToggler = toggler && toggler.contains(event.target);
-
             const isSidebarOpen = sidebar.classList.contains('show');
             
             if (isSidebarOpen && !isClickInsideSidebar && !isClickOnToggler) {
-                if (toggler) {
-                    toggler.click();
-                }
+                if (toggler) toggler.click();
             }
         });
         
         header.addEventListener('click', function(event) {
             const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-            
             if (header.classList.contains('header-minimized') && scrollTop > 0) {
                 if (!event.target.closest('.navbar-toggler') && !event.target.closest('#sidebar')) {
-                    window.scrollTo({
-                        top: 0,
-                        behavior: 'smooth'
-                    });
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
                 }
             }
         });

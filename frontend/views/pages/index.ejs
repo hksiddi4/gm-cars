@@ -12,9 +12,7 @@
             <div class="container-fluid">
                 <h1 class="pt-4">GM Build Counts & Statistics Database</h1>
                 <p class="lead">Production & Statistics extracted from Window Stickers with vehicle image generation through VIN based RPO codes.</p>
-                <%#
-                <h2 class="bg-danger-subtle border border-danger-subtle text-danger-emphasis px-4 py-3 rounded position-relative fw-bold">GM's Window Sticker API was updated on April 23, 2026. All window stickers with creation dates prior to January 1, 2022 were purged from their servers.</h2>
-                %>
+                
                 <h2 class="i-link"><a href="/vehicles"><i class="bi bi-car-front-fill me-1"></i>Vehicles</a></h2>
                 <p>Select a specific model to view build counts and statistics (2020+). <span class="text-legacy">2019 only.</span></p>
 
@@ -150,9 +148,24 @@
                 </p>
 
                 <div class="row g-4">
+                    <!-- Collapsible Statistics Header -->
                     <div class="col-12 col-sm-6 col-xl-3">
-                        <h2 class="i-link"><a href="/stats"><i class="bi bi-list-ol me-1"></i>Statistics</a></h2>
-                        <p>Statistics and charts on vehicle data including: Exterior Paint, Engines, and Production.</p>
+                        <h2 class="i-link mb-2">
+                            <a data-bs-toggle="collapse" href="#statsCollapseIndex" role="button" aria-expanded="false" aria-controls="statsCollapseIndex" class="glow-new-btn px-2 py-1 rounded d-inline-block text-decoration-none shadow-sm" style="transition: all 0.3s; color: white;">
+                                <i class="bi bi-list-ol me-1"></i>Statistics <i class="bi bi-chevron-down fs-6 ms-1"></i>
+                            </a>
+                        </h2>
+                        <div class="collapse" id="statsCollapseIndex">
+                            <ul class="list-unstyled ms-2 mt-3 mb-3 border-start border-secondary ps-3">
+                                <li class="mb-2 i-link"><a href="/stats?category=daily" class="text-decoration-none text-light" style="font-size: 1.1rem;"><i class="bi bi-arrow-right-short me-1"></i>Daily Dashboard</a></li>
+                                <li class="mb-2 i-link"><a href="/stats?category=monthly" class="text-decoration-none text-light" style="font-size: 1.1rem;"><i class="bi bi-arrow-right-short me-1"></i>Monthly Dashboard</a></li>
+                                <li class="mb-2 i-link"><a href="/stats?category=yearly" class="text-decoration-none text-light" style="font-size: 1.1rem;"><i class="bi bi-arrow-right-short me-1"></i>Yearly Dashboard</a></li>
+                                <li class="mb-2 i-link"><a href="/stats?category=color" class="text-decoration-none text-light" style="font-size: 1.1rem;"><i class="bi bi-arrow-right-short me-1"></i>Color Rankings</a></li>
+                                <li class="mb-2 i-link"><a href="/stats?category=engine" class="text-decoration-none text-light" style="font-size: 1.1rem;"><i class="bi bi-arrow-right-short me-1"></i>Engine Rankings</a></li>
+                                <li class="i-link"><a href="/stats?category=production" class="text-decoration-none text-light" style="font-size: 1.1rem;"><i class="bi bi-arrow-right-short me-1"></i>Production Trends</a></li>
+                            </ul>
+                        </div>
+                        <p class="mt-2">Statistics and charts on vehicle data including: Exterior Paint, Engines, and Production.</p>
                     </div>
                     
                     <div class="col-12 col-sm-6 col-xl-3">

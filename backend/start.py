@@ -521,13 +521,14 @@ def sort_price():
 def calendar_activity():
     year = request.args.get('year')
     model_filter = request.args.get('model')
+    category = request.args.get('category', 'daily')
     
-    if not year:
+    if category != 'yearly' and not year:
         return jsonify({'error': 'Year required'}), 400
 
     conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
     
-    params = [year]
+    params = []
     model_join = ""
     model_cond = ""
     
@@ -539,49 +540,39 @@ def calendar_activity():
         else:
             model_cond = "AND v.model = %s"
             params.append(model_filter)
-        
-    sqlStatement = f"""
-        SELECT DATE_FORMAT(o.creation_date, '%%Y-%%m-%%d') as prod_date, COUNT(o.order_id) as count
-        FROM Orders o
-        {model_join}
-        WHERE YEAR(o.creation_date) = %s {model_cond} AND o.creation_date IS NOT NULL
-        GROUP BY prod_date
-    """
+            
+    if category == 'yearly':
+        sqlStatement = f"""
+            SELECT DATE_FORMAT(o.creation_date, '%%Y') as prod_date, COUNT(o.order_id) as count
+            FROM Orders o
+            {model_join}
+            WHERE o.creation_date IS NOT NULL {model_cond}
+            GROUP BY prod_date
+        """
+    elif category == 'monthly':
+        sqlStatement = f"""
+            SELECT DATE_FORMAT(o.creation_date, '%%Y-%%m') as prod_date, COUNT(o.order_id) as count
+            FROM Orders o
+            {model_join}
+            WHERE YEAR(o.creation_date) = %s {model_cond} AND o.creation_date IS NOT NULL
+            GROUP BY prod_date
+        """
+        params.insert(0, year)
+    else:
+        sqlStatement = f"""
+            SELECT DATE_FORMAT(o.creation_date, '%%Y-%%m-%%d') as prod_date, COUNT(o.order_id) as count
+            FROM Orders o
+            {model_join}
+            WHERE YEAR(o.creation_date) = %s {model_cond} AND o.creation_date IS NOT NULL
+            GROUP BY prod_date
+        """
+        params.insert(0, year)
     
     rows = execute_read_query(conn, sqlStatement, params)
     close_connection(conn)
     
     activity_map = {r['prod_date']: r['count'] for r in rows} if rows else {}
     return jsonify(activity_map)
-
-@app.route('/model-bounds', methods=['GET'])
-def model_bounds():
-    model_filter = request.args.get('model')
-    conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
-    
-    if not model_filter:
-        sql_bounds = "SELECT CAST(MIN(creation_date) AS CHAR) as min_date, CAST(MAX(creation_date) AS CHAR) as max_date FROM Orders WHERE creation_date IS NOT NULL"
-        bounds_rows = execute_read_query(conn, sql_bounds)
-        sql_years = "SELECT DISTINCT YEAR(creation_date) as year FROM Orders WHERE creation_date IS NOT NULL ORDER BY year ASC"
-        year_rows = execute_read_query(conn, sql_years)
-    elif model_filter == 'CORVETTE (C8)':
-        sql_bounds = "SELECT CAST(MIN(o.creation_date) AS CHAR) as min_date, CAST(MAX(o.creation_date) AS CHAR) as max_date FROM Orders o JOIN Vehicles v ON o.order_id = v.order_id WHERE v.model LIKE %s AND v.modelYear >= '2020' AND o.creation_date IS NOT NULL"
-        bounds_rows = execute_read_query(conn, sql_bounds, ['CORVETTE%'])
-        sql_years = "SELECT DISTINCT YEAR(o.creation_date) as year FROM Orders o JOIN Vehicles v ON o.order_id = v.order_id WHERE v.model LIKE %s AND v.modelYear >= '2020' AND o.creation_date IS NOT NULL ORDER BY year ASC"
-        year_rows = execute_read_query(conn, sql_years, ['CORVETTE%'])
-    else:
-        sql_bounds = "SELECT CAST(MIN(o.creation_date) AS CHAR) as min_date, CAST(MAX(o.creation_date) AS CHAR) as max_date FROM Orders o JOIN Vehicles v ON o.order_id = v.order_id WHERE v.model = %s AND o.creation_date IS NOT NULL"
-        bounds_rows = execute_read_query(conn, sql_bounds, [model_filter])
-        sql_years = "SELECT DISTINCT YEAR(o.creation_date) as year FROM Orders o JOIN Vehicles v ON o.order_id = v.order_id WHERE v.model = %s AND o.creation_date IS NOT NULL ORDER BY year ASC"
-        year_rows = execute_read_query(conn, sql_years, [model_filter])
-        
-    close_connection(conn)
-    
-    return jsonify({
-        'min_date': bounds_rows[0]['min_date'] if bounds_rows else None,
-        'max_date': bounds_rows[0]['max_date'] if bounds_rows else None,
-        'active_years': [r['year'] for r in year_rows] if year_rows else []
-    })
 
 @app.route('/daily-stats', methods=['GET'])
 def daily_stats():

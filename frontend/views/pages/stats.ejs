@@ -993,7 +993,8 @@
                     }, 10);
                 }
 
-                const cacheKey = `${currentAnnualYear}-${matrixSelectedModel}`;
+                // Append the active category to the cache key so switching views forces fresh data
+                const cacheKey = `${currentAnnualYear}-${matrixSelectedModel}-<%= activeCategory %>`;
                 let activityMap = {};
 
                 if (annualActivityCache[cacheKey]) {
@@ -1004,7 +1005,8 @@
                     annualFetchController = new AbortController();
 
                     try {
-                        let url = `/calendar-activity?year=${currentAnnualYear}`;
+                        // Pass the active category down to the Python backend
+                        let url = `/calendar-activity?year=${currentAnnualYear}&category=<%= activeCategory %>`;
                         if (matrixSelectedModel) url += `&model=${encodeURIComponent(matrixSelectedModel)}`;
 
                         const res = await fetch(url, { 
@@ -1027,48 +1029,30 @@
                 const container = document.getElementById('annualMonthsContainer');
                 container.innerHTML = '';
 
-                const monthLabels = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
+                const currentCategory = "<%= activeCategory %>";
                 const activeDateStr = "<%= stats.current_date %>";
 
-                for (let m = 0; m < 12; m++) {
-                    const card = document.createElement('div');
-                    card.className = 'annual-month-card';
-
-                    const title = document.createElement('div');
-                    title.className = 'annual-month-title';
-                    title.innerText = monthLabels[m];
-                    card.appendChild(title);
-
-                    const daysGrid = document.createElement('div');
-                    daysGrid.className = 'annual-days-grid';
-
-                    ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].forEach(dName => {
-                        const dHead = document.createElement('div');
-                        dHead.className = 'annual-day-header';
-                        dHead.innerText = dName;
-                        daysGrid.appendChild(dHead);
-                    });
-
-                    const firstDayIndex = new Date(currentAnnualYear, m, 1).getDay();
-                    const totalDaysInMonth = new Date(currentAnnualYear, m + 1, 0).getDate();
-
-                    for (let i = 0; i < firstDayIndex; i++) {
-                        const emptyCell = document.createElement('div');
-                        emptyCell.className = 'annual-day-cell empty';
-                        daysGrid.appendChild(emptyCell);
-                    }
-
-                    for (let day = 1; day <= totalDaysInMonth; day++) {
-                        const cell = document.createElement('div');
-                        cell.className = 'annual-day-cell';
-                        
+                // --- 1. MONTHLY GRID (12 Blocks) ---
+                if (currentCategory === 'monthly') {
+                    const monthLabels = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
+                    const grid = document.createElement('div');
+                    grid.className = 'annual-months-grid'; 
+                    
+                    for (let m = 0; m < 12; m++) {
                         const mm = String(m + 1).padStart(2, '0');
-                        const dd = String(day).padStart(2, '0');
-                        const formattedDateKey = `${currentAnnualYear}-${mm}-${dd}`;
-
-                        cell.innerText = day;
-
-                        const count = activityMap[formattedDateKey] || 0;
+                        const dateKey = `${currentAnnualYear}-${mm}`;
+                        const count = activityMap[dateKey] || 0;
+                        
+                        const cell = document.createElement('div');
+                        cell.className = 'annual-day-cell p-3'; 
+                        cell.style.aspectRatio = 'auto';
+                        cell.style.minHeight = '120px';
+                        
+                        const title = document.createElement('div');
+                        title.className = 'fw-bold fs-5 mb-2';
+                        title.innerText = monthLabels[m];
+                        cell.appendChild(title);
+                        
                         if (count > 0) {
                             cell.classList.add('has-activity');
                             const ratio = count / maxCount;
@@ -1076,27 +1060,145 @@
                             cell.style.backgroundColor = `hsl(${hue}, 70%, 50%)`;
                             cell.style.color = '#fff';
                             cell.style.textShadow = '0px 1px 2px rgba(0,0,0,0.8)';
+                            cell.innerHTML += `<div class="fs-3 fw-bold">${count.toLocaleString()}</div><div class="small" style="opacity: 0.85;">Vehicles</div>`;
                             
-                            cell.title = `${count.toLocaleString()} vehicles added on ${formattedDateKey}`;
                             cell.onclick = () => {
                                 const queryParams = new URLSearchParams(window.location.search);
-                                queryParams.set('date', formattedDateKey);
-                                // Override the category parameter to force it to daily if a specific date is clicked
-                                queryParams.set('category', 'daily'); 
+                                queryParams.set('date', dateKey);
+                                queryParams.set('category', 'monthly'); 
                                 if (matrixSelectedModel) queryParams.set('model', matrixSelectedModel);
                                 else queryParams.delete('model');
                                 window.location.search = queryParams.toString();
                             };
+                        } else {
+                            cell.innerHTML += `<div class="fs-5 text-muted">0</div>`;
                         }
-
-                        if (formattedDateKey === activeDateStr && '<%= activeCategory %>' === 'daily') {
-                            cell.classList.add('selected-date');
-                        }
-
-                        daysGrid.appendChild(cell);
+                        
+                        if (dateKey === activeDateStr) cell.classList.add('selected-date');
+                        grid.appendChild(cell);
                     }
-                    card.appendChild(daysGrid);
-                    container.appendChild(card);
+                    container.appendChild(grid);
+
+                // --- 2. YEARLY GRID (Variable Blocks) ---
+                } else if (currentCategory === 'yearly') {
+                    const grid = document.createElement('div');
+                    grid.className = 'annual-months-grid'; 
+                    
+                    // Hide the modal year-selector controls because we are showing ALL years at once
+                    document.querySelector('.annual-year-controls').style.display = 'none';
+                    document.getElementById('annualYearsBar').style.display = 'none';
+
+                    activeYearsList.forEach(yr => {
+                        const dateKey = `${yr}`;
+                        const count = activityMap[dateKey] || 0;
+                        
+                        const cell = document.createElement('div');
+                        cell.className = 'annual-day-cell p-3';
+                        cell.style.aspectRatio = 'auto';
+                        cell.style.minHeight = '140px';
+                        
+                        const title = document.createElement('div');
+                        title.className = 'fw-bold fs-4 mb-2';
+                        title.innerText = yr;
+                        cell.appendChild(title);
+                        
+                        if (count > 0) {
+                            cell.classList.add('has-activity');
+                            const ratio = count / maxCount;
+                            const hue = 120 - (ratio * 120);
+                            cell.style.backgroundColor = `hsl(${hue}, 70%, 50%)`;
+                            cell.style.color = '#fff';
+                            cell.style.textShadow = '0px 1px 2px rgba(0,0,0,0.8)';
+                            cell.innerHTML += `<div class="fs-2 fw-bold">${count.toLocaleString()}</div><div class="small" style="opacity: 0.85;">Vehicles</div>`;
+                            
+                            cell.onclick = () => {
+                                const queryParams = new URLSearchParams(window.location.search);
+                                queryParams.set('date', dateKey);
+                                queryParams.set('category', 'yearly'); 
+                                if (matrixSelectedModel) queryParams.set('model', matrixSelectedModel);
+                                else queryParams.delete('model');
+                                window.location.search = queryParams.toString();
+                            };
+                        } else {
+                            cell.innerHTML += `<div class="fs-5 text-muted">0</div>`;
+                        }
+                        
+                        if (dateKey === activeDateStr) cell.classList.add('selected-date');
+                        grid.appendChild(cell);
+                    });
+                    container.appendChild(grid);
+
+                // --- 3. DAILY GRID (Default Full Calendar) ---
+                } else {
+                    const monthLabels = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
+                    
+                    for (let m = 0; m < 12; m++) {
+                        const card = document.createElement('div');
+                        card.className = 'annual-month-card';
+
+                        const title = document.createElement('div');
+                        title.className = 'annual-month-title';
+                        title.innerText = monthLabels[m];
+                        card.appendChild(title);
+
+                        const daysGrid = document.createElement('div');
+                        daysGrid.className = 'annual-days-grid';
+
+                        ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].forEach(dName => {
+                            const dHead = document.createElement('div');
+                            dHead.className = 'annual-day-header';
+                            dHead.innerText = dName;
+                            daysGrid.appendChild(dHead);
+                        });
+
+                        const firstDayIndex = new Date(currentAnnualYear, m, 1).getDay();
+                        const totalDaysInMonth = new Date(currentAnnualYear, m + 1, 0).getDate();
+
+                        for (let i = 0; i < firstDayIndex; i++) {
+                            const emptyCell = document.createElement('div');
+                            emptyCell.className = 'annual-day-cell empty';
+                            daysGrid.appendChild(emptyCell);
+                        }
+
+                        for (let day = 1; day <= totalDaysInMonth; day++) {
+                            const cell = document.createElement('div');
+                            cell.className = 'annual-day-cell';
+                            
+                            const mm = String(m + 1).padStart(2, '0');
+                            const dd = String(day).padStart(2, '0');
+                            const formattedDateKey = `${currentAnnualYear}-${mm}-${dd}`;
+
+                            cell.innerText = day;
+
+                            const count = activityMap[formattedDateKey] || 0;
+                            if (count > 0) {
+                                cell.classList.add('has-activity');
+                                const ratio = count / maxCount;
+                                const hue = 120 - (ratio * 120);
+                                cell.style.backgroundColor = `hsl(${hue}, 70%, 50%)`;
+                                cell.style.color = '#fff';
+                                cell.style.textShadow = '0px 1px 2px rgba(0,0,0,0.8)';
+                                
+                                cell.title = `${count.toLocaleString()} vehicles added on ${formattedDateKey}`;
+                                cell.onclick = () => {
+                                    const queryParams = new URLSearchParams(window.location.search);
+                                    queryParams.set('date', formattedDateKey);
+                                    queryParams.set('category', 'daily'); 
+                                    if (matrixSelectedModel) queryParams.set('model', matrixSelectedModel);
+                                    else queryParams.delete('model');
+                                    window.location.search = queryParams.toString();
+                                };
+                            }
+
+                            if (formattedDateKey === activeDateStr) {
+                                cell.classList.add('selected-date');
+                            }
+
+                            daysGrid.appendChild(cell);
+                        }
+                        card.appendChild(daysGrid);
+                        container.appendChild(card);
+                    }
                 }
 
                 setTimeout(() => {

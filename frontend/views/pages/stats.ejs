@@ -746,6 +746,46 @@
         });
     </script>
 
+    <!-- Shared Chart Assets -->
+    <script>
+        const mutedPalette = [
+            '#648FFF', '#FFB000', '#DC267F', '#FE6100', 
+            '#785EF0', '#009E73', '#56B4E9', '#D55E00'
+        ];
+
+        const rpoHexMap = {
+            'GBA': '#1a1a1a', 'GB8': '#383838', 'GLK': '#2b282b', 'GNW': '#2b3136', 
+            'G7W': '#778580', 'GAB': '#301518', 'GJI': '#4c5962', 'GXN': '#403a28',
+            'GLU': '#252c38', 'GAI': '#2c323a', 'GXP': '#254258', 'GXF': '#353942',
+            'GUI': '#65594b', 'GS6': '#7d7875', 'GRW': '#acaba7', 'GEC': '#35393f',
+            'GAR': '#303134', 'BLACK MEETS KETTLE': '#161617',
+            'GAZ': '#c4ced1', 'G8G': '#cdd1d5', 'G1W': '#b0b2b2', 'G4J': '#e0e3e7',
+            'ABALONE WHITE': '#bcbcbc', 'GSJ': '#b1b6be', 'G9T': '#b7d3e7',
+            'G7X': '#b6c6d0', 'GAN': '#b3bcc2', 'GXD': '#737778', 'G9K': '#70767e', 
+            'G9F': '#bac6cf', 'GA7': '#727873', 'GXA': '#525a5f', 'G7Q': '#323535', 
+            'GKA': '#686c70', 'GRF': '#989da3', 'GNO': '#6d7276', 'GBL': '#6e7474', 
+            'G6M': '#414346', 'G5D': '#948d88', 'GAE': '#789aac', 'GBD': '#373e3f', 
+            'BAEGE METALLIC': '#bab3af', 'HYPERSONIC METALLIC': '#8c9390', 'GXG': '#565658', 
+            'GJW': '#a29e98', 'GCI': '#4b5053', 'G35': '#404c5b', 'COPPERTINO METALLIC': '#a29388',
+            'BARB WIRE': '#5a616a', 'G7C': '#b61c1d', 'GKZ': '#c62222', 'G7E': '#bf2a32', 
+            'G1E': '#91353d', 'GPH': '#6f1011', 'GNT': '#902124', 'GSK': '#a4292c', 
+            'GPJ': '#ba4e58', 'TACTICAL TINT': '#c42f33', 'GLR': '#351c1c', 'GLL': '#913f38',
+            'GHX': '#922a26', 'G48': '#59322a', 'GMO': '#238ff7', 'GKK': '#24365c', 
+            'GJV': '#0158af', 'GS7': '#235fac', 'GTR': '#2a416d', 'GLG': '#536475', 
+            'GXE': '#316982', 'GLD': '#374b68', 'GLN': '#4f666c', 'G3Y': '#24328e', 
+            'SEYCHELLES METALLIC': '#3592a4', 'SEEKER METALLIC': '#113446', 'GXU': '#4b5764', 
+            'G9M': '#11151d', 'G8L': '#16118b', 'G6I': '#1b3034', 'G1M': '#374357',
+            'GC6': '#eed025', 'GD0': '#e5e245', 'GBK': '#bd921d', 'GCP': '#b5a12d',
+            'GKO': '#b6d13a', 'GC5': '#c36224', 'G26': '#e96122', 'G16': '#e25a39', 
+            'GCF': '#953f15', 'GAG': '#c62c1a', 'HIGH VOLTAGE TINT': '#d2653b',
+            'GVR': '#7d8a78', 'GJ0': '#1f4229', 'G4Z': '#3b812c', 'G9E': '#4c5e46',
+            'GOG': '#00727e', 'KIMONO METALLIC': '#123e30', 'GXR': '#808d80',
+            'GBW': '#214843', 'CHARTREUSE METALLIC': '#a3b752', 'CHARTREUSE MATTE': '#a5b067',
+            'GXL': '#1a153a', 'GGA': '#3e3248', 'G8T': '#4c4f54', 'G42': '#b3a492',
+            'GMU': '#8f8983', 'GMF': '#bd4836', 'G9N': '#9a9082', 'G8X': '#40354c',
+        };
+    </script>
+
     <!-- Dashboard Scripts (Runs only if stats variable is present) -->
     <% if (isDashboard && typeof stats !== 'undefined') { %>
         <script>
@@ -753,43 +793,6 @@
             
             Chart.defaults.color = '#e0e0e0';
             Chart.defaults.font.family = "'Inter', sans-serif";
-
-            const mutedPalette = [
-                '#648FFF', '#FFB000', '#DC267F', '#FE6100', 
-                '#785EF0', '#009E73', '#56B4E9', '#D55E00'
-            ];
-
-            const rpoHexMap = {
-                'GBA': '#1a1a1a', 'GB8': '#383838', 'GLK': '#2b282b', 'GNW': '#2b3136', 
-                'G7W': '#778580', 'GAB': '#301518', 'GJI': '#4c5962', 'GXN': '#403a28',
-                'GLU': '#252c38', 'GAI': '#2c323a', 'GXP': '#254258', 'GXF': '#353942',
-                'GUI': '#65594b', 'GS6': '#7d7875', 'GRW': '#acaba7', 'GEC': '#35393f',
-                'GAR': '#303134', 'BLACK MEETS KETTLE': '#161617',
-                'GAZ': '#c4ced1', 'G8G': '#cdd1d5', 'G1W': '#b0b2b2', 'G4J': '#e0e3e7',
-                'ABALONE WHITE': '#bcbcbc', 'GSJ': '#b1b6be', 'G9T': '#b7d3e7',
-                'G7X': '#b6c6d0', 'GAN': '#b3bcc2', 'GXD': '#737778', 'G9K': '#70767e', 
-                'G9F': '#bac6cf', 'GA7': '#727873', 'GXA': '#525a5f', 'G7Q': '#323535', 
-                'GKA': '#686c70', 'GRF': '#989da3', 'GNO': '#6d7276', 'GBL': '#6e7474', 
-                'G6M': '#414346', 'G5D': '#948d88', 'GAE': '#789aac', 'GBD': '#373e3f', 
-                'BAEGE METALLIC': '#bab3af', 'HYPERSONIC METALLIC': '#8c9390', 'GXG': '#565658', 
-                'GJW': '#a29e98', 'GCI': '#4b5053', 'G35': '#404c5b', 'COPPERTINO METALLIC': '#a29388',
-                'BARB WIRE': '#5a616a', 'G7C': '#b61c1d', 'GKZ': '#c62222', 'G7E': '#bf2a32', 
-                'G1E': '#91353d', 'GPH': '#6f1011', 'GNT': '#902124', 'GSK': '#a4292c', 
-                'GPJ': '#ba4e58', 'TACTICAL TINT': '#c42f33', 'GLR': '#351c1c', 'GLL': '#913f38',
-                'GHX': '#922a26', 'G48': '#59322a', 'GMO': '#238ff7', 'GKK': '#24365c', 
-                'GJV': '#0158af', 'GS7': '#235fac', 'GTR': '#2a416d', 'GLG': '#536475', 
-                'GXE': '#316982', 'GLD': '#374b68', 'GLN': '#4f666c', 'G3Y': '#24328e', 
-                'SEYCHELLES METALLIC': '#3592a4', 'SEEKER METALLIC': '#113446', 'GXU': '#4b5764', 
-                'G9M': '#11151d', 'G8L': '#16118b', 'G6I': '#1b3034', 'G1M': '#374357',
-                'GC6': '#eed025', 'GD0': '#e5e245', 'GBK': '#bd921d', 'GCP': '#b5a12d',
-                'GKO': '#b6d13a', 'GC5': '#c36224', 'G26': '#e96122', 'G16': '#e25a39', 
-                'GCF': '#953f15', 'GAG': '#c62c1a', 'HIGH VOLTAGE TINT': '#d2653b',
-                'GVR': '#7d8a78', 'GJ0': '#1f4229', 'G4Z': '#3b812c', 'G9E': '#4c5e46',
-                'GOG': '#00727e', 'KIMONO METALLIC': '#123e30', 'GXR': '#808d80',
-                'GBW': '#214843', 'CHARTREUSE METALLIC': '#a3b752', 'CHARTREUSE MATTE': '#a5b067',
-                'GXL': '#1a153a', 'GGA': '#3e3248', 'G8T': '#4c4f54', 'G42': '#b3a492',
-                'GMU': '#8f8983', 'GMF': '#bd4836', 'G9N': '#9a9082', 'G8X': '#40354c',
-            };
 
             function createChart(ctxId, type, dataObj, overrideOptions = {}) {
                 const ctx = document.getElementById(ctxId);
@@ -1212,6 +1215,18 @@
                     // Grab the first 20 items (which are now the 20 rarest)
                     let displayData = rawData.slice(0, 20);
 
+                    // Setup default styling (used for Engine)
+                    let bgColors = 'rgba(75, 192, 192, 0.2)';
+                    let borderColors = 'rgba(75, 192, 192, 1)';
+                    let borderWidth = 1;
+
+                    // If it is the Color chart, map the specific hex codes
+                    if (currentCategory === 'color') {
+                        bgColors = displayData.map(d => rpoHexMap[d.label] || '#6c757d');
+                        borderColors = 'rgba(255,255,255,0.15)';
+                        borderWidth = 2;
+                    }
+
                     config = {
                         type: 'bar',
                         data: {
@@ -1219,9 +1234,9 @@
                             datasets: [{
                                 label: 'Count',
                                 data: displayData.map(d => d.count),
-                                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                                borderColor: 'rgba(75, 192, 192, 1)',
-                                borderWidth: 1
+                                backgroundColor: bgColors,
+                                borderColor: borderColors,
+                                borderWidth: borderWidth
                             }]
                         },
                         options: {

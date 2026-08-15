@@ -86,15 +86,17 @@
             padding: 1.5rem;
             color: #e0e0e0;
             box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-            max-height: calc(100vh - 4rem);
+            height: calc(100vh - 4rem); /* Fix full height layout */
+            max-height: 850px;
             display: flex;
             flex-direction: column;
+            overflow: hidden; /* Prevent modal body from scrolling */
         }
         .annual-header {
             border-bottom: 1px solid #333;
-            padding-bottom: 0.4rem;
-            margin-bottom: 0.4rem;
-            flex-shrink: 0;
+            padding-bottom: 0.75rem;
+            margin-bottom: 0.75rem;
+            flex-shrink: 0; /* Never shrink header */
         }
         .annual-title { font-size: 1.5rem; }
         .annual-year-controls {
@@ -106,9 +108,9 @@
             display: flex;
             gap: 6px;
             overflow-x: auto;
-            padding-bottom: 2px;
-            margin-bottom: 0.4rem;
-            flex-shrink: 0;
+            padding-bottom: 4px;
+            margin-bottom: 0.75rem;
+            flex-shrink: 0; /* Never shrink year pills */
         }
         .annual-year-pill {
             background: #222;
@@ -143,9 +145,10 @@
             pointer-events: none;
         }
         .annual-months-scroll-container {
-            overflow-y: auto;
-            flex-grow: 1;
+            overflow-y: auto; /* ONLY this container scrolls */
+            flex-grow: 1; /* Take up all remaining space */
             padding-right: 5px;
+            min-height: 0; /* Crucial for flex child scrolling in modern browsers */
         }
         .annual-months-grid {
             display: grid;
@@ -214,8 +217,9 @@
             .daily-cal-icon { font-size: 1.35rem; }
             .annual-modal-content {
                 padding: 1rem;
-                margin: 1rem auto;
-                max-height: calc(100vh - 2rem);
+                margin: 0.5rem auto;
+                height: calc(100vh - 1rem);
+                max-height: none;
             }
         }
     </style>

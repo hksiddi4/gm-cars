@@ -15,12 +15,10 @@ CORS(app)
 
 myCreds = sql.Creds()
 
-# start.py updates
-
 OLLAMA_URL = "http://192.168.1.126:11434/api/generate"
-AI_MODEL = "qwen2.5-coder:7b"  # Changed from 14b to 7b for 3x-4x speedup
+AI_MODEL = "qwen2.5-coder:7b"
 
-# Cleaned, tightly-formatted schema context (fewer tokens = faster prompt processing)
+# Cleaned, tightly-formatted schema context
 DB_SCHEMA_CONTEXT = """You are a MySQL database assistant. Output ONLY a valid raw MySQL SELECT statement. No markdown, no triple backticks, no explanations.
 
 Schema:
@@ -70,10 +68,10 @@ def natural_language_query():
         "model": AI_MODEL,
         "prompt": system_combined_prompt,
         "stream": False,
-        "keep_alive": -1,  # Keep model warm in RAM indefinitely
+        "keep_alive": -1,
         "options": {
             "temperature": 0.1,
-            "num_predict": 1024  # Prevent long run-on generation
+            "num_predict": 1024
         }
     }
 
@@ -84,7 +82,6 @@ def natural_language_query():
     except Exception as e:
         return jsonify({'error': f'Failed to communicate with AI model: {str(e)}'}), 500
 
-    # Clean code blocks
     if generated_sql.startswith("```"):
         generated_sql = generated_sql.replace("```sql", "").replace("```", "").strip()
 
@@ -152,13 +149,12 @@ def search_inv():
     if not rows:
         return jsonify([])
 
-    # Aggregate results
     vehicle = {}
     rpo_codes = []
     special_descs = []
 
     for row in rows:
-        if not vehicle:  # fill in once
+        if not vehicle:
             vehicle = {
                 'vin': row['vin'],
                 'modelYear': row['modelYear'],
@@ -202,16 +198,14 @@ def sort_price():
     country = request.args.get('country')
     date = request.args.get('date')
     order = request.args.get('order')
-    page = int(request.args.get('page', 1))
-    limit = int(request.args.get('limit', 100))
+    page = request.args.get('page', 1)
     
+    limit = 100
     try:
         page = int(page)
-        limit = int(limit)
         offset = (page - 1) * limit
     except (ValueError, TypeError):
         page = 1
-        limit = 100
         offset = 0
 
     rpo_list = []
@@ -219,7 +213,6 @@ def sort_price():
     conditions = []
     params = []
 
-    # 1. BASE FILTER JOINS (SpecialEditions intentionally excluded for performance)
     filter_join_clause = """
         JOIN Engines e ON v.engine_id = e.engine_id
         JOIN Transmissions t ON v.transmission_id = t.transmission_id
@@ -239,7 +232,6 @@ def sort_price():
     if models_list:
         if "CORVETTE (C8)" in models_list:
             models_list.remove("CORVETTE (C8)")
-            # Convert the virtual label into a wildcard SQL search
             c8_cond = "(v.model LIKE 'CORVETTE%%' AND v.modelYear >= '2020')"
             if models_list:
                 placeholders = ', '.join(['%s'] * len(models_list))
@@ -281,13 +273,12 @@ def sort_price():
             conditions.append("DATE(o.creation_date) = %s")
         params.append(date)
 
-    # 2. RPO HANDLING
     if rpo:
         rpo_list = rpo.split(',') if ',' in rpo else [rpo]
         filter_join_clause += " JOIN Options opt ON v.vehicle_id = opt.vehicle_id"
         
         rpo_conditions = {
-			"Z4B": ["v.modelYear = '2024'", "v.model = 'CAMARO'", "c.color_name IN ('PANTHER BLACK MATTE', 'PANTHER BLACK METALLIC TINTCOAT')"],
+            "Z4B": ["v.modelYear = '2024'", "v.model = 'CAMARO'", "c.color_name IN ('PANTHER BLACK MATTE', 'PANTHER BLACK METALLIC TINTCOAT')"],
             "ZL4B": ["v.modelYear = '2024'", "v.model = 'CAMARO'", "v.trim = 'ZL1'", "c.color_name = 'PANTHER BLACK MATTE'"],
             "X56": ["v.modelYear = '2024'", "v.model = 'CAMARO'", "v.body = 'COUPE'", "v.trim = 'ZL1'", "t.transmission_type = 'M6'", "c.color_name = 'RIPTIDE BLUE METALLIC'", "v.msrp = '89185'"],
             "A1Z": ["v.model = 'CAMARO'", "v.body = 'COUPE'", "v.trim = 'ZL1'"],
@@ -320,7 +311,6 @@ def sort_price():
             "ZLT": ["v.modelYear = '2024'", "v.model = 'CT5'", "v.trim = 'V-SERIES BLACKWING'", "opt.option_code IN ('ZLT', 'ZLV')"],
             "V8V": ["v.model = 'CT5'", "v.trim = 'V-SERIES BLACKWING'"],
             "PCK1": ["v.modelYear = '2026'", "v.model = 'CT5'", "v.trim = 'V-SERIES BLACKWING'", "c.color_name = 'DEEP OCEAN TINTCOAT'"],
-            # F1 Collector "": ["v.modelYear = '2026'", "v.model = 'CT5'", "v.trim = 'V-SERIES BLACKWING'", "c.color_name = 'MIDNIGHT STONE FROST'", "opt.option_code = 'V8V'"],
             "Z6X": ["v.model IN ('HUMMER EV SUV', 'HUMMER EV PICKUP')"],
             "WFP": ["v.modelYear = '2024'", "v.model = 'HUMMER EV SUV'", "v.trim = '3X'", "c.color_name = 'NEPTUNE BLUE MATTE'"],
         }
@@ -360,7 +350,6 @@ def sort_price():
     else:
         rpo_clause = f"HAVING COUNT(DISTINCT opt.option_code) = {rpo_n}"
 
-    # 3. ORDERING
     if any(code in ["ZL4B", "X56", "PEH"] for code in rpo_list) and order not in ["ASC", "DESC"]:
         order_clause = "ORDER BY SUBSTRING(v.vin, -6)"
     elif order in ["ASC", "DESC"]:
@@ -370,12 +359,10 @@ def sort_price():
     else:
         order_clause = "ORDER BY v.vehicle_id DESC"
 
-    # 4. DROPDOWN GENERATOR (Optimized)
     def get_all_distinct_values(current_where, current_params, current_filter_joins, current_rpo_clause):
         conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
 
         if not current_where:
-            # Fastest path for default page load
             years = execute_read_query(conn, "SELECT DISTINCT modelYear FROM Vehicles ORDER BY modelYear DESC")
             models = execute_read_query(conn, "SELECT DISTINCT model FROM Vehicles ORDER BY model ASC")
             bodies = execute_read_query(conn, "SELECT DISTINCT body FROM Vehicles ORDER BY body ASC")
@@ -399,7 +386,6 @@ def sort_price():
             }, engines
 
         else:
-            # Optimized deferred join approach for fetching valid dropdowns on filtered views
             columns = ['modelYear', 'body', 'trim', 'transmission_type', 'drivetrain_type', 'model', 'color_name', 'country']
             
             sqlStatement = f"""
@@ -442,7 +428,6 @@ def sort_price():
             ]
             return sorted_values, sorted_engines
 
-    # 5. FETCH DATA
     distinct_values, engine_list = get_all_distinct_values(where_clause, params, filter_join_clause, rpo_clause)
 
     year_list = distinct_values['modelYear']
@@ -456,7 +441,6 @@ def sort_price():
 
     conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
     
-    # Inner subquery specifically to grab the paginated IDs rapidly
     inner_sql = f"""
         SELECT v.vehicle_id
         FROM Vehicles v {filter_join_clause}
@@ -467,7 +451,6 @@ def sort_price():
         LIMIT %s OFFSET %s
     """
 
-    # Outer query to fetch the wide dataset and attach Special Editions purely for those 100 rows
     select = f"""
         SELECT v.vehicle_id, v.vin, v.modelYear, v.model, v.body, v.trim,
             e.engine_type, t.transmission_type, d.drivetrain_type,
@@ -492,7 +475,6 @@ def sort_price():
     query_params = params + [limit, offset]
     viewTable = execute_read_query(conn, select, query_params)
 
-    # 6. TOTAL COUNT CALCULATION
     if where_clause:
         totalSql = f"""
             SELECT COUNT(*) AS total FROM (
@@ -519,7 +501,8 @@ def sort_price():
         'trans': trans_list,
         'drivetrain': drivetrain_list,
         'color': color_list,
-        'country': country_list
+        'country': country_list,
+        'limit': limit
     })
 
 @app.route('/calendar-activity', methods=['GET'])
@@ -588,7 +571,6 @@ def daily_stats():
     
     from datetime import date
     
-    # 1. Find MIN and MAX bounds first based on filters
     bounds_params = []
     if model_filter:
         if model_filter == 'CORVETTE (C8)':
@@ -605,20 +587,18 @@ def daily_stats():
     min_date = bounds_rows[0]['min_date'] if bounds_rows else None
     max_date = bounds_rows[0]['max_date'] if bounds_rows else None
 
-    # 2. Determine target date and set base_params based on the timeframe category
     curr_date_str = date_filter or max_date or date.today().strftime('%Y-%m-%d')
     
     if category == 'monthly':
         date_condition = "DATE_FORMAT(o.creation_date, '%%Y-%%m') = %s"
-        base_params = [curr_date_str[:7]]  # Extract YYYY-MM
+        base_params = [curr_date_str[:7]] 
     elif category == 'yearly':
         date_condition = "YEAR(o.creation_date) = %s"
-        base_params = [curr_date_str[:4]]  # Extract YYYY
+        base_params = [curr_date_str[:4]] 
     else:
         date_condition = "DATE(o.creation_date) = %s"
         base_params = [curr_date_str]
 
-    # 3. Find all distinct models produced in that specific timeframe
     models_sql = f"""
         SELECT DISTINCT v.model 
         FROM Vehicles v 
@@ -629,7 +609,6 @@ def daily_stats():
     model_rows = execute_read_query(conn, models_sql, base_params)
     available_models = [r['model'] for r in model_rows] if model_rows else []
 
-    # 4. Main stats query
     sqlStatement = f"""
         SELECT v.modelYear, v.model, v.body, v.trim, e.engine_type, e.engine_rpo,
                t.transmission_type, d.drivetrain_type, c.color_name, c.rpo_code,
@@ -646,7 +625,6 @@ def daily_stats():
     
     params = list(base_params)
 
-    # Apply dropdown filter if passed
     if model_filter:
         if model_filter == 'CORVETTE (C8)':
             sqlStatement += " AND v.model LIKE %s AND v.modelYear >= '2020'"
@@ -667,7 +645,6 @@ def daily_stats():
         
     close_connection(conn)
 
-    # Initialize stats payload
     stats = {
         'total': len(rows) if rows else 0,
         'current_date': curr_date_str,
@@ -834,7 +811,6 @@ def stats():
         close_connection(conn)
         return jsonify([])
 
-    # 4. EXECUTE AND FILTER RESULTS
     distinct_sql = f"SELECT DISTINCT v.modelYear, v.model, v.body, v.trim, e.engine_type, t.transmission_type, d.drivetrain_type FROM Vehicles v {join_clause} {where_clause}"
     distinct_results = execute_read_query(conn, distinct_sql, params)
 
@@ -845,11 +821,8 @@ def stats():
     else:
         viewTable = []
 
-    # 3. DYNAMIC DROPDOWN LOGIC (Like the /vehicles page)
-    # Fetch years agnostic of the current year selection
     year_agnostic_conds = [c for c in conditions if c != year_cond]
     
-    # Reconstruct params without the year param
     year_agnostic_params = []
     if model and model != "CORVETTE (C8)": year_agnostic_params.append(model)
     if body: year_agnostic_params.append(body)
@@ -860,12 +833,10 @@ def stats():
 
     year_where = f"WHERE {' AND '.join(year_agnostic_conds)}" if year_agnostic_conds else ""
 
-    # Query for the Year dropdown
     year_sql = f"SELECT DISTINCT v.modelYear FROM Vehicles v {join_clause} {year_where} ORDER BY v.modelYear DESC"
     all_years_raw = execute_read_query(conn, year_sql, year_agnostic_params)
     all_years = [r['modelYear'] for r in all_years_raw if r.get('modelYear')]
 
-    # Query for all other dropdowns based on FULL filters
     distinct_sql = f"""
         SELECT DISTINCT v.model, v.body, v.trim, e.engine_type, t.transmission_type, d.drivetrain_type
         FROM Vehicles v
@@ -876,7 +847,6 @@ def stats():
 
     close_connection(conn)
 
-    # Final logic for the CORVETTE (C8) year restriction
     if model == "CORVETTE (C8)":
         all_years = [y for y in all_years if y and int(y) >= 2020]
 
@@ -948,25 +918,6 @@ def about_stats():
 
     stats_map = {r['model_group'].replace(' ', '_'): r['latest_date'] for r in results}
     return jsonify(stats_map)
-
-# Replace with better implementation
-# @app.route('/api/rarity', methods=['POST'])
-# def unique():
-#     data = request.json
-#     options = data.get('Options')
-
-#     if options is not None:
-#         formatted_options = json.dumps(options)
-#         try:
-#             sqlStatement = f"SELECT COUNT(*) AS Count FROM gm WHERE JSON_UNQUOTE(JSON_EXTRACT(allJson, '$.Options')) = '{formatted_options}'"
-#             conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
-#             response = execute_read_query(conn, sqlStatement)
-#             close_connection(conn)
-#             return response
-#         except ValueError:
-#             return jsonify({'error': 'Invalid value'}), 400
-#     else:
-#         return jsonify({'error': 'No value provided'}), 400
 
 #========================= View Pages #=========================
 

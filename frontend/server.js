@@ -467,35 +467,56 @@ app.get('/model-bounds', blockDirectApiAccess, async (req, res) => {
 
 app.get('/stats', async (req, res) => {
     try {
-        const response = await axiosInstance.get(`${baseURL}/stats`, { params: req.query });
-        const data = response.data;
-        
-        const stats_data = Array.isArray(data.stats_data) ? data.stats_data : [];
-        stats_data.forEach(item => item.total_count = formatCurrency(item.total_count));
+        const category = req.query.category || 'daily';
+        const isDashboard = ['daily', 'monthly', 'yearly'].includes(category);
 
-        res.render('pages/stats', {
-            stats_data,
-            category: data.category,
-            year_list: data.year,
-            model_list: data.model,
-            body_list: data.body,
-            trim_list: data.trim,
-            engine_list: data.engine,
-            trans_list: data.trans,
-            drivetrain_list: data.drivetrain,
-            selectedYear: req.query.year || '',
-            selectedModel: req.query.model || '',
-            selectedBody: req.query.body || '',
-            selectedTrim: req.query.trim || '',
-            selectedEngine: req.query.engine || '',
-            selectedTrans: req.query.trans || '',
-            selectedDrivetrain: req.query.drivetrain || '',
-            pagePath: '/stats',
-            canonicalPath: req.originalUrl
-        });
+        if (isDashboard) {
+            // Fetch Dashboard Data (Daily/Monthly/Yearly)
+            const [statsResponse, wheelsResponse] = await Promise.all([
+                axiosInstance.get(`${baseURL}/daily-stats`, { params: req.query }),
+                axiosInstance.get(`${baseURL}/wheels`)
+            ]);
+            
+            res.render('pages/stats', {
+                category: category,
+                stats: statsResponse.data,
+                all_models: wheelsResponse.data.model,
+                selectedModel: req.query.model || '',
+                pagePath: '/stats',
+                canonicalPath: '/stats'
+            });
+        } else {
+            // Fetch Rankings/Trends Data (Color/Engine/Production)
+            const response = await axiosInstance.get(`${baseURL}/stats`, { params: req.query });
+            const data = response.data;
+            
+            const stats_data = Array.isArray(data.stats_data) ? data.stats_data : [];
+            stats_data.forEach(item => item.total_count = formatCurrency(item.total_count));
+
+            res.render('pages/stats', {
+                category: data.category || category,
+                stats_data,
+                year_list: data.year || [],
+                model_list: data.model || [],
+                body_list: data.body || [],
+                trim_list: data.trim || [],
+                engine_list: data.engine || [],
+                trans_list: data.trans || [],
+                drivetrain_list: data.drivetrain || [],
+                selectedYear: req.query.year || '',
+                selectedModel: req.query.model || '',
+                selectedBody: req.query.body || '',
+                selectedTrim: req.query.trim || '',
+                selectedEngine: req.query.engine || '',
+                selectedTrans: req.query.trans || '',
+                selectedDrivetrain: req.query.drivetrain || '',
+                pagePath: '/stats',
+                canonicalPath: req.originalUrl
+            });
+        }
     } catch (error) {
         console.error('Error in /stats:', error);
-        res.status(500).render('pages/errors/500', { error: 'Internal Server Error' });
+        res.status(500).render('pages/errors/500', { error: 'Internal Server Error', pagePath: '/stats', canonicalPath: req.originalUrl });
     }
 });
 

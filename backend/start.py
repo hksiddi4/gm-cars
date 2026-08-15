@@ -587,6 +587,7 @@ def model_bounds():
 def daily_stats():
     model_filter = request.args.get('model')
     date_filter = request.args.get('date')
+    category = request.args.get('category', 'daily')
     conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
     
     from datetime import date
@@ -601,19 +602,27 @@ def daily_stats():
             bounds_sql = "SELECT DATE_FORMAT(MIN(o.creation_date), '%%Y-%%m-%%d') as min_date, DATE_FORMAT(MAX(o.creation_date), '%%Y-%%m-%%d') as max_date FROM Orders o JOIN Vehicles v ON o.order_id = v.order_id WHERE v.model = %s AND o.creation_date IS NOT NULL"
             bounds_params.append(model_filter)
     else:
-        bounds_sql = "SELECT DATE_FORMAT(MIN(creation_date), '%Y-%m-%d') as min_date, DATE_FORMAT(MAX(creation_date), '%Y-%m-%d') as max_date FROM Orders WHERE creation_date IS NOT NULL"
+        bounds_sql = "SELECT DATE_FORMAT(MIN(creation_date), '%%Y-%%m-%%d') as min_date, DATE_FORMAT(MAX(creation_date), '%%Y-%%m-%%d') as max_date FROM Orders WHERE creation_date IS NOT NULL"
         bounds_params = None
     
     bounds_rows = execute_read_query(conn, bounds_sql, bounds_params)
     min_date = bounds_rows[0]['min_date'] if bounds_rows else None
     max_date = bounds_rows[0]['max_date'] if bounds_rows else None
 
-    # 2. Determine target date and always set base_params
+    # 2. Determine target date and set base_params based on the timeframe category
     curr_date_str = date_filter or max_date or date.today().strftime('%Y-%m-%d')
-    date_condition = "DATE(o.creation_date) = %s"
-    base_params = [curr_date_str]
+    
+    if category == 'monthly':
+        date_condition = "DATE_FORMAT(o.creation_date, '%%Y-%%m') = %s"
+        base_params = [curr_date_str[:7]]  # Extract YYYY-MM
+    elif category == 'yearly':
+        date_condition = "YEAR(o.creation_date) = %s"
+        base_params = [curr_date_str[:4]]  # Extract YYYY
+    else:
+        date_condition = "DATE(o.creation_date) = %s"
+        base_params = [curr_date_str]
 
-    # 3. Find all distinct models produced on that specific date
+    # 3. Find all distinct models produced in that specific timeframe
     models_sql = f"""
         SELECT DISTINCT v.model 
         FROM Vehicles v 

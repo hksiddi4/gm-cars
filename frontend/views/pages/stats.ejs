@@ -257,8 +257,15 @@
                                 let formattedDate = stats.current_date || new Date().toISOString().split('T')[0];
                                 try {
                                     const [y, m, d] = formattedDate.split('-');
-                                    const dateObj = new Date(y, m - 1, d);
-                                    formattedDate = dateObj.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                                    const dateObj = new Date(y, m - 1, d || 1);
+                                    
+                                    if (activeCategory === 'monthly') {
+                                        formattedDate = dateObj.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+                                    } else if (activeCategory === 'yearly') {
+                                        formattedDate = dateObj.toLocaleDateString('en-US', { year: 'numeric' });
+                                    } else {
+                                        formattedDate = dateObj.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                                    }
                                 } catch (e) {
                                     formattedDate = stats.current_date;
                                 }

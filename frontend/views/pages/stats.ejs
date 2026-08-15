@@ -860,9 +860,19 @@
                 if (trimCount > 6) document.getElementById('trimChart').parentElement.style.height = `${trimCount * 35}px`;
                 createChart('trimChart', 'bar', rawData.trim, { indexAxis: 'y', scales: { y: { ticks: { autoSkip: false, font: { size: chartFontSize } } } } });
 
-                const colorCount = Object.keys(rawData.color).length;
+                // Filter out colors with just 1 count for the Dashboard Color Chart
+                const filteredColorData = {};
+                if (rawData.color) {
+                    for (const [colKey, colVal] of Object.entries(rawData.color)) {
+                        if (colVal > 1) {
+                            filteredColorData[colKey] = colVal;
+                        }
+                    }
+                }
+
+                const colorCount = Object.keys(filteredColorData).length;
                 if (colorCount > 6) document.getElementById('colorChart').parentElement.style.height = `${colorCount * 35}px`;
-                createChart('colorChart', 'bar', rawData.color, { indexAxis: 'y', scales: { y: { ticks: { autoSkip: false, font: { size: chartFontSize } } } } });
+                createChart('colorChart', 'bar', filteredColorData, { indexAxis: 'y', scales: { y: { ticks: { autoSkip: false, font: { size: chartFontSize } } } } });
             }
         </script>
 
@@ -1191,7 +1201,7 @@
                         color_names: data.color_names || ''
                     }));
 
-                    // Sort descending to get the true highest counts at the top of the array
+                    // Sort descending (largest counts at the top of the array)
                     rawData.sort((a, b) => b.count - a.count);
 
                     if (currentCategory === 'color') {
@@ -1202,8 +1212,8 @@
                     // Grab the top 20
                     let displayData = rawData.slice(0, 20);
 
-                    // Reverse for Chart.js so the highest count appears at the top of horizontal bars
-                    displayData.reverse();
+                    // Notice: No .reverse() here. 
+                    // Chart.js plots the first item in the array at the top of the Y-axis.
 
                     config = {
                         type: 'bar',

@@ -104,7 +104,7 @@
                                 <% 
                                 const standardCaddy = ['CELESTIQ', 'CT4', 'CT5', 'CT6'];
                                 standardCaddy.forEach(model => { 
-                                    const isNew = (model === 'CELESTIQ');
+                                    const isNew = (model === 'newModelName');
                                 %>
                                     <div class="col-12 i-link">
                                         <a href="/vehicles?model=<%= encodeURIComponent(model) %>" class="model-btn w-100 <%= isNew ? 'glow-new-btn' : '' %>">

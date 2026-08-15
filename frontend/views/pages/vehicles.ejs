@@ -61,7 +61,7 @@
                         }) %>
 
                         <button type="submit" class="btn btn-primary mt-3 w-100">Apply Filters</button>
-                        <% if (selectedModels.length > 0 || selectedRPO || selectedTrim || selectedEngine || selectedTrans || selectedDrivetrain || selectedYear || selectedBody || selectedColor || selectedCountry || limit != 100 || selectedOrder) { %>
+                        <% if (selectedModels.length > 0 || selectedRPO || selectedTrim || selectedEngine || selectedTrans || selectedDrivetrain || selectedYear || selectedBody || selectedColor || selectedCountry || selectedOrder) { %>
                             <button type="button" id="clearFilters" class="btn btn-secondary mt-2 w-100">Clear All</button>
                         <% } %>
                     </form>
@@ -73,18 +73,10 @@
                 <ul id="rpoResults" class="list-group mt-2"></ul>
                 <div id="selectedRPOs" class="selected-rpos mt-1"></div>
             </div>
-            <div class="stats d-flex justify-content-between align-items-end">
-                <p id="totalCount">
+            <div class="stats mt-2 mb-2">
+                <p id="totalCount" class="mb-0 text-muted">
                     Retrieved <%= totalItems.toLocaleString() %> vehicles in <%= elapsedTime.toLocaleString() %> seconds
                 </p>
-                <div class="dropdown-container">
-                    <select id="limitSelect" class="form-select small-dropdown" aria-label="Limit results">
-                        <option value="100" <% if (limit === 100) { %>selected<% } %>>100</option>
-                        <option value="150" <% if (limit === 150) { %>selected<% } %>>150</option>
-                        <option value="200" <% if (limit === 200) { %>selected<% } %>>200</option>
-                        <option value="250" <% if (limit === 250) { %>selected<% } %>>250</option>
-                    </select>
-                </div>
             </div>
             <%
             function buildQuery(params) {
@@ -105,7 +97,6 @@
             }
 
             const baseQuery = {
-                limit,
                 model: selectedModels.length ? selectedModels : undefined,
                 rpo: selectedRPO,
                 trim: selectedTrim,
@@ -117,7 +108,7 @@
                 color: selectedColor,
                 country: selectedCountry,
                 order: selectedOrder,
-                date: typeof selectedDate !== 'undefined' ? selectedDate : undefined // <-- Add this line
+                date: typeof selectedDate !== 'undefined' ? selectedDate : undefined
             };
             %>
             <% if (selectedYear === '2019') { %>
@@ -266,7 +257,6 @@
                                             <option value="ZLZ5" <% if (rpo === 'ZLZ5') { %>selected<% } %>>Le Monstre Special Edition</option>
                                             <option value="V8V" <% if (rpo === 'V8V') { %>selected<% } %>>Precision Package</option>
                                             <option value="PCK1" <% if (rpo === 'PCK1') { %>selected<% } %>>Deep Ocean Appearance Package</option>
-                                            <!-- <option value="" <% if (rpo === '') { %>selected<% } %>>F1 Collector's Edition</option> -->    
                                         </optgroup>
                                         <optgroup label="Hummer EV">
                                             <option value="Z6X" <% if (rpo === 'Z6X') { %>selected<% } %>>Extreme Off-Road Package</option>
@@ -697,7 +687,6 @@
             const filterContent = document.getElementById('filterContent');
             const filterIcon = document.getElementById('filterIcon');
             const filterForm = document.getElementById('filterForm');
-            const limitSelect = document.getElementById('limitSelect');
             const currentOrder = new URLSearchParams(window.location.search).get('order');
             selectedOrder = currentOrder;
             updateIcons(selectedOrder);
@@ -750,7 +739,6 @@
             addSelectListener('drivetrainSelect', 'drivetrain');
             addSelectListener('colorSelect', 'color');
             addSelectListener('countrySelect', 'country');
-            addSelectListener('limitSelect', 'limit');
 
             filterForm.addEventListener('submit', function(event) {
                 event.preventDefault();
@@ -788,7 +776,6 @@
                 addIfPresent('drivetrainSelect', 'drivetrain');
                 addIfPresent('colorSelect', 'color');
                 addIfPresent('countrySelect', 'country');
-                addIfPresent('limitSelect', 'limit');
                 
                 if (selectedOrder) params.set('order', selectedOrder);
 

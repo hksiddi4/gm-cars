@@ -104,7 +104,7 @@
                                 <% 
                                 const standardCaddy = ['CELESTIQ', 'CT4', 'CT5', 'CT6'];
                                 standardCaddy.forEach(model => { 
-                                    const isNew = (model === 'CELESTIQ');
+                                    const isNew = (model === 'newModelName');
                                 %>
                                     <div class="col-12 i-link">
                                         <a href="/vehicles?model=<%= encodeURIComponent(model) %>" class="model-btn w-100 <%= isNew ? 'glow-new-btn' : '' %>">
@@ -151,14 +151,14 @@
                     <!-- Collapsible Statistics Header -->
                     <div class="col-12 col-sm-6 col-xl-3">
                         <h2 class="i-link mb-2 d-flex flex-column align-items-start">
-                            <a data-bs-toggle="collapse" href="#statsCollapseIndex" role="button" aria-expanded="false" aria-controls="statsCollapseIndex" class="glow-new-btn px-2 py-1 rounded d-inline-flex align-items-center text-decoration-none shadow-sm" style="transition: all 0.3s; color: white;">
+                            <a data-bs-toggle="collapse" href="#statsCollapseIndex" role="button" aria-expanded="false" aria-controls="statsCollapseIndex" class="glow-new-btn px-2 py-1 rounded d-inline-flex align-items-center text-decoration-none" style="transition: all 0.3s; color: white;">
                                 <i class="bi bi-list-ol me-1"></i>
                                 <span>Statistics</span>
                                 <i class="bi bi-chevron-down fs-6 ms-2 collapse-chevron"></i>
                             </a>
                         </h2>
-                        <div class="collapse w-100 mt-2" id="statsCollapseIndex">
-                            <ul class="list-unstyled py-2 px-3 mb-3" style="background-color: rgba(255, 255, 255, 0.05); border-radius: 8px; width: fit-content; min-width: 220px;">
+                        <div class="collapse w-100" id="statsCollapseIndex">
+                            <ul class="list-unstyled py-2 px-3 mb-3 mt-2" style="background-color: rgba(255, 255, 255, 0.05); border-radius: 8px; width: fit-content; min-width: 220px;">
                                 <li class="mb-2 i-link"><a href="/stats?category=daily" class="text-decoration-none text-light" style="font-size: 1.1rem;">Daily Dashboard</a></li>
                                 <li class="mb-2 i-link"><a href="/stats?category=monthly" class="text-decoration-none text-light" style="font-size: 1.1rem;">Monthly Dashboard</a></li>
                                 <li class="mb-2 i-link"><a href="/stats?category=yearly" class="text-decoration-none text-light" style="font-size: 1.1rem;">Yearly Dashboard</a></li>

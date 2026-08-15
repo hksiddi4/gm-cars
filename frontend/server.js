@@ -414,27 +414,6 @@ app.get('/search', searchLimiter, async (req, res) => {
     }
 });
 
-app.get('/daily', async (req, res) => {
-    try {
-        // Fetch both daily stats and the full model list concurrently
-        const [statsResponse, wheelsResponse] = await Promise.all([
-            axiosInstance.get(`${baseURL}/daily-stats`, { params: req.query }),
-            axiosInstance.get(`${baseURL}/wheels`)
-        ]);
-        
-        res.render('pages/daily', {
-            stats: statsResponse.data,
-            all_models: wheelsResponse.data.model, // Inject all models here
-            selectedModel: req.query.model || '',
-            pagePath: '/daily',
-            canonicalPath: '/daily'
-        });
-    } catch (error) {
-        console.error("Daily Route Error:", error);
-        res.status(500).render('pages/errors/500', { pagePath: '/daily', canonicalPath: '/daily' });
-    }
-});
-
 app.get('/calendar-activity', blockDirectApiAccess, async (req, res) => {
     try {
         const response = await axiosInstance.get(`${baseURL}/calendar-activity`, { params: req.query });

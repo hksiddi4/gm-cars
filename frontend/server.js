@@ -341,7 +341,9 @@ app.get('/search', searchLimiter, async (req, res) => {
         const response = await axiosInstance.get(`${baseURL}/search`, { params: { vin: vinQuery } });
         const vin_data = response.data;
 
-        if (!vin_data || vin_data.length === 0) throw new Error('VIN not found');
+        if (!vin_data || vin_data.length === 0) {
+            return res.status(400).render('pages/errors/400', { pagePath: '/search', canonicalPath: '/search' });
+        }
 
         // 2. Unique variable for the data object
         const vehicle = vin_data[0]; 
@@ -406,7 +408,8 @@ app.get('/search', searchLimiter, async (req, res) => {
             canonicalPath: `/search?vin=${vinQuery}`
         });
     } catch (error) {
-        console.error("Search Route Error:", error);
+        // Output the VIN and only the error message to keep the logs clean
+        console.error(`Search Route Error for VIN [${vinQuery}]:`, error.message);
         res.status(400).render('pages/errors/400', { pagePath: '/search', canonicalPath: '/search' });
     }
 });

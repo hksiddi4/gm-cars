@@ -543,7 +543,7 @@ def calendar_activity():
             
     if category == 'yearly':
         sqlStatement = f"""
-            SELECT DATE_FORMAT(o.creation_date, '%%Y') as prod_date, COUNT(o.order_id) as count
+            SELECT CAST(YEAR(o.creation_date) AS CHAR) as prod_date, COUNT(o.order_id) as count
             FROM Orders o
             {model_join}
             WHERE o.creation_date IS NOT NULL {model_cond}
@@ -551,7 +551,7 @@ def calendar_activity():
         """
     elif category == 'monthly':
         sqlStatement = f"""
-            SELECT DATE_FORMAT(o.creation_date, '%%Y-%%m') as prod_date, COUNT(o.order_id) as count
+            SELECT CAST(YEAR(o.creation_date) AS CHAR) as prod_date, COUNT(o.order_id) as count
             FROM Orders o
             {model_join}
             WHERE YEAR(o.creation_date) = %s {model_cond} AND o.creation_date IS NOT NULL

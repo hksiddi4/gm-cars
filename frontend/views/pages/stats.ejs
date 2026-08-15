@@ -67,36 +67,37 @@
         .annual-modal-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.85);
             backdrop-filter: blur(4px);
             z-index: 2000;
             display: none;
-            overflow-x: hidden;
-            overflow-y: auto;
-            padding: 0 1rem;
+            overflow: hidden; /* Prevent overlay scroll leaks */
+            touch-action: none; /* Lock mobile gestures on background */
         }
-        .annual-modal-overlay.show { display: block; }
+        .annual-modal-overlay.show { display: flex; align-items: center; justify-content: center; }
         .annual-modal-content {
             background-color: #2b2b2b;
             border: 1px solid #444;
             border-radius: 8px;
-            width: 100%;
+            width: 95%;
             max-width: 1200px;
-            margin: 2rem auto; 
+            margin: auto; 
             padding: 1.5rem;
             color: #e0e0e0;
             box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-            height: calc(100vh - 4rem); /* Fix full height layout */
+            height: 90vh;
             max-height: 850px;
             display: flex;
             flex-direction: column;
-            overflow: hidden; /* Prevent modal body from scrolling */
+            overflow: hidden; 
+            touch-action: auto; /* Allow touch behavior inside modal */
+            overscroll-behavior: contain; /* Stop scroll chaining to parent body */
         }
         .annual-header {
             border-bottom: 1px solid #333;
             padding-bottom: 0.75rem;
             margin-bottom: 0.75rem;
-            flex-shrink: 0; /* Never shrink header */
+            flex-shrink: 0; 
         }
         .annual-title { font-size: 1.5rem; }
         .annual-year-controls {
@@ -110,7 +111,8 @@
             overflow-x: auto;
             padding-bottom: 4px;
             margin-bottom: 0.75rem;
-            flex-shrink: 0; /* Never shrink year pills */
+            flex-shrink: 0; 
+            -webkit-overflow-scrolling: touch; /* Smooth mobile scroll for pills */
         }
         .annual-year-pill {
             background: #222;
@@ -145,10 +147,12 @@
             pointer-events: none;
         }
         .annual-months-scroll-container {
-            overflow-y: auto; /* ONLY this container scrolls */
-            flex-grow: 1; /* Take up all remaining space */
+            overflow-y: auto; 
+            flex-grow: 1; 
             padding-right: 5px;
-            min-height: 0; /* Crucial for flex child scrolling in modern browsers */
+            min-height: 0; 
+            -webkit-overflow-scrolling: touch; /* Smooth mobile scroll for grid */
+            overscroll-behavior: contain; /* Prevents background page from dragging along */
         }
         .annual-months-grid {
             display: grid;
@@ -217,9 +221,11 @@
             .daily-cal-icon { font-size: 1.35rem; }
             .annual-modal-content {
                 padding: 1rem;
-                margin: 0.5rem auto;
-                height: calc(100vh - 1rem);
-                max-height: none;
+                width: 100%;
+                height: 100vh;
+                max-height: 100vh;
+                border-radius: 0;
+                border: none;
             }
         }
     </style>

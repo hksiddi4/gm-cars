@@ -1201,19 +1201,16 @@
                         color_names: data.color_names || ''
                     }));
 
-                    // Sort descending (largest counts at the top of the array)
-                    rawData.sort((a, b) => b.count - a.count);
-
                     if (currentCategory === 'color') {
-                        // Filter out colors with exactly 1 count from the main chart
+                        // Filter out colors with exactly 1 count from the main chart first
                         rawData = rawData.filter(d => d.count > 1);
                     }
 
-                    // Grab the top 20
-                    let displayData = rawData.slice(0, 20);
+                    // Sort ascending (smallest counts at the top of the array)
+                    rawData.sort((a, b) => a.count - b.count);
 
-                    // Notice: No .reverse() here. 
-                    // Chart.js plots the first item in the array at the top of the Y-axis.
+                    // Grab the first 20 items (which are now the 20 rarest)
+                    let displayData = rawData.slice(0, 20);
 
                     config = {
                         type: 'bar',

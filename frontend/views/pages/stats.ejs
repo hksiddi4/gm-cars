@@ -1032,6 +1032,12 @@
                 const currentCategory = "<%= activeCategory %>";
                 const activeDateStr = "<%= stats.current_date %>";
 
+                // Reset visibility for controls that Yearly mode hides
+                const yearControls = document.querySelector('.annual-year-controls');
+                const yearsBar = document.getElementById('annualYearsBar');
+                if (yearControls) yearControls.style.display = 'flex';
+                if (yearsBar) yearsBar.style.display = 'flex';
+
                 // --- 1. MONTHLY GRID (12 Blocks) ---
                 if (currentCategory === 'monthly') {
                     const monthLabels = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];

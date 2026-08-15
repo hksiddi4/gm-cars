@@ -31,18 +31,17 @@
                 
                 <!-- Stylized Collapsible Statistics Menu with Golden Animation -->
                 <li class="nav-item mb-2">
-                    <a href="#sidebarStatsMenu" data-bs-toggle="collapse" role="button" aria-expanded="<%= pagePath === '/stats' ? 'true' : 'false' %>" aria-controls="sidebarStatsMenu" class="nav-link glow-new-btn <%= pagePath === '/stats' ? 'active' : '' %> d-inline-flex align-items-center" style="border-radius: 8px;">
-                        <i class="fs-4 bi bi-list-ol me-2"></i>
-                        Statistics <i class="bi bi-chevron-down ms-2 fs-6"></i>
+                    <a href="#sidebarStatsMenu" data-bs-toggle="collapse" role="button" aria-expanded="<%= pagePath === '/stats' ? 'true' : 'false' %>" aria-controls="sidebarStatsMenu" class="nav-link glow-new-btn <%= pagePath === '/stats' ? 'active' : '' %>" style="border-radius: 8px;">
+                        <i class="fs-4 bi bi-list-ol me-2 align-middle"></i><span class="align-middle">Statistics</span> <i class="bi bi-chevron-down ms-2 align-middle" style="font-size: 0.85rem;"></i>
                     </a>
                     <div class="collapse <%= pagePath === '/stats' ? 'show' : '' %>" id="sidebarStatsMenu">
-                        <ul class="list-unstyled ms-4 mt-3 mb-2 border-start border-secondary ps-3">
-                            <li class="mb-2 i-link"><a href="/stats?category=daily" class="text-decoration-none text-light" style="font-size: 1.1rem;"><i class="bi bi-arrow-right-short me-1"></i>Daily Dashboard</a></li>
-                            <li class="mb-2 i-link"><a href="/stats?category=monthly" class="text-decoration-none text-light" style="font-size: 1.1rem;"><i class="bi bi-arrow-right-short me-1"></i>Monthly Dashboard</a></li>
-                            <li class="mb-2 i-link"><a href="/stats?category=yearly" class="text-decoration-none text-light" style="font-size: 1.1rem;"><i class="bi bi-arrow-right-short me-1"></i>Yearly Dashboard</a></li>
-                            <li class="mb-2 i-link"><a href="/stats?category=color" class="text-decoration-none text-light" style="font-size: 1.1rem;"><i class="bi bi-arrow-right-short me-1"></i>Color Rankings</a></li>
-                            <li class="mb-2 i-link"><a href="/stats?category=engine" class="text-decoration-none text-light" style="font-size: 1.1rem;"><i class="bi bi-arrow-right-short me-1"></i>Engine Rankings</a></li>
-                            <li class="i-link"><a href="/stats?category=production" class="text-decoration-none text-light" style="font-size: 1.1rem;"><i class="bi bi-arrow-right-short me-1"></i>Production Trends</a></li>
+                        <ul class="list-unstyled mt-2 mb-2" style="margin-left: 3.25rem;">
+                            <li class="mb-2 i-link"><a href="/stats?category=daily" class="text-decoration-none text-light" style="font-size: 1.05rem;">- Daily</a></li>
+                            <li class="mb-2 i-link"><a href="/stats?category=monthly" class="text-decoration-none text-light" style="font-size: 1.05rem;">- Monthly</a></li>
+                            <li class="mb-2 i-link"><a href="/stats?category=yearly" class="text-decoration-none text-light" style="font-size: 1.05rem;">- Yearly</a></li>
+                            <li class="mb-2 i-link"><a href="/stats?category=color" class="text-decoration-none text-light" style="font-size: 1.05rem;">- Colors</a></li>
+                            <li class="mb-2 i-link"><a href="/stats?category=engine" class="text-decoration-none text-light" style="font-size: 1.05rem;">- Engines</a></li>
+                            <li class="mb-1 i-link"><a href="/stats?category=production" class="text-decoration-none text-light" style="font-size: 1.05rem;">- Production</a></li>
                         </ul>
                     </div>
                 </li>

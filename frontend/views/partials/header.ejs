@@ -1,3 +1,12 @@
+<style>
+    .collapse-chevron {
+        transition: transform 0.3s ease;
+    }
+    [aria-expanded="true"] .collapse-chevron {
+        transform: rotate(-180deg);
+    }
+</style>
+
 <header id="main-header" style="background-color: transparent;" data-nosnippet>
     <a href="#main-content" class="visually-hidden-focusable p-2 bg-primary text-white position-absolute top-0 end-0 z-3">Skip to main content</a>
     <div class="header-background" style="background-image: url('<%= currentHeaderImage %>');"></div>
@@ -30,12 +39,14 @@
                 </li>
                 
                 <!-- Stylized Collapsible Statistics Menu with Golden Animation -->
-                <li class="nav-item mb-2">
-                    <a href="#sidebarStatsMenu" data-bs-toggle="collapse" role="button" aria-expanded="<%= pagePath === '/stats' ? 'true' : 'false' %>" aria-controls="sidebarStatsMenu" class="nav-link glow-new-btn <%= pagePath === '/stats' ? 'active' : '' %>" style="border-radius: 8px;">
-                        <i class="fs-4 bi bi-list-ol me-2 align-middle"></i><span class="align-middle">Statistics</span> <i class="bi bi-chevron-down ms-2 align-middle" style="font-size: 0.85rem;"></i>
+                <li class="nav-item mb-2 d-flex flex-column align-items-start">
+                    <a href="#sidebarStatsMenu" data-bs-toggle="collapse" role="button" aria-expanded="<%= pagePath === '/stats' ? 'true' : 'false' %>" aria-controls="sidebarStatsMenu" class="nav-link glow-new-btn <%= pagePath === '/stats' ? 'active' : '' %> d-inline-flex align-items-center" style="border-radius: 8px;">
+                        <i class="fs-4 bi bi-list-ol me-2"></i>
+                        <span>Statistics</span>
+                        <i class="bi bi-chevron-down ms-2 collapse-chevron" style="font-size: 0.85rem;"></i>
                     </a>
-                    <div class="collapse <%= pagePath === '/stats' ? 'show' : '' %>" id="sidebarStatsMenu">
-                        <ul class="list-unstyled mt-2 mb-2" style="margin-left: 3.25rem;">
+                    <div class="collapse w-100 <%= pagePath === '/stats' ? 'show' : '' %>" id="sidebarStatsMenu">
+                        <ul class="list-unstyled mt-2 mb-2" style="margin-left: 2rem;">
                             <li class="mb-2 i-link"><a href="/stats?category=daily" class="text-decoration-none text-light" style="font-size: 1.05rem;">- Daily</a></li>
                             <li class="mb-2 i-link"><a href="/stats?category=monthly" class="text-decoration-none text-light" style="font-size: 1.05rem;">- Monthly</a></li>
                             <li class="mb-2 i-link"><a href="/stats?category=yearly" class="text-decoration-none text-light" style="font-size: 1.05rem;">- Yearly</a></li>

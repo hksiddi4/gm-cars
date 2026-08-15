@@ -104,7 +104,7 @@
                                 <% 
                                 const standardCaddy = ['CELESTIQ', 'CT4', 'CT5', 'CT6'];
                                 standardCaddy.forEach(model => { 
-                                    const isNew = (model === 'newModelName');
+                                    const isNew = (model === 'CELESTIQ');
                                 %>
                                     <div class="col-12 i-link">
                                         <a href="/vehicles?model=<%= encodeURIComponent(model) %>" class="model-btn w-100 <%= isNew ? 'glow-new-btn' : '' %>">
@@ -148,13 +148,29 @@
                 </p>
 
                 <div class="row g-4">
+                    <!-- Collapsible Statistics Header -->
                     <div class="col-12 col-sm-6 col-xl-3">
-                        <h2 class="i-link">
-                            <a href="/stats" class="glow-new-btn px-2 py-1 rounded d-inline-block text-white text-decoration-none">
-                                <i class="bi bi-list-ol me-1"></i>Statistics
+                        <h2 class="i-link mb-2 d-flex flex-column align-items-start">
+                            <a data-bs-toggle="collapse" href="#statsCollapseIndex" role="button" aria-expanded="false" aria-controls="statsCollapseIndex" class="glow-new-btn px-2 py-1 rounded d-inline-flex align-items-center text-decoration-none shadow-sm" style="transition: all 0.3s; color: white;">
+                                <i class="bi bi-list-ol me-1"></i>
+                                <span>Statistics</span>
+                                <i class="bi bi-chevron-down fs-6 ms-2 collapse-chevron"></i>
                             </a>
                         </h2>
-                        <p class="mt-2">Real-time daily, monthly, and yearly vehicle statistics, complete with interactive charts for paint colors, engine options, and production volume.</p>
+                        <div class="collapse w-100 mt-2" id="statsCollapseIndex">
+                            <ul class="list-unstyled py-2 px-3 mb-3" style="background-color: rgba(255, 255, 255, 0.05); border-radius: 8px; width: fit-content; min-width: 220px;">
+                                <li class="mb-2 i-link"><a href="/stats?category=daily" class="text-decoration-none text-light" style="font-size: 1.1rem;">Daily Dashboard</a></li>
+                                <li class="mb-2 i-link"><a href="/stats?category=monthly" class="text-decoration-none text-light" style="font-size: 1.1rem;">Monthly Dashboard</a></li>
+                                <li class="mb-2 i-link"><a href="/stats?category=yearly" class="text-decoration-none text-light" style="font-size: 1.1rem;">Yearly Dashboard</a></li>
+                                
+                                <hr class="border-secondary my-2" style="opacity: 0.3;">
+                                
+                                <li class="mb-2 mt-2 i-link"><a href="/stats?category=color" class="text-decoration-none text-light" style="font-size: 1.1rem;">Color Rankings</a></li>
+                                <li class="mb-2 i-link"><a href="/stats?category=engine" class="text-decoration-none text-light" style="font-size: 1.1rem;">Engine Rankings</a></li>
+                                <li class="i-link"><a href="/stats?category=production" class="text-decoration-none text-light" style="font-size: 1.1rem;">Production Trends</a></li>
+                            </ul>
+                        </div>
+                        <p class="mt-2">Statistics and charts on vehicle data including: Exterior Paint, Engines, and Production.</p>
                     </div>
                     
                     <div class="col-12 col-sm-6 col-xl-3">

@@ -46,11 +46,14 @@
                         <i class="bi bi-chevron-down ms-2 collapse-chevron" style="font-size: 0.85rem;"></i>
                     </a>
                     <div class="collapse w-100 <%= pagePath === '/stats' ? 'show' : '' %>" id="sidebarStatsMenu">
-                        <ul class="list-unstyled mt-2 mb-2 p-3" style="margin-left: 0.5rem; margin-right: 0.5rem; background-color: rgba(255, 255, 255, 0.05); border-radius: 8px;">
+                        <ul class="list-unstyled mt-2 mb-2 py-2 px-3" style="margin-left: 0.5rem; margin-right: 0.5rem; background-color: rgba(255, 255, 255, 0.05); border-radius: 8px;">
                             <li class="mb-2 i-link"><a href="/stats?category=daily" class="text-decoration-none text-light" style="font-size: 1.05rem;">Daily</a></li>
                             <li class="mb-2 i-link"><a href="/stats?category=monthly" class="text-decoration-none text-light" style="font-size: 1.05rem;">Monthly</a></li>
                             <li class="mb-2 i-link"><a href="/stats?category=yearly" class="text-decoration-none text-light" style="font-size: 1.05rem;">Yearly</a></li>
-                            <li class="mb-2 i-link"><a href="/stats?category=color" class="text-decoration-none text-light" style="font-size: 1.05rem;">Colors</a></li>
+                            
+                            <hr class="border-secondary my-2" style="opacity: 0.3;">
+                            
+                            <li class="mb-2 mt-2 i-link"><a href="/stats?category=color" class="text-decoration-none text-light" style="font-size: 1.05rem;">Colors</a></li>
                             <li class="mb-2 i-link"><a href="/stats?category=engine" class="text-decoration-none text-light" style="font-size: 1.05rem;">Engines</a></li>
                             <li class="mb-1 i-link"><a href="/stats?category=production" class="text-decoration-none text-light" style="font-size: 1.05rem;">Production</a></li>
                         </ul>
@@ -94,8 +97,25 @@
 
         const header = document.getElementById('main-header');
         const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('main-content');
         const scrollThreshold = 70;
         let lastScrollTop = 0;
+
+        // Apply background blur when sidebar opens
+        if (sidebar && mainContent) {
+            sidebar.addEventListener('show.bs.collapse', function (e) {
+                // Ensure we only trigger on the main sidebar, not the nested statistics dropdown
+                if (e.target === sidebar) {
+                    mainContent.style.transition = 'filter 0.3s ease';
+                    mainContent.style.filter = 'blur(4px)';
+                }
+            });
+            sidebar.addEventListener('hide.bs.collapse', function (e) {
+                if (e.target === sidebar) {
+                    mainContent.style.filter = 'none';
+                }
+            });
+        }
 
         function handleHeaderScroll() {
             const scrollTop = window.pageYOffset || document.documentElement.scrollTop;

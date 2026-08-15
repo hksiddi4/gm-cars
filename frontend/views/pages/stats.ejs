@@ -219,13 +219,17 @@
                 padding: 0.4rem 0.7rem !important;
             }
             .daily-cal-icon { font-size: 1.35rem; }
+            .annual-modal-overlay {
+                align-items: flex-end; /* Pin to bottom on mobile */
+            }
             .annual-modal-content {
                 padding: 1rem;
                 width: 100%;
-                height: 100vh;
-                max-height: 100vh;
-                border-radius: 0;
+                height: calc(100dvh - 60px); /* Use dynamic viewport height minus Safari's bar */
+                max-height: calc(100dvh - 60px);
+                border-radius: 12px 12px 0 0; /* Rounded top sheet style */
                 border: none;
+                margin: 0;
             }
         }
     </style>
@@ -937,6 +941,9 @@
 
             async function openAnnualCalendar() {
                 document.getElementById('annualModal').classList.add('show');
+                // Prevent body scroll behind modal
+                document.body.style.overflow = 'hidden'; 
+                
                 await fetchModelBounds(matrixSelectedModel);
                 if (!activeYearsList.includes(currentAnnualYear)) {
                     currentAnnualYear = activeYearsList[activeYearsList.length - 1];
@@ -946,6 +953,8 @@
 
             function closeAnnualCalendar() {
                 document.getElementById('annualModal').classList.remove('show');
+                // Restore body scroll
+                document.body.style.overflow = ''; 
             }
 
             function changeAnnualYear(direction) {

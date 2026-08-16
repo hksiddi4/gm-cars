@@ -302,7 +302,6 @@ app.get('/vehicles', async (req, res) => {
             colors: data.color,
             country: data.country,
             models: data.model,
-            packages: data.packages,
             currentPage: page,
             totalPages: Math.ceil(data.total / limit),
             totalItems: data.total,

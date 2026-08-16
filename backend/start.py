@@ -374,7 +374,6 @@ def sort_price():
             drivetrains = execute_read_query(conn, "SELECT DISTINCT drivetrain_type FROM Drivetrains ORDER BY drivetrain_type ASC")
             colors = execute_read_query(conn, "SELECT DISTINCT color_name FROM Colors ORDER BY color_name ASC")
             countries = execute_read_query(conn, "SELECT DISTINCT country FROM Orders ORDER BY country ASC")
-            special_editions = execute_read_query(conn, "SELECT DISTINCT special_desc FROM SpecialEditions WHERE special_desc IS NOT NULL")
             close_connection(conn)
 
             return {
@@ -385,17 +384,15 @@ def sort_price():
                 'transmission_type': [r['transmission_type'] for r in trans],
                 'drivetrain_type': [r['drivetrain_type'] for r in drivetrains],
                 'color_name': [r['color_name'] for r in colors],
-                'country': [r['country'] for r in countries],
-                'special_desc': [r['special_desc'] for r in special_editions if r['special_desc']]
+                'country': [r['country'] for r in countries]
             }, engines
 
         else:
-            columns = ['modelYear', 'body', 'trim', 'transmission_type', 'drivetrain_type', 'model', 'color_name', 'country', 'special_desc']
+            columns = ['modelYear', 'body', 'trim', 'transmission_type', 'drivetrain_type', 'model', 'color_name', 'country']
             
             sqlStatement = f"""
                 SELECT DISTINCT v.modelYear, v.model, v.body, v.trim, e.engine_type, e.engine_rpo,
-                                t.transmission_type, d.drivetrain_type, c.color_name, o.country,
-                                se.special_desc
+                                t.transmission_type, d.drivetrain_type, c.color_name, o.country
                 FROM (
                     SELECT v.vehicle_id
                     FROM Vehicles v
@@ -410,7 +407,6 @@ def sort_price():
                 JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id
                 JOIN Colors c ON v.color_id = c.color_id
                 JOIN Orders o ON v.order_id = o.order_id
-                LEFT JOIN SpecialEditions se ON v.vehicle_id = se.vehicle_id
             """
             results = execute_read_query(conn, sqlStatement, current_params)
             close_connection(conn)
@@ -508,7 +504,6 @@ def sort_price():
         'drivetrain': drivetrain_list,
         'color': color_list,
         'country': country_list,
-        'packages': sorted(list(distinct_values.get('special_desc', []))),
         'limit': limit
     })
 

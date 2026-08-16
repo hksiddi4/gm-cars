@@ -6,6 +6,10 @@
     <!-- Load Chart.js and Datalabels -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <script>
+        // Register the DataLabels plugin globally
+        Chart.register(ChartDataLabels);
+    </script>
     <%- include('../partials/analytics'); %>
     <style>
         /* Top Navigation Buttons */
@@ -912,7 +916,7 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     layout: {
-                        padding: 20 // Prevents datalabels from overflowing canvas bounds
+                        padding: isRadial ? 30 : 20 // Prevents datalabels from overflowing canvas bounds
                     },
                     interaction: interactionConfig,
                     onClick: (event, elements, chart) => {
@@ -924,9 +928,17 @@
                             if (window.dashboardQueryDate) params.set('date', window.dashboardQueryDate);
                             if (window.dashboardSelectedModel && filterParam !== 'model') params.set('model', window.dashboardSelectedModel);
                             
-                            // Send the exact label exactly as expected by the rankings/vehicles page
-                            params.set(filterParam, clickedLabel);
+                            let paramValue = clickedLabel;
                             
+                            // Parse "RPO - Name" format for Engine and Color
+                            if (filterParam === 'engine' || filterParam === 'color') {
+                                if (paramValue.includes(' - ')) {
+                                    // Strip out the RPO code and extract just the name string 
+                                    paramValue = paramValue.split(' - ').slice(1).join(' - ').trim();
+                                }
+                            }
+                            
+                            params.set(filterParam, paramValue);
                             window.location.href = '/vehicles?' + params.toString();
                         }
                     },
@@ -959,7 +971,7 @@
                         },
                         datalabels: {
                             color: '#fff',
-                            font: { size: 10, weight: 'bold' },
+                            font: { size: 11, weight: 'bold' },
                             formatter: (val, ctx) => {
                                 return dataValues[ctx.dataIndex].toLocaleString();
                             },
@@ -1525,6 +1537,36 @@
                             maintainAspectRatio: false,
                             layout: {
                                 padding: 20
+                            },
+                            onClick: (event, elements, chart) => {
+                                if (elements.length > 0) {
+                                    const index = elements[0].index;
+                                    const clickedLabel = chart.data.labels[index];
+                                    
+                                    const params = new URLSearchParams();
+                                    
+                                    // Keep current ranking page filter context
+                                    const selectedYearFilter = document.getElementById('filterYear').value;
+                                    if (selectedYearFilter) params.set('year', selectedYearFilter);
+                                    
+                                    const selectedModelFilter = document.getElementById('filterModel').value;
+                                    if (selectedModelFilter) params.set('model', selectedModelFilter);
+                                    
+                                    let paramValue = clickedLabel;
+                                    
+                                    // Parse "RPO - Name" format
+                                    if (currentCategory === 'engine' || currentCategory === 'color') {
+                                        if (paramValue.includes(' - ')) {
+                                            paramValue = paramValue.split(' - ').slice(1).join(' - ').trim();
+                                        }
+                                    }
+                                    
+                                    params.set(currentCategory, paramValue);
+                                    window.location.href = '/vehicles?' + params.toString();
+                                }
+                            },
+                            onHover: (event, chartElement) => {
+                                event.native.target.style.cursor = chartElement[0] ? 'pointer' : 'default';
                             },
                             plugins: {
                                 legend: { display: false },

@@ -858,7 +858,7 @@
                     }
                 } else {
                     if (count > 6) {
-                        neededHeight = Math.max(300, count * 35); // Slight bump to accommodate paddings and datalabels
+                        neededHeight = Math.max(300, count * 35);
                     }
                 }
 
@@ -910,18 +910,17 @@
                     bgColors = labels.map((_, i) => mutedPalette[i % mutedPalette.length]);
                 }
 
-                const interactionConfig = isRadial ? { mode: 'nearest', intersect: true } : { mode: 'index', axis: isHorizontal ? 'y' : 'x', intersect: false };
-
                 let chartOptions = {
                     responsive: true,
                     maintainAspectRatio: false,
                     layout: {
-                        padding: isRadial ? 30 : 20 // Prevents datalabels from overflowing canvas bounds
+                        padding: isRadial ? 30 : { right: 50, top: 10, bottom: 10, left: 10 }
                     },
-                    interaction: interactionConfig,
+                    // We DO NOT set interaction mode globally so hover/click stays purely on the shapes
                     onClick: (event, elements, chart) => {
-                        if (elements.length > 0 && filterParam) {
-                            const index = elements[0].index;
+                        const points = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
+                        if (points.length > 0 && filterParam) {
+                            const index = points[0].index;
                             const clickedLabel = chart.data.labels[index];
                             
                             const params = new URLSearchParams();
@@ -933,7 +932,6 @@
                             // Parse "RPO - Name" format for Engine and Color
                             if (filterParam === 'engine' || filterParam === 'color') {
                                 if (paramValue.includes(' - ')) {
-                                    // Strip out the RPO code and extract just the name string 
                                     paramValue = paramValue.split(' - ').slice(1).join(' - ').trim();
                                 }
                             }
@@ -942,8 +940,9 @@
                             window.location.href = '/vehicles?' + params.toString();
                         }
                     },
-                    onHover: (event, chartElement) => {
-                        event.native.target.style.cursor = chartElement[0] ? 'pointer' : 'default';
+                    onHover: (event, chartElement, chart) => {
+                        const points = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
+                        event.native.target.style.cursor = points.length ? 'pointer' : 'default';
                     },
                     plugins: {
                         legend: { 
@@ -959,11 +958,9 @@
                         tooltip: {
                             callbacks: {
                                 title: function(context) {
-                                    // Forces the Title on the tooltip to be exactly the Label string on every single chart type
                                     return context[0].label; 
                                 },
                                 label: function(context) {
-                                    // Customizes the body next to the colored box
                                     const trueValue = dataValues[context.dataIndex];
                                     return `Count: ${trueValue.toLocaleString()}`;
                                 }
@@ -973,18 +970,24 @@
                             color: '#fff',
                             font: { size: 11, weight: 'bold' },
                             formatter: (val, ctx) => {
-                                return dataValues[ctx.dataIndex].toLocaleString();
+                                const trueValue = dataValues[ctx.dataIndex];
+                                const total = dataValues.reduce((a, b) => a + b, 0);
+                                if (total === 0) return '0%';
+                                return Number(((trueValue / total) * 100).toFixed(1)) + '%';
                             },
                             anchor: isRadial ? (ctx) => {
                                 const total = dataValues.reduce((a, b) => a + b, 0);
+                                if (total === 0) return 'center';
                                 return (dataValues[ctx.dataIndex] / total < 0.05) ? 'end' : 'center';
                             } : 'end',
                             align: isRadial ? (ctx) => {
                                 const total = dataValues.reduce((a, b) => a + b, 0);
+                                if (total === 0) return 'center';
                                 return (dataValues[ctx.dataIndex] / total < 0.05) ? 'end' : 'center';
                             } : (isHorizontal ? 'right' : 'top'),
                             offset: isRadial ? (ctx) => {
                                 const total = dataValues.reduce((a, b) => a + b, 0);
+                                if (total === 0) return 0;
                                 return (dataValues[ctx.dataIndex] / total < 0.05) ? 10 : 0;
                             } : 4,
                             display: (ctx) => dataValues[ctx.dataIndex] > 0
@@ -997,10 +1000,12 @@
                     chartOptions.scales = {
                         x: {
                             grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            grace: isHorizontal ? '15%' : '0%', // Prevents horizontal bars from cutting off datalabels
                             ...((overrideOptions.scales && overrideOptions.scales.x) || {})
                         },
                         y: {
                             grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            grace: isHorizontal ? '0%' : '15%',
                             ...((overrideOptions.scales && overrideOptions.scales.y) || {})
                         }
                     };
@@ -1528,19 +1533,15 @@
                         },
                         options: {
                             indexAxis: 'y',
-                            interaction: {
-                                mode: 'index',
-                                axis: 'y',
-                                intersect: false
-                            },
                             responsive: true,
                             maintainAspectRatio: false,
                             layout: {
-                                padding: 20
+                                padding: { right: 55, top: 10, bottom: 10, left: 10 }
                             },
                             onClick: (event, elements, chart) => {
-                                if (elements.length > 0) {
-                                    const index = elements[0].index;
+                                const points = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
+                                if (points.length > 0) {
+                                    const index = points[0].index;
                                     const clickedLabel = chart.data.labels[index];
                                     
                                     const params = new URLSearchParams();
@@ -1565,8 +1566,9 @@
                                     window.location.href = '/vehicles?' + params.toString();
                                 }
                             },
-                            onHover: (event, chartElement) => {
-                                event.native.target.style.cursor = chartElement[0] ? 'pointer' : 'default';
+                            onHover: (event, chartElement, chart) => {
+                                const points = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
+                                event.native.target.style.cursor = points.length ? 'pointer' : 'default';
                             },
                             plugins: {
                                 legend: { display: false },
@@ -1576,8 +1578,11 @@
                                     color: '#ffffff', font: { size: 20 }
                                 },
                                 datalabels: {
-                                    color: '#ffffff', anchor: 'end', align: 'end', offset: 4,
-                                    formatter: (val) => val.toLocaleString()
+                                    color: '#ffffff', anchor: 'end', align: 'right', offset: 4,
+                                    formatter: (val, ctx) => {
+                                        if (totalCount === 0) return '0%';
+                                        return Number(((val / totalCount) * 100).toFixed(1)) + '%';
+                                    }
                                 },
                                 tooltip: {
                                     enabled: true,

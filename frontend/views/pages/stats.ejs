@@ -851,7 +851,10 @@
                     // Pop out slices that are physically small (using true values)
                     offsets = dataValues.map(val => (val / totalValue < 0.03) ? 15 : 0);
                     hoverOffsets = 20; 
-                    borderWidth = 2; 
+                    
+                    // Fix the 12 o'clock line: Only apply a border if there are 2 or more slices
+                    const activeSlices = dataValues.filter(val => val > 0).length;
+                    borderWidth = activeSlices > 1 ? 2 : 0; 
                 }
 
                 if (ctxId === 'colorChart') {
@@ -860,7 +863,7 @@
                         return rpoHexMap[rpo] || rpoHexMap[label] || '#6c757d'; 
                     });
                     borderColors = 'rgba(255,255,255,0.15)'; 
-                    borderWidth = 2;
+                    borderWidth = 2; // (Color chart is a bar chart, so this safely overrides)
                 } else if (!isRadial) {
                     bgColors = labels.map((_, i) => mutedPalette[i % mutedPalette.length]);
                 }
@@ -928,7 +931,7 @@
                         labels: labels,
                         datasets: [{ 
                             label: 'Count', 
-                            data: renderData, // <--- Using the inflated visual data for drawing
+                            data: renderData, 
                             backgroundColor: bgColors, 
                             borderWidth: borderWidth, 
                             borderColor: borderColors,

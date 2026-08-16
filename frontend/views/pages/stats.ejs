@@ -914,11 +914,52 @@
                 const isIntersect = isRadial ? true : false;
                 const interactionConfig = { mode: interactionMode, axis: isHorizontal ? 'y' : 'x', intersect: isIntersect };
 
+                // Custom inline plugin to draw lines to staggered radial labels
+                const customLinePlugin = {
+                    id: 'customLinePlugin_' + ctxId,
+                    afterDatasetsDraw: (chart) => {
+                        if (chart.config.type !== 'pie' && chart.config.type !== 'doughnut') return;
+                        const ctx = chart.ctx;
+                        const meta = chart.getDatasetMeta(0);
+                        const total = dataValues.reduce((a, b) => a + b, 0);
+
+                        ctx.save();
+                        ctx.lineWidth = 1;
+                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+
+                        meta.data.forEach((arc, i) => {
+                            const trueValue = dataValues[i];
+                            if (trueValue === 0) return;
+                            const pct = trueValue / total;
+                            if (pct >= 0.05) return; 
+
+                            const angle = (arc.startAngle + arc.endAngle) / 2;
+                            const outerRadius = arc.outerRadius;
+                            
+                            const startX = arc.x + Math.cos(angle) * outerRadius;
+                            const startY = arc.y + Math.sin(angle) * outerRadius;
+
+                            let staggerOffset = 8;
+                            if (i % 3 === 1) staggerOffset = 26;
+                            if (i % 3 === 2) staggerOffset = 44;
+
+                            const endX = arc.x + Math.cos(angle) * (outerRadius + staggerOffset - 2);
+                            const endY = arc.y + Math.sin(angle) * (outerRadius + staggerOffset - 2);
+
+                            ctx.beginPath();
+                            ctx.moveTo(startX, startY);
+                            ctx.lineTo(endX, endY);
+                            ctx.stroke();
+                        });
+                        ctx.restore();
+                    }
+                };
+
                 let chartOptions = {
                     responsive: true,
                     maintainAspectRatio: false,
                     layout: {
-                        padding: isRadial ? 30 : { right: 55, top: 10, bottom: 10, left: 10 }
+                        padding: isRadial ? 55 : { right: 55, top: 10, bottom: 10, left: 10 }
                     },
                     interaction: interactionConfig,
                     onClick: (event, elements, chart) => {
@@ -1012,7 +1053,13 @@
                             offset: isRadial ? (ctx) => {
                                 const total = dataValues.reduce((a, b) => a + b, 0);
                                 if (total === 0) return 0;
-                                return (dataValues[ctx.dataIndex] / total < 0.05) ? 10 : 0;
+                                if (dataValues[ctx.dataIndex] / total < 0.05) {
+                                    let staggerOffset = 8;
+                                    if (ctx.dataIndex % 3 === 1) staggerOffset = 26;
+                                    if (ctx.dataIndex % 3 === 2) staggerOffset = 44;
+                                    return staggerOffset;
+                                }
+                                return 0;
                             } : 4,
                             display: (ctx) => dataValues[ctx.dataIndex] > 0
                         }
@@ -1059,7 +1106,8 @@
                             hoverOffset: hoverOffsets 
                         }]
                     },
-                    options: chartOptions
+                    options: chartOptions,
+                    plugins: [customLinePlugin]
                 });
             }
 
@@ -1557,6 +1605,11 @@
                         },
                         options: {
                             indexAxis: 'y',
+                            interaction: {
+                                mode: 'index',
+                                axis: 'y',
+                                intersect: false
+                            },
                             responsive: true,
                             maintainAspectRatio: false,
                             layout: {

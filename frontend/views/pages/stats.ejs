@@ -1355,6 +1355,11 @@
                         color_names: data.color_names || ''
                     }));
 
+                    if (currentCategory === 'color') {
+                        // Filter out colors with exactly 1 count from the main chart
+                        rawData = rawData.filter(d => d.count > 1);
+                    }
+
                     // Sort ascending (smallest counts at the top of the array)
                     rawData.sort((a, b) => a.count - b.count);
 

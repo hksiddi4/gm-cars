@@ -297,6 +297,7 @@ def sort_price():
             "FEB": ["v.model = 'CORVETTE GRAND SPORT'"],
             "FEY": ["v.model = 'CORVETTE GRAND SPORT'"],
             "Y70": ["v.model IN ('CORVETTE STINGRAY', 'CORVETTE Z06')", "v.modelYear = '2023'", "v.trim IN ('3LT', '3LZ')", "(c.color_name = 'WHITE PEARL METALLIC TRICOAT' OR c.color_name = 'CARBON FLASH METALLIC')"],
+            "I26": ["v.model = 'CORVETTE E-RAY'", "v.modelYear = '2026'", "v.trim = '3LZ'", "c.color_name = 'ARCTIC WHITE'", "o.country = 'USA'", "v.body = 'CONVERTIBLE'"],
             "USA": ["v.model IN ('CORVETTE STINGRAY', 'CORVETTE Z06', 'CORVETTE E-RAY', 'CORVETTE ZR1', 'CORVETTE ZR1X')", "v.modelYear = '2026'", "v.trim IN ('3LT', '3LZ')", "(c.color_name = 'ARCTIC WHITE' OR c.color_name = 'BLACK')"],
             "ZRA": ["v.model = 'CORVETTE ZR1X'", "v.modelYear = '2026'", "v.trim = '3LZ'", "c.color_name = 'BLADE SILVER MATTE'"],
             "ZLE": ["v.modelYear = '2023'", "v.model = 'CT4'", "v.trim = 'V-SERIES BLACKWING'", "c.color_name = 'ELECTRIC BLUE'"],
@@ -323,7 +324,8 @@ def sort_price():
             'ZL4B': 'Z4B',
             'ZLZ4': 'ZLZ',
             'ZLZ5': 'ZLZ',
-            'PCK1': 'PCK'
+            'PCK1': 'PCK',
+            "I26": "R7V",
         }
 
         for code in rpo_list:

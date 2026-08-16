@@ -3,9 +3,10 @@
 <head>
     <%- include('../partials/head'); %>
     <title>Production Statistics</title>
-    <!-- Load Chart.js and Datalabels -->
+    <!-- Load Chart.js, Datalabels, and Masonry Layout -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/masonry-layout@4.2.2/dist/masonry.pkgd.min.js"></script>
     <%- include('../partials/analytics'); %>
     <style>
         /* Top Navigation Buttons */
@@ -403,57 +404,57 @@
                                 <p class="text-white mb-0">Try selecting another date from the calendar icon above.</p>
                             </div>
                         <% } else { %>
-                            <!-- Added align-items-start to ensure cards fit their individual heights without excessive stretching -->
-                            <div class="row g-4 align-items-start">
-                                <div class="col-12 col-lg-6">
+                            <!-- Removed g-4 and using mb-4 on cols to allow Masonry Layout grid packing -->
+                            <div class="row" id="masonryGrid">
+                                <div class="col-12 col-lg-6 mb-4 masonry-col">
                                     <div class="dashboard-card">
                                         <h5 class="text-white fw-bold mb-3 text-center">Model</h5>
                                         <div class="chart-container" id="modelChartContainer"><canvas id="modelChart"></canvas></div>
                                     </div>
                                 </div>
-                                <div class="col-12 col-md-6 col-lg-3">
+                                <div class="col-12 col-md-6 col-lg-3 mb-4 masonry-col">
                                     <div class="dashboard-card">
                                         <h5 class="text-white fw-bold mb-3 text-center">Year</h5>
                                         <div class="chart-container" id="yearChartContainer"><canvas id="yearChart"></canvas></div>
                                     </div>
                                 </div>
-                                <div class="col-12 col-md-6 col-lg-3">
+                                <div class="col-12 col-md-6 col-lg-3 mb-4 masonry-col">
                                     <div class="dashboard-card">
                                         <h5 class="text-white fw-bold mb-3 text-center">Body</h5>
                                         <div class="chart-container" id="bodyChartContainer"><canvas id="bodyChart"></canvas></div>
                                     </div>
                                 </div>
-                                <div class="col-12 col-lg-6">
+                                <div class="col-12 col-lg-6 mb-4 masonry-col">
                                     <div class="dashboard-card">
                                         <h5 class="text-white fw-bold mb-3 text-center">Trim</h5>
                                         <div class="chart-container" id="trimChartContainer"><canvas id="trimChart"></canvas></div>
                                     </div>
                                 </div>
-                                <div class="col-12 col-lg-6">
+                                <div class="col-12 col-lg-6 mb-4 masonry-col">
                                     <div class="dashboard-card">
                                         <h5 class="text-white fw-bold mb-3 text-center">Exterior Color</h5>
                                         <div class="chart-container" id="colorChartContainer"><canvas id="colorChart"></canvas></div>
                                     </div>
                                 </div>
-                                <div class="col-12 col-md-4">
+                                <div class="col-12 col-md-4 mb-4 masonry-col">
                                     <div class="dashboard-card">
                                         <h5 class="text-white fw-bold mb-3 text-center">Engine</h5>
                                         <div class="chart-container" id="engineChartContainer"><canvas id="engineChart"></canvas></div>
                                     </div>
                                 </div>
-                                <div class="col-12 col-md-4">
+                                <div class="col-12 col-md-4 mb-4 masonry-col">
                                     <div class="dashboard-card">
                                         <h5 class="text-white fw-bold mb-3 text-center">Transmission</h5>
                                         <div class="chart-container" id="transChartContainer"><canvas id="transChart"></canvas></div>
                                     </div>
                                 </div>
-                                <div class="col-12 col-md-4">
+                                <div class="col-12 col-md-4 mb-4 masonry-col">
                                     <div class="dashboard-card">
                                         <h5 class="text-white fw-bold mb-3 text-center">Drivetrain</h5>
                                         <div class="chart-container" id="drivetrainChartContainer"><canvas id="drivetrainChart"></canvas></div>
                                     </div>
                                 </div>
-                                <div class="col-12">
+                                <div class="col-12 mb-4 masonry-col">
                                     <div class="dashboard-card">
                                         <h5 class="text-white fw-bold mb-3 text-center">Packages/Editions</h5>
                                         <% 
@@ -643,7 +644,7 @@
                                             <th scope="col">Rank</th>
                                             <th scope="col"><%= activeCategory === 'engine' ? 'Engine' : 'RPO' %></th>
                                             <th scope="col">Count</th>
-                                            <% if (activeCategory === 'color') { %><th scope="col">Names</th><% } %>
+                                            <% if (activeCategory === 'color') { %th scope="col">Names</th><% } %>
                                             <th scope="col">% of Total</th>
                                         </tr>
                                     </thead>
@@ -994,6 +995,17 @@
                 if (Object.keys(colorDataToUse).length > 0) {
                     createChart('colorChart', 'bar', colorDataToUse, { indexAxis: 'y', scales: { y: { ticks: { autoSkip: false, font: { size: chartFontSize } } } } });
                 }
+
+                // Initialize Masonry Layout to allow cards to perfectly stack and flow into empty vertical space
+                setTimeout(() => {
+                    const masonryGrid = document.getElementById('masonryGrid');
+                    if (masonryGrid && typeof Masonry !== 'undefined') {
+                        new Masonry(masonryGrid, {
+                            itemSelector: '.masonry-col',
+                            percentPosition: true
+                        });
+                    }
+                }, 100);
             }
         </script>
 

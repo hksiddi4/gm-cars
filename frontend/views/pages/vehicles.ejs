@@ -215,54 +215,137 @@
                             <th scope="col">
                                 <div class="dropdown-container">
                                     <% const rpo = Array.isArray(selectedRPO) ? selectedRPO[0] : selectedRPO; %>
+                                    
+                                    <% 
+                                        // Map out the strict requirements for each package based on your rpo_conditions
+                                        const pkgReqs = {
+                                            "Z4B": { year: ["2024"], model: ["CAMARO"] },
+                                            "ZL4B": { year: ["2024"], model: ["CAMARO"], trim: ["ZL1"] },
+                                            "X56": { year: ["2024"], model: ["CAMARO"], trim: ["ZL1"] },
+                                            "A1Z": { model: ["CAMARO"], trim: ["ZL1"] },
+                                            "A1Y": { model: ["CAMARO"], trim: ["1SS", "2SS"] },
+                                            "A1X": { year: ["2019", "2020", "2021"], model: ["CAMARO"] },
+                                            "H40": { year: ["2024"], model: ["CAMARO"], trim: ["2SS"] },
+                                            "PEH": { year: ["2020"], model: ["CAMARO"] },
+                                            "Z4Z": { model: ["CAMARO"], body: ["CONVERTIBLE"], trim: ["2SS"] },
+                                            "WBL": { year: ["2020", "2021", "2022", "2023", "2024"], model: ["CAMARO"] },
+                                            "B2E": { year: ["2020", "2021", "2022", "2023"], model: ["CAMARO"] },
+                                            "ZCR": { model: ["CORVETTE STINGRAY"], year: ["2022"], trim: ["3LT"] },
+                                            "ZTK": { model: ["CORVETTE ZR1", "CORVETTE ZR1X"] },
+                                            "Z07": { model: ["CORVETTE Z06"] },
+                                            "Z51": { model: ["CORVETTE STINGRAY"] },
+                                            "FEB": { model: ["CORVETTE GRAND SPORT"] },
+                                            "FEY": { model: ["CORVETTE GRAND SPORT"] },
+                                            "Z25": { model: ["CORVETTE GRAND SPORT"] },
+                                            "Y70": { model: ["CORVETTE STINGRAY", "CORVETTE Z06"], year: ["2023"] },
+                                            "USA": { year: ["2026"] },
+                                            "ZRA": { model: ["CORVETTE ZR1X"], year: ["2026"] },
+                                            "ZLE": { year: ["2023"], model: ["CT4"] },
+                                            "ZLD": { year: ["2023"], model: ["CT4"] },
+                                            "ZLG": { year: ["2023"], model: ["CT4"] },
+                                            "ZLK": { year: ["2024"], model: ["CT4"] },
+                                            "ZLJ": { year: ["2024"], model: ["CT4"] },
+                                            "ZLR": { year: ["2024"], model: ["CT4"] },
+                                            "ZLZ4": { year: ["2025"], model: ["CT4"] },
+                                            "ZLZ5": { year: ["2025"], model: ["CT5"] },
+                                            "ABQ": { year: ["2023"], model: ["CT5"] },
+                                            "ZLT": { year: ["2024"], model: ["CT5"] },
+                                            "V8V": { model: ["CT5"] },
+                                            "PCK1": { year: ["2026"], model: ["CT5"] },
+                                            "Z6X": { model: ["HUMMER EV SUV", "HUMMER EV PICKUP"] },
+                                            "WFP": { year: ["2024"], model: ["HUMMER EV SUV"] },
+                                            "OAR": {},
+                                            "R7V": {}
+                                        };
+
+                                        // Function checks if the package's requirements intersect with the currently available data
+                                        function showPkg(code) {
+                                            const req = pkgReqs[code];
+                                            if (!req) return true; // Show by default if no requirements exist
+                                            
+                                            if (req.year && typeof years !== 'undefined') {
+                                                if (!req.year.some(y => years.includes(y.toString()))) return false;
+                                            }
+                                            if (req.model && typeof models !== 'undefined') {
+                                                let hasModel = false;
+                                                req.model.forEach(rm => {
+                                                    if (models.some(m => m && m.startsWith(rm))) hasModel = true;
+                                                });
+                                                if (!hasModel) return false;
+                                            }
+                                            if (req.trim && typeof trim !== 'undefined') {
+                                                if (!req.trim.some(t => trim.includes(t))) return false;
+                                            }
+                                            if (req.body && typeof bodys !== 'undefined') {
+                                                if (!req.body.some(b => bodys.includes(b))) return false;
+                                            }
+                                            return true;
+                                        }
+                                    %>
+                                    
                                     <select id="rpoSelect" class="form-select small-dropdown <%= rpo ? 'active-filter' : '' %>" aria-label="Filter by package/edition">
                                         <option value="" <% if (!rpo) { %>selected<% } %>>Package/Edition</option>
+                                        
+                                        <% if (["Z4B", "ZL4B", "X56", "A1Z", "A1Y", "A1X", "H40", "PEH", "Z4Z", "WBL", "B2E"].some(showPkg)) { %>
                                         <optgroup label="Camaro">
-                                            <option value="Z4B" <% if (rpo === 'Z4B') { %>selected<% } %>>Collector's Edition</option>
-                                            <option value="ZL4B" <% if (rpo === 'ZL4B') { %>selected<% } %>>ZL1 Collector's Edition</option>
-                                            <option value="X56" <% if (rpo === 'X56') { %>selected<% } %>>Garage 56 Special Edition</option>
-                                            <option value="A1Z" <% if (rpo === 'A1Z') { %>selected<% } %>>ZL1 1LE Extreme Track Performance Package</option>
-                                            <option value="A1Y" <% if (rpo === 'A1Y') { %>selected<% } %>>SS 1LE Track Performance Package</option>
-                                            <option value="A1X" <% if (rpo === 'A1X') { %>selected<% } %>>LT 1LE Track Performance Package</option>
-                                            <option value="H40" <% if (rpo === 'H40') { %>selected<% } %>>Hendrick Motorsports 40th Anniversary Edition</option>
-                                            <option value="PEH" <% if (rpo === 'PEH') { %>selected<% } %>>Hertz / Hendrick Motorsports Edition</option>
-                                            <option value="Z4Z" <% if (rpo === 'Z4Z') { %>selected<% } %>>Indy 500 Pace Car</option>
-                                            <option value="WBL" <% if (rpo === 'WBL') { %>selected<% } %>>Redline Edition</option>
-                                            <option value="B2E" <% if (rpo === 'B2E') { %>selected<% } %>>Shock and Steel Edition</option>
+                                            <% if(showPkg("Z4B")) { %><option value="Z4B" <% if (rpo === 'Z4B') { %>selected<% } %>>Collector's Edition</option><% } %>
+                                            <% if(showPkg("ZL4B")) { %><option value="ZL4B" <% if (rpo === 'ZL4B') { %>selected<% } %>>ZL1 Collector's Edition</option><% } %>
+                                            <% if(showPkg("X56")) { %><option value="X56" <% if (rpo === 'X56') { %>selected<% } %>>Garage 56 Special Edition</option><% } %>
+                                            <% if(showPkg("A1Z")) { %><option value="A1Z" <% if (rpo === 'A1Z') { %>selected<% } %>>ZL1 1LE Extreme Track Performance Package</option><% } %>
+                                            <% if(showPkg("A1Y")) { %><option value="A1Y" <% if (rpo === 'A1Y') { %>selected<% } %>>SS 1LE Track Performance Package</option><% } %>
+                                            <% if(showPkg("A1X")) { %><option value="A1X" <% if (rpo === 'A1X') { %>selected<% } %>>LT 1LE Track Performance Package</option><% } %>
+                                            <% if(showPkg("H40")) { %><option value="H40" <% if (rpo === 'H40') { %>selected<% } %>>Hendrick Motorsports 40th Anniversary Edition</option><% } %>
+                                            <% if(showPkg("PEH")) { %><option value="PEH" <% if (rpo === 'PEH') { %>selected<% } %>>Hertz / Hendrick Motorsports Edition</option><% } %>
+                                            <% if(showPkg("Z4Z")) { %><option value="Z4Z" <% if (rpo === 'Z4Z') { %>selected<% } %>>Indy 500 Pace Car</option><% } %>
+                                            <% if(showPkg("WBL")) { %><option value="WBL" <% if (rpo === 'WBL') { %>selected<% } %>>Redline Edition</option><% } %>
+                                            <% if(showPkg("B2E")) { %><option value="B2E" <% if (rpo === 'B2E') { %>selected<% } %>>Shock and Steel Edition</option><% } %>
                                         </optgroup>
+                                        <% } %>
+
+                                        <% if (["ZCR", "ZTK", "Z07", "Z51", "FEB", "FEY", "Z25", "Y70", "USA", "ZRA"].some(showPkg)) { %>
                                         <optgroup label="Corvette">
-                                            <option value="ZCR" <% if (rpo === 'ZCR') { %>selected<% } %>>IMSA GTLM Championship C8.R Edition</option>
-                                            <option value="ZTK" <% if (rpo === 'ZTK') { %>selected<% } %>>ZTK Track Performance Package</option>
-                                            <option value="Z07" <% if (rpo === 'Z07') { %>selected<% } %>>Z07 Performance Package</option>
-                                            <option value="Z51" <% if (rpo === 'Z51') { %>selected<% } %>>Z51 Performance Package</option>
-                                            <option value="FEB" <% if (rpo === 'FEB') { %>selected<% } %>>Z52 Sport Performance Package</option>
-                                            <option value="FEY" <% if (rpo === 'FEY') { %>selected<% } %>>Z52 Track Performance Package</option>
-                                            <option value="Z25" <% if (rpo === 'Z25') { %>selected<% } %>>Grand Sport Launch Edition</option>
-                                            <option value="Y70" <% if (rpo === 'Y70') { %>selected<% } %>>Stingray 70th Anniversary Edition</option>
-                                            <option value="I26" <% if (rpo === 'I26') { %>selected<% } %>>2026 Indianapolis 500 Festival Vehicle</option>
-                                            <option value="USA" <% if (rpo === 'USA') { %>selected<% } %>>Stars & Steel Limited Edition</option>
-                                            <option value="ZRA" <% if (rpo === 'ZRA') { %>selected<% } %>>Quail Silver Limited Edition</option>
+                                            <% if(showPkg("ZCR")) { %><option value="ZCR" <% if (rpo === 'ZCR') { %>selected<% } %>>IMSA GTLM Championship C8.R Edition</option><% } %>
+                                            <% if(showPkg("ZTK")) { %><option value="ZTK" <% if (rpo === 'ZTK') { %>selected<% } %>>ZTK Track Performance Package</option><% } %>
+                                            <% if(showPkg("Z07")) { %><option value="Z07" <% if (rpo === 'Z07') { %>selected<% } %>>Z07 Performance Package</option><% } %>
+                                            <% if(showPkg("Z51")) { %><option value="Z51" <% if (rpo === 'Z51') { %>selected<% } %>>Z51 Performance Package</option><% } %>
+                                            <% if(showPkg("FEB")) { %><option value="FEB" <% if (rpo === 'FEB') { %>selected<% } %>>Z52 Sport Performance Package</option><% } %>
+                                            <% if(showPkg("FEY")) { %><option value="FEY" <% if (rpo === 'FEY') { %>selected<% } %>>Z52 Track Performance Package</option><% } %>
+                                            <% if(showPkg("Z25")) { %><option value="Z25" <% if (rpo === 'Z25') { %>selected<% } %>>Grand Sport Launch Edition</option><% } %>
+                                            <% if(showPkg("Y70")) { %><option value="Y70" <% if (rpo === 'Y70') { %>selected<% } %>>Stingray 70th Anniversary Edition</option><% } %>
+                                            <% if(showPkg("USA")) { %><option value="USA" <% if (rpo === 'USA') { %>selected<% } %>>Stars & Steel Limited Edition</option><% } %>
+                                            <% if(showPkg("ZRA")) { %><option value="ZRA" <% if (rpo === 'ZRA') { %>selected<% } %>>Quail Silver Limited Edition</option><% } %>
                                         </optgroup>
+                                        <% } %>
+
+                                        <% if (["ZLE", "ZLD", "ZLG", "ZLK", "ZLJ", "ZLR", "ZLZ4"].some(showPkg)) { %>
                                         <optgroup label="CT4-V Blackwing">
-                                            <option value="ZLE" <% if (rpo === 'ZLE') { %>selected<% } %>>Watkins Glen IMSA Edition</option>
-                                            <option value="ZLD" <% if (rpo === 'ZLD') { %>selected<% } %>>Sebring IMSA Edition</option>
-                                            <option value="ZLG" <% if (rpo === 'ZLG') { %>selected<% } %>>Road Atlanta IMSA Edition</option>
-                                            <option value="ZLK" <% if (rpo === 'ZLK') { %>selected<% } %>>Arrival Edition</option>
-                                            <option value="ZLJ" <% if (rpo === 'ZLJ') { %>selected<% } %>>Impact Edition</option>
-                                            <option value="ZLR" <% if (rpo === 'ZLR') { %>selected<% } %>>Elevation Edition</option>
-                                            <option value="ZLZ4" <% if (rpo === 'ZLZ4') { %>selected<% } %>>Petit Pataud Special Edition</option>
+                                            <% if(showPkg("ZLE")) { %><option value="ZLE" <% if (rpo === 'ZLE') { %>selected<% } %>>Watkins Glen IMSA Edition</option><% } %>
+                                            <% if(showPkg("ZLD")) { %><option value="ZLD" <% if (rpo === 'ZLD') { %>selected<% } %>>Sebring IMSA Edition</option><% } %>
+                                            <% if(showPkg("ZLG")) { %><option value="ZLG" <% if (rpo === 'ZLG') { %>selected<% } %>>Road Atlanta IMSA Edition</option><% } %>
+                                            <% if(showPkg("ZLK")) { %><option value="ZLK" <% if (rpo === 'ZLK') { %>selected<% } %>>Arrival Edition</option><% } %>
+                                            <% if(showPkg("ZLJ")) { %><option value="ZLJ" <% if (rpo === 'ZLJ') { %>selected<% } %>>Impact Edition</option><% } %>
+                                            <% if(showPkg("ZLR")) { %><option value="ZLR" <% if (rpo === 'ZLR') { %>selected<% } %>>Elevation Edition</option><% } %>
+                                            <% if(showPkg("ZLZ4")) { %><option value="ZLZ4" <% if (rpo === 'ZLZ4') { %>selected<% } %>>Petit Pataud Special Edition</option><% } %>
                                         </optgroup>
+                                        <% } %>
+
+                                        <% if (["ABQ", "ZLT", "ZLZ5", "V8V", "PCK1"].some(showPkg)) { %>
                                         <optgroup label="CT5-V Blackwing">
-                                            <option value="ABQ" <% if (rpo === 'ABQ') { %>selected<% } %>>120th Anniversary Edition</option>
-                                            <option value="ZLT" <% if (rpo === 'ZLT') { %>selected<% } %>>20th Anniversary Edition</option>
-                                            <option value="ZLZ5" <% if (rpo === 'ZLZ5') { %>selected<% } %>>Le Monstre Special Edition</option>
-                                            <option value="V8V" <% if (rpo === 'V8V') { %>selected<% } %>>Precision Package</option>
-                                            <option value="PCK1" <% if (rpo === 'PCK1') { %>selected<% } %>>Deep Ocean Appearance Package</option>
+                                            <% if(showPkg("ABQ")) { %><option value="ABQ" <% if (rpo === 'ABQ') { %>selected<% } %>>120th Anniversary Edition</option><% } %>
+                                            <% if(showPkg("ZLT")) { %><option value="ZLT" <% if (rpo === 'ZLT') { %>selected<% } %>>20th Anniversary Edition</option><% } %>
+                                            <% if(showPkg("ZLZ5")) { %><option value="ZLZ5" <% if (rpo === 'ZLZ5') { %>selected<% } %>>Le Monstre Special Edition</option><% } %>
+                                            <% if(showPkg("V8V")) { %><option value="V8V" <% if (rpo === 'V8V') { %>selected<% } %>>Precision Package</option><% } %>
+                                            <% if(showPkg("PCK1")) { %><option value="PCK1" <% if (rpo === 'PCK1') { %>selected<% } %>>Deep Ocean Appearance Package</option><% } %>
                                         </optgroup>
+                                        <% } %>
+
+                                        <% if (["Z6X", "WFP"].some(showPkg)) { %>
                                         <optgroup label="Hummer EV">
-                                            <option value="Z6X" <% if (rpo === 'Z6X') { %>selected<% } %>>Extreme Off-Road Package</option>
-                                            <option value="WFP" <% if (rpo === 'WFP') { %>selected<% } %>>Omega Edition</option>
+                                            <% if(showPkg("Z6X")) { %><option value="Z6X" <% if (rpo === 'Z6X') { %>selected<% } %>>Extreme Off-Road Package</option><% } %>
+                                            <% if(showPkg("WFP")) { %><option value="WFP" <% if (rpo === 'WFP') { %>selected<% } %>>Omega Edition</option><% } %>
                                         </optgroup>
+                                        <% } %>
+
                                         <option value="OAR" <% if (rpo === 'OAR') { %>selected<% } %>>Pre-Production Vehicle</option>
                                         <option value="R7V" <% if (rpo === 'R7V') { %>selected<% } %>>Show Vehicle</option>
                                     </select>

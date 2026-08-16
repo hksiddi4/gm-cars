@@ -864,9 +864,9 @@
       document.querySelectorAll('#rpoTable tbody tr').forEach(row => {
         row.addEventListener('mousedown', handleMouseDown);
         row.addEventListener('click', (event) => {
-          const link = row.querySelector('a[href]');
-          if (!link) return;
-          handleRowClick(link.href, event);
+          const url = row.getAttribute('data-url');
+          if (!url) return;
+          handleRowClick(url, event);
         });
       });
 

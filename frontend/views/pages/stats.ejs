@@ -403,56 +403,72 @@
                                 <p class="text-white mb-0">Try selecting another date from the calendar icon above.</p>
                             </div>
                         <% } else { %>
-                            <!-- Added align-items-start to ensure cards fit their individual heights without excessive stretching -->
-                            <div class="row g-4 align-items-start">
+                            
+                            <!-- Row 1: Model, Year, Body -->
+                            <div class="row g-4 align-items-start mb-4">
                                 <div class="col-12 col-lg-6">
-                                    <div class="dashboard-card">
+                                    <div class="dashboard-card h-100">
                                         <h5 class="text-white fw-bold mb-3 text-center">Model</h5>
                                         <div class="chart-container" id="modelChartContainer"><canvas id="modelChart"></canvas></div>
                                     </div>
                                 </div>
                                 <div class="col-12 col-md-6 col-lg-3">
-                                    <div class="dashboard-card">
+                                    <div class="dashboard-card h-100">
                                         <h5 class="text-white fw-bold mb-3 text-center">Year</h5>
                                         <div class="chart-container" id="yearChartContainer"><canvas id="yearChart"></canvas></div>
                                     </div>
                                 </div>
                                 <div class="col-12 col-md-6 col-lg-3">
-                                    <div class="dashboard-card">
+                                    <div class="dashboard-card h-100">
                                         <h5 class="text-white fw-bold mb-3 text-center">Body</h5>
                                         <div class="chart-container" id="bodyChartContainer"><canvas id="bodyChart"></canvas></div>
                                     </div>
                                 </div>
-                                <div class="col-12 col-lg-6">
-                                    <div class="dashboard-card">
+                            </div>
+
+                            <!-- Row 2: Trim, Exterior Color & Nested Circle Charts -->
+                            <div class="row g-4 align-items-start">
+                                <!-- LEFT COLUMN: Trim + Engine, Trans, Drivetrain nested below -->
+                                <div class="col-12 col-lg-6 d-flex flex-column gap-4">
+                                    <div class="dashboard-card w-100">
                                         <h5 class="text-white fw-bold mb-3 text-center">Trim</h5>
                                         <div class="chart-container" id="trimChartContainer"><canvas id="trimChart"></canvas></div>
                                     </div>
+                                    
+                                    <!-- Nested Row: Engine, Transmission, Drivetrain flow horizontally filling empty space -->
+                                    <div class="row g-4">
+                                        <div class="col-12 col-sm-6">
+                                            <div class="dashboard-card h-100">
+                                                <h5 class="text-white fw-bold mb-3 text-center">Engine</h5>
+                                                <div class="chart-container" id="engineChartContainer"><canvas id="engineChart"></canvas></div>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 col-sm-6">
+                                            <div class="dashboard-card h-100">
+                                                <h5 class="text-white fw-bold mb-3 text-center">Transmission</h5>
+                                                <div class="chart-container" id="transChartContainer"><canvas id="transChart"></canvas></div>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 col-sm-6">
+                                            <div class="dashboard-card h-100">
+                                                <h5 class="text-white fw-bold mb-3 text-center">Drivetrain</h5>
+                                                <div class="chart-container" id="drivetrainChartContainer"><canvas id="drivetrainChart"></canvas></div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
+
+                                <!-- RIGHT COLUMN: Exterior Color. Stays right next to Trim on Desktop -->
                                 <div class="col-12 col-lg-6">
-                                    <div class="dashboard-card">
+                                    <div class="dashboard-card w-100">
                                         <h5 class="text-white fw-bold mb-3 text-center">Exterior Color</h5>
                                         <div class="chart-container" id="colorChartContainer"><canvas id="colorChart"></canvas></div>
                                     </div>
                                 </div>
-                                <div class="col-12 col-md-4">
-                                    <div class="dashboard-card">
-                                        <h5 class="text-white fw-bold mb-3 text-center">Engine</h5>
-                                        <div class="chart-container" id="engineChartContainer"><canvas id="engineChart"></canvas></div>
-                                    </div>
-                                </div>
-                                <div class="col-12 col-md-4">
-                                    <div class="dashboard-card">
-                                        <h5 class="text-white fw-bold mb-3 text-center">Transmission</h5>
-                                        <div class="chart-container" id="transChartContainer"><canvas id="transChart"></canvas></div>
-                                    </div>
-                                </div>
-                                <div class="col-12 col-md-4">
-                                    <div class="dashboard-card">
-                                        <h5 class="text-white fw-bold mb-3 text-center">Drivetrain</h5>
-                                        <div class="chart-container" id="drivetrainChartContainer"><canvas id="drivetrainChart"></canvas></div>
-                                    </div>
-                                </div>
+                            </div>
+
+                            <!-- Row 3: Packages -->
+                            <div class="row mt-4">
                                 <div class="col-12">
                                     <div class="dashboard-card">
                                         <h5 class="text-white fw-bold mb-3 text-center">Packages/Editions</h5>
@@ -813,6 +829,10 @@
     <!-- Dashboard Scripts -->
     <% if (isDashboard && typeof stats !== 'undefined') { %>
         <script>
+            // Store current query scopes for click routing
+            window.dashboardQueryDate = "<%= typeof stats !== 'undefined' && stats.current_date ? (activeCategory === 'monthly' ? stats.current_date.substring(0,7) : (activeCategory === 'yearly' ? stats.current_date.substring(0,4) : stats.current_date)) : '' %>";
+            window.dashboardSelectedModel = "<%= typeof selectedModel !== 'undefined' ? selectedModel : '' %>";
+
             const rawData = <%- JSON.stringify(stats) %>;
             
             Chart.defaults.color = '#e0e0e0';
@@ -829,21 +849,19 @@
 
                 if (isRadial) {
                     const avgLen = count > 0 ? (keys.reduce((sum, k) => sum + k.length, 0) / count) : 0;
-                    // Doughnut charts with verbose/multiple legends need more height to avoid clipping
                     if (count > 4 || avgLen > 15) {
                         neededHeight = Math.max(320, 220 + (count * 25));
                     }
                 } else {
-                    // Bar charts scale with the number of bars
                     if (count > 6) {
-                        neededHeight = Math.max(300, count * 32);
+                        neededHeight = Math.max(300, count * 35); // Slight bump to accommodate paddings and datalabels
                     }
                 }
 
                 el.style.height = `${neededHeight}px`;
             }
 
-            function createChart(ctxId, type, dataObj, overrideOptions = {}) {
+            function createChart(ctxId, type, dataObj, filterParam, overrideOptions = {}) {
                 const ctx = document.getElementById(ctxId);
                 if (!ctx) return;
 
@@ -893,7 +911,28 @@
                 let chartOptions = {
                     responsive: true,
                     maintainAspectRatio: false,
+                    layout: {
+                        padding: 20 // Prevents datalabels from overflowing canvas bounds
+                    },
                     interaction: interactionConfig,
+                    onClick: (event, elements, chart) => {
+                        if (elements.length > 0 && filterParam) {
+                            const index = elements[0].index;
+                            const clickedLabel = chart.data.labels[index];
+                            
+                            const params = new URLSearchParams();
+                            if (window.dashboardQueryDate) params.set('date', window.dashboardQueryDate);
+                            if (window.dashboardSelectedModel && filterParam !== 'model') params.set('model', window.dashboardSelectedModel);
+                            
+                            // Send the exact label exactly as expected by the rankings/vehicles page
+                            params.set(filterParam, clickedLabel);
+                            
+                            window.location.href = '/vehicles?' + params.toString();
+                        }
+                    },
+                    onHover: (event, chartElement) => {
+                        event.native.target.style.cursor = chartElement[0] ? 'pointer' : 'default';
+                    },
                     plugins: {
                         legend: { 
                             display: isRadial, 
@@ -907,20 +946,37 @@
                         },
                         tooltip: {
                             callbacks: {
+                                title: function(context) {
+                                    // Forces the Title on the tooltip to be exactly the Label string on every single chart type
+                                    return context[0].label; 
+                                },
                                 label: function(context) {
+                                    // Customizes the body next to the colored box
                                     const trueValue = dataValues[context.dataIndex];
-                                    return ` ${context.label}: ${trueValue.toLocaleString()}`;
+                                    return `Count: ${trueValue.toLocaleString()}`;
                                 }
                             }
                         },
-                        datalabels: isRadial ? {
+                        datalabels: {
                             color: '#fff',
+                            font: { size: 10, weight: 'bold' },
                             formatter: (val, ctx) => {
-                                const trueValue = dataValues[ctx.dataIndex];
-                                const trueTotal = dataValues.reduce((a, b) => a + b, 0);
-                                return (trueValue / trueTotal > 0.04) ? trueValue.toLocaleString() : '';
-                            }
-                        } : {}
+                                return dataValues[ctx.dataIndex].toLocaleString();
+                            },
+                            anchor: isRadial ? (ctx) => {
+                                const total = dataValues.reduce((a, b) => a + b, 0);
+                                return (dataValues[ctx.dataIndex] / total < 0.05) ? 'end' : 'center';
+                            } : 'end',
+                            align: isRadial ? (ctx) => {
+                                const total = dataValues.reduce((a, b) => a + b, 0);
+                                return (dataValues[ctx.dataIndex] / total < 0.05) ? 'end' : 'center';
+                            } : (isHorizontal ? 'right' : 'top'),
+                            offset: isRadial ? (ctx) => {
+                                const total = dataValues.reduce((a, b) => a + b, 0);
+                                return (dataValues[ctx.dataIndex] / total < 0.05) ? 10 : 0;
+                            } : 4,
+                            display: (ctx) => dataValues[ctx.dataIndex] > 0
+                        }
                     },
                     ...overrideOptions
                 };
@@ -980,19 +1036,19 @@
                 autoSizeChartContainer('transChartContainer', rawData.trans, true);
                 autoSizeChartContainer('drivetrainChartContainer', rawData.drivetrain, true);
 
-                // Render Charts
-                createChart('modelChart', 'bar', rawData.model);
-                createChart('yearChart', 'doughnut', rawData.modelYear);
-                createChart('bodyChart', 'doughnut', rawData.body);
-                createChart('engineChart', 'doughnut', rawData.engine);
-                createChart('transChart', 'doughnut', rawData.trans);
-                createChart('drivetrainChart', 'pie', rawData.drivetrain);
+                // Render Charts passing the exact URL filterParam
+                createChart('modelChart', 'bar', rawData.model, 'model');
+                createChart('yearChart', 'doughnut', rawData.modelYear, 'year');
+                createChart('bodyChart', 'doughnut', rawData.body, 'body');
+                createChart('engineChart', 'doughnut', rawData.engine, 'engine');
+                createChart('transChart', 'doughnut', rawData.trans, 'trans');
+                createChart('drivetrainChart', 'pie', rawData.drivetrain, 'drivetrain');
                 
-                createChart('trimChart', 'bar', rawData.trim, { indexAxis: 'y', scales: { y: { ticks: { autoSkip: false, font: { size: chartFontSize } } } } });
+                createChart('trimChart', 'bar', rawData.trim, 'trim', { indexAxis: 'y', scales: { y: { ticks: { autoSkip: false, font: { size: chartFontSize } } } } });
 
                 const colorDataToUse = rawData.color || {};
                 if (Object.keys(colorDataToUse).length > 0) {
-                    createChart('colorChart', 'bar', colorDataToUse, { indexAxis: 'y', scales: { y: { ticks: { autoSkip: false, font: { size: chartFontSize } } } } });
+                    createChart('colorChart', 'bar', colorDataToUse, 'color', { indexAxis: 'y', scales: { y: { ticks: { autoSkip: false, font: { size: chartFontSize } } } } });
                 }
             }
         </script>
@@ -1467,6 +1523,9 @@
                             },
                             responsive: true,
                             maintainAspectRatio: false,
+                            layout: {
+                                padding: 20
+                            },
                             plugins: {
                                 legend: { display: false },
                                 title: {
@@ -1481,9 +1540,12 @@
                                 tooltip: {
                                     enabled: true,
                                     callbacks: {
-                                        label: (context) => {
+                                        title: function(context) {
+                                            return context[0].label;
+                                        },
+                                        label: function(context) {
                                             const item = displayData[context.dataIndex];
-                                            return currentCategory === 'color' ? item.color_names : `Total: ${item.count}`;
+                                            return `Count: ${item.count.toLocaleString()}`;
                                         }
                                     }
                                 }

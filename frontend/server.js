@@ -302,6 +302,7 @@ app.get('/vehicles', async (req, res) => {
             colors: data.color,
             country: data.country,
             models: data.model,
+            packages: data.packages,
             currentPage: page,
             totalPages: Math.ceil(data.total / limit),
             totalItems: data.total,
@@ -553,14 +554,14 @@ app.post('/ai-query', apiLimiter, requireAdmin, async (req, res) => {
     }
 });
 
-app.post('/api/rarity', async (req, res) => {
-    try {
-        const response = await axiosInstance.post(`${baseURL}/api/rarity`, { Options: req.body.Options });
-        res.json(response.data);
-    } catch (error) {
-        res.status(500).json({ error: 'Rarity fetch failed' });
-    }
-});
+// app.post('/api/rarity', async (req, res) => {
+//     try {
+//         const response = await axiosInstance.post(`${baseURL}/api/rarity`, { Options: req.body.Options });
+//         res.json(response.data);
+//     } catch (error) {
+//         res.status(500).json({ error: 'Rarity fetch failed' });
+//     }
+// });
 
 // --- ERROR HANDLING ---
 

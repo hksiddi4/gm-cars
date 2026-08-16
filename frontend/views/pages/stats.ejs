@@ -858,7 +858,7 @@
                     }
                 } else {
                     if (count > 6) {
-                        neededHeight = Math.max(300, count * 35);
+                        neededHeight = Math.max(300, count * 35); // Slight bump to accommodate paddings and datalabels
                     }
                 }
 
@@ -910,15 +910,23 @@
                     bgColors = labels.map((_, i) => mutedPalette[i % mutedPalette.length]);
                 }
 
+                const interactionMode = isRadial ? 'nearest' : 'index';
+                const isIntersect = isRadial ? true : false;
+                const interactionConfig = { mode: interactionMode, axis: isHorizontal ? 'y' : 'x', intersect: isIntersect };
+
                 let chartOptions = {
                     responsive: true,
                     maintainAspectRatio: false,
                     layout: {
                         padding: isRadial ? 30 : { right: 55, top: 10, bottom: 10, left: 10 }
                     },
-                    // Prevent arbitrary axis clicks by requiring intersect: true
+                    interaction: interactionConfig,
                     onClick: (event, elements, chart) => {
-                        const points = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
+                        if (!chart.chartArea) return;
+                        const { top, bottom, left, right } = chart.chartArea;
+                        if (event.x < left || event.x > right || event.y < top || event.y > bottom) return;
+
+                        const points = chart.getElementsAtEventForMode(event, interactionMode, { intersect: isIntersect }, false);
                         if (points.length > 0 && filterParam) {
                             const index = points[0].index;
                             const clickedLabel = chart.data.labels[index];
@@ -941,8 +949,17 @@
                         }
                     },
                     onHover: (event, chartElement, chart) => {
-                        const points = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
-                        event.native.target.style.cursor = points.length ? 'pointer' : 'default';
+                        if (!chart.chartArea) return;
+                        const { top, bottom, left, right } = chart.chartArea;
+                        if (event.x < left || event.x > right || event.y < top || event.y > bottom) {
+                            if (event.native && event.native.target) event.native.target.style.cursor = 'default';
+                            return;
+                        }
+                        
+                        const points = chart.getElementsAtEventForMode(event, interactionMode, { intersect: isIntersect }, false);
+                        if (event.native && event.native.target) {
+                            event.native.target.style.cursor = points.length ? 'pointer' : 'default';
+                        }
                     },
                     plugins: {
                         legend: { 
@@ -1533,13 +1550,22 @@
                         },
                         options: {
                             indexAxis: 'y',
+                            interaction: {
+                                mode: 'index',
+                                axis: 'y',
+                                intersect: false
+                            },
                             responsive: true,
                             maintainAspectRatio: false,
                             layout: {
                                 padding: { right: 55, top: 10, bottom: 10, left: 10 }
                             },
                             onClick: (event, elements, chart) => {
-                                const points = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
+                                if (!chart.chartArea) return;
+                                const { top, bottom, left, right } = chart.chartArea;
+                                if (event.x < left || event.x > right || event.y < top || event.y > bottom) return;
+
+                                const points = chart.getElementsAtEventForMode(event, 'index', { intersect: false }, false);
                                 if (points.length > 0) {
                                     const index = points[0].index;
                                     const clickedLabel = chart.data.labels[index];
@@ -1567,8 +1593,17 @@
                                 }
                             },
                             onHover: (event, chartElement, chart) => {
-                                const points = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
-                                event.native.target.style.cursor = points.length ? 'pointer' : 'default';
+                                if (!chart.chartArea) return;
+                                const { top, bottom, left, right } = chart.chartArea;
+                                if (event.x < left || event.x > right || event.y < top || event.y > bottom) {
+                                    if (event.native && event.native.target) event.native.target.style.cursor = 'default';
+                                    return;
+                                }
+
+                                const points = chart.getElementsAtEventForMode(event, 'index', { intersect: false }, false);
+                                if (event.native && event.native.target) {
+                                    event.native.target.style.cursor = points.length ? 'pointer' : 'default';
+                                }
                             },
                             plugins: {
                                 legend: { display: false },

@@ -857,8 +857,29 @@
 
                 if (hasScales) {
                     chartOptions.scales = {
-                        x: { grid: { color: 'rgba(255, 255, 255, 0.1)' }, ticks: { color: '#e0e0e0' }, ...(overrideOptions.scales?.x || {}) },
-                        y: { grid: { color: 'rgba(255, 255, 255, 0.1)' }, ticks: { color: '#e0e0e0' }, ...(overrideOptions.scales?.y || {}) }
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            ...((overrideOptions.scales && overrideOptions.scales.x) || {})
+                        },
+                        y: {
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            ...((overrideOptions.scales && overrideOptions.scales.y) || {})
+                        }
+                    };
+                    
+                    // Deep merge ticks specifically to prevent losing precision/stepSize
+                    chartOptions.scales.x.ticks = { 
+                        color: '#e0e0e0', 
+                        precision: 0, 
+                        stepSize: 1, 
+                        ...(chartOptions.scales.x.ticks || {}) 
+                    };
+                    
+                    chartOptions.scales.y.ticks = { 
+                        color: '#e0e0e0', 
+                        precision: 0, 
+                        stepSize: 1, 
+                        ...(chartOptions.scales.y.ticks || {}) 
                     };
                 }
 
@@ -887,19 +908,12 @@
                 if (trimCount > 6) document.getElementById('trimChart').parentElement.style.height = `${trimCount * 35}px`;
                 createChart('trimChart', 'bar', rawData.trim, { indexAxis: 'y', scales: { y: { ticks: { autoSkip: false, font: { size: chartFontSize } } } } });
 
-                // Filter out colors with just 1 count for the Dashboard Color Chart
-                const filteredColorData = {};
-                if (rawData.color) {
-                    for (const [colKey, colVal] of Object.entries(rawData.color)) {
-                        if (colVal > 1) {
-                            filteredColorData[colKey] = colVal;
-                        }
-                    }
-                }
-
-                const colorCount = Object.keys(filteredColorData).length;
+                const colorDataToUse = rawData.color || {};
+                const colorCount = Object.keys(colorDataToUse).length;
                 if (colorCount > 6) document.getElementById('colorChart').parentElement.style.height = `${colorCount * 35}px`;
-                createChart('colorChart', 'bar', filteredColorData, { indexAxis: 'y', scales: { y: { ticks: { autoSkip: false, font: { size: chartFontSize } } } } });
+                if (colorCount > 0) {
+                    createChart('colorChart', 'bar', colorDataToUse, { indexAxis: 'y', scales: { y: { ticks: { autoSkip: false, font: { size: chartFontSize } } } } });
+                }
             }
         </script>
 
@@ -1321,7 +1335,7 @@
                                         max: allDaysInRange[allDaysInRange.length - 1],
                                         ticks: { color: '#fff', maxTicksLimit: 12 }
                                     },
-                                    y: { beginAtZero: true, ticks: { color: '#fff' } }
+                                    y: { beginAtZero: true, ticks: { color: '#fff', precision: 0, stepSize: 1 } }
                                 },
                                 plugins: {
                                     title: {
@@ -1340,11 +1354,6 @@
                         count: Number(String(data.total_count).replace(/,/g, '')) || 0,
                         color_names: data.color_names || ''
                     }));
-
-                    if (currentCategory === 'color') {
-                        // Filter out colors with exactly 1 count from the main chart first
-                        rawData = rawData.filter(d => d.count > 1);
-                    }
 
                     // Sort ascending (smallest counts at the top of the array)
                     rawData.sort((a, b) => a.count - b.count);
@@ -1408,7 +1417,7 @@
                             },
                             scales: {
                                 y: { ticks: { color: '#ffffff', font: { size: 10 } } },
-                                x: { beginAtZero: true, grace: '15%', ticks: { color: '#ffffff' } }
+                                x: { beginAtZero: true, grace: '15%', ticks: { color: '#ffffff', precision: 0, stepSize: 1 } }
                             }
                         }
                     };

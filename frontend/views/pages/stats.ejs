@@ -914,9 +914,9 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     layout: {
-                        padding: isRadial ? 30 : { right: 50, top: 10, bottom: 10, left: 10 }
+                        padding: isRadial ? 30 : { right: 55, top: 10, bottom: 10, left: 10 }
                     },
-                    // We DO NOT set interaction mode globally so hover/click stays purely on the shapes
+                    // Prevent arbitrary axis clicks by requiring intersect: true
                     onClick: (event, elements, chart) => {
                         const points = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
                         if (points.length > 0 && filterParam) {
@@ -990,7 +990,7 @@
                                 if (total === 0) return 0;
                                 return (dataValues[ctx.dataIndex] / total < 0.05) ? 10 : 0;
                             } : 4,
-                            display: (ctx) => dataValues[ctx.dataIndex] > 0
+                            display: (ctx) => dataValues[ctx.dataIndex] > 0 ? 'auto' : false
                         }
                     },
                     ...overrideOptions

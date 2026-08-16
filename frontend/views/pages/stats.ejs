@@ -832,20 +832,25 @@
                 let borderColors = '#2b2b2b';
                 let borderWidth = 1;
 
-                // --- NEW: Calculate slice percentages for Radial Charts ---
+                // We will use this array to actually draw the chart sizes
+                let renderData = [...dataValues];
                 let offsets = 0;
                 let hoverOffsets = 4;
                 
                 if (isRadial) {
                     const totalValue = dataValues.reduce((sum, val) => sum + val, 0);
                     
-                    // 1. Pop out slices that are less than 3% of the total volume by 15 pixels
+                    // Force a minimum visual slice size (1.5% of the total) so it never drops below 1-2 pixels wide
+                    const minSliceValue = totalValue * 0.015; 
+                    
+                    renderData = dataValues.map(val => {
+                        if (val === 0) return 0;
+                        return val < minSliceValue ? minSliceValue : val;
+                    });
+                    
+                    // Pop out slices that are physically small (using true values)
                     offsets = dataValues.map(val => (val / totalValue < 0.03) ? 15 : 0);
-                    
-                    // 2. Make them expand heavily on hover
                     hoverOffsets = 20; 
-                    
-                    // 3. Force a thicker border so microscopic slices (<0.1%) are at least visually 4px wide
                     borderWidth = 2; 
                 }
 
@@ -872,13 +877,22 @@
                             position: 'bottom', 
                             labels: { color: '#e0e0e0', boxWidth: 12, padding: 15 } 
                         },
-                        // Push labels out of the pie if you are using datalabels so they don't get squished
+                        // Override Tooltip to ALWAYS show the true number, not the inflated visual number
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const trueValue = dataValues[context.dataIndex];
+                                    return ` ${context.label}: ${trueValue.toLocaleString()}`;
+                                }
+                            }
+                        },
                         datalabels: isRadial ? {
                             color: '#fff',
                             formatter: (val, ctx) => {
-                                const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                                // Hide labels inside the pie if they are too small, let the user rely on tooltips/hover
-                                return (val / total > 0.04) ? val.toLocaleString() : '';
+                                const trueValue = dataValues[ctx.dataIndex];
+                                const trueTotal = dataValues.reduce((a, b) => a + b, 0);
+                                // Hide labels inside the pie if they are too small, let the user rely on tooltips
+                                return (trueValue / trueTotal > 0.04) ? trueValue.toLocaleString() : '';
                             }
                         } : {}
                     },
@@ -914,12 +928,12 @@
                         labels: labels,
                         datasets: [{ 
                             label: 'Count', 
-                            data: dataValues, 
+                            data: renderData, // <--- Using the inflated visual data for drawing
                             backgroundColor: bgColors, 
                             borderWidth: borderWidth, 
                             borderColor: borderColors,
-                            offset: offsets,              // <-- Applies the permanent "popout" to small values
-                            hoverOffset: hoverOffsets     // <-- Applies the hover expansion
+                            offset: offsets,
+                            hoverOffset: hoverOffsets
                         }]
                     },
                     options: chartOptions

@@ -832,6 +832,23 @@
                 let borderColors = '#2b2b2b';
                 let borderWidth = 1;
 
+                // --- NEW: Calculate slice percentages for Radial Charts ---
+                let offsets = 0;
+                let hoverOffsets = 4;
+                
+                if (isRadial) {
+                    const totalValue = dataValues.reduce((sum, val) => sum + val, 0);
+                    
+                    // 1. Pop out slices that are less than 3% of the total volume by 15 pixels
+                    offsets = dataValues.map(val => (val / totalValue < 0.03) ? 15 : 0);
+                    
+                    // 2. Make them expand heavily on hover
+                    hoverOffsets = 20; 
+                    
+                    // 3. Force a thicker border so microscopic slices (<0.1%) are at least visually 4px wide
+                    borderWidth = 2; 
+                }
+
                 if (ctxId === 'colorChart') {
                     bgColors = labels.map(label => {
                         const rpo = label.split(' - ')[0]; 
@@ -850,7 +867,20 @@
                     maintainAspectRatio: false,
                     interaction: interactionConfig,
                     plugins: {
-                        legend: { display: isRadial, position: 'bottom', labels: { color: '#e0e0e0', boxWidth: 12, padding: 15 } }
+                        legend: { 
+                            display: isRadial, 
+                            position: 'bottom', 
+                            labels: { color: '#e0e0e0', boxWidth: 12, padding: 15 } 
+                        },
+                        // Push labels out of the pie if you are using datalabels so they don't get squished
+                        datalabels: isRadial ? {
+                            color: '#fff',
+                            formatter: (val, ctx) => {
+                                const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                // Hide labels inside the pie if they are too small, let the user rely on tooltips/hover
+                                return (val / total > 0.04) ? val.toLocaleString() : '';
+                            }
+                        } : {}
                     },
                     ...overrideOptions
                 };
@@ -867,18 +897,13 @@
                         }
                     };
                     
-                    // Deep merge ticks specifically to prevent losing precision/stepSize
                     chartOptions.scales.x.ticks = { 
-                        color: '#e0e0e0', 
-                        precision: 0, 
-                        stepSize: 1, 
+                        color: '#e0e0e0', precision: 0, stepSize: 1, 
                         ...(chartOptions.scales.x.ticks || {}) 
                     };
                     
                     chartOptions.scales.y.ticks = { 
-                        color: '#e0e0e0', 
-                        precision: 0, 
-                        stepSize: 1, 
+                        color: '#e0e0e0', precision: 0, stepSize: 1, 
                         ...(chartOptions.scales.y.ticks || {}) 
                     };
                 }
@@ -887,7 +912,15 @@
                     type: type,
                     data: {
                         labels: labels,
-                        datasets: [{ label: 'Count', data: dataValues, backgroundColor: bgColors, borderWidth: borderWidth, borderColor: borderColors }]
+                        datasets: [{ 
+                            label: 'Count', 
+                            data: dataValues, 
+                            backgroundColor: bgColors, 
+                            borderWidth: borderWidth, 
+                            borderColor: borderColors,
+                            offset: offsets,              // <-- Applies the permanent "popout" to small values
+                            hoverOffset: hoverOffsets     // <-- Applies the hover expansion
+                        }]
                     },
                     options: chartOptions
                 });

@@ -858,7 +858,7 @@
                     }
                 } else {
                     if (count > 6) {
-                        neededHeight = Math.max(300, count * 35); // Slight bump to accommodate paddings and datalabels
+                        neededHeight = Math.max(300, count * 35);
                     }
                 }
 
@@ -990,7 +990,14 @@
                                 const trueValue = dataValues[ctx.dataIndex];
                                 const total = dataValues.reduce((a, b) => a + b, 0);
                                 if (total === 0) return '0%';
-                                return Number(((trueValue / total) * 100).toFixed(1)) + '%';
+                                
+                                const pct = (trueValue / total) * 100;
+                                const rounded = Number(pct.toFixed(1));
+                                
+                                if (rounded === 0 && pct > 0) {
+                                    return Number(pct.toPrecision(1)) + '%';
+                                }
+                                return rounded + '%';
                             },
                             anchor: isRadial ? (ctx) => {
                                 const total = dataValues.reduce((a, b) => a + b, 0);
@@ -1007,7 +1014,7 @@
                                 if (total === 0) return 0;
                                 return (dataValues[ctx.dataIndex] / total < 0.05) ? 10 : 0;
                             } : 4,
-                            display: (ctx) => dataValues[ctx.dataIndex] > 0 ? 'auto' : false
+                            display: (ctx) => dataValues[ctx.dataIndex] > 0
                         }
                     },
                     ...overrideOptions
@@ -1550,11 +1557,6 @@
                         },
                         options: {
                             indexAxis: 'y',
-                            interaction: {
-                                mode: 'index',
-                                axis: 'y',
-                                intersect: false
-                            },
                             responsive: true,
                             maintainAspectRatio: false,
                             layout: {
@@ -1616,7 +1618,14 @@
                                     color: '#ffffff', anchor: 'end', align: 'right', offset: 4,
                                     formatter: (val, ctx) => {
                                         if (totalCount === 0) return '0%';
-                                        return Number(((val / totalCount) * 100).toFixed(1)) + '%';
+                                        
+                                        const pct = (val / totalCount) * 100;
+                                        const rounded = Number(pct.toFixed(1));
+                                        
+                                        if (rounded === 0 && pct > 0) {
+                                            return Number(pct.toPrecision(1)) + '%';
+                                        }
+                                        return rounded + '%';
                                     }
                                 },
                                 tooltip: {

@@ -406,24 +406,31 @@
                         <% } else { %>
                             <!-- Removed g-4 and using mb-4 on cols to allow Masonry Layout grid packing -->
                             <div class="row" id="masonryGrid">
-                                <div class="col-12 col-lg-6 mb-4 masonry-col">
-                                    <div class="dashboard-card">
-                                        <h5 class="text-white fw-bold mb-3 text-center">Model</h5>
-                                        <div class="chart-container" id="modelChartContainer"><canvas id="modelChart"></canvas></div>
+                                <!-- 1. Wrap the first row of charts to create a perfectly flat baseline for Trim & Color -->
+                                <div class="col-12 mb-4 masonry-col">
+                                    <div class="row align-items-start">
+                                        <div class="col-12 col-lg-6 mb-4 mb-lg-0">
+                                            <div class="dashboard-card">
+                                                <h5 class="text-white fw-bold mb-3 text-center">Model</h5>
+                                                <div class="chart-container" id="modelChartContainer"><canvas id="modelChart"></canvas></div>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 col-md-6 col-lg-3 mb-4 mb-md-0">
+                                            <div class="dashboard-card">
+                                                <h5 class="text-white fw-bold mb-3 text-center">Year</h5>
+                                                <div class="chart-container" id="yearChartContainer"><canvas id="yearChart"></canvas></div>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 col-md-6 col-lg-3">
+                                            <div class="dashboard-card">
+                                                <h5 class="text-white fw-bold mb-3 text-center">Body</h5>
+                                                <div class="chart-container" id="bodyChartContainer"><canvas id="bodyChart"></canvas></div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="col-12 col-md-6 col-lg-3 mb-4 masonry-col">
-                                    <div class="dashboard-card">
-                                        <h5 class="text-white fw-bold mb-3 text-center">Year</h5>
-                                        <div class="chart-container" id="yearChartContainer"><canvas id="yearChart"></canvas></div>
-                                    </div>
-                                </div>
-                                <div class="col-12 col-md-6 col-lg-3 mb-4 masonry-col">
-                                    <div class="dashboard-card">
-                                        <h5 class="text-white fw-bold mb-3 text-center">Body</h5>
-                                        <div class="chart-container" id="bodyChartContainer"><canvas id="bodyChart"></canvas></div>
-                                    </div>
-                                </div>
+
+                                <!-- 2. Trim and Exterior Color are independent Masonry items so things float below them -->
                                 <div class="col-12 col-lg-6 mb-4 masonry-col">
                                     <div class="dashboard-card">
                                         <h5 class="text-white fw-bold mb-3 text-center">Trim</h5>
@@ -436,6 +443,8 @@
                                         <div class="chart-container" id="colorChartContainer"><canvas id="colorChart"></canvas></div>
                                     </div>
                                 </div>
+
+                                <!-- 3. These smaller charts will float up into the void under Trim -->
                                 <div class="col-12 col-md-4 mb-4 masonry-col">
                                     <div class="dashboard-card">
                                         <h5 class="text-white fw-bold mb-3 text-center">Engine</h5>
@@ -454,6 +463,7 @@
                                         <div class="chart-container" id="drivetrainChartContainer"><canvas id="drivetrainChart"></canvas></div>
                                     </div>
                                 </div>
+                                
                                 <div class="col-12 mb-4 masonry-col">
                                     <div class="dashboard-card">
                                         <h5 class="text-white fw-bold mb-3 text-center">Packages/Editions</h5>

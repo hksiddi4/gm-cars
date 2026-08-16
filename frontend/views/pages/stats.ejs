@@ -26,18 +26,19 @@
             }
         }
 
-        /* Dashboard Styles (From daily.ejs) */
+        /* Dashboard Styles */
         .dashboard-card {
             background-color: #2b2b2b;
             border: 1px solid #444;
             border-radius: 8px;
             padding: 1.5rem;
-            height: 100%;
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
         }
         .chart-container {
             position: relative;
-            height: 300px;
+            min-height: 300px;
             width: 100%;
         }
         .daily-title {
@@ -67,8 +68,8 @@
         .annual-modal-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.4); /* Translucent background */
-            backdrop-filter: blur(6px); /* Blurs content behind the modal uniformly */
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(6px);
             -webkit-backdrop-filter: blur(6px);
             z-index: 2000;
             display: none;
@@ -77,13 +78,13 @@
         }
         .annual-modal-overlay.show { 
             display: flex; 
-            align-items: flex-end; /* Pins modal to the bottom of the screen */
+            align-items: flex-end; 
             justify-content: center; 
         }
         .annual-modal-content {
             background-color: #2b2b2b;
             border: 1px solid #444;
-            border-radius: 16px 16px 0 0; /* Clean rounded top corners */
+            border-radius: 16px 16px 0 0;
             width: 100%;
             max-width: 1200px;
             margin: 0; 
@@ -226,14 +227,14 @@
             }
             .daily-cal-icon { font-size: 1.35rem; }
             .annual-modal-overlay {
-                align-items: flex-end; /* Pin to bottom on mobile */
+                align-items: flex-end;
             }
             .annual-modal-content {
                 padding: 1rem;
                 width: 100%;
-                height: calc(100dvh - 60px); /* Use dynamic viewport height minus Safari's bar */
+                height: calc(100dvh - 60px);
                 max-height: calc(100dvh - 60px);
-                border-radius: 12px 12px 0 0; /* Rounded top sheet style */
+                border-radius: 12px 12px 0 0;
                 border: none;
                 margin: 0;
             }
@@ -246,7 +247,6 @@
         <div class="content pt-4">
             
             <% 
-                // Determine the active category mode. Default to 'daily'.
                 const activeCategory = (typeof category !== 'undefined' && category) ? category : 'daily';
                 const isDashboard = ['daily', 'monthly', 'yearly'].includes(activeCategory);
             %>
@@ -403,53 +403,54 @@
                                 <p class="text-white mb-0">Try selecting another date from the calendar icon above.</p>
                             </div>
                         <% } else { %>
-                            <div class="row g-4">
+                            <!-- Added align-items-start to ensure cards fit their individual heights without excessive stretching -->
+                            <div class="row g-4 align-items-start">
                                 <div class="col-12 col-lg-6">
                                     <div class="dashboard-card">
                                         <h5 class="text-white fw-bold mb-3 text-center">Model</h5>
-                                        <div class="chart-container"><canvas id="modelChart"></canvas></div>
+                                        <div class="chart-container" id="modelChartContainer"><canvas id="modelChart"></canvas></div>
                                     </div>
                                 </div>
                                 <div class="col-12 col-md-6 col-lg-3">
                                     <div class="dashboard-card">
                                         <h5 class="text-white fw-bold mb-3 text-center">Year</h5>
-                                        <div class="chart-container"><canvas id="yearChart"></canvas></div>
+                                        <div class="chart-container" id="yearChartContainer"><canvas id="yearChart"></canvas></div>
                                     </div>
                                 </div>
                                 <div class="col-12 col-md-6 col-lg-3">
                                     <div class="dashboard-card">
                                         <h5 class="text-white fw-bold mb-3 text-center">Body</h5>
-                                        <div class="chart-container"><canvas id="bodyChart"></canvas></div>
+                                        <div class="chart-container" id="bodyChartContainer"><canvas id="bodyChart"></canvas></div>
                                     </div>
                                 </div>
                                 <div class="col-12 col-lg-6">
                                     <div class="dashboard-card">
                                         <h5 class="text-white fw-bold mb-3 text-center">Trim</h5>
-                                        <div class="chart-container"><canvas id="trimChart"></canvas></div>
+                                        <div class="chart-container" id="trimChartContainer"><canvas id="trimChart"></canvas></div>
                                     </div>
                                 </div>
                                 <div class="col-12 col-lg-6">
                                     <div class="dashboard-card">
                                         <h5 class="text-white fw-bold mb-3 text-center">Exterior Color</h5>
-                                        <div class="chart-container"><canvas id="colorChart"></canvas></div>
+                                        <div class="chart-container" id="colorChartContainer"><canvas id="colorChart"></canvas></div>
                                     </div>
                                 </div>
                                 <div class="col-12 col-md-4">
                                     <div class="dashboard-card">
                                         <h5 class="text-white fw-bold mb-3 text-center">Engine</h5>
-                                        <div class="chart-container"><canvas id="engineChart"></canvas></div>
+                                        <div class="chart-container" id="engineChartContainer"><canvas id="engineChart"></canvas></div>
                                     </div>
                                 </div>
                                 <div class="col-12 col-md-4">
                                     <div class="dashboard-card">
                                         <h5 class="text-white fw-bold mb-3 text-center">Transmission</h5>
-                                        <div class="chart-container"><canvas id="transChart"></canvas></div>
+                                        <div class="chart-container" id="transChartContainer"><canvas id="transChart"></canvas></div>
                                     </div>
                                 </div>
                                 <div class="col-12 col-md-4">
                                     <div class="dashboard-card">
                                         <h5 class="text-white fw-bold mb-3 text-center">Drivetrain</h5>
-                                        <div class="chart-container"><canvas id="drivetrainChart"></canvas></div>
+                                        <div class="chart-container" id="drivetrainChartContainer"><canvas id="drivetrainChart"></canvas></div>
                                     </div>
                                 </div>
                                 <div class="col-12">
@@ -625,7 +626,6 @@
 
                         <% if (activeCategory !== 'production') { %>
                             <% 
-                                // Separate 1-of-1 colors from multi-colors
                                 let multiItems = stats_data;
                                 let singleItems = [];
                                 
@@ -799,7 +799,7 @@
             'GXE': '#316982', 'GLD': '#374b68', 'GLN': '#4f666c', 'G3Y': '#24328e', 
             'SEYCHELLES METALLIC': '#3592a4', 'SEEKER METALLIC': '#113446', 'GXU': '#4b5764', 
             'G9M': '#11151d', 'G8L': '#16118b', 'G6I': '#1b3034', 'G1M': '#374357',
-            'GC6': '#eed025', 'GD0': '#e5e245', 'GBK': '#bd921d', 'GCP': '#b5a12d',
+            'GC6': '#eed025', 'GD0': '#e5e245', 'GBK': '#bd921d', 'GCP': '#b5a12d', 
             'GKO': '#b6d13a', 'GC5': '#c36224', 'G26': '#e96122', 'G16': '#e25a39', 
             'GCF': '#953f15', 'GAG': '#c62c1a', 'HIGH VOLTAGE TINT': '#d2653b',
             'GVR': '#7d8a78', 'GJ0': '#1f4229', 'G4Z': '#3b812c', 'G9E': '#4c5e46',
@@ -810,13 +810,38 @@
         };
     </script>
 
-    <!-- Dashboard Scripts (Runs only if stats variable is present) -->
+    <!-- Dashboard Scripts -->
     <% if (isDashboard && typeof stats !== 'undefined') { %>
         <script>
             const rawData = <%- JSON.stringify(stats) %>;
             
             Chart.defaults.color = '#e0e0e0';
             Chart.defaults.font.family = "'Inter', sans-serif";
+
+            // Dynamically resizes container height based on data complexity
+            function autoSizeChartContainer(containerId, dataObj, isRadial = false) {
+                const el = document.getElementById(containerId);
+                if (!el || !dataObj) return;
+
+                const keys = Object.keys(dataObj);
+                const count = keys.length;
+                let neededHeight = 300;
+
+                if (isRadial) {
+                    const avgLen = count > 0 ? (keys.reduce((sum, k) => sum + k.length, 0) / count) : 0;
+                    // Doughnut charts with verbose/multiple legends need more height to avoid clipping
+                    if (count > 4 || avgLen > 15) {
+                        neededHeight = Math.max(320, 220 + (count * 25));
+                    }
+                } else {
+                    // Bar charts scale with the number of bars
+                    if (count > 6) {
+                        neededHeight = Math.max(300, count * 32);
+                    }
+                }
+
+                el.style.height = `${neededHeight}px`;
+            }
 
             function createChart(ctxId, type, dataObj, overrideOptions = {}) {
                 const ctx = document.getElementById(ctxId);
@@ -832,15 +857,12 @@
                 let borderColors = '#2b2b2b';
                 let borderWidth = 1;
 
-                // We will use this array to actually draw the chart sizes
                 let renderData = [...dataValues];
                 let offsets = 0;
                 let hoverOffsets = 4;
                 
                 if (isRadial) {
                     const totalValue = dataValues.reduce((sum, val) => sum + val, 0);
-                    
-                    // Force a minimum visual slice size (1.5% of the total) so it never drops below 1-2 pixels wide
                     const minSliceValue = totalValue * 0.015; 
                     
                     renderData = dataValues.map(val => {
@@ -848,11 +870,9 @@
                         return val < minSliceValue ? minSliceValue : val;
                     });
                     
-                    // Pop out slices that are physically small (using true values)
                     offsets = dataValues.map(val => (val / totalValue < 0.03) ? 15 : 0);
                     hoverOffsets = 20; 
                     
-                    // Fix the 12 o'clock line: Only apply a border if there are 2 or more slices
                     const activeSlices = dataValues.filter(val => val > 0).length;
                     borderWidth = activeSlices > 1 ? 2 : 0; 
                 }
@@ -863,7 +883,7 @@
                         return rpoHexMap[rpo] || rpoHexMap[label] || '#6c757d'; 
                     });
                     borderColors = 'rgba(255,255,255,0.15)'; 
-                    borderWidth = 2; // (Color chart is a bar chart, so this safely overrides)
+                    borderWidth = 2;
                 } else if (!isRadial) {
                     bgColors = labels.map((_, i) => mutedPalette[i % mutedPalette.length]);
                 }
@@ -878,9 +898,13 @@
                         legend: { 
                             display: isRadial, 
                             position: 'bottom', 
-                            labels: { color: '#e0e0e0', boxWidth: 12, padding: 15 } 
+                            labels: { 
+                                color: '#e0e0e0', 
+                                boxWidth: 12, 
+                                padding: 12,
+                                font: { size: 11 }
+                            } 
                         },
-                        // Override Tooltip to ALWAYS show the true number, not the inflated visual number
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
@@ -894,7 +918,6 @@
                             formatter: (val, ctx) => {
                                 const trueValue = dataValues[ctx.dataIndex];
                                 const trueTotal = dataValues.reduce((a, b) => a + b, 0);
-                                // Hide labels inside the pie if they are too small, let the user rely on tooltips
                                 return (trueValue / trueTotal > 0.04) ? trueValue.toLocaleString() : '';
                             }
                         } : {}
@@ -934,9 +957,9 @@
                             data: renderData, 
                             backgroundColor: bgColors, 
                             borderWidth: borderWidth, 
-                            borderColor: borderColors,
-                            offset: offsets,
-                            hoverOffset: hoverOffsets
+                            borderColor: borderColors, 
+                            offset: offsets, 
+                            hoverOffset: hoverOffsets 
                         }]
                     },
                     options: chartOptions
@@ -944,6 +967,20 @@
             }
 
             if (rawData && rawData.total > 0) {
+                const isMobile = window.innerWidth < 768;
+                const chartFontSize = isMobile ? 8 : 12;
+
+                // Dynamically size containers
+                autoSizeChartContainer('modelChartContainer', rawData.model);
+                autoSizeChartContainer('yearChartContainer', rawData.modelYear, true);
+                autoSizeChartContainer('bodyChartContainer', rawData.body, true);
+                autoSizeChartContainer('trimChartContainer', rawData.trim);
+                autoSizeChartContainer('colorChartContainer', rawData.color || {});
+                autoSizeChartContainer('engineChartContainer', rawData.engine, true);
+                autoSizeChartContainer('transChartContainer', rawData.trans, true);
+                autoSizeChartContainer('drivetrainChartContainer', rawData.drivetrain, true);
+
+                // Render Charts
                 createChart('modelChart', 'bar', rawData.model);
                 createChart('yearChart', 'doughnut', rawData.modelYear);
                 createChart('bodyChart', 'doughnut', rawData.body);
@@ -951,17 +988,10 @@
                 createChart('transChart', 'doughnut', rawData.trans);
                 createChart('drivetrainChart', 'pie', rawData.drivetrain);
                 
-                const isMobile = window.innerWidth < 768;
-                const chartFontSize = isMobile ? 8 : 12;
-
-                const trimCount = Object.keys(rawData.trim).length;
-                if (trimCount > 6) document.getElementById('trimChart').parentElement.style.height = `${trimCount * 35}px`;
                 createChart('trimChart', 'bar', rawData.trim, { indexAxis: 'y', scales: { y: { ticks: { autoSkip: false, font: { size: chartFontSize } } } } });
 
                 const colorDataToUse = rawData.color || {};
-                const colorCount = Object.keys(colorDataToUse).length;
-                if (colorCount > 6) document.getElementById('colorChart').parentElement.style.height = `${colorCount * 35}px`;
-                if (colorCount > 0) {
+                if (Object.keys(colorDataToUse).length > 0) {
                     createChart('colorChart', 'bar', colorDataToUse, { indexAxis: 'y', scales: { y: { ticks: { autoSkip: false, font: { size: chartFontSize } } } } });
                 }
             }
@@ -1011,7 +1041,6 @@
 
             async function openAnnualCalendar() {
                 document.getElementById('annualModal').classList.add('show');
-                // Prevent body scroll behind modal
                 document.body.style.overflow = 'hidden'; 
                 
                 await fetchModelBounds(matrixSelectedModel);
@@ -1023,7 +1052,6 @@
 
             function closeAnnualCalendar() {
                 document.getElementById('annualModal').classList.remove('show');
-                // Restore body scroll
                 document.body.style.overflow = ''; 
             }
 
@@ -1086,7 +1114,6 @@
                     }, 10);
                 }
 
-                // Append the active category to the cache key so switching views forces fresh data
                 const cacheKey = `${currentAnnualYear}-${matrixSelectedModel}-<%= activeCategory %>`;
                 let activityMap = {};
 
@@ -1098,7 +1125,6 @@
                     annualFetchController = new AbortController();
 
                     try {
-                        // Pass the active category down to the Python backend
                         let url = `/calendar-activity?year=${currentAnnualYear}&category=<%= activeCategory %>`;
                         if (matrixSelectedModel) url += `&model=${encodeURIComponent(matrixSelectedModel)}`;
 
@@ -1125,13 +1151,12 @@
                 const currentCategory = "<%= activeCategory %>";
                 const activeDateStr = "<%= stats.current_date %>";
 
-                // Reset visibility for controls that Yearly mode hides
                 const yearControls = document.querySelector('.annual-year-controls');
                 const yearsBar = document.getElementById('annualYearsBar');
                 if (yearControls) yearControls.style.display = 'flex';
                 if (yearsBar) yearsBar.style.display = 'flex';
 
-                // --- 1. MONTHLY GRID (12 Blocks) ---
+                // Monthly Grid
                 if (currentCategory === 'monthly') {
                     const monthLabels = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
                     const grid = document.createElement('div');
@@ -1178,12 +1203,11 @@
                     }
                     container.appendChild(grid);
 
-                // --- 2. YEARLY GRID (Variable Blocks) ---
+                // Yearly Grid
                 } else if (currentCategory === 'yearly') {
                     const grid = document.createElement('div');
                     grid.className = 'annual-months-grid'; 
                     
-                    // Hide the modal year-selector controls because we are showing ALL years at once
                     document.querySelector('.annual-year-controls').style.display = 'none';
                     document.getElementById('annualYearsBar').style.display = 'none';
 
@@ -1227,7 +1251,7 @@
                     });
                     container.appendChild(grid);
 
-                // --- 3. DAILY GRID (Default Full Calendar) ---
+                // Daily Grid
                 } else {
                     const monthLabels = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
                     
@@ -1327,7 +1351,7 @@
         </script>
     <% } %>
 
-    <!-- Rarity / Trend Scripts (Runs only if stats_data variable is present) -->
+    <!-- Rarity / Trend Scripts -->
     <% if (!isDashboard && typeof stats_data !== 'undefined' && stats_data.length > 0) { %>
         <script src="/js/scroll-sync.js"></script>
         <script>
@@ -1398,7 +1422,6 @@
                         };
                     }
                 } else {
-                    // --- COLOR/ENGINE RANKING CHART ---
                     let rawData = stats_data.map(data => ({
                         label: data.label || '',
                         count: Number(String(data.total_count).replace(/,/g, '')) || 0,
@@ -1406,22 +1429,17 @@
                     }));
 
                     if (currentCategory === 'color') {
-                        // Filter out colors with exactly 1 count from the main chart
                         rawData = rawData.filter(d => d.count > 1);
                     }
 
-                    // Sort ascending (smallest counts at the top of the array)
                     rawData.sort((a, b) => a.count - b.count);
 
-                    // Grab the first 20 items (which are now the 20 rarest)
                     let displayData = rawData.slice(0, 20);
 
-                    // Setup default styling (used for Engine)
                     let bgColors = 'rgba(75, 192, 192, 0.2)';
                     let borderColors = 'rgba(75, 192, 192, 1)';
                     let borderWidth = 1;
 
-                    // If it is the Color chart, map the specific hex codes
                     if (currentCategory === 'color') {
                         bgColors = displayData.map(d => rpoHexMap[d.label] || '#6c757d');
                         borderColors = 'rgba(255,255,255,0.15)';

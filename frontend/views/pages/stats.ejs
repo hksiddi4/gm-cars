@@ -1061,7 +1061,16 @@
                                 return (dataValues[ctx.dataIndex] / totalValue < 0.05) ? 'end' : 'center';
                             } : (isHorizontal ? 'right' : 'top'),
                             offset: isRadial ? (ctx) => sliceOffsets[ctx.dataIndex] : 4,
-                            display: (ctx) => dataValues[ctx.dataIndex] > 0
+                            display: (ctx) => {
+                                // Hide 0 values entirely
+                                if (dataValues[ctx.dataIndex] === 0) return false;
+                                
+                                // Radial charts handle overlaps via our custom stagger lines
+                                if (isRadial) return true;
+                                
+                                // Bar charts dynamically hide labels if they collide
+                                return 'auto';
+                            }
                         }
                     },
                     ...overrideOptions

@@ -967,7 +967,7 @@
                         const { top, bottom, left, right } = chart.chartArea;
                         if (event.x < left || event.x > right || event.y < top || event.y > bottom) return;
 
-                        const points = chart.getElementsAtEventForMode(event, interactionMode, { intersect: isIntersect }, false);
+                        const points = chart.getElementsAtEventForMode(event, interactionMode, { intersect: isIntersect, axis: isHorizontal ? 'y' : 'x' }, false);
                         if (points.length > 0 && filterParam) {
                             const index = points[0].index;
                             const clickedLabel = chart.data.labels[index];
@@ -997,7 +997,7 @@
                             return;
                         }
                         
-                        const points = chart.getElementsAtEventForMode(event, interactionMode, { intersect: isIntersect }, false);
+                        const points = chart.getElementsAtEventForMode(event, interactionMode, { intersect: isIntersect, axis: isHorizontal ? 'y' : 'x' }, false);
                         if (event.native && event.native.target) {
                             event.native.target.style.cursor = points.length ? 'pointer' : 'default';
                         }
@@ -1620,7 +1620,7 @@
                                 const { top, bottom, left, right } = chart.chartArea;
                                 if (event.x < left || event.x > right || event.y < top || event.y > bottom) return;
 
-                                const points = chart.getElementsAtEventForMode(event, 'index', { intersect: false }, false);
+                                const points = chart.getElementsAtEventForMode(event, 'index', { intersect: false, axis: 'y' }, false);
                                 if (points.length > 0) {
                                     const index = points[0].index;
                                     const clickedLabel = chart.data.labels[index];
@@ -1655,7 +1655,7 @@
                                     return;
                                 }
 
-                                const points = chart.getElementsAtEventForMode(event, 'index', { intersect: false }, false);
+                                const points = chart.getElementsAtEventForMode(event, 'index', { intersect: false, axis: 'y' }, false);
                                 if (event.native && event.native.target) {
                                     event.native.target.style.cursor = points.length ? 'pointer' : 'default';
                                 }

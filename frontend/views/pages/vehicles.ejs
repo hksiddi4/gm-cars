@@ -373,6 +373,7 @@
         const ct5vRpo = <%- JSON.stringify(ct5vRpo) %>;
         const hummerRpo = <%- JSON.stringify(hummerRpo) %>;
         const hummersuvRpo = <%- JSON.stringify(hummersuvRpo) %>;
+        const celestiqRpo = <%- JSON.stringify(celestiqRpo) %>;
 
         function buildQueryString(params) {
             const queryStrings = Object.entries(params)
@@ -510,7 +511,8 @@
                 { data: ct5Rpo, label: 'CT5' },
                 { data: ct5vRpo, label: 'CT5-V' },
                 { data: hummerRpo, label: 'Hummer EV Pickup' },
-                { data: hummersuvRpo, label: 'Hummer EV SUV' }
+                { data: hummersuvRpo, label: 'Hummer EV SUV' },
+                { data: celestiqRpo, label: 'Celestiq' }
             ];
 
             const rawMasterMap = {};

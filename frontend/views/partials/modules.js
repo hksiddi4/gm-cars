@@ -1779,7 +1779,7 @@ const escaladeiqRpo = {
   "DRZ": "Rear Camera Mirror",
   "EMI": "Emblem, Cadillac Crest",
   "EN0": "Engine, none",
-  "ETN": "Battery Pack",
+  "ETN": "24 Module Battery Pack",
   "F47": "Suspension, Air Ride Adaptive",
   "FE9": "Emissions, Federal requirements",
   "FX3": "StabiliTrak, stability control system",
@@ -3168,8 +3168,8 @@ const hummerRpo = {
   "EN0": "Engine, none",
   "EN5": "Tailgate, locking",
   "EPH": "Electronic Precision Shift",
-  "ETI": "Battery Pack",
-  "ETN": "Battery Pack",
+  "ETI": "20 Module Battery Pack",
+  "ETN": "24 Module Battery Pack",
   "F45": "Chassis, Continuous Damping Adaptive Ride Control",
   "F47": "Suspension",
   "FE2": "Suspension",
@@ -3560,6 +3560,11 @@ const hummersuvRpo = {
   "UIT": "LED Reflective Windshield Collision Alert",
 }
 
+const celestiqRpo = {
+  "EXN": "16 Module Battery Pack",
+  "EHT": "16 Module Battery Pack, Config B"
+}
+
 module.exports = {
   colorMap,
   intColor,
@@ -3575,4 +3580,5 @@ module.exports = {
   ct5vRpo,
   hummerRpo,
   hummersuvRpo,
+  celestiqRpo,
 }

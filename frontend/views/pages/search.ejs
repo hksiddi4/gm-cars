@@ -308,6 +308,7 @@
       const ct5vRpo = <%- JSON.stringify(ct5vRpo) %>;
       const hummerRpo = <%- JSON.stringify(hummerRpo) %>;
       const hummersuvRpo = <%- JSON.stringify(hummersuvRpo) %>;
+      const celestiqRpo = <%- JSON.stringify(celestiqRpo) %>;
 
       const invertedColorMap = {};
       for (const [name, code] of Object.entries(colorMap)) {
@@ -330,7 +331,8 @@
         ...ct5Rpo,
         ...ct5vRpo,
         ...hummerRpo,
-        ...hummersuvRpo
+        ...hummersuvRpo,
+        ...celestiqRpo
       };
 
       function renderRpoCards(vin, model) {
@@ -388,6 +390,7 @@
             (model === 'CT5' && vehicleTrim.startsWith('V-SERIES') && ct5vRpo[rpoCode]) ||
             (model === 'HUMMER EV PICKUP' && hummerRpo[rpoCode]) ||
             (model === 'HUMMER EV SUV' && hummersuvRpo[rpoCode]) ||
+            (model === 'CELESTIQ' && celestiqRpo[rpoCode]) ||
             invertedColorMap[rpoCode] ||
             allRpoDescriptions[rpoCode];
 
@@ -454,6 +457,10 @@
         }
         if (model === 'HUMMER EV SUV' && hummersuvRpo[rpoCode]) {
           element.innerHTML = `<div>${hummersuvRpo[rpoCode]}</div>`;
+          return;
+        }
+        if (model === 'CELESTIQ' && celestiqRpo[rpoCode]) {
+          element.innerHTML = `<div>${celestiqRpo[rpoCode]}</div>`;
           return;
         }
 

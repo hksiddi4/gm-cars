@@ -883,8 +883,30 @@
                 let offsets = 0;
                 let hoverOffsets = 4;
                 
+                // --- Calculate Dynamic Offsets and Padding ---
+                const totalValue = dataValues.reduce((sum, val) => sum + val, 0);
+                const sliceOffsets = new Array(dataValues.length).fill(0);
+                
+                // Only stagger lines if multiple small slices are consecutive
+                if (isRadial && totalValue > 0) {
+                    let consecutiveSmallSlices = 0;
+                    for (let i = 0; i < dataValues.length; i++) {
+                        if (dataValues[i] === 0) continue;
+                        if (dataValues[i] / totalValue < 0.05) {
+                            sliceOffsets[i] = 12 + (consecutiveSmallSlices % 3) * 18;
+                            consecutiveSmallSlices++;
+                        } else {
+                            consecutiveSmallSlices = 0;
+                        }
+                    }
+                }
+                
+                // Calculate the exact padding needed to fit the longest line without clipping
+                const maxStagger = sliceOffsets.length > 0 ? Math.max(...sliceOffsets) : 0;
+                const dynamicPadding = isRadial ? Math.max(35, maxStagger + 25) : { right: 55, top: 10, bottom: 10, left: 10 };
+                // ---------------------------------------------
+
                 if (isRadial) {
-                    const totalValue = dataValues.reduce((sum, val) => sum + val, 0);
                     const minSliceValue = totalValue * 0.015; 
                     
                     renderData = dataValues.map(val => {
@@ -914,14 +936,12 @@
                 const isIntersect = isRadial ? true : false;
                 const interactionConfig = { mode: interactionMode, axis: isHorizontal ? 'y' : 'x', intersect: isIntersect };
 
-                // Custom inline plugin to draw lines to staggered radial labels
                 const customLinePlugin = {
                     id: 'customLinePlugin_' + ctxId,
                     afterDatasetsDraw: (chart) => {
                         if (chart.config.type !== 'pie' && chart.config.type !== 'doughnut') return;
                         const ctx = chart.ctx;
                         const meta = chart.getDatasetMeta(0);
-                        const total = dataValues.reduce((a, b) => a + b, 0);
 
                         ctx.save();
                         ctx.lineWidth = 1;
@@ -929,9 +949,7 @@
 
                         meta.data.forEach((arc, i) => {
                             const trueValue = dataValues[i];
-                            if (trueValue === 0) return;
-                            const pct = trueValue / total;
-                            if (pct >= 0.05) return; 
+                            if (trueValue === 0 || trueValue / totalValue >= 0.05) return; 
 
                             const angle = (arc.startAngle + arc.endAngle) / 2;
                             const outerRadius = arc.outerRadius;
@@ -939,9 +957,7 @@
                             const startX = arc.x + Math.cos(angle) * outerRadius;
                             const startY = arc.y + Math.sin(angle) * outerRadius;
 
-                            let staggerOffset = 8;
-                            if (i % 3 === 1) staggerOffset = 26;
-                            if (i % 3 === 2) staggerOffset = 44;
+                            const staggerOffset = sliceOffsets[i];
 
                             const endX = arc.x + Math.cos(angle) * (outerRadius + staggerOffset - 2);
                             const endY = arc.y + Math.sin(angle) * (outerRadius + staggerOffset - 2);
@@ -959,7 +975,7 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     layout: {
-                        padding: isRadial ? 55 : { right: 55, top: 10, bottom: 10, left: 10 }
+                        padding: dynamicPadding
                     },
                     interaction: interactionConfig,
                     onClick: (event, elements, chart) => {
@@ -978,7 +994,6 @@
                             
                             let paramValue = clickedLabel;
                             
-                            // Parse "RPO - Name" format for Engine and Color
                             if (filterParam === 'engine' || filterParam === 'color') {
                                 if (paramValue.includes(' - ')) {
                                     paramValue = paramValue.split(' - ').slice(1).join(' - ').trim();
@@ -1015,9 +1030,7 @@
                         },
                         tooltip: {
                             callbacks: {
-                                title: function(context) {
-                                    return context[0].label; 
-                                },
+                                title: function(context) { return context[0].label; },
                                 label: function(context) {
                                     const trueValue = dataValues[context.dataIndex];
                                     return `Count: ${trueValue.toLocaleString()}`;
@@ -1029,10 +1042,9 @@
                             font: { size: 11, weight: 'bold' },
                             formatter: (val, ctx) => {
                                 const trueValue = dataValues[ctx.dataIndex];
-                                const total = dataValues.reduce((a, b) => a + b, 0);
-                                if (total === 0) return '0%';
+                                if (totalValue === 0) return '0%';
                                 
-                                const pct = (trueValue / total) * 100;
+                                const pct = (trueValue / totalValue) * 100;
                                 const rounded = Number(pct.toFixed(1));
                                 
                                 if (rounded === 0 && pct > 0) {
@@ -1041,26 +1053,14 @@
                                 return rounded + '%';
                             },
                             anchor: isRadial ? (ctx) => {
-                                const total = dataValues.reduce((a, b) => a + b, 0);
-                                if (total === 0) return 'center';
-                                return (dataValues[ctx.dataIndex] / total < 0.05) ? 'end' : 'center';
+                                if (totalValue === 0) return 'center';
+                                return (dataValues[ctx.dataIndex] / totalValue < 0.05) ? 'end' : 'center';
                             } : 'end',
                             align: isRadial ? (ctx) => {
-                                const total = dataValues.reduce((a, b) => a + b, 0);
-                                if (total === 0) return 'center';
-                                return (dataValues[ctx.dataIndex] / total < 0.05) ? 'end' : 'center';
+                                if (totalValue === 0) return 'center';
+                                return (dataValues[ctx.dataIndex] / totalValue < 0.05) ? 'end' : 'center';
                             } : (isHorizontal ? 'right' : 'top'),
-                            offset: isRadial ? (ctx) => {
-                                const total = dataValues.reduce((a, b) => a + b, 0);
-                                if (total === 0) return 0;
-                                if (dataValues[ctx.dataIndex] / total < 0.05) {
-                                    let staggerOffset = 8;
-                                    if (ctx.dataIndex % 3 === 1) staggerOffset = 26;
-                                    if (ctx.dataIndex % 3 === 2) staggerOffset = 44;
-                                    return staggerOffset;
-                                }
-                                return 0;
-                            } : 4,
+                            offset: isRadial ? (ctx) => sliceOffsets[ctx.dataIndex] : 4,
                             display: (ctx) => dataValues[ctx.dataIndex] > 0
                         }
                     },
@@ -1071,7 +1071,7 @@
                     chartOptions.scales = {
                         x: {
                             grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                            grace: isHorizontal ? '15%' : '0%', // Prevents horizontal bars from cutting off datalabels
+                            grace: isHorizontal ? '15%' : '0%',
                             ...((overrideOptions.scales && overrideOptions.scales.x) || {})
                         },
                         y: {

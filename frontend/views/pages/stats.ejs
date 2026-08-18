@@ -903,7 +903,12 @@
                 
                 // Calculate the exact padding needed to fit the longest line without clipping
                 const maxStagger = sliceOffsets.length > 0 ? Math.max(...sliceOffsets) : 0;
-                const dynamicPadding = isRadial ? Math.max(35, maxStagger + 25) : { right: 55, top: 10, bottom: 10, left: 10 };
+                const radialPad = Math.max(35, maxStagger + 25);
+                
+                // Apply heavy padding only to top/bottom so the chart doesn't get crushed horizontally
+                const dynamicPadding = isRadial 
+                    ? { top: radialPad, bottom: radialPad, left: 25, right: 25 } 
+                    : { right: 55, top: 10, bottom: 10, left: 10 };
                 // ---------------------------------------------
 
                 if (isRadial) {

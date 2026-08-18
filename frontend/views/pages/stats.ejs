@@ -1591,9 +1591,13 @@
                         rawData = rawData.filter(d => d.count > 1);
                     }
 
+                    // Keep original sort to find the rarest items first
                     rawData.sort((a, b) => a.count - b.count);
 
                     let displayData = rawData.slice(0, 20);
+                    
+                    // Reverse the array so the highest values appear at the top
+                    displayData.reverse();
 
                     let bgColors = 'rgba(75, 192, 192, 0.2)';
                     let borderColors = 'rgba(75, 192, 192, 1)';
@@ -1618,25 +1622,23 @@
                             }]
                         },
                         options: {
-                            indexAxis: 'x', // Sets the chart to vertical
+                            indexAxis: 'y', // Keeps the chart horizontal
                             interaction: {
                                 mode: 'index',
-                                axis: 'x', // Updates interaction to track horizontally across the vertical bars
+                                axis: 'y',
                                 intersect: false
                             },
                             responsive: true,
                             maintainAspectRatio: false,
                             layout: {
-                                // Shifted padding from right to top to make room for datalabels above the bars
-                                padding: { right: 10, top: 45, bottom: 10, left: 10 } 
+                                padding: { right: 55, top: 10, bottom: 10, left: 10 }
                             },
                             onClick: (event, elements, chart) => {
                                 if (!chart.chartArea) return;
                                 const { top, bottom, left, right } = chart.chartArea;
                                 if (event.x < left || event.x > right || event.y < top || event.y > bottom) return;
 
-                                // Make sure this is set back to axis: 'x'
-                                const points = chart.getElementsAtEventForMode(event, 'index', { intersect: false, axis: 'x' }, false);
+                                const points = chart.getElementsAtEventForMode(event, 'index', { intersect: false, axis: 'y' }, false);
                                 if (points.length > 0) {
                                     const index = points[0].index;
                                     const clickedLabel = chart.data.labels[index];
@@ -1669,8 +1671,7 @@
                                     return;
                                 }
 
-                                // Make sure this is set back to axis: 'x'
-                                const points = chart.getElementsAtEventForMode(event, 'index', { intersect: false, axis: 'x' }, false);
+                                const points = chart.getElementsAtEventForMode(event, 'index', { intersect: false, axis: 'y' }, false);
                                 if (event.native && event.native.target) {
                                     event.native.target.style.cursor = points.length ? 'pointer' : 'default';
                                 }
@@ -1683,11 +1684,8 @@
                                     color: '#ffffff', font: { size: 20 }
                                 },
                                 datalabels: {
-                                    color: '#ffffff', 
-                                    anchor: 'end', 
-                                    align: 'top', // Shifts the percentage labels to the top of the bars
-                                    offset: 4,
-                                    display: 'auto', // Automatically hides overlapping percentages
+                                    color: '#ffffff', anchor: 'end', align: 'right', offset: 4,
+                                    display: 'auto', // Keeps your overlap collision fix
                                     formatter: (val, ctx) => {
                                         if (totalCount === 0) return '0%';
                                         
@@ -1714,9 +1712,8 @@
                                 }
                             },
                             scales: {
-                                // Swapped X and Y configurations. Added maxRotation so long text labels don't overlap.
-                                x: { ticks: { color: '#ffffff', font: { size: 10 }, maxRotation: 45, minRotation: 45 } },
-                                y: { beginAtZero: true, grace: '15%', ticks: { color: '#ffffff', precision: 0, stepSize: 1 } }
+                                y: { ticks: { color: '#ffffff', font: { size: 10 } } },
+                                x: { beginAtZero: true, grace: '15%', ticks: { color: '#ffffff', precision: 0, stepSize: 1 } }
                             }
                         }
                     };

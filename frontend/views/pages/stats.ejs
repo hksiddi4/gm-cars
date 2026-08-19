@@ -1575,29 +1575,58 @@
                                     label: 'Stickers Produced',
                                     data: finalData,
                                     borderColor: '#3498db',
-                                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                                    backgroundColor: 'rgba(52, 152, 219, 0.2)',
                                     borderWidth: 2,
                                     fill: true,
-                                    tension: 0.3,
-                                    pointRadius: 0
+                                    tension: 0.4, // Smoother curved lines
+                                    pointRadius: 0,
+                                    pointHoverRadius: 6, // Shows a clean dot only when hovering
+                                    pointBackgroundColor: '#ffffff'
                                 }]
                             },
                             options: {
                                 responsive: true,
                                 maintainAspectRatio: false,
+                                interaction: {
+                                    mode: 'index',
+                                    intersect: false, // Allows scrubbing anywhere vertically along the graph
+                                },
                                 scales: {
                                     x: {
+                                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
                                         min: allDaysInRange[0],
                                         max: allDaysInRange[allDaysInRange.length - 1],
-                                        ticks: { color: '#fff', maxTicksLimit: 12 }
+                                        ticks: { color: '#e0e0e0', maxTicksLimit: 12 }
                                     },
-                                    y: { beginAtZero: true, ticks: { color: '#fff', precision: 0, stepSize: 1 } }
+                                    y: { 
+                                        beginAtZero: true, 
+                                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                                        // Removed stepSize: 1 so Chart.js can draw clean auto-scaled intervals (e.g., 0, 200, 400)
+                                        ticks: { color: '#e0e0e0', precision: 0 } 
+                                    }
                                 },
                                 plugins: {
                                     title: {
                                         display: true,
                                         text: `${displayYear} Window Sticker Creation Date (${allDaysInRange[0]} to ${allDaysInRange[allDaysInRange.length-1]})`,
-                                        color: '#ffffff'
+                                        color: '#ffffff',
+                                        font: { size: 16 }
+                                    },
+                                    legend: { display: false },
+                                    datalabels: {
+                                        display: false // Turns off the messy text on the line
+                                    },
+                                    tooltip: {
+                                        enabled: true,
+                                        backgroundColor: 'rgba(0,0,0,0.8)',
+                                        titleFont: { size: 13 },
+                                        bodyFont: { size: 14, weight: 'bold' },
+                                        displayColors: false,
+                                        callbacks: {
+                                            label: function(context) {
+                                                return `Produced: ${context.parsed.y.toLocaleString()}`;
+                                            }
+                                        }
                                     }
                                 }
                             }

@@ -1726,14 +1726,17 @@
                     const canvasEl = document.getElementById('barChart');
                     const canvasWrapper = document.querySelector('.barChart');
                     if (canvasEl && canvasWrapper) {
-                        const rowHeight = 65; // 65px per row gives plenty of room for multiline text
+                        const rowHeight = 65; 
                         const calculatedHeight = Math.max(600, displayData.length * rowHeight);
                         
-                        // Override the hardcoded CSS !important rules
-                        canvasEl.style.setProperty('height', `${calculatedHeight}px`, 'important');
-                        canvasEl.style.setProperty('max-height', 'none', 'important');
+                        // The wrapper dictates the actual pixel height
                         canvasWrapper.style.setProperty('height', `${calculatedHeight}px`, 'important');
                         canvasWrapper.style.setProperty('max-height', 'none', 'important');
+                        canvasWrapper.style.position = 'relative'; // Required for Chart.js
+                        
+                        // The canvas must be exactly 100% of the wrapper to prevent internal resolution squishing
+                        canvasEl.style.setProperty('height', '100%', 'important');
+                        canvasEl.style.setProperty('max-height', 'none', 'important');
                     }
 
                     config = {
@@ -1856,7 +1859,8 @@
                                 x: { 
                                     beginAtZero: true, 
                                     grace: '5%',
-                                    ticks: { color: '#ffffff', precision: 0, stepSize: 1 } 
+                                    // Kept precision: 0 to prevent decimals, but removed stepSize: 1 to allow large numbers to scale normally
+                                    ticks: { color: '#ffffff', precision: 0 } 
                                 }
                             }
                         },

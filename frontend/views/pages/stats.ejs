@@ -857,8 +857,10 @@
                         neededHeight = Math.max(320, 220 + (count * 25));
                     }
                 } else {
-                    if (count > 6) {
-                        neededHeight = Math.max(300, count * 35);
+                    // Give the color chart (which has multiline labels) much more vertical space per row
+                    let rowHeight = containerId === 'colorChartContainer' ? 60 : 35;
+                    if (count > 5) {
+                        neededHeight = Math.max(300, count * rowHeight);
                     }
                 }
 
@@ -1719,6 +1721,20 @@
                     };
 
                     const maxStagger = Math.max(...barOffsets);
+
+                    // FIX: Dynamically expand container height so rows have enough room for multiline text
+                    const canvasEl = document.getElementById('barChart');
+                    const canvasWrapper = document.querySelector('.barChart');
+                    if (canvasEl && canvasWrapper) {
+                        const rowHeight = 65; // 65px per row gives plenty of room for multiline text
+                        const calculatedHeight = Math.max(600, displayData.length * rowHeight);
+                        
+                        // Override the hardcoded CSS !important rules
+                        canvasEl.style.setProperty('height', `${calculatedHeight}px`, 'important');
+                        canvasEl.style.setProperty('max-height', 'none', 'important');
+                        canvasWrapper.style.setProperty('height', `${calculatedHeight}px`, 'important');
+                        canvasWrapper.style.setProperty('max-height', 'none', 'important');
+                    }
 
                     config = {
                         type: 'bar',

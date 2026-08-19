@@ -1609,10 +1609,67 @@
                         borderWidth = 2;
                     }
 
+                    // 1. Format Multiline Labels for the Y-Axis
+                    const chartLabels = displayData.map(d => {
+                        // Splits "GBA - BLACK" into ["GBA", "BLACK"] for stacked display
+                        if (currentCategory === 'color' && d.label.includes(' - ')) {
+                            const parts = d.label.split(' - ');
+                            return [parts[0], parts.slice(1).join(' - ')];
+                        }
+                        return d.label;
+                    });
+
+                    // 2. Calculate Staggered Offsets for Lead Lines
+                    const barOffsets = new Array(displayData.length).fill(4);
+                    let consecutiveSmall = 0;
+                    for (let i = 0; i < displayData.length; i++) {
+                        const pct = totalCount > 0 ? (displayData[i].count / totalCount) * 100 : 0;
+                        // If percentage is small, stagger horizontally to avoid text walls
+                        if (pct < 5.0) { 
+                            barOffsets[i] = 6 + (consecutiveSmall % 3) * 35;
+                            consecutiveSmall++;
+                        } else {
+                            barOffsets[i] = 4;
+                            consecutiveSmall = 0;
+                        }
+                    }
+
+                    // 3. Custom Plugin to Draw Lead Lines on Bar Charts
+                    const barLinePlugin = {
+                        id: 'barLinePlugin',
+                        afterDatasetsDraw: (chart) => {
+                            if (chart.config.type !== 'bar') return;
+                            const ctx = chart.ctx;
+                            const meta = chart.getDatasetMeta(0);
+                            
+                            ctx.save();
+                            ctx.lineWidth = 1;
+                            ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+
+                            meta.data.forEach((bar, i) => {
+                                const offset = barOffsets[i];
+                                if (offset > 4) {
+                                    const startX = bar.x;
+                                    const startY = bar.y;
+                                    // Calculate endX to stop right before the datalabel starts
+                                    const endX = startX + offset - 2; 
+                                    
+                                    ctx.beginPath();
+                                    ctx.moveTo(startX, startY);
+                                    ctx.lineTo(endX, startY);
+                                    ctx.stroke();
+                                }
+                            });
+                            ctx.restore();
+                        }
+                    };
+
+                    const maxStagger = Math.max(...barOffsets);
+
                     config = {
                         type: 'bar',
                         data: {
-                            labels: displayData.map(d => d.label),
+                            labels: chartLabels,
                             datasets: [{
                                 label: 'Count',
                                 data: displayData.map(d => d.count),
@@ -1622,7 +1679,7 @@
                             }]
                         },
                         options: {
-                            indexAxis: 'y', // Keeps the chart horizontal
+                            indexAxis: 'y', // Keeps chart horizontal
                             interaction: {
                                 mode: 'index',
                                 axis: 'y',
@@ -1631,7 +1688,8 @@
                             responsive: true,
                             maintainAspectRatio: false,
                             layout: {
-                                padding: { right: 55, top: 10, bottom: 10, left: 10 }
+                                // Add dynamic padding to the right so staggered labels aren't cut off
+                                padding: { right: maxStagger + 40, top: 10, bottom: 10, left: 10 }
                             },
                             onClick: (event, elements, chart) => {
                                 if (!chart.chartArea) return;
@@ -1641,7 +1699,12 @@
                                 const points = chart.getElementsAtEventForMode(event, 'index', { intersect: false, axis: 'y' }, false);
                                 if (points.length > 0) {
                                     const index = points[0].index;
-                                    const clickedLabel = chart.data.labels[index];
+                                    
+                                    // Re-join array labels back into a string for routing
+                                    let clickedLabel = chart.data.labels[index];
+                                    if (Array.isArray(clickedLabel)) {
+                                        clickedLabel = clickedLabel.join(' - ');
+                                    }
                                     
                                     const params = new URLSearchParams();
                                     
@@ -1684,8 +1747,11 @@
                                     color: '#ffffff', font: { size: 20 }
                                 },
                                 datalabels: {
-                                    color: '#ffffff', anchor: 'end', align: 'right', offset: 4,
-                                    display: 'auto', // Keeps your overlap collision fix
+                                    color: '#ffffff', 
+                                    anchor: 'end', 
+                                    align: 'right', 
+                                    offset: (ctx) => barOffsets[ctx.dataIndex],
+                                    display: true, // Forces all labels to stay visible
                                     formatter: (val, ctx) => {
                                         if (totalCount === 0) return '0%';
                                         
@@ -1702,7 +1768,10 @@
                                     enabled: true,
                                     callbacks: {
                                         title: function(context) {
-                                            return context[0].label;
+                                            // Re-join array labels for the hover tooltip 
+                                            let label = context[0].label;
+                                            if (Array.isArray(label)) label = label.join(' - ');
+                                            return label;
                                         },
                                         label: function(context) {
                                             const item = displayData[context.dataIndex];
@@ -1712,10 +1781,21 @@
                                 }
                             },
                             scales: {
-                                y: { ticks: { color: '#ffffff', font: { size: 10 } } },
-                                x: { beginAtZero: true, grace: '15%', ticks: { color: '#ffffff', precision: 0, stepSize: 1 } }
+                                y: { 
+                                    ticks: { 
+                                        color: '#ffffff', 
+                                        font: { size: 10 },
+                                        autoSkip: false // Prevents the axis from hiding the text
+                                    } 
+                                },
+                                x: { 
+                                    beginAtZero: true, 
+                                    grace: '5%', // Reduced grace since right-side padding handles the label spacing
+                                    ticks: { color: '#ffffff', precision: 0, stepSize: 1 } 
+                                }
                             }
-                        }
+                        },
+                        plugins: [barLinePlugin] // Inject our new lead line plugin
                     };
                 }
 

@@ -639,8 +639,9 @@
                     <% } %>
 
                     <% if (typeof stats_data !== 'undefined' && stats_data.length > 0) { %>
-                        <div class="barChart">
-                            <canvas id="barChart"></canvas>
+                        <!-- CHANGED ID: Bypasses the strict 600px max-height in main.css -->
+                        <div id="dynamicChartWrapper" style="position: relative; width: 100%; min-height: 600px; margin-bottom: 20px;">
+                            <canvas id="mainDataChart"></canvas>
                         </div>
                         <p id="totalCount"></p>
 
@@ -656,7 +657,7 @@
                             %>
 
                             <div id="top-scroll-wrapper"><div id="top-scroll"></div></div>
-                            <div class="table-responsive" id="bottom-scroll-wrapper">
+                            <div class="table-responsive" id="bottom-scroll-wrapper" style="flex: none;">
                                 <table class="table-stats-veh table-hover border shadow" id="mainTable">
                                     <thead>
                                         <tr>
@@ -710,7 +711,7 @@
                                 <div class="mt-5 mb-4">
                                     <h3 class="text-white fw-bold mb-1">One-of-One Colors</h3>
                                     <p class="text-white" style="font-size: 0.9rem;">These exterior colors only appear on a single vehicle.</p>
-                                    <div class="table-responsive">
+                                    <div class="table-responsive" style="flex: none;">
                                         <table class="table-stats-veh table-hover border shadow">
                                             <thead>
                                                 <tr>
@@ -830,705 +831,6 @@
         };
     </script>
 
-    <!-- Dashboard Scripts -->
-    <% if (isDashboard && typeof stats !== 'undefined') { %>
-        <script>
-            // Store current query scopes for click routing
-            window.dashboardQueryDate = "<%= typeof stats !== 'undefined' && stats.current_date ? (activeCategory === 'monthly' ? stats.current_date.substring(0,7) : (activeCategory === 'yearly' ? stats.current_date.substring(0,4) : stats.current_date)) : '' %>";
-            window.dashboardSelectedModel = "<%= typeof selectedModel !== 'undefined' ? selectedModel : '' %>";
-
-            const rawData = <%- JSON.stringify(stats) %>;
-            
-            Chart.defaults.color = '#e0e0e0';
-            Chart.defaults.font.family = "'Inter', sans-serif";
-
-            // Dynamically resizes container height based on data complexity
-            function autoSizeChartContainer(containerId, dataObj, isRadial = false) {
-                const el = document.getElementById(containerId);
-                if (!el || !dataObj) return;
-
-                const keys = Object.keys(dataObj);
-                const count = keys.length;
-                let neededHeight = 300;
-
-                if (isRadial) {
-                    const avgLen = count > 0 ? (keys.reduce((sum, k) => sum + k.length, 0) / count) : 0;
-                    if (count > 4 || avgLen > 15) {
-                        neededHeight = Math.max(320, 220 + (count * 25));
-                    }
-                } else {
-                    // Give the color chart (which has multiline labels) much more vertical space per row
-                    let rowHeight = containerId === 'colorChartContainer' ? 60 : 35;
-                    if (count > 5) {
-                        neededHeight = Math.max(300, count * rowHeight);
-                    }
-                }
-
-                el.style.height = `${neededHeight}px`;
-            }
-
-            function createChart(ctxId, type, dataObj, filterParam, overrideOptions = {}) {
-                const ctx = document.getElementById(ctxId);
-                if (!ctx) return;
-
-                let labels = Object.keys(dataObj);
-                const dataValues = Object.values(dataObj);
-                const isRadial = ['pie', 'doughnut'].includes(type);
-                const hasScales = ['bar', 'line'].includes(type);
-                const isHorizontal = overrideOptions.indexAxis === 'y';
-
-                // 1. Format Multiline Labels for Exterior Color (Only applies to horizontal bar charts)
-                // The !isRadial check ensures pie/circle charts keep their "RPO - Name" format for the legend
-                if (!isRadial && (ctxId === 'colorChart' || ctxId === 'engineChart')) {
-                    labels = labels.map(label => {
-                        if (label.includes(' - ')) {
-                            const parts = label.split(' - ');
-                            const rpo = parts[0].trim();
-                            const name = parts.slice(1).join(' - ').trim();
-                            if (rpo === name) return name;
-                            return [rpo, name];
-                        }
-                        return label;
-                    });
-                }
-
-                let bgColors = mutedPalette;
-                let borderColors = '#2b2b2b';
-                let borderWidth = 1;
-
-                let renderData = [...dataValues];
-                let offsets = 0;
-                let hoverOffsets = 4;
-                
-                // --- Calculate Dynamic Offsets and Padding ---
-                const totalValue = dataValues.reduce((sum, val) => sum + val, 0);
-                const sliceOffsets = new Array(dataValues.length).fill(0);
-                
-                let consecutiveSmallSlices = 0;
-                for (let i = 0; i < dataValues.length; i++) {
-                    if (dataValues[i] === 0) continue;
-                    
-                    const pct = totalValue > 0 ? (dataValues[i] / totalValue) : 0;
-                    if (pct < 0.05) {
-                        if (isRadial) {
-                            sliceOffsets[i] = 12 + (consecutiveSmallSlices % 3) * 18;
-                        } else {
-                            sliceOffsets[i] = 6 + (consecutiveSmallSlices % 3) * 30; // Works for both horizontal and vertical bars
-                        }
-                        consecutiveSmallSlices++;
-                    } else {
-                        sliceOffsets[i] = isRadial ? 0 : 4;
-                        consecutiveSmallSlices = 0;
-                    }
-                }
-                
-                // Calculate the exact padding needed to fit the longest line without clipping
-                const maxStagger = sliceOffsets.length > 0 ? Math.max(...sliceOffsets) : 0;
-                
-                // Apply padding appropriately based on chart orientation
-                let dynamicPadding;
-                if (isRadial) {
-                    const radialPad = Math.max(35, maxStagger + 25);
-                    dynamicPadding = { top: radialPad, bottom: radialPad, left: 25, right: 25 };
-                } else if (isHorizontal) {
-                    dynamicPadding = { right: Math.max(55, maxStagger + 35), top: 10, bottom: 10, left: 10 };
-                } else { // Vertical Bar Chart
-                    dynamicPadding = { right: 10, top: Math.max(25, maxStagger + 25), bottom: 10, left: 10 };
-                }
-                // ---------------------------------------------
-
-                if (isRadial) {
-                    const minSliceValue = totalValue * 0.015; 
-                    
-                    renderData = dataValues.map(val => {
-                        if (val === 0) return 0;
-                        return val < minSliceValue ? minSliceValue : val;
-                    });
-                    
-                    offsets = dataValues.map(val => (val / totalValue < 0.03) ? 15 : 0);
-                    hoverOffsets = 20; 
-                    
-                    const activeSlices = dataValues.filter(val => val > 0).length;
-                    borderWidth = activeSlices > 1 ? 2 : 0; 
-                }
-
-                if (ctxId === 'colorChart') {
-                    bgColors = Object.keys(dataObj).map(origLabel => {
-                        const rpo = origLabel.split(' - ')[0]; 
-                        return rpoHexMap[rpo] || rpoHexMap[origLabel] || '#6c757d'; 
-                    });
-                    borderColors = 'rgba(255,255,255,0.15)'; 
-                    borderWidth = 2;
-                } else if (!isRadial) {
-                    bgColors = labels.map((_, i) => mutedPalette[i % mutedPalette.length]);
-                }
-
-                const interactionMode = isRadial ? 'nearest' : 'index';
-                const isIntersect = isRadial ? true : false;
-                const interactionConfig = { mode: interactionMode, axis: isHorizontal ? 'y' : 'x', intersect: isIntersect };
-
-                const customLinePlugin = {
-                    id: 'customLinePlugin_' + ctxId,
-                    afterDatasetsDraw: (chart) => {
-                        const ctx = chart.ctx;
-                        const meta = chart.getDatasetMeta(0);
-                        
-                        ctx.save();
-                        ctx.lineWidth = 1;
-                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-
-                        meta.data.forEach((element, i) => {
-                            const trueValue = dataValues[i];
-                            if (trueValue === 0) return; 
-                            const pct = trueValue / totalValue;
-                            if (pct >= 0.05) return; 
-
-                            const offset = sliceOffsets[i];
-
-                            if (chart.config.type === 'pie' || chart.config.type === 'doughnut') {
-                                const arc = element;
-                                const angle = (arc.startAngle + arc.endAngle) / 2;
-                                const outerRadius = arc.outerRadius;
-                                
-                                const startX = arc.x + Math.cos(angle) * outerRadius;
-                                const startY = arc.y + Math.sin(angle) * outerRadius;
-
-                                const endX = arc.x + Math.cos(angle) * (outerRadius + offset - 2);
-                                const endY = arc.y + Math.sin(angle) * (outerRadius + offset - 2);
-
-                                ctx.beginPath();
-                                ctx.moveTo(startX, startY);
-                                ctx.lineTo(endX, endY);
-                                ctx.stroke();
-                            } else if (chart.config.type === 'bar') {
-                                const bar = element;
-                                if (offset > 4) {
-                                    const startX = bar.x;
-                                    const startY = bar.y;
-                                    
-                                    ctx.beginPath();
-                                    ctx.moveTo(startX, startY);
-                                    if (isHorizontal) {
-                                        ctx.lineTo(startX + offset - 2, startY);
-                                    } else {
-                                        ctx.lineTo(startX, startY - offset + 2);
-                                    }
-                                    ctx.stroke();
-                                }
-                            }
-                        });
-                        ctx.restore();
-                    }
-                };
-
-                let chartOptions = {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    layout: { padding: dynamicPadding },
-                    interaction: interactionConfig,
-                    onClick: (event, elements, chart) => {
-                        if (!chart.chartArea) return;
-                        const { top, bottom, left, right } = chart.chartArea;
-                        if (event.x < left || event.x > right || event.y < top || event.y > bottom) return;
-
-                        const points = chart.getElementsAtEventForMode(event, interactionMode, { intersect: isIntersect, axis: isHorizontal ? 'y' : 'x' }, false);
-                        if (points.length > 0 && filterParam) {
-                            const index = points[0].index;
-                            
-                            let clickedLabel = chart.data.labels[index];
-                            let paramValue = clickedLabel;
-                            
-                            if (Array.isArray(clickedLabel)) {
-                                paramValue = clickedLabel.slice(1).join(' ').trim();
-                            } else if (typeof clickedLabel === 'string' && clickedLabel.includes(' - ')) {
-                                paramValue = clickedLabel.split(' - ').slice(1).join(' - ').trim();
-                            }
-                            
-                            const params = new URLSearchParams();
-                            if (window.dashboardQueryDate) params.set('date', window.dashboardQueryDate);
-                            if (window.dashboardSelectedModel && filterParam !== 'model') params.set('model', window.dashboardSelectedModel);
-                            
-                            params.set(filterParam, paramValue);
-                            window.location.href = '/vehicles?' + params.toString();
-                        }
-                    },
-                    onHover: (event, chartElement, chart) => {
-                        if (!chart.chartArea) return;
-                        const { top, bottom, left, right } = chart.chartArea;
-                        if (event.x < left || event.x > right || event.y < top || event.y > bottom) {
-                            if (event.native && event.native.target) event.native.target.style.cursor = 'default';
-                            return;
-                        }
-                        
-                        const points = chart.getElementsAtEventForMode(event, interactionMode, { intersect: isIntersect, axis: isHorizontal ? 'y' : 'x' }, false);
-                        if (event.native && event.native.target) {
-                            event.native.target.style.cursor = points.length ? 'pointer' : 'default';
-                        }
-                    },
-                    plugins: {
-                        legend: { 
-                            display: isRadial, 
-                            position: 'bottom', 
-                            labels: { color: '#e0e0e0', boxWidth: 12, padding: 12, font: { size: 11 } } 
-                        },
-                        tooltip: {
-                            callbacks: {
-                                title: function(context) { 
-                                    let label = context[0].label;
-                                    if (Array.isArray(label)) return label[0] + ' - ' + label.slice(1).join(' ');
-                                    return label; 
-                                },
-                                label: function(context) {
-                                    const trueValue = dataValues[context.dataIndex];
-                                    return `Count: ${trueValue.toLocaleString()}`;
-                                }
-                            }
-                        },
-                        datalabels: {
-                            color: '#fff',
-                            font: { size: 11, weight: 'bold' },
-                            formatter: (val, ctx) => {
-                                const trueValue = dataValues[ctx.dataIndex];
-                                if (totalValue === 0) return '0%';
-                                const pct = (trueValue / totalValue) * 100;
-                                const rounded = Number(pct.toFixed(1));
-                                return (rounded === 0 && pct > 0) ? Number(pct.toPrecision(1)) + '%' : rounded + '%';
-                            },
-                            anchor: isRadial 
-                                ? (ctx) => (totalValue === 0 ? 'center' : (dataValues[ctx.dataIndex] / totalValue < 0.05 ? 'end' : 'center'))
-                                : 'end',
-                            align: isRadial 
-                                ? (ctx) => (totalValue === 0 ? 'center' : (dataValues[ctx.dataIndex] / totalValue < 0.05 ? 'end' : 'center'))
-                                : (isHorizontal ? 'right' : 'top'),
-                            offset: (ctx) => sliceOffsets[ctx.dataIndex],
-                            display: (ctx) => dataValues[ctx.dataIndex] > 0 // ALWAYS SHOW (Forces leading lines instead of disappearing)
-                        }
-                    },
-                    ...overrideOptions
-                };
-
-                if (hasScales) {
-                    chartOptions.scales = {
-                        x: {
-                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                            grace: isHorizontal ? '5%' : '0%',
-                            ...((overrideOptions.scales && overrideOptions.scales.x) || {})
-                        },
-                        y: {
-                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                            grace: isHorizontal ? '0%' : '5%',
-                            ...((overrideOptions.scales && overrideOptions.scales.y) || {})
-                        }
-                    };
-                    
-                    chartOptions.scales.x.ticks = { color: '#e0e0e0', precision: 0, stepSize: 1, ...(chartOptions.scales.x.ticks || {}) };
-                    chartOptions.scales.y.ticks = { color: '#e0e0e0', precision: 0, stepSize: 1, ...(chartOptions.scales.y.ticks || {}) };
-                }
-
-                new Chart(ctx, {
-                    type: type,
-                    data: {
-                        labels: labels,
-                        datasets: [{ 
-                            label: 'Count', 
-                            data: renderData, 
-                            backgroundColor: bgColors, 
-                            borderWidth: borderWidth, 
-                            borderColor: borderColors, 
-                            offset: offsets, 
-                            hoverOffset: hoverOffsets 
-                        }]
-                    },
-                    options: chartOptions,
-                    plugins: [customLinePlugin]
-                });
-            }
-
-            if (rawData && rawData.total > 0) {
-                const isMobile = window.innerWidth < 768;
-                const chartFontSize = isMobile ? 8 : 12;
-
-                // Dynamically size containers
-                autoSizeChartContainer('modelChartContainer', rawData.model);
-                autoSizeChartContainer('yearChartContainer', rawData.modelYear, true);
-                autoSizeChartContainer('bodyChartContainer', rawData.body, true);
-                autoSizeChartContainer('trimChartContainer', rawData.trim);
-                autoSizeChartContainer('colorChartContainer', rawData.color || {});
-                autoSizeChartContainer('engineChartContainer', rawData.engine, true);
-                autoSizeChartContainer('transChartContainer', rawData.trans, true);
-                autoSizeChartContainer('drivetrainChartContainer', rawData.drivetrain, true);
-
-                // Render Charts passing the exact URL filterParam
-                createChart('modelChart', 'bar', rawData.model, 'model');
-                createChart('yearChart', 'doughnut', rawData.modelYear, 'year');
-                createChart('bodyChart', 'doughnut', rawData.body, 'body');
-                createChart('engineChart', 'doughnut', rawData.engine, 'engine');
-                createChart('transChart', 'doughnut', rawData.trans, 'trans');
-                createChart('drivetrainChart', 'pie', rawData.drivetrain, 'drivetrain');
-                
-                createChart('trimChart', 'bar', rawData.trim, 'trim', { indexAxis: 'y', scales: { y: { ticks: { autoSkip: false, font: { size: chartFontSize } } } } });
-
-                const colorDataToUse = rawData.color || {};
-                if (Object.keys(colorDataToUse).length > 0) {
-                    createChart('colorChart', 'bar', colorDataToUse, 'color', { indexAxis: 'y', scales: { y: { ticks: { autoSkip: false, font: { size: chartFontSize } } } } });
-                }
-            }
-        </script>
-
-        <!-- Annual Production Matrix Controller -->
-        <script>
-            let currentAnnualYear = new Date("<%= stats.current_date %>T00:00:00").getFullYear();
-            if (isNaN(currentAnnualYear)) currentAnnualYear = new Date().getFullYear();
-
-            const minYearRange = 2019;
-            const maxYearRange = new Date().getFullYear();
-            let activeYearsList = [];
-
-            let matrixSelectedModel = "<%= typeof selectedModel !== 'undefined' ? selectedModel : '' %>";
-            const annualActivityCache = {};
-            let annualFetchController = null;
-
-            async function fetchModelBounds(model) {
-                try {
-                    const url = model ? `/model-bounds?model=${encodeURIComponent(model)}` : `/model-bounds`;
-                    const res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-                    const data = await res.json();
-                    if (data.active_years && data.active_years.length > 0) activeYearsList = data.active_years;
-                    else {
-                        activeYearsList = [];
-                        for(let y = minYearRange; y <= maxYearRange; y++) activeYearsList.push(y);
-                    }
-                } catch(e) {
-                    activeYearsList = [];
-                    for(let y = minYearRange; y <= maxYearRange; y++) activeYearsList.push(y);
-                }
-            }
-
-            const modelSelectEl = document.getElementById('matrixModelSelect');
-            if (modelSelectEl) {
-                modelSelectEl.addEventListener('change', async function() {
-                    matrixSelectedModel = this.value;
-                    if (matrixSelectedModel) this.classList.add('active-filter');
-                    else this.classList.remove('active-filter');
-                    
-                    await fetchModelBounds(matrixSelectedModel);
-                    currentAnnualYear = activeYearsList[activeYearsList.length - 1]; 
-                    renderAnnualMatrix(false, true); 
-                });
-            }
-
-            async function openAnnualCalendar() {
-                document.getElementById('annualModal').classList.add('show');
-                document.body.style.overflow = 'hidden'; 
-                
-                await fetchModelBounds(matrixSelectedModel);
-                if (!activeYearsList.includes(currentAnnualYear)) {
-                    currentAnnualYear = activeYearsList[activeYearsList.length - 1];
-                }
-                renderAnnualMatrix(true, false); 
-            }
-
-            function closeAnnualCalendar() {
-                document.getElementById('annualModal').classList.remove('show');
-                document.body.style.overflow = ''; 
-            }
-
-            function changeAnnualYear(direction) {
-                if (!activeYearsList || activeYearsList.length === 0) return;
-                let currentIndex = activeYearsList.indexOf(currentAnnualYear);
-                if (currentIndex === -1) currentIndex = direction > 0 ? 0 : activeYearsList.length - 1;
-                else currentIndex += direction;
-                
-                if (currentIndex < 0) currentIndex = 0;
-                if (currentIndex >= activeYearsList.length) currentIndex = activeYearsList.length - 1;
-                
-                currentAnnualYear = activeYearsList[currentIndex];
-                renderAnnualMatrix();
-            }
-
-            function selectAnnualYear(yr) {
-                currentAnnualYear = yr;
-                renderAnnualMatrix();
-            }
-
-            async function renderAnnualMatrix(isInitialOpen = false, isModelChange = false) {
-                document.getElementById('annualModalYear').innerText = currentAnnualYear;
-                
-                const prevBtn = document.getElementById('annualPrevBtn');
-                const nextBtn = document.getElementById('annualNextBtn');
-                const currentIndex = activeYearsList.indexOf(currentAnnualYear);
-                
-                if (currentIndex <= 0) prevBtn.classList.add('invisible-btn');
-                else prevBtn.classList.remove('invisible-btn');
-
-                if (currentIndex === -1 || currentIndex >= activeYearsList.length - 1) nextBtn.classList.add('invisible-btn');
-                else nextBtn.classList.remove('invisible-btn');
-
-                const yearsBar = document.getElementById('annualYearsBar');
-                yearsBar.innerHTML = '';
-                let activePill = null;
-
-                for (let y = minYearRange; y <= maxYearRange; y++) {
-                    const pill = document.createElement('button');
-                    pill.type = 'button';
-                    pill.innerText = y;
-                    
-                    if (activeYearsList.includes(y)) {
-                        pill.className = `annual-year-pill ${y === currentAnnualYear ? 'active' : ''}`;
-                        pill.onclick = () => selectAnnualYear(y);
-                    } else {
-                        pill.className = 'annual-year-pill';
-                        pill.disabled = true;
-                    }
-                    
-                    yearsBar.appendChild(pill);
-                    if (y === currentAnnualYear) activePill = pill;
-                }
-
-                if (activePill) {
-                    setTimeout(() => {
-                        const scrollPos = activePill.offsetLeft - (yearsBar.clientWidth / 2) + (activePill.clientWidth / 2);
-                        yearsBar.scrollTo({ left: Math.max(0, scrollPos), behavior: 'smooth' });
-                    }, 10);
-                }
-
-                const cacheKey = `${currentAnnualYear}-${matrixSelectedModel}-<%= activeCategory %>`;
-                let activityMap = {};
-
-                if (annualActivityCache[cacheKey]) {
-                    activityMap = annualActivityCache[cacheKey];
-                    buildAnnualGrid(activityMap, isInitialOpen, isModelChange);
-                } else {
-                    if (annualFetchController) annualFetchController.abort();
-                    annualFetchController = new AbortController();
-
-                    try {
-                        let url = `/calendar-activity?year=${currentAnnualYear}&category=<%= activeCategory %>`;
-                        if (matrixSelectedModel) url += `&model=${encodeURIComponent(matrixSelectedModel)}`;
-
-                        const res = await fetch(url, { 
-                            signal: annualFetchController.signal,
-                            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                        });
-                        activityMap = await res.json();
-                        annualActivityCache[cacheKey] = activityMap;
-                        buildAnnualGrid(activityMap, isInitialOpen, isModelChange);
-                    } catch (err) {
-                        if (err.name !== 'AbortError') console.error("Failed to load production matrix activity", err);
-                    }
-                }
-            }
-
-            function buildAnnualGrid(activityMap, isInitialOpen, isModelChange) {
-                const counts = Object.values(activityMap);
-                const maxCount = counts.length > 0 ? Math.max(...counts) : 1;
-
-                const container = document.getElementById('annualMonthsContainer');
-                container.innerHTML = '';
-
-                const currentCategory = "<%= activeCategory %>";
-                const activeDateStr = "<%= stats.current_date %>";
-
-                const yearControls = document.querySelector('.annual-year-controls');
-                const yearsBar = document.getElementById('annualYearsBar');
-                if (yearControls) yearControls.style.display = 'flex';
-                if (yearsBar) yearsBar.style.display = 'flex';
-
-                // Monthly Grid
-                if (currentCategory === 'monthly') {
-                    const monthLabels = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
-                    const grid = document.createElement('div');
-                    grid.className = 'annual-months-grid'; 
-                    
-                    for (let m = 0; m < 12; m++) {
-                        const mm = String(m + 1).padStart(2, '0');
-                        const dateKey = `${currentAnnualYear}-${mm}`;
-                        const count = activityMap[dateKey] || 0;
-                        
-                        const cell = document.createElement('div');
-                        cell.className = 'annual-day-cell p-3'; 
-                        cell.style.aspectRatio = 'auto';
-                        cell.style.minHeight = '120px';
-                        
-                        const title = document.createElement('div');
-                        title.className = 'fw-bold fs-5 mb-2';
-                        title.innerText = monthLabels[m];
-                        cell.appendChild(title);
-                        
-                        if (count > 0) {
-                            cell.classList.add('has-activity');
-                            const ratio = count / maxCount;
-                            const hue = 120 - (ratio * 120);
-                            cell.style.backgroundColor = `hsl(${hue}, 70%, 50%)`;
-                            cell.style.color = '#fff';
-                            cell.style.textShadow = '0px 1px 2px rgba(0,0,0,0.8)';
-                            cell.innerHTML += `<div class="fs-3 fw-bold">${count.toLocaleString()}</div><div class="small" style="opacity: 0.85;">Vehicles</div>`;
-                            
-                            cell.onclick = () => {
-                                const queryParams = new URLSearchParams(window.location.search);
-                                queryParams.set('date', dateKey);
-                                queryParams.set('category', 'monthly'); 
-                                if (matrixSelectedModel) queryParams.set('model', matrixSelectedModel);
-                                else queryParams.delete('model');
-                                window.location.search = queryParams.toString();
-                            };
-                        } else {
-                            cell.innerHTML += `<div class="fs-5 text-muted">0</div>`;
-                        }
-                        
-                        if (dateKey === activeDateStr) cell.classList.add('selected-date');
-                        grid.appendChild(cell);
-                    }
-                    container.appendChild(grid);
-
-                // Yearly Grid
-                } else if (currentCategory === 'yearly') {
-                    const grid = document.createElement('div');
-                    grid.className = 'annual-months-grid'; 
-                    
-                    document.querySelector('.annual-year-controls').style.display = 'none';
-                    document.getElementById('annualYearsBar').style.display = 'none';
-
-                    activeYearsList.forEach(yr => {
-                        const dateKey = `${yr}`;
-                        const count = activityMap[dateKey] || 0;
-                        
-                        const cell = document.createElement('div');
-                        cell.className = 'annual-day-cell p-3';
-                        cell.style.aspectRatio = 'auto';
-                        cell.style.minHeight = '140px';
-                        
-                        const title = document.createElement('div');
-                        title.className = 'fw-bold fs-4 mb-2';
-                        title.innerText = yr;
-                        cell.appendChild(title);
-                        
-                        if (count > 0) {
-                            cell.classList.add('has-activity');
-                            const ratio = count / maxCount;
-                            const hue = 120 - (ratio * 120);
-                            cell.style.backgroundColor = `hsl(${hue}, 70%, 50%)`;
-                            cell.style.color = '#fff';
-                            cell.style.textShadow = '0px 1px 2px rgba(0,0,0,0.8)';
-                            cell.innerHTML += `<div class="fs-2 fw-bold">${count.toLocaleString()}</div><div class="small" style="opacity: 0.85;">Vehicles</div>`;
-                            
-                            cell.onclick = () => {
-                                const queryParams = new URLSearchParams(window.location.search);
-                                queryParams.set('date', dateKey);
-                                queryParams.set('category', 'yearly'); 
-                                if (matrixSelectedModel) queryParams.set('model', matrixSelectedModel);
-                                else queryParams.delete('model');
-                                window.location.search = queryParams.toString();
-                            };
-                        } else {
-                            cell.innerHTML += `<div class="fs-5 text-muted">0</div>`;
-                        }
-                        
-                        if (dateKey === activeDateStr) cell.classList.add('selected-date');
-                        grid.appendChild(cell);
-                    });
-                    container.appendChild(grid);
-
-                // Daily Grid
-                } else {
-                    const monthLabels = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
-                    
-                    for (let m = 0; m < 12; m++) {
-                        const card = document.createElement('div');
-                        card.className = 'annual-month-card';
-
-                        const title = document.createElement('div');
-                        title.className = 'annual-month-title';
-                        title.innerText = monthLabels[m];
-                        card.appendChild(title);
-
-                        const daysGrid = document.createElement('div');
-                        daysGrid.className = 'annual-days-grid';
-
-                        ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].forEach(dName => {
-                            const dHead = document.createElement('div');
-                            dHead.className = 'annual-day-header';
-                            dHead.innerText = dName;
-                            daysGrid.appendChild(dHead);
-                        });
-
-                        const firstDayIndex = new Date(currentAnnualYear, m, 1).getDay();
-                        const totalDaysInMonth = new Date(currentAnnualYear, m + 1, 0).getDate();
-
-                        for (let i = 0; i < firstDayIndex; i++) {
-                            const emptyCell = document.createElement('div');
-                            emptyCell.className = 'annual-day-cell empty';
-                            daysGrid.appendChild(emptyCell);
-                        }
-
-                        for (let day = 1; day <= totalDaysInMonth; day++) {
-                            const cell = document.createElement('div');
-                            cell.className = 'annual-day-cell';
-                            
-                            const mm = String(m + 1).padStart(2, '0');
-                            const dd = String(day).padStart(2, '0');
-                            const formattedDateKey = `${currentAnnualYear}-${mm}-${dd}`;
-
-                            cell.innerText = day;
-
-                            const count = activityMap[formattedDateKey] || 0;
-                            if (count > 0) {
-                                cell.classList.add('has-activity');
-                                const ratio = count / maxCount;
-                                const hue = 120 - (ratio * 120);
-                                cell.style.backgroundColor = `hsl(${hue}, 70%, 50%)`;
-                                cell.style.color = '#fff';
-                                cell.style.textShadow = '0px 1px 2px rgba(0,0,0,0.8)';
-                                
-                                cell.title = `${count.toLocaleString()} vehicles added on ${formattedDateKey}`;
-                                cell.onclick = () => {
-                                    const queryParams = new URLSearchParams(window.location.search);
-                                    queryParams.set('date', formattedDateKey);
-                                    queryParams.set('category', 'daily'); 
-                                    if (matrixSelectedModel) queryParams.set('model', matrixSelectedModel);
-                                    else queryParams.delete('model');
-                                    window.location.search = queryParams.toString();
-                                };
-                            }
-
-                            if (formattedDateKey === activeDateStr) {
-                                cell.classList.add('selected-date');
-                            }
-
-                            daysGrid.appendChild(cell);
-                        }
-                        card.appendChild(daysGrid);
-                        container.appendChild(card);
-                    }
-                }
-
-                setTimeout(() => {
-                    const scrollContainer = document.querySelector('.annual-months-scroll-container');
-                    if (!scrollContainer) return;
-
-                    if (isModelChange) {
-                        const activityCells = container.querySelectorAll('.has-activity');
-                        if (activityCells.length > 0) {
-                            const latestCell = activityCells[activityCells.length - 1]; 
-                            const offset = latestCell.offsetTop - (scrollContainer.clientHeight / 2);
-                            scrollContainer.scrollTo({ top: offset, behavior: 'smooth' });
-                        } else {
-                            scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
-                        }
-                    } else if (isInitialOpen) {
-                        const selectedCell = container.querySelector('.selected-date');
-                        if (selectedCell) {
-                            const offset = selectedCell.offsetTop - (scrollContainer.clientHeight / 2);
-                            scrollContainer.scrollTo({ top: offset, behavior: 'smooth' });
-                        } else {
-                            scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
-                        }
-                    }
-                }, 150);
-            }
-        </script>
-    <% } %>
-
     <!-- Rarity / Trend Scripts -->
     <% if (!isDashboard && typeof stats_data !== 'undefined' && stats_data.length > 0) { %>
         <script src="/js/scroll-sync.js"></script>
@@ -1545,10 +847,13 @@
                 const countEl = document.getElementById('totalCount');
                 if (countEl) countEl.textContent = `Retrieved: ${totalCount.toLocaleString()} vehicles`;
 
-                const ctx = document.getElementById('barChart').getContext('2d');
+                const ctx = document.getElementById('mainDataChart').getContext('2d');
                 let config;
 
                 if (currentCategory === 'production') {
+                    const canvasWrapper = document.getElementById('dynamicChartWrapper');
+                    if (canvasWrapper) canvasWrapper.style.height = '600px';
+
                     const sortedData = stats_data.filter(item => item.label !== null).sort((a, b) => new Date(a.label) - new Date(b.label));
                     
                     if (sortedData.length > 0) {
@@ -1600,10 +905,14 @@
                         };
                     }
                 } else {
+                    // Extract all necessary fields for multiline labels
                     let rawData = stats_data.map(data => ({
                         label: data.label || '',
                         count: Number(String(data.total_count).replace(/,/g, '')) || 0,
-                        color_names: data.color_names || ''
+                        color_names: data.color_names || '',
+                        rpo_code: data.rpo_code || '',
+                        engine_rpo: data.engine_rpo || '',
+                        engine_type: data.engine_type || ''
                     }));
 
                     if (currentCategory === 'color') {
@@ -1628,51 +937,39 @@
                         borderWidth = 2;
                     }
 
+                    // Helper to wrap long strings to prevent cutoff
+                    function wrapText(text, maxLen) {
+                        if (!text) return [];
+                        let words = text.split(' ');
+                        let lines = [];
+                        let currentLine = '';
+                        for (let word of words) {
+                            if ((currentLine + word).length > maxLen) {
+                                if (currentLine) lines.push(currentLine.trim());
+                                currentLine = word + ' ';
+                            } else {
+                                currentLine += word + ' ';
+                            }
+                        }
+                        if (currentLine) lines.push(currentLine.trim());
+                        return lines;
+                    }
+
                     // 1. Format Multiline Labels for the Y-Axis & Auto-Wrap Long Text
                     const chartLabels = displayData.map(d => {
                         if (currentCategory === 'color') {
-                            const rpo = d.label.trim();
-                            const names = d.color_names ? d.color_names.split(',').map(n => n.trim()) : [];
-                            const name = names.length > 0 ? names[0] : rpo;
+                            const rpo = d.rpo_code || d.label;
+                            const name = d.color_names ? d.color_names.split(',')[0].trim() : '';
                             
-                            if (rpo === name) return name;
+                            if (!name || rpo === name) return rpo;
+                            return [rpo, ...wrapText(name, 22)];
                             
-                            // Wrap long color names so they don't hit the boundary on mobile
-                            let words = name.split(' ');
-                            let lines = [rpo];
-                            let currentLine = '';
-                            for (let word of words) {
-                                if ((currentLine + word).length > 18) {
-                                    if (currentLine) lines.push(currentLine.trim());
-                                    currentLine = word + ' ';
-                                } else {
-                                    currentLine += word + ' ';
-                                }
-                            }
-                            if (currentLine) lines.push(currentLine.trim());
-                            return lines;
+                        } else if (currentCategory === 'engine') {
+                            const rpo = d.engine_rpo;
+                            const name = d.engine_type || d.label;
                             
-                        } else if (currentCategory === 'engine' && d.label.includes(' - ')) {
-                            const parts = d.label.split(' - ');
-                            const rpo = parts[0].trim();
-                            const name = parts.slice(1).join(' - ').trim();
-                            
-                            if (rpo === name) return name;
-                            
-                            // Wrap long engine names to prevent cutoff
-                            let words = name.split(' ');
-                            let lines = [rpo];
-                            let currentLine = '';
-                            for (let word of words) {
-                                if ((currentLine + word).length > 18) {
-                                    if (currentLine) lines.push(currentLine.trim());
-                                    currentLine = word + ' ';
-                                } else {
-                                    currentLine += word + ' ';
-                                }
-                            }
-                            if (currentLine) lines.push(currentLine.trim());
-                            return lines;
+                            if (!rpo || rpo === name) return wrapText(name, 22);
+                            return [rpo, ...wrapText(name, 22)];
                         }
                         return d.label;
                     });
@@ -1723,20 +1020,11 @@
                     const maxStagger = Math.max(...barOffsets);
 
                     // FIX: Dynamically expand container height so rows have enough room for multiline text
-                    const canvasEl = document.getElementById('barChart');
-                    const canvasWrapper = document.querySelector('.barChart');
-                    if (canvasEl && canvasWrapper) {
-                        const rowHeight = 65; 
+                    const canvasWrapper = document.getElementById('dynamicChartWrapper');
+                    if (canvasWrapper) {
+                        const rowHeight = 48; // 48px gives comfortable space for multiline labels
                         const calculatedHeight = Math.max(600, displayData.length * rowHeight);
-                        
-                        // The wrapper dictates the actual pixel height
-                        canvasWrapper.style.setProperty('height', `${calculatedHeight}px`, 'important');
-                        canvasWrapper.style.setProperty('max-height', 'none', 'important');
-                        canvasWrapper.style.position = 'relative'; // Required for Chart.js
-                        
-                        // The canvas must be exactly 100% of the wrapper to prevent internal resolution squishing
-                        canvasEl.style.setProperty('height', '100%', 'important');
-                        canvasEl.style.setProperty('max-height', 'none', 'important');
+                        canvasWrapper.style.height = `${calculatedHeight}px`;
                     }
 
                     config = {
@@ -1762,7 +1050,7 @@
                             maintainAspectRatio: false,
                             layout: {
                                 // Add dynamic padding to the right so staggered labels aren't cut off
-                                padding: { right: Math.max(55, maxStagger + 40), top: 10, bottom: 10, left: 10 }
+                                padding: { right: Math.max(65, maxStagger + 45), top: 10, bottom: 10, left: 10 }
                             },
                             onClick: (event, elements, chart) => {
                                 if (!chart.chartArea) return;
@@ -1772,15 +1060,15 @@
                                 const points = chart.getElementsAtEventForMode(event, 'index', { intersect: false, axis: 'y' }, false);
                                 if (points.length > 0) {
                                     const index = points[0].index;
+                                    const d = displayData[index];
                                     
-                                    // Re-join array labels back into a string for routing
-                                    let clickedLabel = chart.data.labels[index];
-                                    let paramValue = clickedLabel;
-                                    
-                                    if (Array.isArray(clickedLabel)) {
-                                        paramValue = clickedLabel.slice(1).join(' ').trim();
-                                    } else if (typeof clickedLabel === 'string' && clickedLabel.includes(' - ')) {
-                                        paramValue = clickedLabel.split(' - ').slice(1).join(' - ').trim();
+                                    let paramValue = '';
+                                    if (currentCategory === 'color') {
+                                        paramValue = d.color_names ? d.color_names.split(',')[0].trim() : (d.rpo_code || d.label);
+                                    } else if (currentCategory === 'engine') {
+                                        paramValue = d.engine_type || d.label;
+                                    } else {
+                                        paramValue = d.label;
                                     }
                                     
                                     const params = new URLSearchParams();
@@ -1819,7 +1107,7 @@
                                     anchor: 'end', 
                                     align: 'right', 
                                     offset: (ctx) => barOffsets[ctx.dataIndex],
-                                    display: true, // Forces all labels to stay visible instead of colliding
+                                    display: true, // Forces all labels to stay visible
                                     formatter: (val, ctx) => {
                                         if (totalCount === 0) return '0%';
                                         
@@ -1836,9 +1124,8 @@
                                     enabled: true,
                                     callbacks: {
                                         title: function(context) {
-                                            // Re-join array labels onto a single line for the hover tooltip 
                                             let label = context[0].label;
-                                            if (Array.isArray(label)) return label[0] + ' - ' + label.slice(1).join(' ');
+                                            if (Array.isArray(label)) return label.join(' - ');
                                             return label;
                                         },
                                         label: function(context) {
@@ -1850,6 +1137,7 @@
                             },
                             scales: {
                                 y: { 
+                                    grid: { color: 'rgba(255, 255, 255, 0.1)' },
                                     ticks: { 
                                         color: '#ffffff', 
                                         font: { size: 10 },
@@ -1859,7 +1147,7 @@
                                 x: { 
                                     beginAtZero: true, 
                                     grace: '5%',
-                                    // Kept precision: 0 to prevent decimals, but removed stepSize: 1 to allow large numbers to scale normally
+                                    grid: { color: 'rgba(255, 255, 255, 0.1)' },
                                     ticks: { color: '#ffffff', precision: 0 } 
                                 }
                             }

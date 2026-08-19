@@ -875,8 +875,9 @@
                 const hasScales = ['bar', 'line'].includes(type);
                 const isHorizontal = overrideOptions.indexAxis === 'y';
 
-                // 1. Format Multiline Labels for Exterior Color / Engine
-                if (ctxId === 'colorChart' || ctxId === 'engineChart') {
+                // 1. Format Multiline Labels for Exterior Color (Only applies to horizontal bar charts)
+                // The !isRadial check ensures pie/circle charts keep their "RPO - Name" format for the legend
+                if (!isRadial && (ctxId === 'colorChart' || ctxId === 'engineChart')) {
                     labels = labels.map(label => {
                         if (label.includes(' - ')) {
                             const parts = label.split(' - ');
@@ -929,7 +930,7 @@
                     dynamicPadding = { top: radialPad, bottom: radialPad, left: 25, right: 25 };
                 } else if (isHorizontal) {
                     dynamicPadding = { right: Math.max(55, maxStagger + 35), top: 10, bottom: 10, left: 10 };
-                } else { // Vertical Bar Chart (e.g., Model Chart)
+                } else { // Vertical Bar Chart
                     dynamicPadding = { right: 10, top: Math.max(25, maxStagger + 25), bottom: 10, left: 10 };
                 }
                 // ---------------------------------------------
@@ -1031,19 +1032,19 @@
                         const points = chart.getElementsAtEventForMode(event, interactionMode, { intersect: isIntersect, axis: isHorizontal ? 'y' : 'x' }, false);
                         if (points.length > 0 && filterParam) {
                             const index = points[0].index;
+                            
                             let clickedLabel = chart.data.labels[index];
-                            if (Array.isArray(clickedLabel)) clickedLabel = clickedLabel.join(' - ');
+                            let paramValue = clickedLabel;
+                            
+                            if (Array.isArray(clickedLabel)) {
+                                paramValue = clickedLabel.slice(1).join(' ').trim();
+                            } else if (typeof clickedLabel === 'string' && clickedLabel.includes(' - ')) {
+                                paramValue = clickedLabel.split(' - ').slice(1).join(' - ').trim();
+                            }
                             
                             const params = new URLSearchParams();
                             if (window.dashboardQueryDate) params.set('date', window.dashboardQueryDate);
                             if (window.dashboardSelectedModel && filterParam !== 'model') params.set('model', window.dashboardSelectedModel);
-                            
-                            let paramValue = clickedLabel;
-                            if (filterParam === 'engine' || filterParam === 'color') {
-                                if (paramValue.includes(' - ')) {
-                                    paramValue = paramValue.split(' - ').slice(1).join(' - ').trim();
-                                }
-                            }
                             
                             params.set(filterParam, paramValue);
                             window.location.href = '/vehicles?' + params.toString();
@@ -1072,7 +1073,7 @@
                             callbacks: {
                                 title: function(context) { 
                                     let label = context[0].label;
-                                    if (Array.isArray(label)) label = label.join(' - ');
+                                    if (Array.isArray(label)) return label[0] + ' - ' + label.slice(1).join(' ');
                                     return label; 
                                 },
                                 label: function(context) {
@@ -1625,17 +1626,51 @@
                         borderWidth = 2;
                     }
 
-                    // 1. Format Multiline Labels for the Y-Axis
+                    // 1. Format Multiline Labels for the Y-Axis & Auto-Wrap Long Text
                     const chartLabels = displayData.map(d => {
-                        if ((currentCategory === 'color' || currentCategory === 'engine') && d.label.includes(' - ')) {
+                        if (currentCategory === 'color') {
+                            const rpo = d.label.trim();
+                            const names = d.color_names ? d.color_names.split(',').map(n => n.trim()) : [];
+                            const name = names.length > 0 ? names[0] : rpo;
+                            
+                            if (rpo === name) return name;
+                            
+                            // Wrap long color names so they don't hit the boundary on mobile
+                            let words = name.split(' ');
+                            let lines = [rpo];
+                            let currentLine = '';
+                            for (let word of words) {
+                                if ((currentLine + word).length > 18) {
+                                    if (currentLine) lines.push(currentLine.trim());
+                                    currentLine = word + ' ';
+                                } else {
+                                    currentLine += word + ' ';
+                                }
+                            }
+                            if (currentLine) lines.push(currentLine.trim());
+                            return lines;
+                            
+                        } else if (currentCategory === 'engine' && d.label.includes(' - ')) {
                             const parts = d.label.split(' - ');
                             const rpo = parts[0].trim();
                             const name = parts.slice(1).join(' - ').trim();
                             
-                            if (rpo === name) {
-                                return name;
+                            if (rpo === name) return name;
+                            
+                            // Wrap long engine names to prevent cutoff
+                            let words = name.split(' ');
+                            let lines = [rpo];
+                            let currentLine = '';
+                            for (let word of words) {
+                                if ((currentLine + word).length > 18) {
+                                    if (currentLine) lines.push(currentLine.trim());
+                                    currentLine = word + ' ';
+                                } else {
+                                    currentLine += word + ' ';
+                                }
                             }
-                            return [rpo, name];
+                            if (currentLine) lines.push(currentLine.trim());
+                            return lines;
                         }
                         return d.label;
                     });
@@ -1719,26 +1754,22 @@
                                 if (points.length > 0) {
                                     const index = points[0].index;
                                     
+                                    // Re-join array labels back into a string for routing
                                     let clickedLabel = chart.data.labels[index];
+                                    let paramValue = clickedLabel;
+                                    
                                     if (Array.isArray(clickedLabel)) {
-                                        clickedLabel = clickedLabel.join(' - ');
+                                        paramValue = clickedLabel.slice(1).join(' ').trim();
+                                    } else if (typeof clickedLabel === 'string' && clickedLabel.includes(' - ')) {
+                                        paramValue = clickedLabel.split(' - ').slice(1).join(' - ').trim();
                                     }
                                     
                                     const params = new URLSearchParams();
-                                    
                                     const selectedYearFilter = document.getElementById('filterYear').value;
                                     if (selectedYearFilter) params.set('year', selectedYearFilter);
                                     
                                     const selectedModelFilter = document.getElementById('filterModel').value;
                                     if (selectedModelFilter) params.set('model', selectedModelFilter);
-                                    
-                                    let paramValue = clickedLabel;
-                                    
-                                    if (currentCategory === 'engine' || currentCategory === 'color') {
-                                        if (paramValue.includes(' - ')) {
-                                            paramValue = paramValue.split(' - ').slice(1).join(' - ').trim();
-                                        }
-                                    }
                                     
                                     params.set(currentCategory, paramValue);
                                     window.location.href = '/vehicles?' + params.toString();
@@ -1769,7 +1800,7 @@
                                     anchor: 'end', 
                                     align: 'right', 
                                     offset: (ctx) => barOffsets[ctx.dataIndex],
-                                    display: true, // Forces all labels to stay visible
+                                    display: true, // Forces all labels to stay visible instead of colliding
                                     formatter: (val, ctx) => {
                                         if (totalCount === 0) return '0%';
                                         
@@ -1786,8 +1817,9 @@
                                     enabled: true,
                                     callbacks: {
                                         title: function(context) {
+                                            // Re-join array labels onto a single line for the hover tooltip 
                                             let label = context[0].label;
-                                            if (Array.isArray(label)) label = label.join(' - ');
+                                            if (Array.isArray(label)) return label[0] + ' - ' + label.slice(1).join(' ');
                                             return label;
                                         },
                                         label: function(context) {

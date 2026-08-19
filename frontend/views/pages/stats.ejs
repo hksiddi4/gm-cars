@@ -875,12 +875,15 @@
                 const hasScales = ['bar', 'line'].includes(type);
                 const isHorizontal = overrideOptions.indexAxis === 'y';
 
-                // 1. Format Multiline Labels for Exterior Color (Y-Axis)
-                if (ctxId === 'colorChart') {
+                // 1. Format Multiline Labels for Exterior Color / Engine
+                if (ctxId === 'colorChart' || ctxId === 'engineChart') {
                     labels = labels.map(label => {
                         if (label.includes(' - ')) {
                             const parts = label.split(' - ');
-                            return [parts[0], parts.slice(1).join(' - ')];
+                            const rpo = parts[0].trim();
+                            const name = parts.slice(1).join(' - ').trim();
+                            if (rpo === name) return name;
+                            return [rpo, name];
                         }
                         return label;
                     });
@@ -906,8 +909,8 @@
                     if (pct < 0.05) {
                         if (isRadial) {
                             sliceOffsets[i] = 12 + (consecutiveSmallSlices % 3) * 18;
-                        } else if (isHorizontal) {
-                            sliceOffsets[i] = 6 + (consecutiveSmallSlices % 3) * 30; // Bar chart stagger
+                        } else {
+                            sliceOffsets[i] = 6 + (consecutiveSmallSlices % 3) * 30; // Works for both horizontal and vertical bars
                         }
                         consecutiveSmallSlices++;
                     } else {
@@ -919,14 +922,14 @@
                 // Calculate the exact padding needed to fit the longest line without clipping
                 const maxStagger = sliceOffsets.length > 0 ? Math.max(...sliceOffsets) : 0;
                 
-                // Apply padding appropriately based on chart type
+                // Apply padding appropriately based on chart orientation
                 let dynamicPadding;
                 if (isRadial) {
                     const radialPad = Math.max(35, maxStagger + 25);
                     dynamicPadding = { top: radialPad, bottom: radialPad, left: 25, right: 25 };
                 } else if (isHorizontal) {
                     dynamicPadding = { right: Math.max(55, maxStagger + 35), top: 10, bottom: 10, left: 10 };
-                } else {
+                } else { // Vertical Bar Chart (e.g., Model Chart)
                     dynamicPadding = { right: 10, top: Math.max(25, maxStagger + 25), bottom: 10, left: 10 };
                 }
                 // ---------------------------------------------
@@ -994,16 +997,19 @@
                                 ctx.moveTo(startX, startY);
                                 ctx.lineTo(endX, endY);
                                 ctx.stroke();
-                            } else if (chart.config.type === 'bar' && isHorizontal) {
+                            } else if (chart.config.type === 'bar') {
                                 const bar = element;
                                 if (offset > 4) {
                                     const startX = bar.x;
                                     const startY = bar.y;
-                                    const endX = startX + offset - 2; 
                                     
                                     ctx.beginPath();
                                     ctx.moveTo(startX, startY);
-                                    ctx.lineTo(endX, startY);
+                                    if (isHorizontal) {
+                                        ctx.lineTo(startX + offset - 2, startY);
+                                    } else {
+                                        ctx.lineTo(startX, startY - offset + 2);
+                                    }
                                     ctx.stroke();
                                 }
                             }
@@ -1621,10 +1627,15 @@
 
                     // 1. Format Multiline Labels for the Y-Axis
                     const chartLabels = displayData.map(d => {
-                        // Splits "GBA - BLACK" into ["GBA", "BLACK"] for stacked display
-                        if (currentCategory === 'color' && d.label.includes(' - ')) {
+                        if ((currentCategory === 'color' || currentCategory === 'engine') && d.label.includes(' - ')) {
                             const parts = d.label.split(' - ');
-                            return [parts[0], parts.slice(1).join(' - ')];
+                            const rpo = parts[0].trim();
+                            const name = parts.slice(1).join(' - ').trim();
+                            
+                            if (rpo === name) {
+                                return name;
+                            }
+                            return [rpo, name];
                         }
                         return d.label;
                     });
@@ -1634,7 +1645,6 @@
                     let consecutiveSmall = 0;
                     for (let i = 0; i < displayData.length; i++) {
                         const pct = totalCount > 0 ? (displayData[i].count / totalCount) * 100 : 0;
-                        // If percentage is small, stagger horizontally to avoid text walls
                         if (pct < 5.0) { 
                             barOffsets[i] = 6 + (consecutiveSmall % 3) * 35;
                             consecutiveSmall++;
@@ -1661,7 +1671,6 @@
                                 if (offset > 4) {
                                     const startX = bar.x;
                                     const startY = bar.y;
-                                    // Calculate endX to stop right before the datalabel starts
                                     const endX = startX + offset - 2; 
                                     
                                     ctx.beginPath();
@@ -1710,7 +1719,6 @@
                                 if (points.length > 0) {
                                     const index = points[0].index;
                                     
-                                    // Re-join array labels back into a string for routing
                                     let clickedLabel = chart.data.labels[index];
                                     if (Array.isArray(clickedLabel)) {
                                         clickedLabel = clickedLabel.join(' - ');
@@ -1778,7 +1786,6 @@
                                     enabled: true,
                                     callbacks: {
                                         title: function(context) {
-                                            // Re-join array labels for the hover tooltip 
                                             let label = context[0].label;
                                             if (Array.isArray(label)) label = label.join(' - ');
                                             return label;
@@ -1800,12 +1807,12 @@
                                 },
                                 x: { 
                                     beginAtZero: true, 
-                                    grace: '5%', // Reduced grace since right-side padding handles the label spacing
+                                    grace: '5%',
                                     ticks: { color: '#ffffff', precision: 0, stepSize: 1 } 
                                 }
                             }
                         },
-                        plugins: [barLinePlugin] // Inject our new lead line plugin
+                        plugins: [barLinePlugin]
                     };
                 }
 

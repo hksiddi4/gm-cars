@@ -49,6 +49,15 @@
           <% } %>
       </div>
       <div class="flex-row-wrap">
+          <div id="corvette-roof-toggle" style="display: none; width: 100%; justify-content: center; margin-bottom: 15px;">
+            <div class="btn-group shadow-sm" role="group" aria-label="Roof Toggle">
+              <input type="radio" class="btn-check" name="roofToggle" id="roofUp" autocomplete="off" checked>
+              <label class="btn btn-outline-secondary" style="font-weight: 600;" for="roofUp">Top Up</label>
+
+              <input type="radio" class="btn-check" name="roofToggle" id="roofDown" autocomplete="off">
+              <label class="btn btn-outline-secondary" style="font-weight: 600;" for="roofDown">Top Down</label>
+            </div>
+          </div>
           <div id="image-warning"></div>
           <div id="carousel-container">
             <div id="loading-animation" class="shimmer">
@@ -699,63 +708,67 @@
       }
 
       let urls = [];
-
-      // Troubleshooting imgGen
-      //console.log(`Model Year: ${modelYear}, MMC Code: ${mmc_code}, Trim: ${trim}, Color: ${color}, Interior Color: ${colorInt}`);
-      //console.log(`https://cgi.chevrolet.com/mmgprod-us/dynres/prove/image.gen?i=${modelYear}/${mmc_code}/${mmc_code}__${trim}/${color}_${rpos}gmds10.png&v=deg01&std=true&country=US&send404=true&transparentBackgroundPng=true`);
-      
-      if (model === 'CELESTIQ') {
-        warningDiv.innerHTML = 'Image generation does not support Celestiq.';
-        urls = [ghostImg];
-      } else if ((['3WT', '4WT'].includes(vehicleTrim)) && modelYear === 2024) {
-        warningDiv.innerHTML = 'Image generation does not support 2024 Silverado EV WT.';
-        urls = [ghostImg];
-      } else if (modelYear && mmc_code && trim && color && colorInt) {
-        for (let i = 1; i <= extMax; i++) {
-          urls.push(`/gm-images/mmgprod-us/dynres/prove/image.gen?i=${modelYear}/${mmc_code}/${mmc_code}__${trim}/${color}_${rpos}gmds10.png&v=deg${String(i).padStart(2, '0')}&std=true&country=US&send404=true&transparentBackgroundPng=true`);
-        }
-        for (let i = 1; i <= intMax; i++) {
-          urls.push(`/gm-images/mmgprod-us/dynres/prove/imageinterior.gen?i=${modelYear}/${mmc_code}/${mmc_code}__${trim}/${colorInt}_${rpos}gmds10.png&v=deg${String(i).padStart(2, '0')}&std=true&country=US&send404=true&transparentBackgroundPng=true`);
-        }
-      } else {
-        urls = [ghostImg];
-      }
-
-      const gallery = document.getElementById('image-gallery');
-      if (urls.length === 1 && urls[0] === ghostImg) {
-        document.getElementById('image-gallery').style.display = 'none';
-      } else {
-        urls.forEach((imgSrc, index) => {
-          const thumb = document.createElement('img');
-          thumb.src = imgSrc;
-          thumb.alt = `Thumbnail ${index + 1}`;
-          thumb.style.width = '100px';
-          thumb.style.cursor = 'pointer';
-          thumb.style.border = '1px solid transparent';
-          thumb.addEventListener('click', () => {
-            showImage(index);
-          });
-          gallery.appendChild(thumb);
-        });
-      }
-
       let currentIndex = 0;
       let initialLoad = true;
+      const gallery = document.getElementById('image-gallery');
+
+      function updateGallery(topDown) {
+        urls = [];
+        
+        if (model === 'CELESTIQ') {
+          warningDiv.innerHTML = 'Image generation does not support Celestiq.';
+          urls = [ghostImg];
+        } else if ((['3WT', '4WT'].includes(vehicleTrim)) && modelYear === 2024) {
+          warningDiv.innerHTML = 'Image generation does not support 2024 Silverado EV WT.';
+          urls = [ghostImg];
+        } else if (modelYear && mmc_code && trim && color && colorInt) {
+          for (let i = 1; i <= extMax; i++) {
+            let u = `/gm-images/mmgprod-us/dynres/prove/image.gen?i=${modelYear}/${mmc_code}/${mmc_code}__${trim}/${color}_${rpos}gmds10.png&v=deg${String(i).padStart(2, '0')}&std=true&country=US&send404=true&transparentBackgroundPng=true`;
+            if (topDown) u += '&removeCat=CONV';
+            urls.push(u);
+          }
+          for (let i = 1; i <= intMax; i++) {
+            urls.push(`/gm-images/mmgprod-us/dynres/prove/imageinterior.gen?i=${modelYear}/${mmc_code}/${mmc_code}__${trim}/${colorInt}_${rpos}gmds10.png&v=deg${String(i).padStart(2, '0')}&std=true&country=US&send404=true&transparentBackgroundPng=true`);
+          }
+        } else {
+          urls = [ghostImg];
+        }
+
+        gallery.innerHTML = '';
+        if (urls.length === 1 && urls[0] === ghostImg) {
+          gallery.style.display = 'none';
+        } else {
+          gallery.style.display = 'flex';
+          urls.forEach((imgSrc, index) => {
+            const thumb = document.createElement('img');
+            thumb.src = imgSrc;
+            thumb.alt = `Thumbnail ${index + 1}`;
+            thumb.style.width = '100px';
+            thumb.style.cursor = 'pointer';
+            thumb.style.border = '1px solid transparent';
+            thumb.addEventListener('click', () => {
+              showImage(index);
+            });
+            gallery.appendChild(thumb);
+          });
+        }
+      }
 
       function preloadImage(src) {
         const img = new Image();
         img.src = src;
       }
 
-      function showImage(index) {
-        // If clicking the current active image after initial load, do nothing
-        if (!initialLoad && index === currentIndex) {
+      function showImage(index, forceUpdate = false) {
+        // If clicking the current active image after initial load, do nothing unless forcing an update
+        if (!initialLoad && index === currentIndex && !forceUpdate) {
           return;
         }
 
         while (urls[index] === null) {
           index = (index + 1) % urls.length;
-          if (index === currentIndex) break;
+          // Prevent infinite loops if forcing an update
+          if (index === currentIndex && !forceUpdate) break;
         }
         currentIndex = index;
         const imgSrc = urls[index];
@@ -850,6 +863,25 @@
         if (urls[nextIndex]) preloadImage(urls[nextIndex]);
       }
 
+      if (modelUpper.startsWith('CORVETTE')) {
+        document.getElementById('corvette-roof-toggle').style.display = 'flex';
+        
+        document.getElementById('roofUp').addEventListener('change', (e) => {
+          if (e.target.checked) {
+            updateGallery(false);
+            showImage(currentIndex, true);
+          }
+        });
+        
+        document.getElementById('roofDown').addEventListener('change', (e) => {
+          if (e.target.checked) {
+            updateGallery(true);
+            showImage(currentIndex, true);
+          }
+        });
+      }
+
+      updateGallery(false);
       showImage(currentIndex);
 
       document.getElementById('prev').addEventListener('click', () => {

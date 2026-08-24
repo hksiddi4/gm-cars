@@ -14,6 +14,17 @@
                 min-width: 110px;
             }
         }
+        
+        /* NEW: Start images invisible and set up the fade transition */
+        .rpo-card img {
+            opacity: 0;
+            transition: opacity 0.4s ease-in-out;
+        }
+        
+        /* NEW: Class added via JS when image finishes downloading */
+        .rpo-card img.loaded {
+            opacity: 1;
+        }
     </style>
     <main id="main-content" class="container">
         <div class="row pt-4">
@@ -37,7 +48,6 @@
                     <option value="hummersuv">Hummer EV SUV</option>
                 </select>
 
-                <!-- NEW: Corvette Submodel Dropdown (Hidden by default) -->
                 <select id="submodelSelect" class="form-select small-dropdown" style="display: none;" aria-label="Filter by submodel">
                     <option value="stingray">Stingray</option>
                     <option value="z06">Z06</option>
@@ -72,7 +82,6 @@
             celestiq: <%- JSON.stringify(celestiqRpo || {}) %>,
         };
 
-        // Added submodel parameter
         function renderRPOs(model, submodel = null) {
             container.innerHTML = '';
             const safeModel = Object.prototype.hasOwnProperty.call(allRpos, model) ? model : null;
@@ -88,7 +97,6 @@
                 
                 const params = new URLSearchParams();
                 if (safeModel !== 'corvette') params.set('model', safeModel);
-                // Optionally pass submodel to the URL if you need it on the vehicles page
                 if (safeModel === 'corvette' && submodel) params.set('submodel', submodel);
                 params.set('rpo', rpo);
                 
@@ -101,7 +109,6 @@
 
                 const img = document.createElement('img');
                 
-                // NEW: Dynamic Image Path Logic
                 let imagePath = `../img/rpos/${encodeURIComponent(safeModel)}`;
                 if (safeModel === 'corvette' && submodel) {
                     imagePath += `/${encodeURIComponent(submodel)}`;
@@ -110,6 +117,12 @@
                 
                 img.alt = rpo;
                 img.loading = 'lazy';
+                
+                // NEW: Triggers the CSS transition once the image is completely downloaded
+                img.onload = function() {
+                    this.classList.add('loaded');
+                };
+
                 img.onerror = function() {
                     if (!this.dataset.fallback) {
                         this.dataset.fallback = 'true';
@@ -124,6 +137,8 @@
                         } else {
                             fallbackPath += 'chevrolet.webp';
                         }
+                        // Setting the new src will trigger the onload event again, 
+                        // causing the fallback image to fade in smoothly as well!
                         this.src = fallbackPath;
                         missingRpos.push(rpo);
                     }
@@ -147,7 +162,6 @@
             });
         }
 
-        // Handle Main Dropdown Changes
         modelSelect.addEventListener('change', e => {
             const selectedModel = e.target.value;
             
@@ -160,12 +174,10 @@
             }
         });
 
-        // Handle Submodel Dropdown Changes
         submodelSelect.addEventListener('change', e => {
             renderRPOs(modelSelect.value, e.target.value);
         });
 
-        // Initial Load
         if (modelSelect.value === 'corvette') {
             submodelSelect.style.display = 'block';
             renderRPOs(modelSelect.value, submodelSelect.value);

@@ -192,22 +192,23 @@ function getHeaderImages() {
 function getLocalImageRPOs() {
     const localRpoImages = {};
     try {
-        const modelDirs = fs.readdirSync(rpoWheelsDir, { withFileTypes: true })
-            .filter(dirent => dirent.isDirectory())
-            .map(dirent => dirent.name);
-
-        modelDirs.forEach(modelDir => {
-            const modelPath = path.join(rpoWheelsDir, modelDir);
-            const imageFiles = fs.readdirSync(modelPath)
-                .filter(file => /\.(webp)$/i.test(file));
-            
-            imageFiles.forEach(file => {
-                const rpoCode = path.parse(file).name.toUpperCase();
-                const imagePath = `/img/rpos/${modelDir}/${file}`;
-                localRpoImages[`${modelDir.toUpperCase()}-${rpoCode}`] = imagePath;
-                if (!localRpoImages[rpoCode]) localRpoImages[rpoCode] = imagePath;
+        // Recursive function to dig into nested folders like corvette/z06
+        function scanDirectory(currentPath, prefix = '') {
+            const entries = fs.readdirSync(currentPath, { withFileTypes: true });
+            entries.forEach(entry => {
+                if (entry.isDirectory()) {
+                    scanDirectory(path.join(currentPath, entry.name), prefix ? `${prefix}/${entry.name}` : entry.name);
+                } else if (/\.(webp)$/i.test(entry.name)) {
+                    const rpoCode = path.parse(entry.name).name.toUpperCase();
+                    const imagePath = `/img/rpos/${prefix}/${entry.name}`;
+                    
+                    // Add to map (e.g., CORVETTE-Z06-RPO or just RPO)
+                    localRpoImages[`${prefix.replace(/\//g, '-').toUpperCase()}-${rpoCode}`] = imagePath;
+                    if (!localRpoImages[rpoCode]) localRpoImages[rpoCode] = imagePath;
+                }
             });
-        });
+        }
+        scanDirectory(rpoWheelsDir);
     } catch (error) {
         console.warn(`Warning: Could not read RPO wheel image directory: ${error.message}`);
     }
@@ -355,8 +356,22 @@ app.get('/search', searchLimiter, async (req, res) => {
             
             // Mirror directory resolution logic used on frontend
             let folderName = modelUpper.toLowerCase();
-            if (modelUpper.startsWith('CORVETTE')) {
-                folderName = 'corvette';
+            if (modelUpper === 'CORVETTE STINGRAY') {
+                folderName = 'corvette/stingray';
+            } else if (modelUpper === 'CORVETTE Z06') {
+                folderName = 'corvette/z06';
+            } else if (modelUpper === 'CORVETTE E-RAY') {
+                folderName = 'corvette/e-ray';
+            } else if (modelUpper === 'CORVETTE GRAND SPORT' && vehicleTrim === 'GRAND SPORT X') {
+                folderName = 'corvette/grand_sport_x';
+            } else if (modelUpper === 'CORVETTE GRAND SPORT') {
+                folderName = 'corvette/grand_sport';
+            } else if (modelUpper === 'CORVETTE ZR1') {
+                folderName = 'corvette/zr1';
+            } else if (modelUpper === 'CORVETTE ZR1X') {
+                folderName = 'corvette/zr1x';
+            } else if (modelUpper.startsWith('CORVETTE')) {
+                folderName = 'corvette'; // Fallback
             } else if (modelUpper === 'ESCALADE IQ') {
                 folderName = 'escaladeiq';
             } else if (modelUpper === 'CT4' && vehicleTrim.startsWith('V-SERIES')) {

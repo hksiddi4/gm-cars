@@ -68,6 +68,7 @@
 
         const allRpos = {
             camaro: <%- JSON.stringify(camaroRpo || {}) %>,
+            corvettegsx: <%- JSON.stringify(corvetteGSXRpo || {}) %>,
             corvette: <%- JSON.stringify(corvetteRpo || {}) %>,
             escalade: <%- JSON.stringify(escaladeRpo || {}) %>,
             escaladeiq: <%- JSON.stringify(escaladeiqRpo || {}) %>,
@@ -102,7 +103,12 @@
             const safeModel = Object.prototype.hasOwnProperty.call(allRpos, model) ? model : null;
             if (!safeModel) return;
             
-            const rpos = allRpos[safeModel];
+            // NEW: Point the rpo dictionary to corvettegsx if Grand Sport X is selected
+            let rpos = allRpos[safeModel];
+            if (safeModel === 'corvette' && submodel === 'grand_sport_x' && allRpos.corvettegsx) {
+                rpos = allRpos.corvettegsx;
+            }
+            
             const missingRpos = [];
 
             Object.keys(rpos).forEach(rpo => {

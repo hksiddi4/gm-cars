@@ -296,6 +296,7 @@
       const colorMap = <%- JSON.stringify(colorMap) %>;
       const camaroRpo = <%- JSON.stringify(camaroRpo) %>;
       const corvetteRpo = <%- JSON.stringify(corvetteRpo) %>;
+      const corvetteGSXRpo = <%- JSON.stringify(corvetteGSXRpo) %>;
       const escaladeRpo = <%- JSON.stringify(escaladeRpo) %>;
       const escaladeiqRpo = <%- JSON.stringify(escaladeiqRpo) %>;
       const ct4Rpo = <%- JSON.stringify(ct4Rpo) %>;
@@ -320,6 +321,7 @@
         ...invertedColorMap,
         ...camaroRpo,
         ...corvetteRpo,
+        ...corvetteGSXRpo,
         ...escaladeRpo,
         ...escaladeiqRpo,
         ...ct4Rpo,
@@ -352,8 +354,22 @@
           container.appendChild(cardWrapper);
 
           let imgSrc;
-          if (model.startsWith('CORVETTE')) {
-              imgSrc = `/img/rpos/corvette/${rpoCode}.webp`;
+          if (model === 'CORVETTE STINGRAY') {
+              imgSrc = `/img/rpos/corvette/stingray/${rpoCode}.webp`;
+          } else if (model === 'CORVETTE Z06') {
+              imgSrc = `/img/rpos/corvette/z06/${rpoCode}.webp`;
+          } else if (model === 'CORVETTE E-RAY') {
+              imgSrc = `/img/rpos/corvette/e-ray/${rpoCode}.webp`;
+          } else if (model === 'CORVETTE GRAND SPORT' && vehicleTrim === 'GRAND SPORT X') {
+              imgSrc = `/img/rpos/corvette/grand_sport_x/${rpoCode}.webp`;
+          } else if (model === 'CORVETTE GRAND SPORT') {
+              imgSrc = `/img/rpos/corvette/grand_sport/${rpoCode}.webp`;
+          } else if (model === 'CORVETTE ZR1') {
+              imgSrc = `/img/rpos/corvette/zr1/${rpoCode}.webp`;
+          } else if (model === 'CORVETTE ZR1X') {
+              imgSrc = `/img/rpos/corvette/zr1x/${rpoCode}.webp`;
+          } else if (model.startsWith('CORVETTE')) {
+              imgSrc = `/img/rpos/corvette/${rpoCode}.webp`; // Fallback
           } else if (model === 'ESCALADE IQ') {
               imgSrc = `/img/rpos/escaladeiq/${rpoCode}.webp`;
           } else if (model === 'CT4' && vehicleTrim.startsWith('V-SERIES')) {
@@ -378,6 +394,7 @@
           let descText = 
             (model === 'CAMARO' && camaroRpo[rpoCode]) ||
             (model.startsWith('CORVETTE') && corvetteRpo[rpoCode]) ||
+            (model.startsWith('CORVETTE') && trim === 'GRAND SPORT X' && corvetteGSXRpo[rpoCode]) ||
             (model === 'ESCALADE' && escaladeRpo[rpoCode]) ||
             (model === 'ESCALADE IQ' && escaladeiqRpo[rpoCode]) ||
             (model === 'CT4' && ct4Rpo[rpoCode]) ||
@@ -421,6 +438,10 @@
         }
         if (model.startsWith('CORVETTE') && corvetteRpo[rpoCode]) {
           element.innerHTML = `<div>${corvetteRpo[rpoCode]}</div>`;
+          return;
+        }
+        if (model.startsWith('CORVETTE') && trim === 'GRAND SPORT X' && corvetteGSXRpo[rpoCode]) {
+          element.innerHTML = `<div>${corvetteGSXRpo[rpoCode]}</div>`;
           return;
         }
         if (model === 'ESCALADE' && escaladeRpo[rpoCode]) {

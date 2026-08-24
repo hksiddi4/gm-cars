@@ -52,6 +52,7 @@
     <script>
         const camaroRpo = <%- JSON.stringify(camaroRpo) %>;
         const corvetteRpo = <%- JSON.stringify(corvetteRpo) %>;
+        const corvetteGSXRpo = <%- JSON.stringify(corvetteGSXRpo) %>;
         const escaladeRpo = <%- JSON.stringify(escaladeRpo) %>;
         const escaladeiqRpo = <%- JSON.stringify(escaladeiqRpo) %>;
         const ct4Rpo = <%- JSON.stringify(ct4Rpo) %>;
@@ -65,6 +66,7 @@
         const rpoDescriptions = {
             ...camaroRpo,
             ...corvetteRpo,
+            ...corvetteGSXRpo,
             ...escaladeRpo,
             ...escaladeiqRpo,
             ...ct4Rpo,
@@ -110,9 +112,8 @@
                     return escaladeRpo[rpoCode];
                 case 'ESCALADE IQ':
                     return escaladeiqRpo[rpoCode];
-                default:
-                    if (model.startsWith('CORVETTE')) return corvetteRpo[rpoCode];
-                    return null;
+                case 'CORVETTE GSX':
+                    return corvetteGSXRpo[rpoCode];
             }
         };
         

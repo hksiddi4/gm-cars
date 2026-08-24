@@ -129,6 +129,7 @@
                     imagePath += `/${encodeURIComponent(submodel)}`;
                 }
                 img.src = `${imagePath}/${encodeURIComponent(rpo)}.webp`;
+                console.log(img.src);
                 
                 img.alt = rpo;
                 img.loading = 'lazy';

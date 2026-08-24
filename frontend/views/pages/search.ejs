@@ -60,12 +60,16 @@
           </div>
           <div id="image-warning"></div>
           <div id="carousel-container">
-            <div id="loading-animation" class="shimmer">
-              <div class="shimmer-box"></div>
+            <!-- Wrapped main image to allow absolute overlay loading without layout shift -->
+            <div id="main-image-wrapper" style="position: relative; display: flex; justify-content: center; align-items: center; min-height: 200px; width: 100%;">
+              <div id="loading-animation" class="shimmer" style="position: absolute; inset: 0; z-index: 5; border-radius: 8px; display: none;">
+                <div class="shimmer-box" style="width: 100%; height: 100%;"></div>
+              </div>
+              <div aria-live="polite" aria-atomic="true" style="z-index: 1; width: 100%; text-align: center;">
+                <img id="carousel-image" alt="" style="max-width: 100%; height: auto; transition: opacity 0.2s ease-in-out; opacity: 0;">
+              </div>
             </div>
-            <div aria-live="polite" aria-atomic="true">
-              <img id="carousel-image" alt="Selected Vehicle View">
-            </div>
+
             <button id="prev" style="display: none;" aria-label="Previous Image">&#10094;</button>
             <button id="next" style="display: none;" aria-label="Next Image">&#10095;</button>
             <div style="display: flex; justify-content: center;">
@@ -282,23 +286,6 @@
       window.location.assign(safeUrl);
     }
 
-    function loadImageWithRetry(url, retries = 3, delay = 1000) {
-      return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.onload = () => resolve(url);
-        img.onerror = () => {
-          if (retries > 0) {
-            setTimeout(() => {
-              loadImageWithRetry(url, retries - 1, delay).then(resolve).catch(reject);
-            }, delay);
-          } else {
-            reject(url);
-          }
-        };
-        img.src = url;
-      });
-    }
-
     document.addEventListener('DOMContentLoaded', () => {
       const vin_data = <%- JSON.stringify(vin_data).replace(/</g, '\\u003c') %>;
       const vin = vin_data[0];
@@ -493,12 +480,11 @@
       const mmc = <%- JSON.stringify(mmc) %>;
       const ghostImg = '/img/ghost-chevrolet-car-alt.webp';
 
+      let fallbackImg;
       if (model === 'CAMARO') fallbackImg = '/img/vehicleLogos/camaro.webp';
       else if (model.startsWith('CT') || model === 'CELESTIQ' || model.startsWith('ESCALADE')) fallbackImg = '/img/vehicleLogos/cadillac.webp';
       else if (model.startsWith('CORVETTE')) fallbackImg = '/img/vehicleLogos/corvette.webp';
       else fallbackImg = ghostImg;
-      carouselImage.removeAttribute('src');
-      carouselImage.classList.add('shimmer');
 
       const modelYear = vin_data[0].modelYear;
       const mmc_code = vin_data[0].mmc_code;
@@ -740,26 +726,40 @@
         } else {
           gallery.style.display = 'flex';
           urls.forEach((imgSrc, index) => {
+            const thumbWrapper = document.createElement('div');
+            thumbWrapper.classList.add('shimmer');
+            thumbWrapper.style.width = '100px';
+            thumbWrapper.style.minHeight = '56px';
+            thumbWrapper.style.borderRadius = '4px';
+            thumbWrapper.style.overflow = 'hidden';
+            thumbWrapper.style.border = '1px solid transparent';
+            thumbWrapper.style.cursor = 'pointer';
+            
             const thumb = document.createElement('img');
-            thumb.alt = `Thumbnail ${index + 1}`;
-            thumb.style.width = '100px';
-            thumb.style.minHeight = '56px'; // Ensures box height before load
-            thumb.style.cursor = 'pointer';
-            thumb.style.border = '1px solid transparent';
+            thumb.style.width = '100%';
+            thumb.style.display = 'block';
+            thumb.style.opacity = '0';
+            thumb.style.transition = 'opacity 0.2s ease-in-out';
             
-            // Add shimmer class while loading
-            thumb.classList.add('shimmer');
+            thumb.onload = () => {
+              thumbWrapper.classList.remove('shimmer');
+              thumb.style.opacity = '1';
+              thumb.alt = `Thumbnail ${index + 1}`;
+            };
             
-            thumb.onload = () => thumb.classList.remove('shimmer');
-            thumb.onerror = () => thumb.classList.remove('shimmer');
+            thumb.onerror = () => {
+              thumbWrapper.classList.remove('shimmer');
+              thumb.style.opacity = '1';
+              thumb.alt = 'Image not available';
+            };
             
-            thumb.addEventListener('click', () => {
+            thumbWrapper.addEventListener('click', () => {
               showImage(index);
             });
             
-            // Assign src last
             thumb.src = imgSrc;
-            gallery.appendChild(thumb);
+            thumbWrapper.appendChild(thumb);
+            gallery.appendChild(thumbWrapper);
           });
         }
       }
@@ -770,62 +770,65 @@
       }
 
       function showImage(index, forceUpdate = false) {
-        // If clicking the current active image after initial load, do nothing unless forcing an update
         if (!initialLoad && index === currentIndex && !forceUpdate) {
           return;
         }
 
         while (urls[index] === null) {
           index = (index + 1) % urls.length;
-          // Prevent infinite loops if forcing an update
           if (index === currentIndex && !forceUpdate) break;
         }
         currentIndex = index;
         const imgSrc = urls[index];
 
-        // Always show the loading shimmer when fetching a new main image
         loadingAnimation.style.display = 'block';
+        carouselImage.style.opacity = 0;
+
+        // Clear previous listeners to avoid race conditions during rapid clicking
+        carouselImage.onload = null;
+        carouselImage.onerror = null;
+
+        const handleLoadSuccess = () => {
+          loadingAnimation.style.display = 'none';
+          carouselImage.style.opacity = 1;
+          
+          if (urls.length > 1) {
+            document.getElementById('prev').style.display = 'block';
+            document.getElementById('next').style.display = 'block';
+          } else {
+            document.getElementById('prev').style.display = 'none';
+            document.getElementById('next').style.display = 'none';
+          }
+          
+          document.getElementById('image-gallery-shimmer').style.display = 'none';
+          
+          if (urls.length === 1 && urls[0] === ghostImg) {
+            document.getElementById('image-gallery').style.display = 'none';
+          } else {
+            document.getElementById('image-gallery').style.display = 'flex';
+          }
+          
+          initialLoad = false;
+        };
 
         if (initialLoad || forceUpdate) {
-          carouselImage.style.opacity = 0;
+          carouselImage.onload = handleLoadSuccess;
 
-          carouselImage.onload = () => {
-            loadingAnimation.style.display = 'none';
-            carouselImage.style.display = 'block';
-            carouselImage.style.opacity = 1;
-            
-            if (urls.length > 1) {
-              document.getElementById('prev').style.display = 'block';
-              document.getElementById('next').style.display = 'block';
-            } else {
-              document.getElementById('prev').style.display = 'none';
-              document.getElementById('next').style.display = 'none';
-            }
-            
-            document.getElementById('image-gallery-shimmer').style.display = 'none';
-            
-            if (urls.length === 1 && urls[0] === ghostImg) {
-              document.getElementById('image-gallery').style.display = 'none';
-            } else {
-              document.getElementById('image-gallery').style.display = 'flex';
-            }
-            
-            initialLoad = false;
-          };
-
-          // Setup a safety 404 catch
           carouselImage.onerror = () => {
-            if (carouselImage.src.includes('ghost')) return; // Exit logic loop
+            if (carouselImage.src.includes('ghost')) {
+              loadingAnimation.style.display = 'none';
+              carouselImage.style.opacity = 1;
+              return;
+            }
             
             if (!warningDiv.innerHTML.includes('Image generation does not support')) {
               warningDiv.innerHTML += (warningDiv.innerHTML ? '<br>' : '') + `Image generation does not support ${modelYear} ${vin.model || model}`;
               warningDiv.style.color = '#e57373';
             }
             
-            // Clear array to stop indexing the 404 images
             urls = [ghostImg];
             currentIndex = 0;
-            gallery.innerHTML = ''; // Wipe pre-loaded thumbnails
+            gallery.innerHTML = ''; 
             
             loadingAnimation.style.display = 'none';
             carouselImage.src = ghostImg;
@@ -834,18 +837,15 @@
 
           carouselImage.src = imgSrc;
         } else {
-          carouselImage.style.opacity = 0;
-
           setTimeout(() => {
-            carouselImage.onload = () => {
-              loadingAnimation.style.display = 'none';
-              carouselImage.style.opacity = 1;
-            };
+            carouselImage.onload = handleLoadSuccess;
             
-            // Backup catch in case subsequent gallery items fail
             carouselImage.onerror = () => {
               loadingAnimation.style.display = 'none';
-              if (carouselImage.src.includes('ghost')) return;
+              if (carouselImage.src.includes('ghost')) {
+                carouselImage.style.opacity = 1;
+                return;
+              }
               carouselImage.src = ghostImg; 
               carouselImage.style.opacity = 1;
             };
@@ -855,8 +855,8 @@
           }, 200);
         }
 
-        [...gallery.children].forEach((img, i) => {
-          img.style.border = (i === index && urls[i]) ? '1px solid #141414' : '1px solid transparent';
+        [...gallery.children].forEach((wrapper, i) => {
+          wrapper.style.border = (i === index && urls[i]) ? '1px solid #141414' : '1px solid transparent';
         });
 
         const el = gallery.children[index];
@@ -864,11 +864,9 @@
           const galleryRect = gallery.getBoundingClientRect();
           const elRect = el.getBoundingClientRect();
           
-          // Calculate how much to move to center the thumbnail
           const offset = elRect.left - galleryRect.left - (galleryRect.width / 2) + (elRect.width / 2);
           let targetScroll = gallery.scrollLeft + offset;
           
-          // Clamp the scroll position to prevent the last item from centering in empty space
           const maxScroll = gallery.scrollWidth - gallery.clientWidth;
           targetScroll = Math.max(0, Math.min(targetScroll, maxScroll));
           
@@ -950,19 +948,17 @@
       let touchEndX = 0;
 
       const handleSwipe = () => {
-        const swipeThreshold = 50; // Minimum pixels to count as a swipe
+        const swipeThreshold = 50; 
         const swipeDistance = touchEndX - touchStartX;
 
         if (Math.abs(swipeDistance) > swipeThreshold) {
           if (swipeDistance < 0) {
-            // Swiped Left -> Next Image
             let nextIndex = currentIndex;
             do {
               nextIndex = (nextIndex === urls.length - 1) ? 0 : nextIndex + 1;
             } while (urls[nextIndex] === null && nextIndex !== currentIndex);
             showImage(nextIndex);
           } else {
-            // Swiped Right -> Previous Image
             let prevIndex = currentIndex;
             do {
               prevIndex = (prevIndex === 0) ? urls.length - 1 : prevIndex - 1;

@@ -22,7 +22,7 @@
             </div>
         </div>
         <div class="d-flex flex-wrap gap-2 mb-3">
-            <div class="statsDropdown">
+            <div class="statsDropdown d-flex gap-2">
                 <select id="modelSelect" class="form-select small-dropdown" aria-label="Filter by model">
                     <option value="">Select Model</option>
                     <option value="camaro">Camaro</option>
@@ -36,6 +36,17 @@
                     <option value="hummer">Hummer EV Pickup</option>
                     <option value="hummersuv">Hummer EV SUV</option>
                 </select>
+
+                <!-- NEW: Corvette Submodel Dropdown (Hidden by default) -->
+                <select id="submodelSelect" class="form-select small-dropdown" style="display: none;" aria-label="Filter by submodel">
+                    <option value="stingray">Stingray</option>
+                    <option value="z06">Z06</option>
+                    <option value="e-ray">E-Ray</option>
+                    <option value="grand_sport">Grand Sport</option>
+                    <option value="grand_sport_x">Grand Sport X</option>
+                    <option value="zr1">ZR1</option>
+                    <option value="zr1x">ZR1X</option>
+                </select>
             </div>
         </div>
         <div class="rpo-container" id="rpoContainer"></div>
@@ -45,25 +56,28 @@
     <script>
         const container = document.getElementById('rpoContainer');
         const modelSelect = document.getElementById('modelSelect');
+        const submodelSelect = document.getElementById('submodelSelect');
 
         const allRpos = {
-            camaro: <%- JSON.stringify(camaroRpo) %>,
-            corvette: <%- JSON.stringify(corvetteRpo) %>,
-            escalade: <%- JSON.stringify(escaladeRpo) %>,
-            escaladeiq: <%- JSON.stringify(escaladeiqRpo) %>,
-            ct4: <%- JSON.stringify(ct4Rpo) %>,
-            ct4v: <%- JSON.stringify(ct4vRpo) %>,
-            ct5: <%- JSON.stringify(ct5Rpo) %>,
-            ct5v: <%- JSON.stringify(ct5vRpo) %>,
-            hummer: <%- JSON.stringify(hummerRpo) %>,
-            hummersuv: <%- JSON.stringify(hummersuvRpo) %>,
-            celestiq: <%- JSON.stringify(celestiqRpo) %>,
+            camaro: <%- JSON.stringify(camaroRpo || {}) %>,
+            corvette: <%- JSON.stringify(corvetteRpo || {}) %>,
+            escalade: <%- JSON.stringify(escaladeRpo || {}) %>,
+            escaladeiq: <%- JSON.stringify(escaladeiqRpo || {}) %>,
+            ct4: <%- JSON.stringify(ct4Rpo || {}) %>,
+            ct4v: <%- JSON.stringify(ct4vRpo || {}) %>,
+            ct5: <%- JSON.stringify(ct5Rpo || {}) %>,
+            ct5v: <%- JSON.stringify(ct5vRpo || {}) %>,
+            hummer: <%- JSON.stringify(hummerRpo || {}) %>,
+            hummersuv: <%- JSON.stringify(hummersuvRpo || {}) %>,
+            celestiq: <%- JSON.stringify(celestiqRpo || {}) %>,
         };
 
-        function renderRPOs(model) {
+        // Added submodel parameter
+        function renderRPOs(model, submodel = null) {
             container.innerHTML = '';
             const safeModel = Object.prototype.hasOwnProperty.call(allRpos, model) ? model : null;
             if (!safeModel) return;
+            
             const rpos = allRpos[safeModel];
             const missingRpos = [];
 
@@ -71,19 +85,29 @@
                 const cardWrapper = document.createElement('div');
                 cardWrapper.className = 'rpo-wrapper';
                 const link = document.createElement('a');
+                
                 const params = new URLSearchParams();
                 if (safeModel !== 'corvette') params.set('model', safeModel);
+                // Optionally pass submodel to the URL if you need it on the vehicles page
+                if (safeModel === 'corvette' && submodel) params.set('submodel', submodel);
                 params.set('rpo', rpo);
+                
                 link.href = `/vehicles?${params.toString()}`;
                 link.style.textDecoration = 'none';
-
                 link.className = 'rpo-card-link';
 
                 const card = document.createElement('div');
                 card.className = 'rpo-card';
 
                 const img = document.createElement('img');
-                img.src = `../img/rpos/${encodeURIComponent(safeModel)}/${encodeURIComponent(rpo)}.webp`;
+                
+                // NEW: Dynamic Image Path Logic
+                let imagePath = `../img/rpos/${encodeURIComponent(safeModel)}`;
+                if (safeModel === 'corvette' && submodel) {
+                    imagePath += `/${encodeURIComponent(submodel)}`;
+                }
+                img.src = `${imagePath}/${encodeURIComponent(rpo)}.webp`;
+                
                 img.alt = rpo;
                 img.loading = 'lazy';
                 img.onerror = function() {
@@ -91,15 +115,16 @@
                         this.dataset.fallback = 'true';
                         const cadillacModels = ['escalade', 'escaladeiq', 'ct4', 'ct4v', 'ct5', 'ct5v'];
                         const gmcModels = ['hummer', 'hummersuv'];
-                        let imagePath = '../img/brand-logos/';
+                        let fallbackPath = '../img/brand-logos/';
+                        
                         if (cadillacModels.includes(safeModel)) {
-                            imagePath += 'cadillac.webp';
+                            fallbackPath += 'cadillac.webp';
                         } else if (gmcModels.includes(safeModel)) {
-                            imagePath += 'gmc.webp';
+                            fallbackPath += 'gmc.webp';
                         } else {
-                            imagePath += 'chevrolet.webp';
+                            fallbackPath += 'chevrolet.webp';
                         }
-                        this.src = imagePath;
+                        this.src = fallbackPath;
                         missingRpos.push(rpo);
                     }
                 };
@@ -120,24 +145,33 @@
                 cardWrapper.appendChild(link);
                 container.appendChild(cardWrapper);
             });
-
-            setTimeout(() => {
-                // if (missingRpos.length > 0) downloadMissingRpos(missingRpos);
-            }, 5000);
         }
 
-        function downloadMissingRpos(list) {
-            const blob = new Blob([list.join('\n')], { type: 'text/plain' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = 'missing_rpos.txt';
-            a.click();
-            URL.revokeObjectURL(a.href);
+        // Handle Main Dropdown Changes
+        modelSelect.addEventListener('change', e => {
+            const selectedModel = e.target.value;
+            
+            if (selectedModel === 'corvette') {
+                submodelSelect.style.display = 'block';
+                renderRPOs(selectedModel, submodelSelect.value);
+            } else {
+                submodelSelect.style.display = 'none';
+                renderRPOs(selectedModel);
+            }
+        });
+
+        // Handle Submodel Dropdown Changes
+        submodelSelect.addEventListener('change', e => {
+            renderRPOs(modelSelect.value, e.target.value);
+        });
+
+        // Initial Load
+        if (modelSelect.value === 'corvette') {
+            submodelSelect.style.display = 'block';
+            renderRPOs(modelSelect.value, submodelSelect.value);
+        } else {
+            renderRPOs(modelSelect.value);
         }
-
-        modelSelect.addEventListener('change', e => renderRPOs(e.target.value));
-
-        renderRPOs(modelSelect.value);
     </script>
 </body>
 </html>

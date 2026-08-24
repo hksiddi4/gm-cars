@@ -443,7 +443,8 @@
                                     <div class="row g-4">
                                         <div class="col-12 col-sm-6">
                                             <div class="dashboard-card h-100">
-                                                <h5 class="text-white fw-bold mb-3 text-center">Engine</h5>
+                                                <h5 class="text-white fw-bold mb-1 text-center">Engine</h5>
+                                                <div class="text-center mb-2" style="font-size: 0.75rem; color: #aaaaaa;">* Grey text indicates 2019 only</div>
                                                 <div class="chart-container" id="engineChartContainer"><canvas id="engineChart"></canvas></div>
                                             </div>
                                         </div>
@@ -643,7 +644,12 @@
                         <div id="dynamicChartWrapper" style="position: relative; width: 100%; min-height: 600px; margin-bottom: 20px;">
                             <canvas id="mainDataChart"></canvas>
                         </div>
-                        <p id="totalCount"></p>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <p id="totalCount" class="mb-0"></p>
+                            <% if (activeCategory === 'engine') { %>
+                                <div style="font-size: 0.85rem; color: #aaaaaa;">* Grey text indicates 2019 only (LT5 / LTA)</div>
+                            <% } %>
+                        </div>
 
                         <% if (activeCategory !== 'production') { %>
                             <% 
@@ -677,7 +683,8 @@
                                                         <img src="/img/extColors/<%= data.rpo_code %>.webp" onerror="this.src='/img/extColors/default.webp';" width="20" height="20" style="margin-right: 8px; border-radius: 50%;">
                                                         <%= data.label %>
                                                     <% } else if (activeCategory === 'engine') { %>
-                                                        <a class="color-link" href="/vehicles?engine=<%= encodeURIComponent(data.engine_type) %>">
+                                                        <% const is2019Engine = data.engine_rpo === 'LT5' || data.engine_rpo === 'LTA' || (data.engine_type && (data.engine_type.includes('LT5') || data.engine_type.includes('LTA'))); %>
+                                                        <a class="color-link" href="/vehicles?engine=<%= encodeURIComponent(data.engine_type) %>" style="<%= is2019Engine ? 'color: #aaaaaa;' : '' %>">
                                                             <% if (data.engine_rpo) { %><strong><%= data.engine_rpo %></strong> - <% } %>
                                                             <%= data.engine_type %>
                                                         </a>
@@ -1070,7 +1077,31 @@
                         legend: { 
                             display: isRadial, 
                             position: 'bottom', 
-                            labels: { color: '#e0e0e0', boxWidth: 12, padding: 12, font: { size: 11 } } 
+                            labels: { 
+                                color: '#e0e0e0', boxWidth: 12, padding: 12, font: { size: 11 },
+                                generateLabels: (chart) => {
+                                    const data = chart.data;
+                                    if (data.labels.length && data.datasets.length) {
+                                        return data.labels.map((label, i) => {
+                                            const meta = chart.getDatasetMeta(0);
+                                            const style = meta.controller.getStyle(i);
+                                            const labelStr = Array.isArray(label) ? label.join(' ') : String(label);
+                                            const isSpecial = chart.canvas.id === 'engineChart' && (labelStr.includes('LT5') || labelStr.includes('LTA'));
+                                            
+                                            return {
+                                                text: labelStr,
+                                                fillStyle: style.backgroundColor,
+                                                strokeStyle: style.borderColor,
+                                                lineWidth: style.borderWidth,
+                                                hidden: isNaN(data.datasets[0].data[i]) || meta.data[i].hidden,
+                                                index: i,
+                                                fontColor: isSpecial ? '#aaaaaa' : '#e0e0e0'
+                                            };
+                                        });
+                                    }
+                                    return [];
+                                }
+                            } 
                         },
                         tooltip: {
                             callbacks: {
@@ -1086,7 +1117,12 @@
                             }
                         },
                         datalabels: {
-                            color: '#fff',
+                            color: (ctx) => {
+                                const label = ctx.chart.data.labels[ctx.dataIndex];
+                                const labelStr = Array.isArray(label) ? label.join(' ') : String(label);
+                                if (ctxId === 'engineChart' && (labelStr.includes('LT5') || labelStr.includes('LTA'))) return '#aaaaaa';
+                                return '#fff';
+                            },
                             font: { size: 11, weight: 'bold' },
                             formatter: (val, ctx) => {
                                 const trueValue = dataValues[ctx.dataIndex];
@@ -1122,8 +1158,17 @@
                         }
                     };
                     
-                    chartOptions.scales.x.ticks = { color: '#e0e0e0', precision: 0, stepSize: 1, ...(chartOptions.scales.x.ticks || {}) };
-                    chartOptions.scales.y.ticks = { color: '#e0e0e0', precision: 0, stepSize: 1, ...(chartOptions.scales.y.ticks || {}) };
+                    const getTickColor = (ctx) => {
+                        if (ctx.tick === undefined || ctx.tick.value === undefined || !ctx.chart.data.labels) return '#e0e0e0';
+                        const label = ctx.chart.data.labels[ctx.tick.value];
+                        if (!label) return '#e0e0e0';
+                        const labelStr = Array.isArray(label) ? label.join(' ') : String(label);
+                        if (ctxId === 'engineChart' && (labelStr.includes('LT5') || labelStr.includes('LTA'))) return '#aaaaaa';
+                        return '#e0e0e0';
+                    };
+                    
+                    chartOptions.scales.x.ticks = { color: getTickColor, precision: 0, stepSize: 1, ...(chartOptions.scales.x.ticks || {}) };
+                    chartOptions.scales.y.ticks = { color: getTickColor, precision: 0, stepSize: 1, ...(chartOptions.scales.y.ticks || {}) };
                 }
 
                 new Chart(ctx, {
@@ -1848,7 +1893,13 @@
                                     color: '#ffffff', font: { size: 20 }
                                 },
                                 datalabels: {
-                                    color: '#ffffff', 
+                                    color: (ctx) => {
+                                        const label = ctx.chart.data.labels[ctx.dataIndex];
+                                        if (!label) return '#ffffff';
+                                        const labelStr = Array.isArray(label) ? label.join(' ') : String(label);
+                                        if (currentCategory === 'engine' && (labelStr.includes('LT5') || labelStr.includes('LTA'))) return '#aaaaaa';
+                                        return '#ffffff';
+                                    }, 
                                     anchor: 'end', 
                                     align: 'right', 
                                     offset: (ctx) => barOffsets[ctx.dataIndex],
@@ -1884,7 +1935,14 @@
                                 y: { 
                                     grid: { color: 'rgba(255, 255, 255, 0.1)' },
                                     ticks: { 
-                                        color: '#ffffff', 
+                                        color: (ctx) => {
+                                            if (ctx.tick === undefined || ctx.tick.value === undefined || !ctx.chart.data.labels) return '#ffffff';
+                                            const label = ctx.chart.data.labels[ctx.tick.value];
+                                            if (!label) return '#ffffff';
+                                            const labelStr = Array.isArray(label) ? label.join(' ') : String(label);
+                                            if (currentCategory === 'engine' && (labelStr.includes('LT5') || labelStr.includes('LTA'))) return '#aaaaaa';
+                                            return '#ffffff';
+                                        },
                                         font: { size: 10 },
                                         autoSkip: false // Prevents the axis from hiding the text
                                     } 

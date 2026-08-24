@@ -15,13 +15,11 @@
             }
         }
         
-        /* NEW: Start images invisible and set up the fade transition */
         .rpo-card img {
             opacity: 0;
             transition: opacity 0.4s ease-in-out;
         }
         
-        /* NEW: Class added via JS when image finishes downloading */
         .rpo-card img.loaded {
             opacity: 1;
         }
@@ -82,6 +80,23 @@
             celestiq: <%- JSON.stringify(celestiqRpo || {}) %>,
         };
 
+        // NEW: Function to silently update the URL in the browser without reloading
+        function updateURL(model, submodel = null) {
+            const url = new URL(window.location);
+            if (model) {
+                url.searchParams.set('model', model);
+                if (model === 'corvette' && submodel) {
+                    url.searchParams.set('submodel', submodel);
+                } else {
+                    url.searchParams.delete('submodel');
+                }
+            } else {
+                url.searchParams.delete('model');
+                url.searchParams.delete('submodel');
+            }
+            window.history.pushState({}, '', url);
+        }
+
         function renderRPOs(model, submodel = null) {
             container.innerHTML = '';
             const safeModel = Object.prototype.hasOwnProperty.call(allRpos, model) ? model : null;
@@ -118,7 +133,6 @@
                 img.alt = rpo;
                 img.loading = 'lazy';
                 
-                // NEW: Triggers the CSS transition once the image is completely downloaded
                 img.onload = function() {
                     this.classList.add('loaded');
                 };
@@ -137,8 +151,6 @@
                         } else {
                             fallbackPath += 'chevrolet.webp';
                         }
-                        // Setting the new src will trigger the onload event again, 
-                        // causing the fallback image to fade in smoothly as well!
                         this.src = fallbackPath;
                         missingRpos.push(rpo);
                     }
@@ -168,18 +180,40 @@
             if (selectedModel === 'corvette') {
                 submodelSelect.style.display = 'block';
                 renderRPOs(selectedModel, submodelSelect.value);
+                updateURL(selectedModel, submodelSelect.value); // Update browser link
             } else {
                 submodelSelect.style.display = 'none';
                 renderRPOs(selectedModel);
+                updateURL(selectedModel); // Update browser link
             }
         });
 
         submodelSelect.addEventListener('change', e => {
             renderRPOs(modelSelect.value, e.target.value);
+            updateURL(modelSelect.value, e.target.value); // Update browser link
         });
 
+        // NEW: Initial Load Logic to Read the URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlModel = urlParams.get('model');
+        const urlSubmodel = urlParams.get('submodel');
+
+        // Check if the URL model is valid, then set the dropdown to match it
+        if (urlModel && allRpos.hasOwnProperty(urlModel)) {
+            modelSelect.value = urlModel;
+        }
+
+        // Apply logic to submodel dropdown and render
         if (modelSelect.value === 'corvette') {
             submodelSelect.style.display = 'block';
+            // If the URL has a submodel, set the dropdown to match it
+            if (urlSubmodel) {
+                // Ensure it's a valid option before setting it
+                const validSubmodels = Array.from(submodelSelect.options).map(opt => opt.value);
+                if (validSubmodels.includes(urlSubmodel)) {
+                    submodelSelect.value = urlSubmodel;
+                }
+            }
             renderRPOs(modelSelect.value, submodelSelect.value);
         } else {
             renderRPOs(modelSelect.value);

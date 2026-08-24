@@ -741,14 +741,24 @@
           gallery.style.display = 'flex';
           urls.forEach((imgSrc, index) => {
             const thumb = document.createElement('img');
-            thumb.src = imgSrc;
             thumb.alt = `Thumbnail ${index + 1}`;
             thumb.style.width = '100px';
+            thumb.style.minHeight = '56px'; // Ensures box height before load
             thumb.style.cursor = 'pointer';
             thumb.style.border = '1px solid transparent';
+            
+            // Add shimmer class while loading
+            thumb.classList.add('shimmer');
+            
+            thumb.onload = () => thumb.classList.remove('shimmer');
+            thumb.onerror = () => thumb.classList.remove('shimmer');
+            
             thumb.addEventListener('click', () => {
               showImage(index);
             });
+            
+            // Assign src last
+            thumb.src = imgSrc;
             gallery.appendChild(thumb);
           });
         }
@@ -773,11 +783,15 @@
         currentIndex = index;
         const imgSrc = urls[index];
 
-        if (initialLoad) {
+        // Always show the loading shimmer when fetching a new main image
+        loadingAnimation.style.display = 'block';
+
+        if (initialLoad || forceUpdate) {
+          carouselImage.style.opacity = 0;
+
           carouselImage.onload = () => {
             loadingAnimation.style.display = 'none';
             carouselImage.style.display = 'block';
-            carouselImage.classList.remove('shimmer');
             carouselImage.style.opacity = 1;
             
             if (urls.length > 1) {
@@ -799,7 +813,7 @@
             initialLoad = false;
           };
 
-          // Setup a safety 404 catch on the first load attempt
+          // Setup a safety 404 catch
           carouselImage.onerror = () => {
             if (carouselImage.src.includes('ghost')) return; // Exit logic loop
             
@@ -812,7 +826,10 @@
             urls = [ghostImg];
             currentIndex = 0;
             gallery.innerHTML = ''; // Wipe pre-loaded thumbnails
+            
+            loadingAnimation.style.display = 'none';
             carouselImage.src = ghostImg;
+            carouselImage.style.opacity = 1;
           };
 
           carouselImage.src = imgSrc;
@@ -821,11 +838,13 @@
 
           setTimeout(() => {
             carouselImage.onload = () => {
+              loadingAnimation.style.display = 'none';
               carouselImage.style.opacity = 1;
             };
             
             // Backup catch in case subsequent gallery items fail
             carouselImage.onerror = () => {
+              loadingAnimation.style.display = 'none';
               if (carouselImage.src.includes('ghost')) return;
               carouselImage.src = ghostImg; 
               carouselImage.style.opacity = 1;

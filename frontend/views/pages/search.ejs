@@ -59,20 +59,19 @@
           </div>
           <div id="image-warning"></div>
           <div id="carousel-container">
-            <!-- CHANGED: Added aspect-ratio: 16/9 to lock the frame to the correct 1920x1080 dimensions -->
-            <div id="main-image-wrapper" style="position: relative; display: flex; justify-content: center; align-items: center; width: 100%; aspect-ratio: 16 / 9; max-height: 600px; overflow: hidden; border-radius: 8px;">
+            <!-- CHANGED: Enforced display:block and absolute positioning to rigidly hold the 16:9 ratio -->
+            <div id="main-image-wrapper" style="position: relative; display: block; width: 100%; aspect-ratio: 16 / 9; max-height: 600px; overflow: hidden; border-radius: 8px;">
               <div id="loading-animation" class="shimmer" style="position: absolute; inset: 0; z-index: 5; display: none;">
                 <div class="shimmer-box" style="width: 100%; height: 100%;"></div>
               </div>
-              <div aria-live="polite" aria-atomic="true" style="z-index: 1; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;">
-                <img id="carousel-image" alt="" style="width: 100%; height: 100%; object-fit: contain; transition: opacity 0.2s ease-in-out; opacity: 0;">
-              </div>
+              <!-- CHANGED: Added display: block !important to override main.css display: none rule -->
+              <img id="carousel-image" alt="" aria-live="polite" aria-atomic="true" style="display: block !important; position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; transition: opacity 0.2s ease-in-out; opacity: 0; z-index: 1;">
             </div>
 
             <button id="prev" style="display: none;" aria-label="Previous Image">&#10094;</button>
             <button id="next" style="display: none;" aria-label="Next Image">&#10095;</button>
             <div style="display: flex; justify-content: center;">
-              <!-- CHANGED: Removed the hardcoded shimmer div. The JS handles it on the thumbs directly now -->
+              <!-- CHANGED: Deleted the old redundant shimmer container entirely -->
               <div id="image-gallery"></div>
             </div>
           </div>
@@ -732,6 +731,7 @@
               thumb.alt = `Thumbnail ${index + 1}`;
             };
             
+            // CHANGED: Cleanly hide the 404 thumbnails without breaking the wrapper
             thumb.onerror = () => {
               thumbWrapper.style.display = 'none';
               urls[index] = null;
@@ -801,6 +801,7 @@
         loadingAnimation.style.display = 'block';
         carouselImage.style.opacity = 0;
 
+        // Clear previous listeners to avoid race conditions during rapid clicking
         carouselImage.onload = () => {
           loadingAnimation.style.display = 'none';
           carouselImage.style.opacity = 1;
@@ -813,6 +814,8 @@
             document.getElementById('prev').style.display = 'none';
             document.getElementById('next').style.display = 'none';
           }
+
+          // CHANGED: Removed the old image-gallery-shimmer hide logic
 
           [...gallery.children].forEach((wrapper, i) => {
             wrapper.style.border = (i === currentIndex && urls[i]) ? '1px solid #141414' : '1px solid transparent';

@@ -677,6 +677,8 @@
             const thumbWrapper = document.createElement('div');
             thumbWrapper.classList.add('shimmer');
             thumbWrapper.style.width = '100px';
+            thumbWrapper.style.minWidth = '100px'; 
+            thumbWrapper.style.flexShrink = '0';   
             thumbWrapper.style.minHeight = '56px';
             thumbWrapper.style.borderRadius = '4px';
             thumbWrapper.style.overflow = 'hidden';

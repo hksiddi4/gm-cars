@@ -53,6 +53,11 @@
         const camaroRpo = <%- JSON.stringify(camaroRpo) %>;
         const corvetteRpo = <%- JSON.stringify(corvetteRpo) %>;
         const corvetteGSXRpo = <%- JSON.stringify(corvetteGSXRpo) %>;
+        const corvetteGSRpo = <%- JSON.stringify(corvetteGSRpo) %>;
+        const stingrayRpo = <%- JSON.stringify(stingrayRpo) %>;
+        const z06Rpo = <%- JSON.stringify(z06Rpo) %>;
+        const erayRpo = <%- JSON.stringify(erayRpo) %>;
+        const zr1Rpo = <%- JSON.stringify(zr1Rpo) %>;
         const escaladeRpo = <%- JSON.stringify(escaladeRpo) %>;
         const escaladeiqRpo = <%- JSON.stringify(escaladeiqRpo) %>;
         const ct4Rpo = <%- JSON.stringify(ct4Rpo) %>;
@@ -67,6 +72,11 @@
             ...camaroRpo,
             ...corvetteRpo,
             ...corvetteGSXRpo,
+            ...corvetteGSRpo,
+            ...stingrayRpo,
+            ...z06Rpo,
+            ...erayRpo,
+            ...zr1Rpo,
             ...escaladeRpo,
             ...escaladeiqRpo,
             ...ct4Rpo,
@@ -106,14 +116,17 @@
                     if (ct5Rpo[rpoCode]) return ct5Rpo[rpoCode];
                     if (ct5vRpo[rpoCode]) return ct5vRpo[rpoCode];
                     return null;
-                case 'CAMARO':
-                    return camaroRpo[rpoCode];
-                case 'ESCALADE':
-                    return escaladeRpo[rpoCode];
-                case 'ESCALADE IQ':
-                    return escaladeiqRpo[rpoCode];
-                case 'CORVETTE GSX':
-                    return corvetteGSXRpo[rpoCode];
+                case 'CAMARO': return camaroRpo[rpoCode];
+                case 'ESCALADE': return escaladeRpo[rpoCode];
+                case 'ESCALADE IQ': return escaladeiqRpo[rpoCode];
+                case 'CORVETTE STINGRAY': return stingrayRpo[rpoCode];
+                case 'CORVETTE Z06': return z06Rpo[rpoCode];
+                case 'CORVETTE E-RAY': return erayRpo[rpoCode];
+                case 'CORVETTE GRAND SPORT': return corvetteGSRpo[rpoCode];
+                case 'CORVETTE GSX': return corvetteGSXRpo[rpoCode];
+                case 'CORVETTE ZR1': return zr1Rpo[rpoCode];
+                case 'CORVETTE ZR1X': return zr1Rpo[rpoCode];
+                case 'CORVETTE (ALL)': return corvetteRpo[rpoCode];
             }
         };
         

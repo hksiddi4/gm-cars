@@ -297,6 +297,11 @@
       const camaroRpo = <%- JSON.stringify(camaroRpo) %>;
       const corvetteRpo = <%- JSON.stringify(corvetteRpo) %>;
       const corvetteGSXRpo = <%- JSON.stringify(corvetteGSXRpo) %>;
+      const corvetteGSRpo = <%- JSON.stringify(corvetteGSRpo) %>;
+      const stingrayRpo = <%- JSON.stringify(stingrayRpo) %>;
+      const z06Rpo = <%- JSON.stringify(z06Rpo) %>;
+      const erayRpo = <%- JSON.stringify(erayRpo) %>;
+      const zr1Rpo = <%- JSON.stringify(zr1Rpo) %>;
       const escaladeRpo = <%- JSON.stringify(escaladeRpo) %>;
       const escaladeiqRpo = <%- JSON.stringify(escaladeiqRpo) %>;
       const ct4Rpo = <%- JSON.stringify(ct4Rpo) %>;
@@ -322,6 +327,11 @@
         ...camaroRpo,
         ...corvetteRpo,
         ...corvetteGSXRpo,
+        ...corvetteGSRpo,
+        ...stingrayRpo,
+        ...z06Rpo,
+        ...erayRpo,
+        ...zr1Rpo,
         ...escaladeRpo,
         ...escaladeiqRpo,
         ...ct4Rpo,
@@ -393,8 +403,13 @@
 
           let descText = 
             (model === 'CAMARO' && camaroRpo[rpoCode]) ||
+            (model === 'CORVETTE STINGRAY' && stingrayRpo[rpoCode]) ||
+            (model === 'CORVETTE Z06' && z06Rpo[rpoCode]) ||
+            (model === 'CORVETTE E-RAY' && erayRpo[rpoCode]) ||
+            (model === 'CORVETTE GRAND SPORT' && vehicleTrim === 'GRAND SPORT X' && corvetteGSXRpo[rpoCode]) ||
+            (model === 'CORVETTE GRAND SPORT' && vehicleTrim !== 'GRAND SPORT X' && corvetteGSRpo[rpoCode]) ||
+            (model.startsWith('CORVETTE ZR1') && zr1Rpo[rpoCode]) ||
             (model.startsWith('CORVETTE') && corvetteRpo[rpoCode]) ||
-            (model.startsWith('CORVETTE') && trim === 'GRAND SPORT X' && corvetteGSXRpo[rpoCode]) ||
             (model === 'ESCALADE' && escaladeRpo[rpoCode]) ||
             (model === 'ESCALADE IQ' && escaladeiqRpo[rpoCode]) ||
             (model === 'CT4' && ct4Rpo[rpoCode]) ||
@@ -432,18 +447,14 @@
       document.querySelectorAll('#rpoTable .rpo-description').forEach(element => {
         const rpoCode = element.getAttribute('data-code');
 
-        if (model === 'CAMARO' && camaroRpo[rpoCode]) {
-          element.innerHTML = `<div>${camaroRpo[rpoCode]}</div>`;
-          return;
-        }
-        if (model.startsWith('CORVETTE') && corvetteRpo[rpoCode]) {
-          element.innerHTML = `<div>${corvetteRpo[rpoCode]}</div>`;
-          return;
-        }
-        if (model.startsWith('CORVETTE') && trim === 'GRAND SPORT X' && corvetteGSXRpo[rpoCode]) {
-          element.innerHTML = `<div>${corvetteGSXRpo[rpoCode]}</div>`;
-          return;
-        }
+        if (model === 'CAMARO' && camaroRpo[rpoCode]) { element.innerHTML = `<div>${camaroRpo[rpoCode]}</div>`; return; }
+        if (model === 'CORVETTE STINGRAY' && stingrayRpo[rpoCode]) { element.innerHTML = `<div>${stingrayRpo[rpoCode]}</div>`; return; }
+        if (model === 'CORVETTE Z06' && z06Rpo[rpoCode]) { element.innerHTML = `<div>${z06Rpo[rpoCode]}</div>`; return; }
+        if (model === 'CORVETTE E-RAY' && erayRpo[rpoCode]) { element.innerHTML = `<div>${erayRpo[rpoCode]}</div>`; return; }
+        if (model === 'CORVETTE GRAND SPORT' && vehicleTrim === 'GRAND SPORT X' && corvetteGSXRpo[rpoCode]) { element.innerHTML = `<div>${corvetteGSXRpo[rpoCode]}</div>`; return; }
+        if (model === 'CORVETTE GRAND SPORT' && vehicleTrim !== 'GRAND SPORT X' && corvetteGSRpo[rpoCode]) { element.innerHTML = `<div>${corvetteGSRpo[rpoCode]}</div>`; return; }
+        if (model.startsWith('CORVETTE ZR1') && zr1Rpo[rpoCode]) { element.innerHTML = `<div>${zr1Rpo[rpoCode]}</div>`; return; }
+        if (model.startsWith('CORVETTE') && corvetteRpo[rpoCode]) { element.innerHTML = `<div>${corvetteRpo[rpoCode]}</div>`; return; }
         if (model === 'ESCALADE' && escaladeRpo[rpoCode]) {
           element.innerHTML = `<div>${escaladeRpo[rpoCode]}</div>`;
           return;

@@ -59,19 +59,16 @@
           </div>
           <div id="image-warning"></div>
           <div id="carousel-container">
-            <!-- CHANGED: Enforced display:block and absolute positioning to rigidly hold the 16:9 ratio -->
             <div id="main-image-wrapper" style="position: relative; display: block; width: 100%; aspect-ratio: 16 / 9; max-height: 600px; overflow: hidden; border-radius: 8px;">
               <div id="loading-animation" class="shimmer" style="position: absolute; inset: 0; z-index: 5; display: none;">
                 <div class="shimmer-box" style="width: 100%; height: 100%;"></div>
               </div>
-              <!-- CHANGED: Added display: block !important to override main.css display: none rule -->
               <img id="carousel-image" alt="" aria-live="polite" aria-atomic="true" style="display: block !important; position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; transition: opacity 0.2s ease-in-out; opacity: 0; z-index: 1;">
             </div>
 
             <button id="prev" style="display: none;" aria-label="Previous Image">&#10094;</button>
             <button id="next" style="display: none;" aria-label="Next Image">&#10095;</button>
             <div style="display: flex; justify-content: center;">
-              <!-- CHANGED: Deleted the old redundant shimmer container entirely -->
               <div id="image-gallery"></div>
             </div>
           </div>
@@ -475,7 +472,6 @@
 
       const carouselImage = document.getElementById('carousel-image');
       const loadingAnimation = document.getElementById('loading-animation');
-      loadingAnimation.style.display = 'block';
 
       const warningDiv = document.getElementById('image-warning');
       const mmc = <%- JSON.stringify(mmc) %>;
@@ -573,7 +569,6 @@
         extMax = modelYear >= 2026 ? 17 : 7;
       }
 
-      // GM Image Gen API doesn't have some codes so pick closest available option
       let unsupportedColors = null;
       const unsupportedColorNames = [
         'BLACK MEETS KETTLE',
@@ -680,6 +675,7 @@
       let urls = [];
       let currentIndex = 0;
       let initialLoad = true;
+      let imageSwapTimeout;
       const gallery = document.getElementById('image-gallery');
 
       function updateGallery(topDown) {
@@ -798,7 +794,11 @@
         currentIndex = index;
         const imgSrc = urls[index];
 
-        loadingAnimation.style.display = 'block';
+        // CHANGED: Only show the shimmer animation on the very first load
+        if (initialLoad) {
+            loadingAnimation.style.display = 'block';
+        }
+        
         carouselImage.style.opacity = 0;
 
         // Clear previous listeners to avoid race conditions during rapid clicking
@@ -814,8 +814,6 @@
             document.getElementById('prev').style.display = 'none';
             document.getElementById('next').style.display = 'none';
           }
-
-          // CHANGED: Removed the old image-gallery-shimmer hide logic
 
           [...gallery.children].forEach((wrapper, i) => {
             wrapper.style.border = (i === currentIndex && urls[i]) ? '1px solid #141414' : '1px solid transparent';
@@ -849,13 +847,15 @@
           moveToNextValid();
         };
 
-        if (initialLoad || forceUpdate) {
+        // CHANGED: Give the CSS transition exactly 200ms to fade to 0 opacity before swapping the source
+        if (initialLoad) {
             carouselImage.src = imgSrc;
         } else {
-            setTimeout(() => {
+            clearTimeout(imageSwapTimeout);
+            imageSwapTimeout = setTimeout(() => {
                 carouselImage.src = imgSrc;
                 carouselImage.alt = `Image ${index + 1}`;
-            }, 50); 
+            }, 200); 
         }
         
         let nextIndex = (currentIndex + 1) % urls.length;
@@ -877,6 +877,7 @@
           if (e.target.checked) {
             updateGallery(false);
             showImage(currentIndex, true);
+            e.target.blur(); // CHANGED: Immediately remove focus so arrow keys aren't trapped by the radio group
           }
         });
         
@@ -884,6 +885,7 @@
           if (e.target.checked) {
             updateGallery(true);
             showImage(currentIndex, true);
+            e.target.blur(); // CHANGED: Immediately remove focus so arrow keys aren't trapped by the radio group
           }
         });
       }
@@ -919,16 +921,25 @@
       });
 
       document.addEventListener('keydown', (event) => {
-        if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') return;
+        const targetTag = event.target.tagName;
+        const targetType = event.target.type;
+        
+        // CHANGED: Exclude only text-based inputs so global arrow keys can overrule radio buttons
+        if (targetTag === 'TEXTAREA' || (targetTag === 'INPUT' && (targetType === 'text' || targetType === 'search' || targetType === 'number' || targetType === 'email'))) {
+            return;
+        }
+        
         if (urls.filter(u => u !== null).length <= 1) return;
 
         if (event.key === 'ArrowLeft') {
+          event.preventDefault(); // CHANGED: Prevent default browser behavior (which changes radio buttons)
           let prevIndex = currentIndex;
           do {
             prevIndex = (prevIndex === 0) ? urls.length - 1 : prevIndex - 1;
           } while (urls[prevIndex] === null && prevIndex !== currentIndex);
           showImage(prevIndex);
         } else if (event.key === 'ArrowRight') {
+          event.preventDefault(); // CHANGED: Prevent default browser behavior (which changes radio buttons)
           let nextIndex = currentIndex;
           do {
             nextIndex = (nextIndex === urls.length - 1) ? 0 : nextIndex + 1;

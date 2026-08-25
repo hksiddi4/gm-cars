@@ -247,6 +247,8 @@
   <%- include('../partials/footer'); %>
   
   <script>
+    let startX = 0; // FIXED: Added missing variable declaration
+    
     function handleMouseDown(event) {
       startX = event.clientX;
     }
@@ -528,6 +530,34 @@
           trim = options.find(opt => ["1SA", "1SB", "1SC", "1SG", "1SH", "1SD"].includes(opt)) || trim;
         }
       }
+
+      // --- FIXED: RESTORED FRAME COUNT LOGIC ---
+      let extMax = 7;
+      let intMax = 4;
+            
+      if (modelUpper === 'CAMARO') {
+        intMax = 2;
+        extMax = modelYear >= 2023 ? 5 : 4;
+      } else if (modelUpper.startsWith('CORVETTE')) {
+        if (modelYear === 2019) {
+          extMax = 4;
+          intMax = 2;
+        } else if (modelYear <= 2023) {
+          extMax = 6;
+        }
+      } else if (['CT4', 'CT5', 'CT6'].includes(modelUpper) && modelYear <= 2022) {
+        extMax = 6;
+      } else if (['SILVERADO EV', 'SIERRA EV'].includes(modelUpper)) {
+        extMax = 5;
+        intMax = 2;
+      } else if (['HUMMER EV PICKUP', 'HUMMER EV SUV'].includes(modelUpper)) {
+        intMax = 2;
+        extMax = modelYear >= 2023 ? 5 : 4;
+      } else if (modelUpper === 'ESCALADE') {
+        intMax = 4;
+        extMax = modelYear >= 2026 ? 17 : 7;
+      }
+      // -----------------------------------------
 
       let rpos = options.join('_');
       let color = options.find(opt => Object.values(colorMap).includes(opt));

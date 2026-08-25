@@ -37,7 +37,6 @@
               <h4>
                 <em>
                   <% 
-                    // Split the special_descs by comma and iterate over each description
                     const specialDescs = vin.special_descs.split(', ');
                     specialDescs.forEach(desc => { 
                   %>
@@ -60,20 +59,20 @@
           </div>
           <div id="image-warning"></div>
           <div id="carousel-container">
-            <!-- Wrapped main image to allow absolute overlay loading without layout shift -->
-            <div id="main-image-wrapper" style="position: relative; display: flex; justify-content: center; align-items: center; min-height: 200px; width: 100%;">
-              <div id="loading-animation" class="shimmer" style="position: absolute; inset: 0; z-index: 5; border-radius: 8px; display: none;">
+            <!-- CHANGED: Added aspect-ratio: 16/9 to lock the frame to the correct 1920x1080 dimensions -->
+            <div id="main-image-wrapper" style="position: relative; display: flex; justify-content: center; align-items: center; width: 100%; aspect-ratio: 16 / 9; max-height: 600px; overflow: hidden; border-radius: 8px;">
+              <div id="loading-animation" class="shimmer" style="position: absolute; inset: 0; z-index: 5; display: none;">
                 <div class="shimmer-box" style="width: 100%; height: 100%;"></div>
               </div>
-              <div aria-live="polite" aria-atomic="true" style="z-index: 1; width: 100%; text-align: center;">
-                <img id="carousel-image" alt="" style="max-width: 100%; height: auto; transition: opacity 0.2s ease-in-out; opacity: 0;">
+              <div aria-live="polite" aria-atomic="true" style="z-index: 1; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;">
+                <img id="carousel-image" alt="" style="width: 100%; height: 100%; object-fit: contain; transition: opacity 0.2s ease-in-out; opacity: 0;">
               </div>
             </div>
 
             <button id="prev" style="display: none;" aria-label="Previous Image">&#10094;</button>
             <button id="next" style="display: none;" aria-label="Next Image">&#10095;</button>
             <div style="display: flex; justify-content: center;">
-              <div id="image-gallery-shimmer"></div>
+              <!-- CHANGED: Removed the hardcoded shimmer div. The JS handles it on the thumbs directly now -->
               <div id="image-gallery"></div>
             </div>
           </div>
@@ -347,7 +346,6 @@
         const container = document.getElementById('rpoImageContainer');
         container.innerHTML = '';
 
-        // Fetch the pre-verified RPO images array compiled by server.js
         const verifiedRpoImages = <%- JSON.stringify(verifiedRpoImages || []) %>;
 
         if (!verifiedRpoImages.length) {
@@ -355,7 +353,6 @@
           return;
         }
 
-        // Sort the pre-filtered codes alphabetically
         const sortedRpoCodes = [...verifiedRpoImages].sort();
 
         sortedRpoCodes.forEach(rpoCode => {
@@ -379,7 +376,7 @@
           } else if (model === 'CORVETTE ZR1X') {
               imgSrc = `/img/rpos/corvette/zr1x/${rpoCode}.webp`;
           } else if (model.startsWith('CORVETTE')) {
-              imgSrc = `/img/rpos/corvette/${rpoCode}.webp`; // Fallback
+              imgSrc = `/img/rpos/corvette/${rpoCode}.webp`;
           } else if (model === 'ESCALADE IQ') {
               imgSrc = `/img/rpos/escaladeiq/${rpoCode}.webp`;
           } else if (model === 'CT4' && vehicleTrim.startsWith('V-SERIES')) {
@@ -455,42 +452,15 @@
         if (model === 'CORVETTE GRAND SPORT' && vehicleTrim !== 'GRAND SPORT X' && corvetteGSRpo[rpoCode]) { element.innerHTML = `<div>${corvetteGSRpo[rpoCode]}</div>`; return; }
         if (model.startsWith('CORVETTE ZR1') && zr1Rpo[rpoCode]) { element.innerHTML = `<div>${zr1Rpo[rpoCode]}</div>`; return; }
         if (model.startsWith('CORVETTE') && corvetteRpo[rpoCode]) { element.innerHTML = `<div>${corvetteRpo[rpoCode]}</div>`; return; }
-        if (model === 'ESCALADE' && escaladeRpo[rpoCode]) {
-          element.innerHTML = `<div>${escaladeRpo[rpoCode]}</div>`;
-          return;
-        }
-        if (model === 'ESCALADE IQ' && escaladeiqRpo[rpoCode]) {
-          element.innerHTML = `<div>${escaladeiqRpo[rpoCode]}</div>`;
-          return;
-        }
-        if (model === 'CT4' && ct4Rpo[rpoCode]) {
-          element.innerHTML = `<div>${ct4Rpo[rpoCode]}</div>`;
-          return;
-        }
-        if (model === 'CT4' && vehicleTrim.startsWith('V-SERIES') && ct4vRpo[rpoCode]) {
-          element.innerHTML = `<div>${ct4vRpo[rpoCode]}</div>`;
-          return;
-        }
-        if (model === 'CT5' && ct5Rpo[rpoCode]) {
-          element.innerHTML = `<div>${ct5Rpo[rpoCode]}</div>`;
-          return;
-        }
-        if (model === 'CT5' && vehicleTrim.startsWith('V-SERIES') && ct5vRpo[rpoCode]) {
-          element.innerHTML = `<div>${ct5vRpo[rpoCode]}</div>`;
-          return;
-        }
-        if (model === 'HUMMER EV PICKUP' && hummerRpo[rpoCode]) {
-          element.innerHTML = `<div>${hummerRpo[rpoCode]}</div>`;
-          return;
-        }
-        if (model === 'HUMMER EV SUV' && hummersuvRpo[rpoCode]) {
-          element.innerHTML = `<div>${hummersuvRpo[rpoCode]}</div>`;
-          return;
-        }
-        if (model === 'CELESTIQ' && celestiqRpo[rpoCode]) {
-          element.innerHTML = `<div>${celestiqRpo[rpoCode]}</div>`;
-          return;
-        }
+        if (model === 'ESCALADE' && escaladeRpo[rpoCode]) { element.innerHTML = `<div>${escaladeRpo[rpoCode]}</div>`; return; }
+        if (model === 'ESCALADE IQ' && escaladeiqRpo[rpoCode]) { element.innerHTML = `<div>${escaladeiqRpo[rpoCode]}</div>`; return; }
+        if (model === 'CT4' && ct4Rpo[rpoCode]) { element.innerHTML = `<div>${ct4Rpo[rpoCode]}</div>`; return; }
+        if (model === 'CT4' && vehicleTrim.startsWith('V-SERIES') && ct4vRpo[rpoCode]) { element.innerHTML = `<div>${ct4vRpo[rpoCode]}</div>`; return; }
+        if (model === 'CT5' && ct5Rpo[rpoCode]) { element.innerHTML = `<div>${ct5Rpo[rpoCode]}</div>`; return; }
+        if (model === 'CT5' && vehicleTrim.startsWith('V-SERIES') && ct5vRpo[rpoCode]) { element.innerHTML = `<div>${ct5vRpo[rpoCode]}</div>`; return; }
+        if (model === 'HUMMER EV PICKUP' && hummerRpo[rpoCode]) { element.innerHTML = `<div>${hummerRpo[rpoCode]}</div>`; return; }
+        if (model === 'HUMMER EV SUV' && hummersuvRpo[rpoCode]) { element.innerHTML = `<div>${hummersuvRpo[rpoCode]}</div>`; return; }
+        if (model === 'CELESTIQ' && celestiqRpo[rpoCode]) { element.innerHTML = `<div>${celestiqRpo[rpoCode]}</div>`; return; }
 
         if (invertedColorMap[rpoCode]) {
           element.innerHTML = `<div>${invertedColorMap[rpoCode]}</div>`;
@@ -524,7 +494,6 @@
 
       let trim = mmc[mmc_code] || '';
 
-      // Fix 2022+ 1LE mirrors
       if (model === 'CAMARO' && modelYear >= 2020 && (options.includes('A1Y') || options.includes('A1Z'))) {
         options = options.filter(code => code !== 'DD1' && code !== 'DG7');
       }
@@ -535,27 +504,27 @@
           options = options.filter(code => code !== "T3S");
         }
       } else {
-        if (["1YC07", "1YC67", "1YY07", "1YY67", "1YW07", "1YW67", "1YX07", "1YX67", "1YE07", "1YE67"].includes(mmc_code)) { // Camaro/Corvette
+        if (["1YC07", "1YC67", "1YY07", "1YY67", "1YW07", "1YW67", "1YX07", "1YX67", "1YE07", "1YE67"].includes(mmc_code)) {
           trim = options.find(opt => ["1LT", "2LT", "3LT"].includes(opt)) || trim;
-        } else if (["1YH07", "1YH67", "1YG07", "1YG67", "1YR07", "1YR67", "1YZ07", "1YZ67", "1YS07", "1YS67"].includes(mmc_code)) { // Corvette Z06/E-Ray
+        } else if (["1YH07", "1YH67", "1YG07", "1YG67", "1YR07", "1YR67", "1YZ07", "1YZ67", "1YS07", "1YS67"].includes(mmc_code)) {
           trim = options.find(opt => ["1LZ", "2LZ", "3LZ"].includes(opt)) || trim;
-        } else if (["1YV07", "1YV67"].includes(mmc_code)) { // Corvette ZR1/ZR1X
+        } else if (["1YV07", "1YV67"].includes(mmc_code)) {
           trim = options.find(opt => ["1ZR", "3ZR"].includes(opt)) || trim;
-        } else if (["1AH37", "1AH67"].includes(mmc_code)) { // Camaro
+        } else if (["1AH37", "1AH67"].includes(mmc_code)) {
           trim = options.find(opt => ["3LT"].includes(opt)) || trim;
-        } else if (["1AG37", "1AG67"].includes(mmc_code) && modelYear < 2024) { // Camaro 2020-2023
+        } else if (["1AG37", "1AG67"].includes(mmc_code) && modelYear < 2024) {
           trim = options.find(opt => ["1LS"].includes(opt)) || trim;
-        } else if (["TT35743", "TT35526"].includes(mmc_code)) { // CT4/CT5
+        } else if (["TT35743", "TT35526"].includes(mmc_code)) {
           trim = options.find(opt => ["1SE", "1SF", "1SG", "1SB", "1SC", "1SD"].includes(opt)) || trim;
-        } else if (["CT35843"].includes(mmc_code)) { // Trucks
+        } else if (["CT35843"].includes(mmc_code)) {
           trim = options.find(opt => ["2WT", "3WT", "4WT", "5WT", "8WT", "3LT", "2SP", "3SP"].includes(opt)) || trim;
         } else if (["TT35843"].includes(mmc_code)) {
           trim = options.find(opt => ["5SD", "5SB", "5SC", "3SB", "3SC", "4SC", "4SD"].includes(opt)) || trim;
         } else if (["6T35726"].includes(mmc_code)) {
           trim = options.find(opt => ["1SC", "1SF", "1SD", "1SG"].includes(opt)) || trim;
-        } else if (["6C10706", "6K10706"].includes(mmc_code)) { // Escalade
+        } else if (["6C10706", "6K10706"].includes(mmc_code)) {
           trim = options.find(opt => ["1SA", "1SB", "1SC", "1SG", "1SH", "1SD"].includes(opt)) || trim;
-        } else if (["6C10906", "6K10906"].includes(mmc_code)) { // Escalade ESV
+        } else if (["6C10906", "6K10906"].includes(mmc_code)) {
           trim = options.find(opt => ["1SA", "1SB", "1SC", "1SG", "1SH", "1SD"].includes(opt)) || trim;
         }
       }
@@ -564,7 +533,6 @@
       let color = options.find(opt => Object.values(colorMap).includes(opt));
       let colorInt = options.find(opt => Object.keys(intColor).includes(opt));
       
-      // --- ADDED VALIDATION CHECK FOR UNDEFINED/NULL ---
       let missingVarsMsgs = [];
       const requiredVars = { modelYear, mmc_code, trim, color, colorInt };
       
@@ -578,7 +546,6 @@
         warningDiv.innerHTML += (warningDiv.innerHTML ? '<br>' : '') + missingVarsMsgs.join('<br>');
         warningDiv.style.color = '#e57373';
       }
-      // -------------------------------------------------
 
       const modelUpper = vin_data[0].model ? vin_data[0].model.toUpperCase() : '';
       let extMax = 7;
@@ -607,18 +574,6 @@
         extMax = modelYear >= 2026 ? 17 : 7;
       }
 
-      const shimmerContainer = document.getElementById('image-gallery-shimmer');
-      shimmerContainer.innerHTML = '';
-
-      const totalBoxes = intMax + extMax;
-      for (let i = 0; i < totalBoxes; i++) {
-        const box = document.createElement('div');
-        box.classList.add('shimmer-box', 'shimmer');
-        box.style.width = '100px';
-        box.style.borderRadius = '4px';
-        shimmerContainer.appendChild(box);
-      }
-
       // GM Image Gen API doesn't have some codes so pick closest available option
       let unsupportedColors = null;
       const unsupportedColorNames = [
@@ -645,7 +600,6 @@
         }
       }
 
-      // Force 2025 + 1SV + GBL → GXD
       if (modelYear === 2025 && trim === '1SV' && color === 'GBL') {
         unsupportedColors = 'GBL';
         color = 'GXD';
@@ -698,7 +652,6 @@
         unsupportedInts = colorInt;
         colorInt = replacementMap[key];
       } else {
-        // Check generic pattern for CT5/CT4
         const patternKey = key.split('-').slice(1).join('-');
         if (replacementMap[patternKey]) {
           unsupportedInts = colorInt;
@@ -780,9 +733,12 @@
             };
             
             thumb.onerror = () => {
-              thumbWrapper.classList.remove('shimmer');
-              thumb.style.opacity = '1';
-              thumb.alt = 'Image not available';
+              thumbWrapper.style.display = 'none';
+              urls[index] = null;
+
+              if (currentIndex === index) {
+                  moveToNextValid();
+              }
             };
             
             thumbWrapper.addEventListener('click', () => {
@@ -796,120 +752,119 @@
         }
       }
 
-      function preloadImage(src) {
-        const img = new Image();
-        img.src = src;
+      function moveToNextValid() {
+          let nextIdx = (currentIndex + 1) % urls.length;
+          let start = currentIndex;
+          while (urls[nextIdx] === null) {
+              nextIdx = (nextIdx + 1) % urls.length;
+              if (nextIdx === start) {
+                  showGhost();
+                  return;
+              }
+          }
+          showImage(nextIdx, true);
+      }
+
+      function showGhost() {
+          loadingAnimation.style.display = 'none';
+          carouselImage.style.opacity = 1;
+          carouselImage.src = ghostImg;
+          
+          if (!warningDiv.innerHTML.includes('Image generation does not support')) {
+            warningDiv.innerHTML += (warningDiv.innerHTML ? '<br>' : '') + `Image generation does not support ${modelYear} ${vin.model || model}`;
+            warningDiv.style.color = '#e57373';
+          }
+          
+          urls = [ghostImg];
+          currentIndex = 0;
+          gallery.innerHTML = ''; 
+          document.getElementById('prev').style.display = 'none';
+          document.getElementById('next').style.display = 'none';
       }
 
       function showImage(index, forceUpdate = false) {
-        if (!initialLoad && index === currentIndex && !forceUpdate) {
-          return;
+        if (!initialLoad && index === currentIndex && !forceUpdate) return;
+
+        let attempts = 0;
+        while (urls[index] === null && attempts < urls.length) {
+            index = (index + 1) % urls.length;
+            attempts++;
+        }
+        if (attempts >= urls.length) {
+            showGhost();
+            return;
         }
 
-        while (urls[index] === null) {
-          index = (index + 1) % urls.length;
-          if (index === currentIndex && !forceUpdate) break;
-        }
         currentIndex = index;
         const imgSrc = urls[index];
 
         loadingAnimation.style.display = 'block';
         carouselImage.style.opacity = 0;
 
-        // Clear previous listeners to avoid race conditions during rapid clicking
-        carouselImage.onload = null;
-        carouselImage.onerror = null;
-
-        const handleLoadSuccess = () => {
+        carouselImage.onload = () => {
           loadingAnimation.style.display = 'none';
           carouselImage.style.opacity = 1;
           
-          if (urls.length > 1) {
+          const validCount = urls.filter(u => u !== null).length;
+          if (validCount > 1 && urls[0] !== ghostImg) {
             document.getElementById('prev').style.display = 'block';
             document.getElementById('next').style.display = 'block';
           } else {
             document.getElementById('prev').style.display = 'none';
             document.getElementById('next').style.display = 'none';
           }
-          
-          document.getElementById('image-gallery-shimmer').style.display = 'none';
-          
-          if (urls.length === 1 && urls[0] === ghostImg) {
-            document.getElementById('image-gallery').style.display = 'none';
-          } else {
-            document.getElementById('image-gallery').style.display = 'flex';
+
+          [...gallery.children].forEach((wrapper, i) => {
+            wrapper.style.border = (i === currentIndex && urls[i]) ? '1px solid #141414' : '1px solid transparent';
+          });
+
+          const el = gallery.children[currentIndex];
+          if (el) {
+            const galleryRect = gallery.getBoundingClientRect();
+            const elRect = el.getBoundingClientRect();
+            const offset = elRect.left - galleryRect.left - (galleryRect.width / 2) + (elRect.width / 2);
+            let targetScroll = gallery.scrollLeft + offset;
+            const maxScroll = gallery.scrollWidth - gallery.clientWidth;
+            targetScroll = Math.max(0, Math.min(targetScroll, maxScroll));
+            gallery.scrollTo({ left: targetScroll, behavior: 'smooth' });
           }
-          
+
           initialLoad = false;
         };
 
-        if (initialLoad || forceUpdate) {
-          carouselImage.onload = handleLoadSuccess;
-
-          carouselImage.onerror = () => {
-            if (carouselImage.src.includes('ghost')) {
-              loadingAnimation.style.display = 'none';
-              carouselImage.style.opacity = 1;
-              return;
-            }
-            
-            if (!warningDiv.innerHTML.includes('Image generation does not support')) {
-              warningDiv.innerHTML += (warningDiv.innerHTML ? '<br>' : '') + `Image generation does not support ${modelYear} ${vin.model || model}`;
-              warningDiv.style.color = '#e57373';
-            }
-            
-            urls = [ghostImg];
-            currentIndex = 0;
-            gallery.innerHTML = ''; 
-            
+        carouselImage.onerror = () => {
+          if (imgSrc === ghostImg) {
             loadingAnimation.style.display = 'none';
-            carouselImage.src = ghostImg;
             carouselImage.style.opacity = 1;
-          };
+            return;
+          }
+          
+          urls[currentIndex] = null;
+          if (gallery.children[currentIndex]) {
+              gallery.children[currentIndex].style.display = 'none';
+          }
+          moveToNextValid();
+        };
 
-          carouselImage.src = imgSrc;
-        } else {
-          setTimeout(() => {
-            carouselImage.onload = handleLoadSuccess;
-            
-            carouselImage.onerror = () => {
-              loadingAnimation.style.display = 'none';
-              if (carouselImage.src.includes('ghost')) {
-                carouselImage.style.opacity = 1;
-                return;
-              }
-              carouselImage.src = ghostImg; 
-              carouselImage.style.opacity = 1;
-            };
-
+        if (initialLoad || forceUpdate) {
             carouselImage.src = imgSrc;
-            carouselImage.alt = `Image ${index + 1}`;
-          }, 200);
+        } else {
+            setTimeout(() => {
+                carouselImage.src = imgSrc;
+                carouselImage.alt = `Image ${index + 1}`;
+            }, 50); 
         }
-
-        [...gallery.children].forEach((wrapper, i) => {
-          wrapper.style.border = (i === index && urls[i]) ? '1px solid #141414' : '1px solid transparent';
-        });
-
-        const el = gallery.children[index];
-        if (el) {
-          const galleryRect = gallery.getBoundingClientRect();
-          const elRect = el.getBoundingClientRect();
-          
-          const offset = elRect.left - galleryRect.left - (galleryRect.width / 2) + (elRect.width / 2);
-          let targetScroll = gallery.scrollLeft + offset;
-          
-          const maxScroll = gallery.scrollWidth - gallery.clientWidth;
-          targetScroll = Math.max(0, Math.min(targetScroll, maxScroll));
-          
-          gallery.scrollTo({ left: targetScroll, behavior: 'smooth' });
-        }
-
-        let nextIndex = (index + 1) % urls.length;
-        while (urls[nextIndex] === null && nextIndex !== index) {
+        
+        let nextIndex = (currentIndex + 1) % urls.length;
+        while (urls[nextIndex] === null && nextIndex !== currentIndex) {
           nextIndex = (nextIndex + 1) % urls.length;
         }
         if (urls[nextIndex]) preloadImage(urls[nextIndex]);
+      }
+
+      function preloadImage(src) {
+        const img = new Image();
+        img.src = src;
       }
 
       if (modelUpper.startsWith('CORVETTE')) {
@@ -934,6 +889,7 @@
       showImage(currentIndex);
 
       document.getElementById('prev').addEventListener('click', () => {
+        if (urls.filter(u => u !== null).length <= 1) return;
         let prevIndex = currentIndex;
         do {
           prevIndex = (prevIndex === 0) ? urls.length - 1 : prevIndex - 1;
@@ -942,6 +898,7 @@
       });
 
       document.getElementById('next').addEventListener('click', () => {
+        if (urls.filter(u => u !== null).length <= 1) return;
         let nextIndex = currentIndex;
         do {
           nextIndex = (nextIndex === urls.length - 1) ? 0 : nextIndex + 1;
@@ -960,6 +917,7 @@
 
       document.addEventListener('keydown', (event) => {
         if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') return;
+        if (urls.filter(u => u !== null).length <= 1) return;
 
         if (event.key === 'ArrowLeft') {
           let prevIndex = currentIndex;
@@ -984,6 +942,8 @@
         const swipeDistance = touchEndX - touchStartX;
 
         if (Math.abs(swipeDistance) > swipeThreshold) {
+          if (urls.filter(u => u !== null).length <= 1) return;
+
           if (swipeDistance < 0) {
             let nextIndex = currentIndex;
             do {

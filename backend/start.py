@@ -873,7 +873,7 @@ def wheel_stats():
     params = []
     if model:
         if model == "CORVETTE (ALL)":
-            corvette_models = ["CORVETTE STINGRAY", "CORVETTE STINGRAY W/ Z51", "CORVETTE GRAND SPORT", "CORVETTE E-RAY", "CORVETTE Z06", "CORVETTE ZR1", "CORVETTE ZR1X"]
+            corvette_models = ["CORVETTE STINGRAY", "CORVETTE STINGRAY W/ Z51", "CORVETTE GRAND SPORT", "CORVETTE GRAND SPORT X", "CORVETTE E-RAY", "CORVETTE Z06", "CORVETTE ZR1", "CORVETTE ZR1X"]
             corvette_list = ", ".join(['%s'] * len(corvette_models))
             conditions.append(f"model IN ({corvette_list})")
             params.extend(corvette_models)

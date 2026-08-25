@@ -354,43 +354,36 @@ app.get('/search', searchLimiter, async (req, res) => {
             const modelUpper = vehicle.model?.toUpperCase() || '';
             const vehicleTrim = vehicle.trim || '';
             
-            // Mirror directory resolution logic used on frontend
-            let folderName = modelUpper.toLowerCase();
-            if (modelUpper === 'CORVETTE STINGRAY') {
-                folderName = 'corvette/stingray';
-            } else if (modelUpper === 'CORVETTE Z06') {
-                folderName = 'corvette/z06';
-            } else if (modelUpper === 'CORVETTE E-RAY') {
-                folderName = 'corvette/e-ray';
-            } else if (modelUpper === 'CORVETTE GRAND SPORT' && vehicleTrim === 'GRAND SPORT X') {
-                folderName = 'corvette/grand_sport_x';
-            } else if (modelUpper === 'CORVETTE GRAND SPORT') {
-                folderName = 'corvette/grand_sport';
-            } else if (modelUpper === 'CORVETTE ZR1') {
-                folderName = 'corvette/zr1';
-            } else if (modelUpper === 'CORVETTE ZR1X') {
-                folderName = 'corvette/zr1x';
-            } else if (modelUpper.startsWith('CORVETTE')) {
-                folderName = 'corvette'; // Fallback
+            // Generate the exact prefix matching localRpoImageMap for instant memory lookups
+            let prefixKey = modelUpper.replace(/ /g, '-');
+            
+            if (modelUpper.startsWith('CORVETTE')) {
+                if (vehicle.rpo_codes.includes('LT6')) {
+                    prefixKey = 'CORVETTE-Z06';
+                } else if (vehicle.rpo_codes.includes('LT7')) {
+                    prefixKey = (vehicleTrim.includes('ZR1X') || vehicle.rpo_codes.includes('ZTK')) ? 'CORVETTE-ZR1X' : 'CORVETTE-ZR1';
+                } else if (vehicle.rpo_codes.includes('HP1')) {
+                    prefixKey = 'CORVETTE-E-RAY';
+                } else if (vehicle.rpo_codes.includes('LS6')) {
+                    prefixKey = (vehicleTrim === 'GRAND SPORT X') ? 'CORVETTE-GRAND_SPORT_X' : 'CORVETTE-GRAND_SPORT';
+                } else {
+                    prefixKey = 'CORVETTE-STINGRAY';
+                }
             } else if (modelUpper === 'ESCALADE IQ') {
-                folderName = 'escaladeiq';
+                prefixKey = 'ESCALADEIQ';
             } else if (modelUpper === 'CT4' && vehicleTrim.startsWith('V-SERIES')) {
-                folderName = 'ct4v';
+                prefixKey = 'CT4V';
             } else if (modelUpper === 'CT5' && vehicleTrim.startsWith('V-SERIES')) {
-                folderName = 'ct5v';
+                prefixKey = 'CT5V';
             } else if (modelUpper === 'HUMMER EV PICKUP') {
-                folderName = 'hummer';
+                prefixKey = 'HUMMER';
             } else if (modelUpper === 'HUMMER EV SUV') {
-                folderName = 'hummersuv';
+                prefixKey = 'HUMMERSUV';
             }
 
-            const baseRpoDir = path.resolve(__dirname, 'public', 'img', 'rpos', folderName);
             vehicle.rpo_codes.forEach(rpoCode => {
-                const absoluteImagePath = path.resolve(baseRpoDir, `${rpoCode}.webp`);
-                const relativePath = path.relative(baseRpoDir, absoluteImagePath);
-                
-                // Only pass to view if file physically exists on NVMe drive and is within base directory
-                if (!relativePath.startsWith('..') && !path.isAbsolute(relativePath) && fs.existsSync(absoluteImagePath)) {
+                // Instantly checks the in-memory map instead of slow file system operations
+                if (localRpoImageMap[`${prefixKey}-${rpoCode}`] || localRpoImageMap[rpoCode]) {
                     verifiedRpoImages.push(rpoCode);
                 }
             });

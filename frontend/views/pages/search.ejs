@@ -284,9 +284,36 @@
     document.addEventListener('DOMContentLoaded', () => {
       const vin_data = <%- JSON.stringify(vin_data).replace(/</g, '\\u003c') %>;
       const vin = vin_data[0];
-      const model = vin.model?.toUpperCase() || '';
+      const modelUpper = vin.model?.toUpperCase() || '';
       const vehicleTrim = vin.trim || '';
+      const modelYear = vin_data[0].modelYear;
+      const mmc_code = vin_data[0].mmc_code;
+      let options = vin_data[0].rpo_codes || [];
 
+      // Determine accurate derived model & prefix for the RPO Image Cache
+      let derivedModel = modelUpper;
+      let folderName = modelUpper.toLowerCase().replace(/ /g, '');
+      let prefixKey = modelUpper.replace(/ /g, '-');
+
+      if (modelUpper.startsWith('CORVETTE')) {
+          if (options.includes('LT6')) { derivedModel = 'CORVETTE Z06'; prefixKey = 'CORVETTE-Z06'; folderName = 'corvette/z06'; }
+          else if (options.includes('LT7')) {
+              if (vehicleTrim.includes('ZR1X') || options.includes('ZTK')) { derivedModel = 'CORVETTE ZR1X'; prefixKey = 'CORVETTE-ZR1X'; folderName = 'corvette/zr1x'; }
+              else { derivedModel = 'CORVETTE ZR1'; prefixKey = 'CORVETTE-ZR1'; folderName = 'corvette/zr1'; }
+          }
+          else if (options.includes('HP1')) { derivedModel = 'CORVETTE E-RAY'; prefixKey = 'CORVETTE-E-RAY'; folderName = 'corvette/e-ray'; }
+          else if (options.includes('LS6')) {
+              if (vehicleTrim === 'GRAND SPORT X') { derivedModel = 'CORVETTE GSX'; prefixKey = 'CORVETTE-GRAND_SPORT_X'; folderName = 'corvette/grand_sport_x'; }
+              else { derivedModel = 'CORVETTE GRAND SPORT'; prefixKey = 'CORVETTE-GRAND_SPORT'; folderName = 'corvette/grand_sport'; }
+          }
+          else { derivedModel = 'CORVETTE STINGRAY'; prefixKey = 'CORVETTE-STINGRAY'; folderName = 'corvette/stingray'; }
+      } else if (modelUpper === 'ESCALADE IQ') { prefixKey = 'ESCALADEIQ'; folderName = 'escaladeiq'; }
+      else if (modelUpper === 'CT4' && vehicleTrim.startsWith('V-SERIES')) { prefixKey = 'CT4V'; folderName = 'ct4v'; }
+      else if (modelUpper === 'CT5' && vehicleTrim.startsWith('V-SERIES')) { prefixKey = 'CT5V'; folderName = 'ct5v'; }
+      else if (modelUpper === 'HUMMER EV PICKUP') { prefixKey = 'HUMMER'; folderName = 'hummer'; }
+      else if (modelUpper === 'HUMMER EV SUV') { prefixKey = 'HUMMERSUV'; folderName = 'hummersuv'; }
+
+      const localRpoImageMap = <%- JSON.stringify(localRpoImageMap || {}) %>;
       const intColor = <%- JSON.stringify(intColor) %>;
       const colorMap = <%- JSON.stringify(colorMap) %>;
       const camaroRpo = <%- JSON.stringify(camaroRpo) %>;
@@ -309,11 +336,8 @@
 
       const invertedColorMap = {};
       for (const [name, code] of Object.entries(colorMap)) {
-        if (code && code.length === 3) { 
-          invertedColorMap[code] = name;
-        } else {
-          invertedColorMap[name] = name;
-        }
+        if (code && code.length === 3) invertedColorMap[code] = name;
+        else invertedColorMap[name] = name;
       }
 
       const allRpoDescriptions = {
@@ -338,80 +362,67 @@
         ...celestiqRpo
       };
 
-      function renderRpoCards(vin, model) {
+      function renderRpoCards(vin) {
         const container = document.getElementById('rpoImageContainer');
         container.innerHTML = '';
 
         const verifiedRpoImages = <%- JSON.stringify(verifiedRpoImages || []) %>;
+        
+        // CHANGED: Render if it has a verified image OR if we have a description for it in our dictionaries
+        const rposToRender = (vin.rpo_codes || []).filter(rpo => {
+            return verifiedRpoImages.includes(rpo) || allRpoDescriptions[rpo];
+        }).sort();
 
-        if (!verifiedRpoImages.length) {
+        if (!rposToRender.length) {
           container.innerHTML = '<h4>No specific RPO images found for this vehicle.</h4>';
           return;
         }
 
-        const sortedRpoCodes = [...verifiedRpoImages].sort();
+        // Establish the fallback path based on the vehicle model
+        let fallbackPath = '/img/brand-logos/';
+        if (['ESCALADE', 'ESCALADE IQ', 'CT4', 'CT4-V', 'CT5', 'CT5-V', 'CELESTIQ'].includes(modelUpper) || modelUpper.startsWith('CT')) {
+            fallbackPath += 'cadillac.webp';
+        } else if (['HUMMER EV PICKUP', 'HUMMER EV SUV', 'SIERRA EV'].includes(modelUpper)) {
+            fallbackPath += 'gmc.webp';
+        } else {
+            fallbackPath += 'chevrolet.webp';
+        }
 
-        sortedRpoCodes.forEach(rpoCode => {
+        rposToRender.forEach(rpoCode => {
           const cardWrapper = document.createElement('div');
           cardWrapper.className = 'rpo-wrapper';
           container.appendChild(cardWrapper);
 
-          let imgSrc;
-          if (model === 'CORVETTE STINGRAY') {
-              imgSrc = `/img/rpos/corvette/stingray/${rpoCode}.webp`;
-          } else if (model === 'CORVETTE Z06') {
-              imgSrc = `/img/rpos/corvette/z06/${rpoCode}.webp`;
-          } else if (model === 'CORVETTE E-RAY') {
-              imgSrc = `/img/rpos/corvette/e-ray/${rpoCode}.webp`;
-          } else if (model === 'CORVETTE GRAND SPORT' && vehicleTrim === 'GRAND SPORT X') {
-              imgSrc = `/img/rpos/corvette/grand_sport_x/${rpoCode}.webp`;
-          } else if (model === 'CORVETTE GRAND SPORT') {
-              imgSrc = `/img/rpos/corvette/grand_sport/${rpoCode}.webp`;
-          } else if (model === 'CORVETTE ZR1') {
-              imgSrc = `/img/rpos/corvette/zr1/${rpoCode}.webp`;
-          } else if (model === 'CORVETTE ZR1X') {
-              imgSrc = `/img/rpos/corvette/zr1x/${rpoCode}.webp`;
-          } else if (model.startsWith('CORVETTE')) {
-              imgSrc = `/img/rpos/corvette/${rpoCode}.webp`;
-          } else if (model === 'ESCALADE IQ') {
-              imgSrc = `/img/rpos/escaladeiq/${rpoCode}.webp`;
-          } else if (model === 'CT4' && vehicleTrim.startsWith('V-SERIES')) {
-              imgSrc = `/img/rpos/ct4v/${rpoCode}.webp`;
-          } else if (model === 'CT5' && vehicleTrim.startsWith('V-SERIES')) {
-              imgSrc = `/img/rpos/ct5v/${rpoCode}.webp`;
-          } else if (model === 'HUMMER EV PICKUP') {
-              imgSrc = `/img/rpos/hummer/${rpoCode}.webp`;
-          } else if (model === 'HUMMER EV SUV') {
-              imgSrc = `/img/rpos/hummersuv/${rpoCode}.webp`;
-          } else {
-              imgSrc = `/img/rpos/${model.toLowerCase()}/${rpoCode}.webp`;
-          }
+          // Perfectly resolves using the memory map (which handles shared folders and subfolders instantly)
+          let imgSrc = localRpoImageMap[`${prefixKey}-${rpoCode}`] || localRpoImageMap[rpoCode] || `/img/rpos/${folderName}/${rpoCode}.webp`;
 
           const cardLink = document.createElement('a');
-          cardLink.href = `/vehicles?model=${encodeURIComponent(model)}&rpo=${encodeURIComponent(rpoCode)}`;
+          cardLink.href = `/vehicles?model=${encodeURIComponent(vin.model)}&rpo=${encodeURIComponent(rpoCode)}`;
           cardLink.className = 'rpo-card-link';
 
           const card = document.createElement('div');
           card.className = 'rpo-card';
 
+          // Properly map the desc text to the precise dictionary based on the derived submodel
           let descText = 
-            (model === 'CAMARO' && camaroRpo[rpoCode]) ||
-            (model === 'CORVETTE STINGRAY' && stingrayRpo[rpoCode]) ||
-            (model === 'CORVETTE Z06' && z06Rpo[rpoCode]) ||
-            (model === 'CORVETTE E-RAY' && erayRpo[rpoCode]) ||
-            (model === 'CORVETTE GRAND SPORT' && vehicleTrim === 'GRAND SPORT X' && corvetteGSXRpo[rpoCode]) ||
-            (model === 'CORVETTE GRAND SPORT' && vehicleTrim !== 'GRAND SPORT X' && corvetteGSRpo[rpoCode]) ||
-            (model.startsWith('CORVETTE ZR1') && zr1Rpo[rpoCode]) ||
-            (model.startsWith('CORVETTE') && corvetteRpo[rpoCode]) ||
-            (model === 'ESCALADE' && escaladeRpo[rpoCode]) ||
-            (model === 'ESCALADE IQ' && escaladeiqRpo[rpoCode]) ||
-            (model === 'CT4' && ct4Rpo[rpoCode]) ||
-            (model === 'CT4' && vehicleTrim.startsWith('V-SERIES') && ct4vRpo[rpoCode]) ||
-            (model === 'CT5' && ct5Rpo[rpoCode]) ||
-            (model === 'CT5' && vehicleTrim.startsWith('V-SERIES') && ct5vRpo[rpoCode]) ||
-            (model === 'HUMMER EV PICKUP' && hummerRpo[rpoCode]) ||
-            (model === 'HUMMER EV SUV' && hummersuvRpo[rpoCode]) ||
-            (model === 'CELESTIQ' && celestiqRpo[rpoCode]) ||
+            (derivedModel === 'CAMARO' && camaroRpo[rpoCode]) ||
+            (derivedModel === 'CORVETTE STINGRAY' && stingrayRpo[rpoCode]) ||
+            (derivedModel === 'CORVETTE Z06' && z06Rpo[rpoCode]) ||
+            (derivedModel === 'CORVETTE E-RAY' && erayRpo[rpoCode]) ||
+            (derivedModel === 'CORVETTE GSX' && corvetteGSXRpo[rpoCode]) ||
+            (derivedModel === 'CORVETTE GRAND SPORT' && corvetteGSRpo[rpoCode]) ||
+            (derivedModel === 'CORVETTE ZR1X' && zr1Rpo[rpoCode]) ||
+            (derivedModel === 'CORVETTE ZR1' && zr1Rpo[rpoCode]) ||
+            (modelUpper.startsWith('CORVETTE') && corvetteRpo[rpoCode]) ||
+            (derivedModel === 'ESCALADE' && escaladeRpo[rpoCode]) ||
+            (derivedModel === 'ESCALADE IQ' && escaladeiqRpo[rpoCode]) ||
+            (derivedModel === 'CT4' && ct4Rpo[rpoCode]) ||
+            (derivedModel === 'CT4' && vehicleTrim.startsWith('V-SERIES') && ct4vRpo[rpoCode]) ||
+            (derivedModel === 'CT5' && ct5Rpo[rpoCode]) ||
+            (derivedModel === 'CT5' && vehicleTrim.startsWith('V-SERIES') && ct5vRpo[rpoCode]) ||
+            (derivedModel === 'HUMMER EV PICKUP' && hummerRpo[rpoCode]) ||
+            (derivedModel === 'HUMMER EV SUV' && hummersuvRpo[rpoCode]) ||
+            (derivedModel === 'CELESTIQ' && celestiqRpo[rpoCode]) ||
             invertedColorMap[rpoCode] ||
             allRpoDescriptions[rpoCode];
 
@@ -419,8 +430,9 @@
             ? `<div>${descText}</div>` 
             : `<div style="color: gray; font-style: italic;">No description available</div>`;
 
+          // CHANGED: Added onerror attribute to handle images that fail to load
           card.innerHTML = `
-            <img src="${imgSrc}" alt="${rpoCode}">
+            <img src="${imgSrc}" alt="${rpoCode}" onerror="this.onerror=null; this.src='${fallbackPath}';">
             <p>${rpoCode}</p>
             <div class="rpo-description">${descHTML}</div>
           `;
@@ -430,9 +442,9 @@
         });
       }
 
-      if (vin.model && model !== 'CELESTIQ') {
-        renderRpoCards(vin, vin.model);
-      } else if (model === 'CELESTIQ') {
+      if (vin.model && modelUpper !== 'CELESTIQ') {
+        renderRpoCards(vin);
+      } else if (modelUpper === 'CELESTIQ') {
         const rpoImgContainer = document.getElementById('rpoImageContainer');
         if (rpoImgContainer) rpoImgContainer.style.display = 'none';
       }
@@ -440,34 +452,31 @@
       document.querySelectorAll('#rpoTable .rpo-description').forEach(element => {
         const rpoCode = element.getAttribute('data-code');
 
-        if (model === 'CAMARO' && camaroRpo[rpoCode]) { element.innerHTML = `<div>${camaroRpo[rpoCode]}</div>`; return; }
-        if (model === 'CORVETTE STINGRAY' && stingrayRpo[rpoCode]) { element.innerHTML = `<div>${stingrayRpo[rpoCode]}</div>`; return; }
-        if (model === 'CORVETTE Z06' && z06Rpo[rpoCode]) { element.innerHTML = `<div>${z06Rpo[rpoCode]}</div>`; return; }
-        if (model === 'CORVETTE E-RAY' && erayRpo[rpoCode]) { element.innerHTML = `<div>${erayRpo[rpoCode]}</div>`; return; }
-        if (model === 'CORVETTE GRAND SPORT' && vehicleTrim === 'GRAND SPORT X' && corvetteGSXRpo[rpoCode]) { element.innerHTML = `<div>${corvetteGSXRpo[rpoCode]}</div>`; return; }
-        if (model === 'CORVETTE GRAND SPORT' && vehicleTrim !== 'GRAND SPORT X' && corvetteGSRpo[rpoCode]) { element.innerHTML = `<div>${corvetteGSRpo[rpoCode]}</div>`; return; }
-        if (model.startsWith('CORVETTE ZR1') && zr1Rpo[rpoCode]) { element.innerHTML = `<div>${zr1Rpo[rpoCode]}</div>`; return; }
-        if (model.startsWith('CORVETTE') && corvetteRpo[rpoCode]) { element.innerHTML = `<div>${corvetteRpo[rpoCode]}</div>`; return; }
-        if (model === 'ESCALADE' && escaladeRpo[rpoCode]) { element.innerHTML = `<div>${escaladeRpo[rpoCode]}</div>`; return; }
-        if (model === 'ESCALADE IQ' && escaladeiqRpo[rpoCode]) { element.innerHTML = `<div>${escaladeiqRpo[rpoCode]}</div>`; return; }
-        if (model === 'CT4' && ct4Rpo[rpoCode]) { element.innerHTML = `<div>${ct4Rpo[rpoCode]}</div>`; return; }
-        if (model === 'CT4' && vehicleTrim.startsWith('V-SERIES') && ct4vRpo[rpoCode]) { element.innerHTML = `<div>${ct4vRpo[rpoCode]}</div>`; return; }
-        if (model === 'CT5' && ct5Rpo[rpoCode]) { element.innerHTML = `<div>${ct5Rpo[rpoCode]}</div>`; return; }
-        if (model === 'CT5' && vehicleTrim.startsWith('V-SERIES') && ct5vRpo[rpoCode]) { element.innerHTML = `<div>${ct5vRpo[rpoCode]}</div>`; return; }
-        if (model === 'HUMMER EV PICKUP' && hummerRpo[rpoCode]) { element.innerHTML = `<div>${hummerRpo[rpoCode]}</div>`; return; }
-        if (model === 'HUMMER EV SUV' && hummersuvRpo[rpoCode]) { element.innerHTML = `<div>${hummersuvRpo[rpoCode]}</div>`; return; }
-        if (model === 'CELESTIQ' && celestiqRpo[rpoCode]) { element.innerHTML = `<div>${celestiqRpo[rpoCode]}</div>`; return; }
+        if (derivedModel === 'CAMARO' && camaroRpo[rpoCode]) { element.innerHTML = `<div>${camaroRpo[rpoCode]}</div>`; return; }
+        if (derivedModel === 'CORVETTE STINGRAY' && stingrayRpo[rpoCode]) { element.innerHTML = `<div>${stingrayRpo[rpoCode]}</div>`; return; }
+        if (derivedModel === 'CORVETTE Z06' && z06Rpo[rpoCode]) { element.innerHTML = `<div>${z06Rpo[rpoCode]}</div>`; return; }
+        if (derivedModel === 'CORVETTE E-RAY' && erayRpo[rpoCode]) { element.innerHTML = `<div>${erayRpo[rpoCode]}</div>`; return; }
+        if (derivedModel === 'CORVETTE GSX' && corvetteGSXRpo[rpoCode]) { element.innerHTML = `<div>${corvetteGSXRpo[rpoCode]}</div>`; return; }
+        if (derivedModel === 'CORVETTE GRAND SPORT' && corvetteGSRpo[rpoCode]) { element.innerHTML = `<div>${corvetteGSRpo[rpoCode]}</div>`; return; }
+        if (derivedModel === 'CORVETTE ZR1X' && zr1Rpo[rpoCode]) { element.innerHTML = `<div>${zr1Rpo[rpoCode]}</div>`; return; }
+        if (derivedModel === 'CORVETTE ZR1' && zr1Rpo[rpoCode]) { element.innerHTML = `<div>${zr1Rpo[rpoCode]}</div>`; return; }
+        if (modelUpper.startsWith('CORVETTE') && corvetteRpo[rpoCode]) { element.innerHTML = `<div>${corvetteRpo[rpoCode]}</div>`; return; }
+        if (derivedModel === 'ESCALADE' && escaladeRpo[rpoCode]) { element.innerHTML = `<div>${escaladeRpo[rpoCode]}</div>`; return; }
+        if (derivedModel === 'ESCALADE IQ' && escaladeiqRpo[rpoCode]) { element.innerHTML = `<div>${escaladeiqRpo[rpoCode]}</div>`; return; }
+        if (derivedModel === 'CT4' && ct4Rpo[rpoCode]) { element.innerHTML = `<div>${ct4Rpo[rpoCode]}</div>`; return; }
+        if (derivedModel === 'CT4' && vehicleTrim.startsWith('V-SERIES') && ct4vRpo[rpoCode]) { element.innerHTML = `<div>${ct4vRpo[rpoCode]}</div>`; return; }
+        if (derivedModel === 'CT5' && ct5Rpo[rpoCode]) { element.innerHTML = `<div>${ct5Rpo[rpoCode]}</div>`; return; }
+        if (derivedModel === 'CT5' && vehicleTrim.startsWith('V-SERIES') && ct5vRpo[rpoCode]) { element.innerHTML = `<div>${ct5vRpo[rpoCode]}</div>`; return; }
+        if (derivedModel === 'HUMMER EV PICKUP' && hummerRpo[rpoCode]) { element.innerHTML = `<div>${hummerRpo[rpoCode]}</div>`; return; }
+        if (derivedModel === 'HUMMER EV SUV' && hummersuvRpo[rpoCode]) { element.innerHTML = `<div>${hummersuvRpo[rpoCode]}</div>`; return; }
+        if (derivedModel === 'CELESTIQ' && celestiqRpo[rpoCode]) { element.innerHTML = `<div>${celestiqRpo[rpoCode]}</div>`; return; }
 
         if (invertedColorMap[rpoCode]) {
           element.innerHTML = `<div>${invertedColorMap[rpoCode]}</div>`;
           return;
         }
 
-        if (allRpoDescriptions[rpoCode]) {
-          element.innerHTML = `<div>${allRpoDescriptions[rpoCode]}</div>`;
-        } else {
-          element.innerHTML = `<div style="color: gray; font-style: italic;">No description available</div>`;
-        }
+        element.innerHTML = `<div style="color: gray; font-style: italic;">No description available</div>`;
       });
 
       const carouselImage = document.getElementById('carousel-image');
@@ -478,18 +487,14 @@
       const ghostImg = '/img/ghost-chevrolet-car-alt.webp';
 
       let fallbackImg;
-      if (model === 'CAMARO') fallbackImg = '/img/vehicleLogos/camaro.webp';
-      else if (model.startsWith('CT') || model === 'CELESTIQ' || model.startsWith('ESCALADE')) fallbackImg = '/img/vehicleLogos/cadillac.webp';
-      else if (model.startsWith('CORVETTE')) fallbackImg = '/img/vehicleLogos/corvette.webp';
+      if (modelUpper === 'CAMARO') fallbackImg = '/img/vehicleLogos/camaro.webp';
+      else if (modelUpper.startsWith('CT') || modelUpper === 'CELESTIQ' || modelUpper.startsWith('ESCALADE')) fallbackImg = '/img/vehicleLogos/cadillac.webp';
+      else if (modelUpper.startsWith('CORVETTE')) fallbackImg = '/img/vehicleLogos/corvette.webp';
       else fallbackImg = ghostImg;
-
-      const modelYear = vin_data[0].modelYear;
-      const mmc_code = vin_data[0].mmc_code;
-      let options = vin_data[0].rpo_codes || [];
 
       let trim = mmc[mmc_code] || '';
 
-      if (model === 'CAMARO' && modelYear >= 2020 && (options.includes('A1Y') || options.includes('A1Z'))) {
+      if (modelUpper === 'CAMARO' && modelYear >= 2020 && (options.includes('A1Y') || options.includes('A1Z'))) {
         options = options.filter(code => code !== 'DD1' && code !== 'DG7');
       }
       
@@ -527,71 +532,18 @@
       let rpos = options.join('_');
       let color = options.find(opt => Object.values(colorMap).includes(opt));
       let colorInt = options.find(opt => Object.keys(intColor).includes(opt));
-      
-      let missingVarsMsgs = [];
-      const requiredVars = { modelYear, mmc_code, trim, color, colorInt };
-      
-      for (const [key, value] of Object.entries(requiredVars)) {
-        if (value === undefined || value === null || value === '') {
-          missingVarsMsgs.push(`Error: ${key} is undefined/null`);
-        }
-      }
-
-      if (missingVarsMsgs.length > 0) {
-        warningDiv.innerHTML += (warningDiv.innerHTML ? '<br>' : '') + missingVarsMsgs.join('<br>');
-        warningDiv.style.color = '#e57373';
-      }
-
-      const modelUpper = vin_data[0].model ? vin_data[0].model.toUpperCase() : '';
-      let extMax = 7;
-      let intMax = 4;
-            
-      if (modelUpper === 'CAMARO') {
-        intMax = 2;
-        extMax = modelYear >= 2023 ? 5 : 4;
-      } else if (modelUpper.startsWith('CORVETTE')) {
-        if (modelYear === 2019) {
-          extMax = 4;
-          intMax = 2;
-        } else if (modelYear <= 2023) {
-          extMax = 6;
-        }
-      } else if (['CT4', 'CT5', 'CT6'].includes(modelUpper) && modelYear <= 2022) {
-        extMax = 6;
-      } else if (['SILVERADO EV', 'SIERRA EV'].includes(modelUpper)) {
-        extMax = 5;
-        intMax = 2;
-      } else if (['HUMMER EV PICKUP', 'HUMMER EV SUV'].includes(modelUpper)) {
-        intMax = 2;
-        extMax = modelYear >= 2023 ? 5 : 4;
-      } else if (modelUpper === 'ESCALADE') {
-        intMax = 4;
-        extMax = modelYear >= 2026 ? 17 : 7;
-      }
 
       let unsupportedColors = null;
       const unsupportedColorNames = [
-        'BLACK MEETS KETTLE',
-        'COPPERTINO METALLIC',
-        'CHARTREUSE METALLIC',
-        'ABALONE WHITE',
-        'TACTICAL TINT',
-        'BARB WIRE',
-        'KIMONO METALLIC',
-        'SEEKER METALLIC',
-        'HIGH VOLTAGE TINT',
-        'BAEGE METALLIC',
-        'SEYCHELLES METALLIC',
-        'HYPERSONIC METALLIC',
-        'CHARTREUSE MATTE'
+        'BLACK MEETS KETTLE', 'COPPERTINO METALLIC', 'CHARTREUSE METALLIC', 'ABALONE WHITE',
+        'TACTICAL TINT', 'BARB WIRE', 'KIMONO METALLIC', 'SEEKER METALLIC', 'HIGH VOLTAGE TINT',
+        'BAEGE METALLIC', 'SEYCHELLES METALLIC', 'HYPERSONIC METALLIC', 'CHARTREUSE MATTE'
       ];
       let unsupportedInts = null;
       const colorName = vin_data[0].color_name;
 
       if (colorName === 'BLADE SILVER METALLIC' && modelYear >= 2026) {
-        if (color === 'GAN') {
-          color = 'GKA';
-        }
+        if (color === 'GAN') color = 'GKA';
       }
 
       if (modelYear === 2025 && trim === '1SV' && color === 'GBL') {
@@ -605,12 +557,8 @@
         color = 'GXD';
       } else if (color === 'GBA') {
         const specialColors = {
-          'ABALONE WHITE': 'GAZ',
-          'BAEGE METALLIC': 'GAZ',
-          'TACTICAL TINT': 'G7C',
-          'BARB WIRE': 'GXD',
-          'HYPERSONIC METALLIC': 'GXD',
-          'SEEKER METALLIC': 'GJV',
+          'ABALONE WHITE': 'GAZ', 'BAEGE METALLIC': 'GAZ', 'TACTICAL TINT': 'G7C',
+          'BARB WIRE': 'GXD', 'HYPERSONIC METALLIC': 'GXD', 'SEEKER METALLIC': 'GJV',
           'SEYCHELLES METALLIC': 'GJV'
         };
 
@@ -620,28 +568,20 @@
         }
 
         if (unsupportedColorNames.includes(colorName)) {
-          unsupportedColors = unsupportedColors 
-            ? unsupportedColors + ', ' + colorName 
-            : colorName;
+          unsupportedColors = unsupportedColors ? unsupportedColors + ', ' + colorName : colorName;
         }
         if (rpos.includes(unsupportedColors)) {
           rpos = rpos.replace(new RegExp(unsupportedColors, 'g'), color);
         }
       }
+      
       const replacementMap = {
-        'E2D-CT5-1SV': 'HMR',
-        'E2B-CT5-1SV': 'HMR',
-        'E2G-CT5-1SV': 'HJD',
-        'E54-CT5-1SV': 'HMR',
-        'E2D-CT4-1SP': 'HEA',
-        'E2B-CT4-1SP': 'HEA',
-        'E2G-CT4-1SP': 'HEA',
-        'E54-CT4-1SP': 'HEA',
-        'EG1-CT5-1SV': 'HJD',
-        'EG1-CT4-1SP': 'HEB',
+        'E2D-CT5-1SV': 'HMR', 'E2B-CT5-1SV': 'HMR', 'E2G-CT5-1SV': 'HJD', 'E54-CT5-1SV': 'HMR',
+        'E2D-CT4-1SP': 'HEA', 'E2B-CT4-1SP': 'HEA', 'E2G-CT4-1SP': 'HEA', 'E54-CT4-1SP': 'HEA',
+        'EG1-CT5-1SV': 'HJD', 'EG1-CT4-1SP': 'HEB',
       };
 
-      const key = `${colorInt}-${model}-${trim}`;
+      const key = `${colorInt}-${modelUpper}-${trim}`;
       if (replacementMap[key]) {
         unsupportedInts = colorInt;
         colorInt = replacementMap[key];
@@ -660,9 +600,7 @@
           const extCell = document.getElementById('extColorCell');
           if (extCell) extCell.style.cssText = 'color:#e57373;';
         }
-        if (unsupportedColors && unsupportedInts) {
-          msg += ', ';
-        }
+        if (unsupportedColors && unsupportedInts) msg += ', ';
         if (unsupportedInts) {
           msg += `Int. color <i>${unsupportedInts}</i>`;
           const intCell = document.getElementById('intColorCell');
@@ -681,7 +619,7 @@
       function updateGallery(topDown) {
         urls = [];
         
-        if (model === 'CELESTIQ') {
+        if (modelUpper === 'CELESTIQ') {
           warningDiv.innerHTML = 'Image generation does not support Celestiq.';
           urls = [ghostImg];
         } else if ((['3WT', '4WT'].includes(vehicleTrim)) && modelYear === 2024) {
@@ -727,20 +665,13 @@
               thumb.alt = `Thumbnail ${index + 1}`;
             };
             
-            // CHANGED: Cleanly hide the 404 thumbnails without breaking the wrapper
             thumb.onerror = () => {
               thumbWrapper.style.display = 'none';
               urls[index] = null;
-
-              if (currentIndex === index) {
-                  moveToNextValid();
-              }
+              if (currentIndex === index) moveToNextValid();
             };
             
-            thumbWrapper.addEventListener('click', () => {
-              showImage(index);
-            });
-            
+            thumbWrapper.addEventListener('click', () => showImage(index));
             thumb.src = imgSrc;
             thumbWrapper.appendChild(thumb);
             gallery.appendChild(thumbWrapper);
@@ -763,11 +694,12 @@
 
       function showGhost() {
           loadingAnimation.style.display = 'none';
-          carouselImage.style.opacity = 1;
           carouselImage.src = ghostImg;
           
+          setTimeout(() => { carouselImage.style.opacity = 1; }, 50);
+          
           if (!warningDiv.innerHTML.includes('Image generation does not support')) {
-            warningDiv.innerHTML += (warningDiv.innerHTML ? '<br>' : '') + `Image generation does not support ${modelYear} ${vin.model || model}`;
+            warningDiv.innerHTML += (warningDiv.innerHTML ? '<br>' : '') + `Image generation does not support ${modelYear} ${derivedModel}`;
             warningDiv.style.color = '#e57373';
           }
           
@@ -794,14 +726,12 @@
         currentIndex = index;
         const imgSrc = urls[index];
 
-        // CHANGED: Only show the shimmer animation on the very first load
         if (initialLoad) {
             loadingAnimation.style.display = 'block';
         }
         
         carouselImage.style.opacity = 0;
 
-        // Clear previous listeners to avoid race conditions during rapid clicking
         carouselImage.onload = () => {
           loadingAnimation.style.display = 'none';
           carouselImage.style.opacity = 1;
@@ -834,7 +764,8 @@
         };
 
         carouselImage.onerror = () => {
-          if (imgSrc === ghostImg) {
+          // Check if we already tried the ghost image to avoid loop
+          if (carouselImage.src.includes('ghost')) {
             loadingAnimation.style.display = 'none';
             carouselImage.style.opacity = 1;
             return;
@@ -847,7 +778,6 @@
           moveToNextValid();
         };
 
-        // CHANGED: Give the CSS transition exactly 200ms to fade to 0 opacity before swapping the source
         if (initialLoad) {
             carouselImage.src = imgSrc;
         } else {
@@ -877,7 +807,7 @@
           if (e.target.checked) {
             updateGallery(false);
             showImage(currentIndex, true);
-            e.target.blur(); // CHANGED: Immediately remove focus so arrow keys aren't trapped by the radio group
+            e.target.blur(); 
           }
         });
         
@@ -885,7 +815,7 @@
           if (e.target.checked) {
             updateGallery(true);
             showImage(currentIndex, true);
-            e.target.blur(); // CHANGED: Immediately remove focus so arrow keys aren't trapped by the radio group
+            e.target.blur();
           }
         });
       }
@@ -924,7 +854,6 @@
         const targetTag = event.target.tagName;
         const targetType = event.target.type;
         
-        // CHANGED: Exclude only text-based inputs so global arrow keys can overrule radio buttons
         if (targetTag === 'TEXTAREA' || (targetTag === 'INPUT' && (targetType === 'text' || targetType === 'search' || targetType === 'number' || targetType === 'email'))) {
             return;
         }
@@ -932,14 +861,14 @@
         if (urls.filter(u => u !== null).length <= 1) return;
 
         if (event.key === 'ArrowLeft') {
-          event.preventDefault(); // CHANGED: Prevent default browser behavior (which changes radio buttons)
+          event.preventDefault(); 
           let prevIndex = currentIndex;
           do {
             prevIndex = (prevIndex === 0) ? urls.length - 1 : prevIndex - 1;
           } while (urls[prevIndex] === null && prevIndex !== currentIndex);
           showImage(prevIndex);
         } else if (event.key === 'ArrowRight') {
-          event.preventDefault(); // CHANGED: Prevent default browser behavior (which changes radio buttons)
+          event.preventDefault(); 
           let nextIndex = currentIndex;
           do {
             nextIndex = (nextIndex === urls.length - 1) ? 0 : nextIndex + 1;

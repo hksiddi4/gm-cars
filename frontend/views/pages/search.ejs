@@ -454,6 +454,8 @@
       document.querySelectorAll('#rpoTable .rpo-description').forEach(element => {
         const rpoCode = element.getAttribute('data-code');
 
+        console.log(derivedModel);
+
         if (derivedModel === 'CAMARO' && camaroRpo[rpoCode]) { element.innerHTML = `<div>${camaroRpo[rpoCode]}</div>`; return; }
         if (derivedModel === 'CORVETTE STINGRAY' && stingrayRpo[rpoCode]) { element.innerHTML = `<div>${stingrayRpo[rpoCode]}</div>`; return; }
         if (derivedModel === 'CORVETTE Z06' && z06Rpo[rpoCode]) { element.innerHTML = `<div>${z06Rpo[rpoCode]}</div>`; return; }
@@ -506,9 +508,9 @@
           options = options.filter(code => code !== "T3S");
         }
       } else {
-        if (["1YC07", "1YC67", "1YY07", "1YY67", "1YW07", "1YW67", "1YX07", "1YX67", "1YE07", "1YE67"].includes(mmc_code)) {
+        if (["1YC07", "1YC67", "1YY07", "1YY67", "1YW07", "1YW67", "1YX07", "1YX67", "1YE07", "1YE67", "1YG07", "1YG67",].includes(mmc_code)) {
           trim = options.find(opt => ["1LT", "2LT", "3LT"].includes(opt)) || trim;
-        } else if (["1YH07", "1YH67", "1YG07", "1YG67", "1YR07", "1YR67", "1YZ07", "1YZ67", "1YS07", "1YS67"].includes(mmc_code)) {
+        } else if (["1YH07", "1YH67", "1YR07", "1YR67", "1YZ07", "1YZ67", "1YS07", "1YS67"].includes(mmc_code)) {
           trim = options.find(opt => ["1LZ", "2LZ", "3LZ"].includes(opt)) || trim;
         } else if (["1YV07", "1YV67"].includes(mmc_code)) {
           trim = options.find(opt => ["1ZR", "3ZR"].includes(opt)) || trim;

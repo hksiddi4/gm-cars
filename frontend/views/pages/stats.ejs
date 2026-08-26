@@ -4,9 +4,9 @@
     <%- include('../partials/head'); %>
     <title>Production Statistics</title>
     <!-- Load Chart.js and Datalabels -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
-    <script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" nonce="<%= nonce %>"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2" nonce="<%= nonce %>"></script>
+    <script nonce="<%= nonce %>">
         // Register the DataLabels plugin globally
         Chart.register(ChartDataLabels);
     </script>
@@ -313,13 +313,7 @@
                             <div class="d-flex align-items-center gap-3 flex-grow-1" style="max-width: max-content;">
                                 <% if (stats.available_models && stats.available_models.length > 0) { %>
                                     <div class="statsDropdown m-0" style="width: 220px;">
-                                        <select id="modelFilter" class="form-select small-dropdown m-0 <%= typeof selectedModel !== 'undefined' && selectedModel ? 'active-filter' : '' %>" aria-label="Filter by model"
-                                                onchange="
-                                                    const params = new URLSearchParams(window.location.search);
-                                                    if (this.value) params.set('model', this.value);
-                                                    else params.delete('model');
-                                                    window.location.search = params.toString();
-                                                ">
+                                        <select id="modelFilter" class="form-select small-dropdown m-0 <%= typeof selectedModel !== 'undefined' && selectedModel ? 'active-filter' : '' %>" aria-label="Filter by model">
                                             <option value="">All Models</option>
                                             <% 
                                                 let dailyModels = [...stats.available_models];
@@ -337,7 +331,7 @@
                             </div>
                             
                             <!-- Calendar Icon -->
-                            <div class="calendar-wrapper d-flex align-items-center justify-content-center mt-1" style="width: 36px; height: 36px; cursor: pointer;" onclick="openAnnualCalendar()" title="View Full Year Matrix">
+                            <div id="openCalBtn" class="calendar-wrapper d-flex align-items-center justify-content-center mt-1" style="width: 36px; height: 36px; cursor: pointer;" title="View Full Year Matrix">
                                 <i class="bi bi-calendar-date daily-cal-icon text-white"></i>
                             </div>
 
@@ -361,9 +355,9 @@
                         </div>
 
                         <!-- Full Year Production Matrix Modal -->
-                        <div id="annualModal" class="annual-modal-overlay" onclick="closeAnnualCalendar()">
+                        <div id="annualModal" class="annual-modal-overlay">
                             <div class="annual-modal-content position-relative" onclick="event.stopPropagation()">
-                                <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 mt-3 me-3" onclick="closeAnnualCalendar()"></button>
+                                <button id="closeCalBtn" type="button" class="btn-close btn-close-white position-absolute top-0 end-0 mt-3 me-3"></button>
 
                                 <div class="annual-header pe-4">
                                     <div class="d-flex flex-wrap align-items-center justify-content-between w-100 gap-3">
@@ -388,9 +382,9 @@
                                             </div>
                                         </div>
                                         <div class="annual-year-controls m-0">
-                                            <button id="annualPrevBtn" type="button" class="btn btn-sm btn-dark border-secondary px-2" onclick="changeAnnualYear(-1)"><i class="bi bi-chevron-left"></i></button>
+                                            <button id="annualPrevBtn" type="button" class="btn btn-sm btn-dark border-secondary px-2"><i class="bi bi-chevron-left"></i></button>
                                             <span id="annualModalYear" class="fs-6 fw-bold text-white annual-year-text" style="min-width: 45px; text-align: center;">2026</span>
-                                            <button id="annualNextBtn" type="button" class="btn btn-sm btn-dark border-secondary px-2" onclick="changeAnnualYear(1)"><i class="bi bi-chevron-right"></i></button>
+                                            <button id="annualNextBtn" type="button" class="btn btn-sm btn-dark border-secondary px-2"><i class="bi bi-chevron-right"></i></button>
                                         </div>
                                     </div>
                                 </div>
@@ -534,7 +528,7 @@
                                                                 }
                                                             %>
                                                             <% if (pkgLink) { %>
-                                                                <tr style="cursor: pointer;" onclick="window.location.href='<%- pkgLink %>'">
+                                                                <tr style="cursor: pointer;" class="pkg-row" data-url="<%- pkgLink %>">
                                                             <% } else { %>
                                                                 <tr>
                                                             <% } %>
@@ -757,8 +751,8 @@
                             <div class="response" role="status">
                                 <p>No results found for the current filters.</p>
                                 <div style="margin-top: 12px; display:flex; gap:10px; justify-content:center;">
-                                    <button type="button" class="btn btn-outline-light" onclick="history.back()">Go Back</button>
-                                    <button type="button" class="btn btn-secondary" onclick="window.location.href='/stats?category=<%= activeCategory %>'">Clear Filters</button>
+                                    <button type="button" class="btn btn-outline-light" id="statsGoBackBtn">Go Back</button>
+                                    <button type="button" class="btn btn-secondary" id="statsClearBtn">Clear Filters</button>
                                 </div>
                             </div>
                         </div>
@@ -770,7 +764,7 @@
     <%- include('../partials/footer'); %>
 
     <!-- Filter Sync Script -->
-    <script>
+    <script nonce="<%= nonce %>">
         document.addEventListener('DOMContentLoaded', function () {
             const filters = ['filterYear', 'filterModel', 'filterBody', 'filterTrim', 'filterEngine', 'filterTrans'];
             const url = new URL(window.location.href);
@@ -799,7 +793,7 @@
     </script>
 
     <!-- Shared Chart Assets -->
-    <script>
+    <script nonce="<%= nonce %>">
         const mutedPalette = [
             '#648FFF', '#FFB000', '#DC267F', '#FE6100', 
             '#785EF0', '#009E73', '#56B4E9', '#D55E00'
@@ -840,7 +834,7 @@
 
     <!-- Dashboard Scripts -->
     <% if (isDashboard && typeof stats !== 'undefined') { %>
-        <script>
+        <script nonce="<%= nonce %>">
             // Store current query scopes for click routing
             window.dashboardQueryDate = "<%= typeof stats !== 'undefined' && stats.current_date ? (activeCategory === 'monthly' ? stats.current_date.substring(0,7) : (activeCategory === 'yearly' ? stats.current_date.substring(0,4) : stats.current_date)) : '' %>";
             window.dashboardSelectedModel = "<%= typeof selectedModel !== 'undefined' ? selectedModel : '' %>";
@@ -1222,7 +1216,7 @@
         </script>
 
         <!-- Annual Production Matrix Controller -->
-        <script>
+        <script nonce="<%= nonce %>">
             let currentAnnualYear = new Date("<%= stats.current_date %>T00:00:00").getFullYear();
             if (isNaN(currentAnnualYear)) currentAnnualYear = new Date().getFullYear();
 
@@ -1577,8 +1571,8 @@
 
     <!-- Rarity / Trend Scripts -->
     <% if (!isDashboard && typeof stats_data !== 'undefined' && stats_data.length > 0) { %>
-        <script src="/js/scroll-sync.js"></script>
-        <script>
+        <script src="/js/scroll-sync.js" nonce="<%= nonce %>"></script>
+        <script nonce="<%= nonce %>">
             const stats_data = <%- JSON.stringify(stats_data) %>;
             const currentCategory = '<%= activeCategory %>';
             const displayYear = '<%= typeof selectedYear !== "undefined" ? selectedYear : "2027" %>';
@@ -1960,6 +1954,26 @@
                 }
 
                 if(config) new Chart(ctx, config);
+                
+                document.getElementById('modelFilter')?.addEventListener('change', function() {
+                    const params = new URLSearchParams(window.location.search);
+                    if (this.value) params.set('model', this.value);
+                    else params.delete('model');
+                    window.location.search = params.toString();
+                });
+
+                document.getElementById('openCalBtn')?.addEventListener('click', openAnnualCalendar);
+                document.getElementById('annualModal')?.addEventListener('click', closeAnnualCalendar);
+                document.getElementById('closeCalBtn')?.addEventListener('click', closeAnnualCalendar);
+                document.getElementById('annualPrevBtn')?.addEventListener('click', () => changeAnnualYear(-1));
+                document.getElementById('annualNextBtn')?.addEventListener('click', () => changeAnnualYear(1));
+
+                document.querySelectorAll('.pkg-row').forEach(row => {
+                    row.addEventListener('click', () => window.location.href = row.getAttribute('data-url'));
+                });
+
+                document.getElementById('statsGoBackBtn')?.addEventListener('click', () => history.back());
+                document.getElementById('statsClearBtn')?.addEventListener('click', () => window.location.href='/stats?category=<%= activeCategory %>');
             });
         </script>
     <% } %>

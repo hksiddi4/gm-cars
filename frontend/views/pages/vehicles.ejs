@@ -131,7 +131,7 @@
                 <table class="table-veh table-hover border border shadow" id="allTable">
                     <thead>
                         <tr>
-                            <th scope="col" id="vinHeader" class="sortable" role="button" tabindex="0" aria-label="Sort by VIN" onclick="toggleVINOrder()" onkeydown="if(event.key === 'Enter' || event.key === ' '){ event.preventDefault(); toggleVINOrder(); }" style="cursor: pointer;">
+                            <th scope="col" id="vinHeader" class="sortable" role="button" tabindex="0" aria-label="Sort by VIN" style="cursor: pointer;">
                                 VIN
                                 <i class="bi bi-chevron-down" id="vinIcon" style="display: none;" aria-hidden="true"></i>
                             </th>
@@ -208,7 +208,7 @@
                                     </select>
                                 </div>
                             </th>
-                            <th scope="col" id="msrpHeader" class="sortable" role="button" tabindex="0" aria-label="Sort by MSRP" onclick="toggleMSRPOrder()" onkeydown="if(event.key === 'Enter' || event.key === ' '){ event.preventDefault(); toggleMSRPOrder(); }" style="cursor: pointer;">
+                            <th scope="col" id="msrpHeader" class="sortable" role="button" tabindex="0" aria-label="Sort by MSRP" style="cursor: pointer;">
                                 MSRP
                                 <i class="bi bi-chevron-down" id="msrpIcon" style="display: none;" aria-hidden="true"></i>
                             </th>
@@ -347,8 +347,8 @@
                     <div class="response" role="status">
                         <p>No results found for the current filters.</p>
                         <div style="margin-top: 12px; display:flex; gap:10px; justify-content:center;">
-                            <button type="button" class="btn btn-outline-light" onclick="history.back()">Go Back</button>
-                            <button type="button" class="btn btn-secondary" id="clearFiltersBtn" onclick="window.location.href='/vehicles'">Clear Filters</button>
+                            <button type="button" class="btn btn-outline-light" id="goBackBtn">Go Back</button>
+                            <button type="button" class="btn btn-secondary" id="clearFiltersBtn">Clear Filters</button>
                         </div>
                     </div>
                 </div>
@@ -357,8 +357,8 @@
     </main>
     <%- include('../partials/footer'); %>
     
-    <script src="/js/scroll-sync.js"></script>
-    <script>
+    <script src="/js/scroll-sync.js" nonce="<%= nonce %>"></script>
+    <script nonce="<%= nonce %>">
         let startX;
         let selectedOrder = '';
 
@@ -794,6 +794,19 @@
                 row.addEventListener('mousedown', handleMouseDown);
                 row.addEventListener('click', (event) => handleRowClick(url, event));
             });
+
+            document.getElementById('vinHeader')?.addEventListener('click', toggleVINOrder);
+            document.getElementById('vinHeader')?.addEventListener('keydown', e => {
+                if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleVINOrder(); }
+            });
+
+            document.getElementById('msrpHeader')?.addEventListener('click', toggleMSRPOrder);
+            document.getElementById('msrpHeader')?.addEventListener('keydown', e => {
+                if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleMSRPOrder(); }
+            });
+
+            document.getElementById('goBackBtn')?.addEventListener('click', () => history.back());
+            document.getElementById('clearFiltersBtn')?.addEventListener('click', () => window.location.href='/vehicles');
         });
     </script>
 </body>

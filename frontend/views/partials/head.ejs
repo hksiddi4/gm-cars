@@ -125,7 +125,7 @@
 <meta name="twitter:description" content="<%= customDescription %>">
 <meta name="twitter:image" content="<%= ogImage %>">
 
-<script type="application/ld+json">
+<script type="application/ld+json" nonce="<%= nonce %>">
 {
   "@context": "https://schema.org",
   "@type": "WebSite",
@@ -140,7 +140,7 @@
 }
 </script>
 
-<script type="application/ld+json">
+<script type="application/ld+json" nonce="<%= nonce %>">
 {
   "@context": "https://schema.org",
   "@type": "Organization",
@@ -164,7 +164,7 @@
     const displayTitle = pathSegment.charAt(0).toUpperCase() + pathSegment.slice(1);
   %>
   
-  <script type="application/ld+json">
+  <script type="application/ld+json" nonce="<%= nonce %>">
   {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -188,7 +188,7 @@
   </script>
   
   <% if (pagePath === '/vehicles') { %>
-  <script type="application/ld+json">
+  <script type="application/ld+json" nonce="<%= nonce %>">
   {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
@@ -198,7 +198,7 @@
   }
   </script>
   <% } else if (pagePath === '/stats') { %>
-  <script type="application/ld+json">
+  <script type="application/ld+json" nonce="<%= nonce %>">
   {
     "@context": "https://schema.org",
     "@type": "Dataset",
@@ -208,7 +208,7 @@
   }
   </script>
   <% } else if (pagePath === '/wheels') { %>
-  <script type="application/ld+json">
+  <script type="application/ld+json" nonce="<%= nonce %>">
   {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
@@ -218,7 +218,7 @@
   }
   </script>
   <% } else if (pagePath === '/about') { %>
-  <script type="application/ld+json">
+  <script type="application/ld+json" nonce="<%= nonce %>">
   {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
@@ -228,7 +228,7 @@
   }
   </script>
   <% } else if (pagePath === '/rpos') { %>
-  <script type="application/ld+json">
+  <script type="application/ld+json" nonce="<%= nonce %>">
   {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
@@ -247,4 +247,4 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 <link rel="stylesheet" href="/css/main.css?v=1.0.54">
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" nonce="<%= nonce %>"></script>

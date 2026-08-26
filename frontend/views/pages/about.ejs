@@ -254,7 +254,7 @@
     </main>
     <%- include('../partials/footer'); %>
 
-    <script>
+    <script nonce="<%= nonce %>">
         const stats = <%- JSON.stringify(stats) %>;
 
         document.addEventListener('DOMContentLoaded', function() {

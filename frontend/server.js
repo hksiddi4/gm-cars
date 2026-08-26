@@ -17,19 +17,18 @@ app.use((req, res, next) => {
 
 // 3. Apply Helmet Security Headers
 app.use(helmet({
-    // Fixes "Content-Security-Policy lacks" & "unsafe directives"
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
             scriptSrc: [
                 "'self'",
-                (req, res) => `'nonce-${res.locals.nonce}'`, // Securely allows your inline scripts
+                (req, res) => `'nonce-${res.locals.nonce}'`,
                 "https://cdn.jsdelivr.net",
                 "https://www.googletagmanager.com"
             ],
             styleSrc: [
                 "'self'",
-                "'unsafe-inline'", // Needed because you use style="..." attributes in your HTML
+                "'unsafe-inline'", 
                 "https://cdn.jsdelivr.net"
             ],
             imgSrc: [
@@ -37,7 +36,10 @@ app.use(helmet({
                 "data:",
                 "https://www.gmbuildcounts.com",
                 "https://www.google-analytics.com",
-                "https://www.googletagmanager.com"
+                "https://www.googletagmanager.com",
+                "https://www.cadillac.com",  // Added for wheel images
+                "https://www.chevrolet.com", // Added for wheel images
+                "https://www.gmc.com"        // Added for wheel images
             ],
             connectSrc: [
                 "'self'",
@@ -46,22 +48,13 @@ app.use(helmet({
                 "https://stats.g.doubleclick.net"
             ],
             fontSrc: ["'self'", "https://cdn.jsdelivr.net"],
-            objectSrc: ["'none'"],
+            objectSrc: ["'self'"], // Allows your Window Sticker PDFs to render
+            frameSrc: ["'self'"],  // Allows the iframe inside the PDF object
             upgradeInsecureRequests: [],
         },
     },
-    // Fixes "Referrer-Policy HTTP header"
-    referrerPolicy: {
-        policy: 'strict-origin-when-cross-origin' 
-    },
-    // Fixes "HTTP Strict-Transport-Security header (HSTS)"
-    hsts: {
-        maxAge: 31536000, // 1 year
-        includeSubDomains: true,
-        preload: true
-    },
-    // Fixes "X-Content-Type-Options" (Helmet does this automatically)
-    // Helmet automatically sets X-Content-Type-Options: nosniff
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+    hsts: { maxAge: 31536000, includeSubDomains: true, preload: true }
 }));
 // --- END SECURITY REQUIREMENTS ---
 

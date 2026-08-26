@@ -298,17 +298,28 @@
       let prefixKey = modelUpper.replace(/ /g, '-');
 
       if (modelUpper.startsWith('CORVETTE')) {
-          if (options.includes('LT6')) { derivedModel = 'CORVETTE Z06'; prefixKey = 'CORVETTE-Z06'; folderName = 'corvette/z06'; }
-          else if (options.includes('LT7')) {
-              if (modelUpper.includes('ZR1X') || options.includes('ZTK')) { derivedModel = 'CORVETTE ZR1X'; prefixKey = 'CORVETTE-ZR1X'; folderName = 'corvette/zr1x'; }
-              else { derivedModel = 'CORVETTE ZR1'; prefixKey = 'CORVETTE-ZR1'; folderName = 'corvette/zr1'; }
+          if (modelUpper.includes('Z06') || options.includes('LT6')) { 
+              derivedModel = 'CORVETTE Z06'; prefixKey = 'CORVETTE-Z06'; folderName = 'corvette/z06'; 
           }
-          else if (options.includes('HP1')) { derivedModel = 'CORVETTE E-RAY'; prefixKey = 'CORVETTE-E-RAY'; folderName = 'corvette/e-ray'; }
-          else if (options.includes('LS6')) {
-              if (modelUpper.includes('GRAND SPORT X')) { derivedModel = 'CORVETTE GRAND SPORT X'; prefixKey = 'CORVETTE-GRAND_SPORT_X'; folderName = 'corvette/grand_sport_x'; }
-              else { derivedModel = 'CORVETTE GRAND SPORT'; prefixKey = 'CORVETTE-GRAND_SPORT'; folderName = 'corvette/grand_sport'; }
+          else if (modelUpper.includes('ZR1X') || (options.includes('LT7') && options.includes('ZTK'))) { 
+              derivedModel = 'CORVETTE ZR1X'; prefixKey = 'CORVETTE-ZR1X'; folderName = 'corvette/zr1x'; 
           }
-          else { derivedModel = 'CORVETTE STINGRAY'; prefixKey = 'CORVETTE-STINGRAY'; folderName = 'corvette/stingray'; }
+          else if (modelUpper.includes('ZR1') || options.includes('LT7')) { 
+              derivedModel = 'CORVETTE ZR1'; prefixKey = 'CORVETTE-ZR1'; folderName = 'corvette/zr1'; 
+          }
+          else if (modelUpper.includes('GRAND SPORT X')) { 
+              derivedModel = 'CORVETTE GRAND SPORT X'; prefixKey = 'CORVETTE-GRAND_SPORT_X'; folderName = 'corvette/grand_sport_x'; 
+          }
+          else if (modelUpper.includes('GRAND SPORT') || options.includes('LS6')) { 
+              derivedModel = 'CORVETTE GRAND SPORT'; prefixKey = 'CORVETTE-GRAND_SPORT'; folderName = 'corvette/grand_sport'; 
+          }
+          else if (modelUpper.includes('E-RAY') || options.includes('HP1')) { 
+              // This is now safely checked AFTER Grand Sport X
+              derivedModel = 'CORVETTE E-RAY'; prefixKey = 'CORVETTE-E-RAY'; folderName = 'corvette/e-ray'; 
+          }
+          else { 
+              derivedModel = 'CORVETTE STINGRAY'; prefixKey = 'CORVETTE-STINGRAY'; folderName = 'corvette/stingray'; 
+          }
       } else if (modelUpper === 'ESCALADE IQ') { prefixKey = 'ESCALADEIQ'; folderName = 'escaladeiq'; }
       else if (modelUpper === 'CT4' && vehicleTrim.startsWith('V-SERIES')) { prefixKey = 'CT4V'; folderName = 'ct4v'; }
       else if (modelUpper === 'CT5' && vehicleTrim.startsWith('V-SERIES')) { prefixKey = 'CT5V'; folderName = 'ct5v'; }

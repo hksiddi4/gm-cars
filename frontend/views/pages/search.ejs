@@ -315,7 +315,7 @@
       else if (modelUpper === 'HUMMER EV PICKUP') { prefixKey = 'HUMMER'; folderName = 'hummer'; }
       else if (modelUpper === 'HUMMER EV SUV') { prefixKey = 'HUMMERSUV'; folderName = 'hummersuv'; }
 
-      console.log({modelUpper} - {prefixKey} - {folderName});
+      console.log(`${modelUpper} - ${prefixKey} - ${folderName}`);
 
       const localRpoImageMap = <%- JSON.stringify(localRpoImageMap || {}) %>;
       const intColor = <%- JSON.stringify(intColor) %>;

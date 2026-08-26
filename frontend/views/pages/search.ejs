@@ -305,7 +305,7 @@
           }
           else if (options.includes('HP1')) { derivedModel = 'CORVETTE E-RAY'; prefixKey = 'CORVETTE-E-RAY'; folderName = 'corvette/e-ray'; }
           else if (options.includes('LS6')) {
-              if (vehicleTrim === 'GRAND SPORT X') { derivedModel = 'CORVETTE GSX'; prefixKey = 'CORVETTE-GRAND_SPORT_X'; folderName = 'corvette/grand_sport_x'; }
+              if (vehicleTrim === 'GRAND SPORT X') { derivedModel = 'CORVETTE GRAND SPORT X'; prefixKey = 'CORVETTE-GRAND_SPORT_X'; folderName = 'corvette/grand_sport_x'; }
               else { derivedModel = 'CORVETTE GRAND SPORT'; prefixKey = 'CORVETTE-GRAND_SPORT'; folderName = 'corvette/grand_sport'; }
           }
           else { derivedModel = 'CORVETTE STINGRAY'; prefixKey = 'CORVETTE-STINGRAY'; folderName = 'corvette/stingray'; }
@@ -411,7 +411,7 @@
             (derivedModel === 'CORVETTE STINGRAY' && stingrayRpo[rpoCode]) ||
             (derivedModel === 'CORVETTE Z06' && z06Rpo[rpoCode]) ||
             (derivedModel === 'CORVETTE E-RAY' && erayRpo[rpoCode]) ||
-            (derivedModel === 'CORVETTE GSX' && corvetteGSXRpo[rpoCode]) ||
+            (derivedModel === 'CORVETTE GRAND SPORT X' && corvetteGSXRpo[rpoCode]) ||
             (derivedModel === 'CORVETTE GRAND SPORT' && corvetteGSRpo[rpoCode]) ||
             (derivedModel === 'CORVETTE ZR1X' && zr1Rpo[rpoCode]) ||
             (derivedModel === 'CORVETTE ZR1' && zr1Rpo[rpoCode]) ||
@@ -460,7 +460,7 @@
         if (derivedModel === 'CORVETTE STINGRAY' && stingrayRpo[rpoCode]) { element.innerHTML = `<div>${stingrayRpo[rpoCode]}</div>`; return; }
         if (derivedModel === 'CORVETTE Z06' && z06Rpo[rpoCode]) { element.innerHTML = `<div>${z06Rpo[rpoCode]}</div>`; return; }
         if (derivedModel === 'CORVETTE E-RAY' && erayRpo[rpoCode]) { element.innerHTML = `<div>${erayRpo[rpoCode]}</div>`; return; }
-        if (derivedModel === 'CORVETTE GSX' && corvetteGSXRpo[rpoCode]) { element.innerHTML = `<div>${corvetteGSXRpo[rpoCode]}</div>`; return; }
+        if (derivedModel === 'CORVETTE GRAND SPORT X' && corvetteGSXRpo[rpoCode]) { element.innerHTML = `<div>${corvetteGSXRpo[rpoCode]}</div>`; return; }
         if (derivedModel === 'CORVETTE GRAND SPORT' && corvetteGSRpo[rpoCode]) { element.innerHTML = `<div>${corvetteGSRpo[rpoCode]}</div>`; return; }
         if (derivedModel === 'CORVETTE ZR1X' && zr1Rpo[rpoCode]) { element.innerHTML = `<div>${zr1Rpo[rpoCode]}</div>`; return; }
         if (derivedModel === 'CORVETTE ZR1' && zr1Rpo[rpoCode]) { element.innerHTML = `<div>${zr1Rpo[rpoCode]}</div>`; return; }

@@ -326,8 +326,6 @@
       else if (modelUpper === 'HUMMER EV PICKUP') { prefixKey = 'HUMMER'; folderName = 'hummer'; }
       else if (modelUpper === 'HUMMER EV SUV') { prefixKey = 'HUMMERSUV'; folderName = 'hummersuv'; }
 
-      console.log(`${modelUpper} - ${prefixKey} - ${folderName}`);
-
       const localRpoImageMap = <%- JSON.stringify(localRpoImageMap || {}) %>;
       const intColor = <%- JSON.stringify(intColor) %>;
       const colorMap = <%- JSON.stringify(colorMap) %>;
@@ -408,8 +406,21 @@
           cardWrapper.className = 'rpo-wrapper';
           container.appendChild(cardWrapper);
 
-          // Perfectly resolves using the memory map (which handles shared folders and subfolders instantly)
-          let imgSrc = localRpoImageMap[`${prefixKey}-${rpoCode}`] || localRpoImageMap[rpoCode] || `/img/rpos/${folderName}/${rpoCode}.webp`;
+          // STRICT CORVETTE HIERARCHY: Check exact submodel first, then other Corvettes, then generic
+          let imgSrc = localRpoImageMap[`${prefixKey}-${rpoCode}`];
+
+          if (!imgSrc && modelUpper.startsWith('CORVETTE')) {
+              imgSrc = localRpoImageMap[`CORVETTE-GRAND_SPORT_X-${rpoCode}`] ||
+                       localRpoImageMap[`CORVETTE-GRAND_SPORT-${rpoCode}`] ||
+                       localRpoImageMap[`CORVETTE-Z06-${rpoCode}`] ||
+                       localRpoImageMap[`CORVETTE-ZR1X-${rpoCode}`] ||
+                       localRpoImageMap[`CORVETTE-ZR1-${rpoCode}`] ||
+                       localRpoImageMap[`CORVETTE-E-RAY-${rpoCode}`] ||
+                       localRpoImageMap[`CORVETTE-STINGRAY-${rpoCode}`];
+          }
+
+          // Fall back to global code or direct folder path last (NEVER pull from another car model)
+          imgSrc = imgSrc || localRpoImageMap[rpoCode] || `/img/rpos/${folderName}/${rpoCode}.webp`;
 
           const cardLink = document.createElement('a');
           cardLink.href = `/vehicles?model=${encodeURIComponent(vin.model)}&rpo=${encodeURIComponent(rpoCode)}`;
@@ -466,8 +477,6 @@
 
       document.querySelectorAll('#rpoTable .rpo-description').forEach(element => {
         const rpoCode = element.getAttribute('data-code');
-
-        console.log(derivedModel);
 
         if (derivedModel === 'CAMARO' && camaroRpo[rpoCode]) { element.innerHTML = `<div>${camaroRpo[rpoCode]}</div>`; return; }
         if (derivedModel === 'CORVETTE STINGRAY' && stingrayRpo[rpoCode]) { element.innerHTML = `<div>${stingrayRpo[rpoCode]}</div>`; return; }

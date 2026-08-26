@@ -1,6 +1,70 @@
 const express = require('express');
 const compression = require('compression');
 const app = express();
+
+// --- NEW SECURITY REQUIREMENTS ---
+const helmet = require('helmet');
+const crypto = require('crypto');
+
+// 1. Disable the X-Powered-By header (fixes "Server software exposed")
+app.disable('x-powered-by');
+
+// 2. Generate a unique nonce for inline scripts on each request
+app.use((req, res, next) => {
+    res.locals.nonce = crypto.randomBytes(16).toString('base64');
+    next();
+});
+
+// 3. Apply Helmet Security Headers
+app.use(helmet({
+    // Fixes "Content-Security-Policy lacks" & "unsafe directives"
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: [
+                "'self'",
+                (req, res) => `'nonce-${res.locals.nonce}'`, // Securely allows your inline scripts
+                "https://cdn.jsdelivr.net",
+                "https://www.googletagmanager.com"
+            ],
+            styleSrc: [
+                "'self'",
+                "'unsafe-inline'", // Needed because you use style="..." attributes in your HTML
+                "https://cdn.jsdelivr.net"
+            ],
+            imgSrc: [
+                "'self'",
+                "data:",
+                "https://www.gmbuildcounts.com",
+                "https://www.google-analytics.com",
+                "https://www.googletagmanager.com"
+            ],
+            connectSrc: [
+                "'self'",
+                "https://www.google-analytics.com",
+                "https://analytics.google.com",
+                "https://stats.g.doubleclick.net"
+            ],
+            fontSrc: ["'self'", "https://cdn.jsdelivr.net"],
+            objectSrc: ["'none'"],
+            upgradeInsecureRequests: [],
+        },
+    },
+    // Fixes "Referrer-Policy HTTP header"
+    referrerPolicy: {
+        policy: 'strict-origin-when-cross-origin' 
+    },
+    // Fixes "HTTP Strict-Transport-Security header (HSTS)"
+    hsts: {
+        maxAge: 31536000, // 1 year
+        includeSubDomains: true,
+        preload: true
+    },
+    // Fixes "X-Content-Type-Options" (Helmet does this automatically)
+    // Helmet automatically sets X-Content-Type-Options: nosniff
+}));
+// --- END SECURITY REQUIREMENTS ---
+
 const axios = require('axios');
 const TurndownService = require('turndown');
 const turndownService = new TurndownService();

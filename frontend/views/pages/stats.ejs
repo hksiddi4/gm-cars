@@ -356,7 +356,7 @@
 
                         <!-- Full Year Production Matrix Modal -->
                         <div id="annualModal" class="annual-modal-overlay">
-                            <div class="annual-modal-content position-relative" onclick="event.stopPropagation()">
+                            <div id="annualModalContent" class="annual-modal-content position-relative">
                                 <button id="closeCalBtn" type="button" class="btn-close btn-close-white position-absolute top-0 end-0 mt-3 me-3"></button>
 
                                 <div class="annual-header pe-4">
@@ -674,7 +674,7 @@
                                                 <td scope="row"><%= index + 1 %></td>
                                                 <td scope="row" style="white-space: nowrap; text-align: left;">
                                                     <% if (activeCategory === 'color') { %>
-                                                        <img src="/img/extColors/<%= data.rpo_code %>.webp" onerror="this.src='/img/extColors/default.webp';" width="20" height="20" style="margin-right: 8px; border-radius: 50%;">
+                                                        <img src="/img/extColors/<%= data.rpo_code %>.webp" data-fallback="/img/extColors/default.webp" width="20" height="20" style="margin-right: 8px; border-radius: 50%;">
                                                         <%= data.label %>
                                                     <% } else if (activeCategory === 'engine') { %>
                                                         <% const is2019Engine = data.engine_rpo === 'LT5' || data.engine_rpo === 'LTA' || (data.engine_type && (data.engine_type.includes('LT5') || data.engine_type.includes('LTA'))); %>
@@ -724,7 +724,7 @@
                                                 <% singleItems.forEach(function(data) { %>
                                                     <tr>
                                                         <td scope="row" style="white-space: nowrap; text-align: left; width: 200px;">
-                                                            <img src="/img/extColors/<%= data.rpo_code %>.webp" onerror="this.src='/img/extColors/default.webp';" width="20" height="20" style="margin-right: 8px; border-radius: 50%;">
+                                                            <img src="/img/extColors/<%= data.rpo_code %>.webp" data-fallback="/img/extColors/default.webp" width="20" height="20" style="margin-right: 8px; border-radius: 50%;">
                                                             <%= data.label %>
                                                         </td>
                                                         <td scope="row" style="text-align: left;">
@@ -1954,28 +1954,39 @@
                 }
 
                 if(config) new Chart(ctx, config);
-                
-                document.getElementById('modelFilter')?.addEventListener('change', function() {
-                    const params = new URLSearchParams(window.location.search);
-                    if (this.value) params.set('model', this.value);
-                    else params.delete('model');
-                    window.location.search = params.toString();
-                });
-
-                document.getElementById('openCalBtn')?.addEventListener('click', openAnnualCalendar);
-                document.getElementById('annualModal')?.addEventListener('click', closeAnnualCalendar);
-                document.getElementById('closeCalBtn')?.addEventListener('click', closeAnnualCalendar);
-                document.getElementById('annualPrevBtn')?.addEventListener('click', () => changeAnnualYear(-1));
-                document.getElementById('annualNextBtn')?.addEventListener('click', () => changeAnnualYear(1));
-
-                document.querySelectorAll('.pkg-row').forEach(row => {
-                    row.addEventListener('click', () => window.location.href = row.getAttribute('data-url'));
-                });
-
-                document.getElementById('statsGoBackBtn')?.addEventListener('click', () => history.back());
-                document.getElementById('statsClearBtn')?.addEventListener('click', () => window.location.href='/stats?category=<%= activeCategory %>');
             });
         </script>
     <% } %>
+
+    <!-- Global UI Listeners for Stats Page -->
+    <script nonce="<%= nonce %>">
+        document.addEventListener('DOMContentLoaded', () => {
+            // Modal Click Handler
+            document.getElementById('annualModalContent')?.addEventListener('click', e => e.stopPropagation());
+            
+            // Dashboard Calendar Controls
+            document.getElementById('modelFilter')?.addEventListener('change', function() {
+                const params = new URLSearchParams(window.location.search);
+                if (this.value) params.set('model', this.value);
+                else params.delete('model');
+                window.location.search = params.toString();
+            });
+
+            document.getElementById('openCalBtn')?.addEventListener('click', () => typeof openAnnualCalendar === 'function' && openAnnualCalendar());
+            document.getElementById('annualModal')?.addEventListener('click', () => typeof closeAnnualCalendar === 'function' && closeAnnualCalendar());
+            document.getElementById('closeCalBtn')?.addEventListener('click', () => typeof closeAnnualCalendar === 'function' && closeAnnualCalendar());
+            document.getElementById('annualPrevBtn')?.addEventListener('click', () => typeof changeAnnualYear === 'function' && changeAnnualYear(-1));
+            document.getElementById('annualNextBtn')?.addEventListener('click', () => typeof changeAnnualYear === 'function' && changeAnnualYear(1));
+
+            // Package Rows
+            document.querySelectorAll('.pkg-row').forEach(row => {
+                row.addEventListener('click', () => window.location.href = row.getAttribute('data-url'));
+            });
+
+            // Empty State Buttons
+            document.getElementById('statsGoBackBtn')?.addEventListener('click', () => history.back());
+            document.getElementById('statsClearBtn')?.addEventListener('click', () => window.location.href='/stats?category=<%= activeCategory %>');
+        });
+    </script>
 </body>
 </html>

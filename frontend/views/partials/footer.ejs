@@ -6,4 +6,15 @@
             feedback@gmbuildcounts.com
         </a>
     </div>
+    <!-- Secure Image Fallback Handler -->
+    <script nonce="<%= nonce %>">
+        document.addEventListener('error', function(event) {
+            if (event.target && event.target.tagName && event.target.tagName.toLowerCase() === 'img') {
+                const fallbackSrc = event.target.getAttribute('data-fallback');
+                if (fallbackSrc && event.target.src !== new URL(fallbackSrc, window.location.href).href) {
+                    event.target.src = fallbackSrc;
+                }
+            }
+        }, true);
+    </script>
 </footer>

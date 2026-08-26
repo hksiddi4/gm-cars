@@ -284,7 +284,7 @@
                     </thead>
                     <tbody>
                         <% vehicle_data.forEach(function(data) { %>
-                            <tr style="cursor: pointer;" onmousedown="handleMouseDown(event);" data-url="/search?vin=<%= data.vin %>">
+                            <tr style="cursor: pointer;" data-url="/search?vin=<%= data.vin %>">
                                 <td scope="row" style="text-align: left;" class="<%= data.special_desc && data.special_desc.includes('Pre-Production Vehicle') ? 'highlight' : '' %> <%= data.special_desc && data.special_desc.includes('Show Vehicle') ? 'text-highlight' : '' %>">
                                     <%= data.vin.slice(0, 9) %><strong><%= data.vin.slice(9) %></strong>
                                 </td>
@@ -313,7 +313,7 @@
                                         alt="Color Code: <%= finalImageSrcRPO %>" 
                                         width="20" 
                                         height="20"
-                                        onerror="this.onerror=null; this.src='../../img/extColors/default.webp';"
+                                        data-fallback="../../img/extColors/default.webp"
                                     >
                                     <%= data.color_name %>
                                 </td>

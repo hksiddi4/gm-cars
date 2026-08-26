@@ -434,7 +434,7 @@
 
           // CHANGED: Added onerror attribute to handle images that fail to load
           card.innerHTML = `
-            <img src="${imgSrc}" alt="${rpoCode}" onerror="this.onerror=null; this.src='${fallbackPath}';">
+            <img src="${imgSrc}" alt="${rpoCode}" data-fallback="${fallbackPath}">
             <p>${rpoCode}</p>
             <div class="rpo-description">${descHTML}</div>
           `;

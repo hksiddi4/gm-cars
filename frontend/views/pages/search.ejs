@@ -195,7 +195,9 @@
                 </a>
               </div>
               <div style="width: 100%; overflow: hidden; aspect-ratio: 11 / 8.5;">
-                <iframe src="<%= stickerPath %>#view=Fit" width="100%" height="100%" style="border: none;" title="Vehicle Window Sticker PDF"></iframe>
+                <object data="<%= stickerPath %>#view=Fit" type="application/pdf" width="100%" height="100%" style="border: none;" aria-label="Vehicle Window Sticker PDF">
+                  <iframe src="<%= stickerPath %>#view=Fit" width="100%" height="100%" style="border: none;" title="Vehicle Window Sticker PDF"></iframe>
+                </object>
               </div>
             </div>
           <% } else { %>

@@ -201,7 +201,14 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static('public', {
     maxAge: '30d',
-    etag: true
+    etag: true,
+    setHeaders: (res, path, stat) => {
+        // Force browsers to view PDFs inline instead of downloading
+        if (path.endsWith('.pdf')) {
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', 'inline');
+        }
+    }
 }));
 app.set('view engine', 'ejs');
 // Agent Content Negotiation Middleware

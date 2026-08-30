@@ -59,11 +59,11 @@
           </div>
           <div id="image-warning"></div>
           <div id="carousel-container">
-            <div id="main-image-wrapper" style="position: relative; display: block; width: 100%; aspect-ratio: 16 / 9; max-height: 600px; overflow: hidden; border-radius: 8px;">
-              <div id="loading-animation" class="shimmer" style="position: absolute; inset: 0; z-index: 5; display: none;">
-                <div class="shimmer-box" style="width: 100%; height: 100%;"></div>
+            <div id="main-image-wrapper" style="position: relative; display: block; width: 100%; aspect-ratio: 16 / 9; max-height: 600px; overflow: hidden; border-radius: 4px;">
+              <div id="loading-animation" class="shimmer" style="position: absolute; inset: 0; z-index: 5; display: none; border-radius: 4px;">
+                <div class="shimmer-box" style="width: 100%; height: 100%; border-radius: 4px;"></div>
               </div>
-              <img id="carousel-image" alt="" aria-live="polite" aria-atomic="true" style="display: block !important; position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; transition: opacity 0.2s ease-in-out; opacity: 0; z-index: 1;">
+              <img id="carousel-image" alt="" aria-live="polite" aria-atomic="true" style="display: block !important; position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; transition: opacity 0.2s ease-in-out; opacity: 0; z-index: 1; border-radius: 4px;">
             </div>
 
             <button id="prev" style="display: none;" aria-label="Previous Image">&#10094;</button>
@@ -247,7 +247,7 @@
   <%- include('../partials/footer'); %>
   
   <script nonce="<%= nonce %>">
-    let startX = 0; // FIXED: Added missing variable declaration
+    let startX = 0;
     
     function handleMouseDown(event) {
       startX = event.clientX;
@@ -314,7 +314,6 @@
               derivedModel = 'CORVETTE GRAND SPORT'; prefixKey = 'CORVETTE-GRAND_SPORT'; folderName = 'corvette/grand_sport'; 
           }
           else if (modelUpper.includes('E-RAY') || options.includes('HP1')) { 
-              // This is now safely checked AFTER Grand Sport X
               derivedModel = 'CORVETTE E-RAY'; prefixKey = 'CORVETTE-E-RAY'; folderName = 'corvette/e-ray'; 
           }
           else { 
@@ -381,7 +380,6 @@
 
         const verifiedRpoImages = <%- JSON.stringify(verifiedRpoImages || []) %>;
         
-        // CHANGED: Render if it has a verified image OR if we have a description for it in our dictionaries
         const rposToRender = (vin.rpo_codes || []).filter(rpo => {
             return verifiedRpoImages.includes(rpo) || allRpoDescriptions[rpo];
         }).sort();
@@ -391,7 +389,6 @@
           return;
         }
 
-        // Establish the fallback path based on the vehicle model
         let fallbackPath = '/img/brand-logos/';
         if (['ESCALADE', 'ESCALADE IQ', 'CT4', 'CT4-V', 'CT5', 'CT5-V', 'CELESTIQ'].includes(modelUpper) || modelUpper.startsWith('CT')) {
             fallbackPath += 'cadillac.webp';
@@ -406,7 +403,6 @@
           cardWrapper.className = 'rpo-wrapper';
           container.appendChild(cardWrapper);
 
-          // STRICT CORVETTE HIERARCHY: Check exact submodel first, then other Corvettes, then generic
           let imgSrc = localRpoImageMap[`${prefixKey}-${rpoCode}`];
 
           if (!imgSrc && modelUpper.startsWith('CORVETTE')) {
@@ -419,7 +415,6 @@
                        localRpoImageMap[`CORVETTE-STINGRAY-${rpoCode}`];
           }
 
-          // Fall back to global code or direct folder path last (NEVER pull from another car model)
           imgSrc = imgSrc || localRpoImageMap[rpoCode] || `/img/rpos/${folderName}/${rpoCode}.webp`;
 
           const cardLink = document.createElement('a');
@@ -429,7 +424,6 @@
           const card = document.createElement('div');
           card.className = 'rpo-card';
 
-          // Properly map the desc text to the precise dictionary based on the derived submodel
           let descText = 
             (derivedModel === 'CAMARO' && camaroRpo[rpoCode]) ||
             (derivedModel === 'CORVETTE STINGRAY' && stingrayRpo[rpoCode]) ||
@@ -456,7 +450,6 @@
             ? `<div>${descText}</div>` 
             : `<div style="color: gray; font-style: italic;">No description available</div>`;
 
-          // CHANGED: Added onerror attribute to handle images that fail to load
           card.innerHTML = `
             <img src="${imgSrc}" alt="${rpoCode}" data-fallback="${fallbackPath}">
             <p>${rpoCode}</p>
@@ -555,7 +548,6 @@
         }
       }
 
-      // --- FIXED: RESTORED FRAME COUNT LOGIC ---
       let extMax = 7;
       let intMax = 4;
             
@@ -581,7 +573,6 @@
         intMax = 4;
         extMax = modelYear >= 2026 ? 17 : 7;
       }
-      // -----------------------------------------
 
       let rpos = options.join('_');
       let color = options.find(opt => Object.values(colorMap).includes(opt));
@@ -820,7 +811,6 @@
         };
 
         carouselImage.onerror = () => {
-          // Check if we already tried the ghost image to avoid loop
           if (carouselImage.src.includes('ghost')) {
             loadingAnimation.style.display = 'none';
             carouselImage.style.opacity = 1;

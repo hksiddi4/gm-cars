@@ -25,9 +25,9 @@
           
           if (["1AJ37", "1AJ67"].includes(mmc_code) && year > 2019 && options.includes("1LZ")) {
               cgiTrim = "1LZ"; options = options.filter(c => c !== "T3S");
-          } else if (["1YC07", "1YC67", "1YY07", "1YY67", "1YW07", "1YW67", "1YX07", "1YX67", "1YE07", "1YE67"].includes(mmc_code)) {
+          } else if (["1YC07", "1YC67", "1YY07", "1YY67", "1YW07", "1YW67", "1YX07", "1YX67", "1YE07", "1YE67", "1YG07", "1YG67"].includes(mmc_code)) {
               cgiTrim = options.find(opt => ["1LT", "2LT", "3LT"].includes(opt)) || cgiTrim;
-          } else if (["1YH07", "1YH67", "1YG07", "1YG67", "1YR07", "1YR67", "1YZ07", "1YZ67", "1YS07", "1YS67"].includes(mmc_code)) {
+          } else if (["1YH07", "1YH67", "1YR07", "1YR67", "1YZ07", "1YZ67", "1YS07", "1YS67"].includes(mmc_code)) {
               cgiTrim = options.find(opt => ["1LZ", "2LZ", "3LZ"].includes(opt)) || cgiTrim;
           } else if (["1YV07", "1YV67"].includes(mmc_code)) {
               cgiTrim = options.find(opt => ["1ZR", "3ZR"].includes(opt)) || cgiTrim;

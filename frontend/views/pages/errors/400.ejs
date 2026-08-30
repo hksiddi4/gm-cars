@@ -16,8 +16,8 @@
                              <p>Invalid VIN</p>
                              <h4>Please check your VIN for errors. New builds may take some time to appear on the website.</h4>
                              <div style="margin-top: 12px; display:flex; gap:10px; justify-content:center;">
-                                 <button type="button" class="btn btn-outline-light" onclick="history.back()">Go Back</button>
-                                 <button type="button" class="btn btn-secondary" id="clearFiltersBtn" onclick="window.location.href='/'">Go Home</button>
+                                 <button type="button" class="btn btn-outline-light" id="goBackBtn">Go Back</button>
+                                 <a href="/" class="btn btn-secondary" id="clearFiltersBtn">Go Home</a>
                              </div>
                          </div>
                      </div>                    
@@ -26,5 +26,8 @@
         </div>
         <%- include('../../partials/footer'); %>
     </div>
+    <script nonce="<%= nonce %>">
+        document.getElementById('goBackBtn').addEventListener('click', () => history.back());
+    </script>
 </body>
 </html>

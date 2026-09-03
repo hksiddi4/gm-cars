@@ -152,6 +152,50 @@
             background-repeat: no-repeat !important;
         }
 
+        /* Split Styles: 35% Crossed Only (2022 missing early stickers, no progress) */
+        .cell-split35-crossed-only {
+            background: repeating-linear-gradient(135deg, #adb5bd 0, #adb5bd 1px, transparent 1px, transparent 2.5px) !important;
+            -webkit-mask-image: linear-gradient(to right, black 35%, transparent 35%);
+            mask-image: linear-gradient(to right, black 35%, transparent 35%);
+        }
+
+        /* Split Styles: 95% Crossed / 5% Green (2021 missing almost all stickers before Jan 1, 2022) */
+        .cell-split95-crossed-green {
+            background-image: 
+                linear-gradient(#28a745, #28a745),
+                repeating-linear-gradient(135deg, #adb5bd 0, #adb5bd 1px, transparent 1px, transparent 2.5px) !important;
+            background-size: 5% 100%, 95% 100% !important;
+            background-position: right top, left top !important;
+            background-repeat: no-repeat !important;
+        }
+
+        /* Split Styles: 95% Crossed / 5% Yellow (2021 missing almost all stickers, in progress) */
+        .cell-split95-crossed-yellow {
+            background-image: 
+                linear-gradient(#ffc107, #ffc107),
+                repeating-linear-gradient(135deg, #adb5bd 0, #adb5bd 1px, transparent 1px, transparent 2.5px) !important;
+            background-size: 5% 100%, 95% 100% !important;
+            background-position: right top, left top !important;
+            background-repeat: no-repeat !important;
+        }
+
+        /* Split Styles: 95% Crossed / 5% NA (2021 missing almost all stickers, N/A) */
+        .cell-split95-crossed-na {
+            background-image: 
+                linear-gradient(#5e5e5e, #5e5e5e),
+                repeating-linear-gradient(135deg, #adb5bd 0, #adb5bd 1px, transparent 1px, transparent 2.5px) !important;
+            background-size: 5% 100%, 95% 100% !important;
+            background-position: right top, left top !important;
+            background-repeat: no-repeat !important;
+        }
+
+        /* Split Styles: 95% Crossed Only (2021 missing almost all stickers, no progress) */
+        .cell-split95-crossed-only {
+            background: repeating-linear-gradient(135deg, #adb5bd 0, #adb5bd 1px, transparent 1px, transparent 2.5px) !important;
+            -webkit-mask-image: linear-gradient(to right, black 95%, transparent 95%);
+            mask-image: linear-gradient(to right, black 95%, transparent 95%);
+        }
+
         .legend-container { display: flex; align-items: center; padding: 5px 0 0 0; }
         .legend-item { display: flex; align-items: center; }
         .legend-box { display: inline-block; width: 15px; height: 15px; margin-right: 5px; border-radius: 3px; border: 1px solid #dee2e6; }
@@ -207,7 +251,7 @@
                                 <td>Camaro</td>
                                 <td class="cell-split65-green-crossed"></td>
                                 <td class="cell-split5-green-crossed"></td>
-                                <td class="cell-green"></td> <td class="cell-split35-crossed-green"></td> <td class="cell-green"></td> <td class="cell-green"></td>
+                                <td class="cell-split95-crossed-green"></td> <td class="cell-split35-crossed-green"></td> <td class="cell-green"></td> <td class="cell-green"></td>
                                 <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-na"></td>
                                 <td></td>
                             </tr>
@@ -215,13 +259,13 @@
                                 <td>Corvette</td>
                                 <td class="cell-split65-green-crossed"></td>
                                 <td class="cell-split5-green-crossed"></td>
-                                <td class="cell-green"></td> <td class="cell-split35-crossed-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-yellow"></td> <td></td>
+                                <td class="cell-split95-crossed-green"></td> <td class="cell-split35-crossed-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-yellow"></td> <td></td>
                             </tr>
                             <tr search-model="SILVERADO EV" data-model="SILVERADO_EV">
                                 <td>Silverado EV</td>
                                 <td class="cell-split65-crossed-na"></td>
                                 <td class="cell-split5-crossed-na"></td>
-                                <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-yellow"></td> <td></td> <td></td>
+                                <td class="cell-split95-crossed-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-yellow"></td> <td></td> <td></td>
                             </tr>
                             <tr class="table-secondary">
                                 <td colspan="11" class="table-secondary-tag">Cadillac</td>
@@ -229,34 +273,34 @@
                             <tr search-model="CT4" data-model="CT4">
                                 <td>CT4</td>
                                 <td class="cell-split65-crossed-na"></td> <td class="cell-split5-green-crossed"></td>
-                                <td class="cell-green"></td> <td class="cell-split35-crossed-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-na"></td> <td></td>
+                                <td class="cell-split95-crossed-green"></td> <td class="cell-split35-crossed-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-na"></td> <td></td>
                             </tr>
                             <tr search-model="CT5" data-model="CT5">
                                 <td>CT5</td>
                                 <td class="cell-split65-crossed-na"></td> <td class="cell-split5-green-crossed"></td>
-                                <td class="cell-green"></td> <td class="cell-split35-crossed-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-yellow"></td> <td></td> <td></td>
+                                <td class="cell-split95-crossed-green"></td> <td class="cell-split35-crossed-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-yellow"></td> <td></td> <td></td>
                             </tr>
                             <tr search-model="CT6" data-model="CT6">
                                 <td>CT6</td>
                                 <td class="cell-split65-green-crossed"></td>
                                 <td class="cell-split5-green-crossed"></td>
-                                <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td></td>
+                                <td class="cell-split95-crossed-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td></td>
                             </tr>
                             <tr search-model="ESCALADE" data-model="ESCALADE">
                                 <td>Escalade</td>
                                 <td class="cell-crossed"></td>
-                                <td class="cell-crossed"></td> <td class="cell-crossed"></td> <td></td> <td></td> <td></td> <td class="cell-green"></td> <td></td> <td></td> <td></td>
+                                <td class="cell-crossed"></td> <td class="cell-crossed"></td> <td class="cell-split35-crossed-only"></td> <td></td> <td></td> <td class="cell-green"></td> <td></td> <td></td> <td></td>
                             </tr>
                             <tr search-model="ESCALADE ESV" data-model="ESCALADE_ESV">
                                 <td>Escalade ESV</td>
                                 <td class="cell-crossed"></td>
-                                <td class="cell-crossed"></td> <td class="cell-crossed"></td> <td></td> <td></td> <td></td> <td class="cell-yellow"></td> <td></td> <td></td> <td></td>
+                                <td class="cell-crossed"></td> <td class="cell-crossed"></td> <td class="cell-split35-crossed-only"></td> <td></td> <td></td> <td class="cell-yellow"></td> <td></td> <td></td> <td></td>
                             </tr>
                             <tr search-model="ESCALADE IQ" data-model="ESCALADE_IQ">
                                 <td>Escalade IQ</td>
                                 <td class="cell-split65-crossed-na"></td>
                                 <td class="cell-split5-crossed-na"></td>
-                                <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-green"></td> <td></td> <td></td> <td></td>
+                                <td class="cell-split95-crossed-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-green"></td> <td></td> <td></td> <td></td>
                             </tr>
                             <tr class="table-secondary">
                                 <td colspan="11" class="table-secondary-tag">GMC</td>
@@ -265,13 +309,13 @@
                                 <td>Hummer EV</td>
                                 <td class="cell-split65-crossed-na"></td>
                                 <td class="cell-split5-crossed-na"></td>
-                                <td class="cell-na"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-yellow"></td> <td></td> <td></td> <td></td>
+                                <td class="cell-split95-crossed-na"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td class="cell-yellow"></td> <td></td> <td></td> <td></td>
                             </tr>
                             <tr search-model="SIERRA EV" data-model="SIERRA_EV">
                                 <td>Sierra EV</td>
                                 <td class="cell-split65-crossed-na"></td>
                                 <td class="cell-split5-crossed-na"></td>
-                                <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td></td> <td></td> <td></td>
+                                <td class="cell-split95-crossed-na"></td> <td class="cell-na"></td> <td class="cell-na"></td> <td class="cell-green"></td> <td class="cell-green"></td> <td></td> <td></td> <td></td>
                             </tr>
                         </tbody>
                     </table>
@@ -279,7 +323,7 @@
                 <p style="font-size: 0.65rem; margin-top: 0.5rem;">*Window stickers were uploaded starting mid-May 2019, making data incomplete for most of 2019/early 2020 model years.</p>
                 <p style="font-size: 0.65rem;">**GM's Window Sticker API was updated on April 23, 2026. All window stickers with creation dates prior to January 1, 2022 were purged from the servers.</p>
                 <p class="pt-4">GM Build Counts is an independent enthusiast project and is not affiliated with, sponsored by, or endorsed by General Motors (GM). All vehicle data is sourced from public-facing OEM records for informational and educational purposes only. All GM logos, brand names (including Chevrolet, GMC, Buick, and Cadillac), and trademarks are the property of General Motors.</p>
-		        </div>
+                </div>
         </div>
     </main>
     <%- include('../partials/footer'); %>

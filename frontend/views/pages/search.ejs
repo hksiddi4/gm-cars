@@ -679,7 +679,7 @@
           for (let i = 1; i <= intMax; i++) {
             urls.push(`/gm-images/mmgprod-us/dynres/prove/imageinterior.gen?i=${modelYear}/${mmc_code}/${mmc_code}__${trim}/${colorInt}_${rpos}gmds10.png&v=deg${String(i).padStart(2, '0')}&std=true&country=US&send404=true&transparentBackgroundPng=true`);
           }
-          console.log('Generated URLs:', urls);
+          //console.log('Generated URLs:', urls); // Debug line
         } else {
           urls = [ghostImg];
         }

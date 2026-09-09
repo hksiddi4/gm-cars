@@ -451,7 +451,7 @@
             : `<div style="color: gray; font-style: italic;">No description available</div>`;
 
           card.innerHTML = `
-            <img src="${imgSrc}" alt="${rpoCode}" data-fallback="${fallbackPath}">
+            <img src="${imgSrc}" alt="${rpoCode}" data-fallback="${fallbackPath}" onerror="this.onerror=null; this.src=this.getAttribute('data-fallback');">
             <p>${rpoCode}</p>
             <div class="rpo-description">${descHTML}</div>
           `;
@@ -564,7 +564,16 @@
       } else if (['CT4', 'CT5', 'CT6'].includes(modelUpper) && modelYear <= 2022) {
         extMax = 6;
       } else if (['SILVERADO EV', 'SIERRA EV'].includes(modelUpper)) {
-        extMax = 5;
+        if (modelYear <= 2025 && modelUpper === 'SIERRA EV') {
+          extMax = 5;
+        } else if (modelYear >= 2026 && modelUpper === 'SIERRA EV') {
+          extMax = 6;
+        }
+        if (modelYear <= 2025 && modelUpper === 'SILVERADO EV') {
+          extMax = 5;
+        } else if (modelYear >= 2026 && modelUpper === 'SILVERADO EV') {
+          extMax = 4;
+        }
         intMax = 2;
       } else if (['HUMMER EV PICKUP', 'HUMMER EV SUV'].includes(modelUpper)) {
         intMax = 2;

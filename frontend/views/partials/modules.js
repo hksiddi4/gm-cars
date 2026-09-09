@@ -1810,6 +1810,7 @@ const escaladeRpo = { // 2025-2026
 }
 
 const escaladeiqRpo = {
+  "GAI": "DEEP SPACE METALLIC",
   "OAR": "Pre-Production Vehicle",
   "R7V": "Show Vehicle ID",
   "41T": "Black roof",
@@ -2060,6 +2061,7 @@ const escaladeiqRpo = {
 }
 
 const ct4Rpo = {
+  "GAI": "DEEP SPACE METALLIC",
   "58F": "Wheels, 18\" (45.7 cm) alloy with Sterling Silver finish",
   "5A7": "Spare wheel delete",
   "5JS": "LPO, Black mirror caps",
@@ -2316,6 +2318,7 @@ const ct4Rpo = {
 }
 
 const ct4vRpo = {
+  "GAI": "DEEP SPACE METALLIC",
   "00Z": "Not Equipped with Front and Rear Park Assist and Reverse Automatic Braking, see dealer for details",
   "04O": "Not Equipped with Driver and Front Passenger Ventilated Seat Cushion Blower Motor, see dealer for details",
   "37V": "Seat belt color, Santorini",
@@ -2587,6 +2590,7 @@ const ct4vRpo = {
 }
 
 const ct5Rpo = {
+  "GAI": "DEEP SPACE METALLIC",
   "53S": "Steering wheel, sueded microfiber",
   "57M": "Wheels, 19\" (48.3 cm) alloy with Satin Graphite finish",
   "57R": "Wheels, 18\" (45.7 cm) alloy with Manoogian Silver finish",
@@ -2889,6 +2893,7 @@ const ct5Rpo = {
 }
 
 const ct5vRpo = {
+  "GAI": "DEEP SPACE METALLIC",
   "00Z": "Not Equipped with Front and Rear Park Assist and Reverse Automatic Braking, see dealer for details",
   "04O": "Not Equipped with Driver and Front Passenger Ventilated Seat Cushion Blower Motor, see dealer for details",
   "37V": "Seat belt color, Santorini",
@@ -3209,6 +3214,7 @@ const ct5vRpo = {
 }
 
 const hummerRpo = {
+  "GAI": "GRAPHITE BLUE METALLIC",
   "OAR": "Pre-Production Vehicle",
   "R7V": "Show Vehicle ID",
   "5AV": "LPO, GM Energy PowerShift Charger, Residential bidirectional EV charger",
@@ -3435,6 +3441,7 @@ const hummerRpo = {
 }
 
 const hummersuvRpo = {
+  "GAI": "GRAPHITE BLUE METALLIC",
   "OAR": "Pre-Production Vehicle",
   "R7V": "Show Vehicle ID",
   "5AV": "LPO, GM Energy PowerShift Charger, Residential bidirectional EV charger",
@@ -3656,6 +3663,7 @@ const celestiqRpo = {
 }
 
 const silveradoevRpo = {
+  "GAI": "BLUE SMOKE METALLIC",
   "5AV": "LPO, GM Energy PowerShift Charger, Residential bidirectional EV charger",
   "5CH": "LPO, GM PowerUp 2 (J1772) Charger, Residential EV charger",
   "5GD": "Tow/Haul Mode ",

@@ -3776,7 +3776,7 @@ const silveradoevRpo = {
   "PRB": "3 Years OnStar One",
   "PSC": "Dual Level Charge Cord",
   "PZ8": "Hitch View",
-  "Q7L": "Wheels, 22" x 9" (55.9 cm x 22.9 cm)",
+  "Q7L": "Wheels, 22\" x 9\" (55.9 cm x 22.9 cm)",
   "Q8E": "Jack, mechanical, with tools located in the eTrunk",
   "QK1": "Tailgate, standard",
   "QK2": "Tailgate, Multi-Flex, with six functional load/access features",

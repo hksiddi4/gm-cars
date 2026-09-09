@@ -494,6 +494,7 @@
             const msrpIcon = document.getElementById('msrpIcon');
 
             function setIcon(iconElement, iconType, condition) {
+                if (!iconElement) return;
                 iconElement.className = condition ? `bi bi-chevron-${iconType}` : '';
                 iconElement.style.display = condition ? 'inline' : 'none';
             }

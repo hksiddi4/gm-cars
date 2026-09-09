@@ -415,7 +415,18 @@
                        localRpoImageMap[`CORVETTE-STINGRAY-${rpoCode}`];
           }
 
-          imgSrc = imgSrc || localRpoImageMap[rpoCode] || `/img/rpos/${folderName}/${rpoCode}.webp`;
+          // Check the map first
+          imgSrc = imgSrc || localRpoImageMap[rpoCode];
+
+          // If not in the map, only try the folder path if the backend verified it exists
+          if (!imgSrc) {
+            if (typeof verifiedRpoImages !== 'undefined' && verifiedRpoImages.includes(rpoCode)) {
+              imgSrc = `/img/rpos/${folderName}/${rpoCode}.webp`;
+            } else {
+              // Skip the 404 entirely and go straight to the fallback logo
+              imgSrc = fallbackPath; 
+            }
+          }
 
           const cardLink = document.createElement('a');
           cardLink.href = `/vehicles?model=${encodeURIComponent(vin.model)}&rpo=${encodeURIComponent(rpoCode)}`;

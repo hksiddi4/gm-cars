@@ -679,11 +679,10 @@
           for (let i = 1; i <= intMax; i++) {
             urls.push(`/gm-images/mmgprod-us/dynres/prove/imageinterior.gen?i=${modelYear}/${mmc_code}/${mmc_code}__${trim}/${colorInt}_${rpos}gmds10.png&v=deg${String(i).padStart(2, '0')}&std=true&country=US&send404=true&transparentBackgroundPng=true`);
           }
+          console.log('Generated URLs:', urls);
         } else {
           urls = [ghostImg];
         }
-
-        console.log('MMC_CODE:', mmc_code, 'TRIM:', trim, 'COLOR:', color, 'INT COLOR:', colorInt);
 
         gallery.innerHTML = '';
         if (urls.length === 1 && urls[0] === ghostImg) {

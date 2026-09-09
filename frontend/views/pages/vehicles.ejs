@@ -649,8 +649,11 @@
 
             renderSelectedRPOs();
 
-            rpoSearchInput.addEventListener('input', function() {
-                const query = rpoSearchInput.value.toUpperCase().trim();
+            rpoSearchInput.addEventListener('input', function(e) {
+                // Instantly remove any character that is NOT a letter or a number
+                e.target.value = e.target.value.replace(/[^a-zA-Z0-9]/g, '');
+
+                const query = e.target.value.toUpperCase().trim();
                 rpoResults.innerHTML = '';
 
                 if (query.length > 1) {

@@ -345,6 +345,7 @@
       const hummerRpo = <%- JSON.stringify(hummerRpo) %>;
       const hummersuvRpo = <%- JSON.stringify(hummersuvRpo) %>;
       const celestiqRpo = <%- JSON.stringify(celestiqRpo) %>;
+      const silveradoevRpo = <%- JSON.stringify(silveradoevRpo) %>;
 
       const invertedColorMap = {};
       for (const [name, code] of Object.entries(colorMap)) {
@@ -371,7 +372,8 @@
         ...ct5vRpo,
         ...hummerRpo,
         ...hummersuvRpo,
-        ...celestiqRpo
+        ...celestiqRpo,
+        ...silveradoevRpo,
       };
 
       function renderRpoCards(vin) {
@@ -454,6 +456,7 @@
             (derivedModel === 'HUMMER EV PICKUP' && hummerRpo[rpoCode]) ||
             (derivedModel === 'HUMMER EV SUV' && hummersuvRpo[rpoCode]) ||
             (derivedModel === 'CELESTIQ' && celestiqRpo[rpoCode]) ||
+            (derivedModel === 'SILVERADO EV' && silveradoevRpo[rpoCode]) ||
             invertedColorMap[rpoCode] ||
             allRpoDescriptions[rpoCode];
 
@@ -500,7 +503,7 @@
         if (derivedModel === 'HUMMER EV PICKUP' && hummerRpo[rpoCode]) { element.innerHTML = `<div>${hummerRpo[rpoCode]}</div>`; return; }
         if (derivedModel === 'HUMMER EV SUV' && hummersuvRpo[rpoCode]) { element.innerHTML = `<div>${hummersuvRpo[rpoCode]}</div>`; return; }
         if (derivedModel === 'CELESTIQ' && celestiqRpo[rpoCode]) { element.innerHTML = `<div>${celestiqRpo[rpoCode]}</div>`; return; }
-
+        if (derivedModel === 'SILVERADO EV' && silveradoevRpo[rpoCode]) { element.innerHTML = `<div>${silveradoevRpo[rpoCode]}</div>`; return; }
         if (invertedColorMap[rpoCode]) {
           element.innerHTML = `<div>${invertedColorMap[rpoCode]}</div>`;
           return;

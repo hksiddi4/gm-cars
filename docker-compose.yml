@@ -60,7 +60,7 @@ services:
   cloudflare-tunnel:
     image: cloudflare/cloudflared:latest
     restart: unless-stopped
-    command: tunnel --no-autoupdate --protocol http2 run
+    command: tunnel --no-autoupdate --protocol http2 --heartbeat-count 5 --heartbeat-interval 15s run
     networks:
       - app-network
     environment:

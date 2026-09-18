@@ -71,7 +71,6 @@ const nodemailer = require('nodemailer');
 const basicAuth = require('express-basic-auth');
 const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
 
-// 1. Create a strict rate limiter for the contact form
 const contactLimiter = rateLimit({
     windowMs: 60 * 60 * 1000, 
     max: 3, 
@@ -84,91 +83,6 @@ const contactLimiter = rateLimit({
     handler: (req, res) => {
         res.status(429).render('pages/contact', { 
             error: 'Too many messages sent from this connection. Please wait an hour before trying again.',
-            pagePath: '/contact',
-            canonicalPath: '/contact'
-        });
-    }
-});
-
-// 2. Render the Contact Page
-app.get('/contact', (req, res) => {
-    res.render('pages/contact', {
-        pagePath: '/contact',
-        canonicalPath: '/contact'
-    });
-});
-
-// 3. Handle the Form Submission
-app.post('/contact', contactLimiter, async (req, res) => {
-    const { name, email, message, 'cf-turnstile-response': turnstileToken } = req.body;
-
-    // --- A. Verify Cloudflare Turnstile ---
-    if (!turnstileToken) {
-        return res.render('pages/contact', { 
-            error: 'Please complete the bot check.',
-            pagePath: '/contact',
-            canonicalPath: '/contact'
-        });
-    }
-
-    try {
-        const verifyUrl = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
-        const verifyResponse = await axios.post(verifyUrl, `secret=${process.env.TURNSTILE_SECRET_KEY}&response=${turnstileToken}`, {
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-        });
-
-        if (!verifyResponse.data.success) {
-            return res.render('pages/contact', { 
-                error: 'Bot verification failed. Please try again.',
-                pagePath: '/contact',
-                canonicalPath: '/contact'
-            });
-        }
-    } catch (err) {
-        console.error('Turnstile verification error:', err);
-        return res.render('pages/contact', { 
-            error: 'Security service unavailable. Try again later.',
-            pagePath: '/contact',
-            canonicalPath: '/contact'
-        });
-    }
-
-    // --- B. Send the Email ---
-    try {
-        const transporter = nodemailer.createTransport({
-            host: 'smtp.mail.me.com',
-            port: 587,
-            secure: false, // MUST be false for port 587
-            auth: {
-                user: 'hussainks92@icloud.com', 
-                pass: process.env.SMTP_PASS
-            }
-        });
-
-        const mailOptions = {
-            from: '"GM Buildcounts" <contact@gmbuildcounts.com>', 
-            to: 'contact@gmbuildcounts.com',                      
-            replyTo: email,                                       
-            subject: `New Contact Form Submission from ${name}`,
-            text: `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
-            html: `<p><strong>Name:</strong> ${name}</p>
-                   <p><strong>Email:</strong> ${email}</p>
-                   <p><strong>Message:</strong><br>${message.replace(/\n/g, '<br>')}</p>`
-        };
-
-        await transporter.sendMail(mailOptions);
-        
-        // Render success state
-        res.render('pages/contact', { 
-            success: true,
-            pagePath: '/contact',
-            canonicalPath: '/contact' 
-        });
-
-    } catch (err) {
-        console.error('Email sending error:', err);
-        res.render('pages/contact', { 
-            error: 'Failed to send message. Please try again later.',
             pagePath: '/contact',
             canonicalPath: '/contact'
         });
@@ -449,6 +363,91 @@ app.use((req, res, next) => {
 });
 
 // --- ROUTES ---
+
+// 2. Render the Contact Page
+app.get('/contact', (req, res) => {
+    res.render('pages/contact', {
+        pagePath: '/contact',
+        canonicalPath: '/contact'
+    });
+});
+
+// 3. Handle the Form Submission
+app.post('/contact', contactLimiter, async (req, res) => {
+    const { name, email, message, 'cf-turnstile-response': turnstileToken } = req.body;
+
+    // --- A. Verify Cloudflare Turnstile ---
+    if (!turnstileToken) {
+        return res.render('pages/contact', { 
+            error: 'Please complete the bot check.',
+            pagePath: '/contact',
+            canonicalPath: '/contact'
+        });
+    }
+
+    try {
+        const verifyUrl = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
+        const verifyResponse = await axios.post(verifyUrl, `secret=${process.env.TURNSTILE_SECRET_KEY}&response=${turnstileToken}`, {
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+        });
+
+        if (!verifyResponse.data.success) {
+            return res.render('pages/contact', { 
+                error: 'Bot verification failed. Please try again.',
+                pagePath: '/contact',
+                canonicalPath: '/contact'
+            });
+        }
+    } catch (err) {
+        console.error('Turnstile verification error:', err);
+        return res.render('pages/contact', { 
+            error: 'Security service unavailable. Try again later.',
+            pagePath: '/contact',
+            canonicalPath: '/contact'
+        });
+    }
+
+    // --- B. Send the Email ---
+    try {
+        const transporter = nodemailer.createTransport({
+            host: 'smtp.mail.me.com',
+            port: 587,
+            secure: false, // MUST be false for port 587
+            auth: {
+                user: 'hussainks92@icloud.com', 
+                pass: process.env.SMTP_PASS
+            }
+        });
+
+        const mailOptions = {
+            from: '"GM Buildcounts" <contact@gmbuildcounts.com>', 
+            to: 'contact@gmbuildcounts.com',                      
+            replyTo: email,                                       
+            subject: `New Contact Form Submission from ${name}`,
+            text: `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
+            html: `<p><strong>Name:</strong> ${name}</p>
+                   <p><strong>Email:</strong> ${email}</p>
+                   <p><strong>Message:</strong><br>${message.replace(/\n/g, '<br>')}</p>`
+        };
+
+        await transporter.sendMail(mailOptions);
+        
+        // Render success state
+        res.render('pages/contact', { 
+            success: true,
+            pagePath: '/contact',
+            canonicalPath: '/contact' 
+        });
+
+    } catch (err) {
+        console.error('Email sending error:', err);
+        res.render('pages/contact', { 
+            error: 'Failed to send message. Please try again later.',
+            pagePath: '/contact',
+            canonicalPath: '/contact'
+        });
+    }
+});
 
 app.get('/maintenance', (req, res) => {
     res.render('pages/errors/maintenance', {

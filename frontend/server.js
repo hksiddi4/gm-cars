@@ -64,11 +64,19 @@ const turndownService = new TurndownService();
 const fs = require('fs');
 const path = require('path');
 const nodemailer = require('nodemailer');
+const basicAuth = require('express-basic-auth');
+const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
 
 // 1. Create a strict rate limiter for the contact form (e.g., 3 emails per hour per IP)
 const contactLimiter = rateLimit({
     windowMs: 60 * 60 * 1000, 
     max: 3, 
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req, res) => {
+        // Extract the actual user's IP from Cloudflare
+        return req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.ip;
+    },
     handler: (req, res) => {
         res.status(429).render('pages/contact', { error: 'Too many messages sent. Please try again later.' });
     }
@@ -156,9 +164,6 @@ const sendDiscordAlert = async (ip, path, userAgent) => {
         console.error("Discord webhook failed:", err.message);
     }
 };
-
-const basicAuth = require('express-basic-auth');
-const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
 
 const authLimiter = rateLimit({
     windowMs: 5 * 60 * 1000,

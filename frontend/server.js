@@ -420,14 +420,12 @@ app.post('/contact', contactLimiter, async (req, res) => {
         });
 
         const mailOptions = {
-            from: '"GM Buildcounts" <contact@gmbuildcounts.com>', 
+            from: '"GM Build Counts" <contact@gmbuildcounts.com>', 
             to: 'contact@gmbuildcounts.com',                      
             replyTo: email,                                       
             subject: `New Contact Form Submission from ${name}`,
             text: `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
-            html: `<p><strong>Name:</strong> ${name}</p>
-                   <p><strong>Email:</strong> ${email}</p>
-                   <p><strong>Message:</strong><br>${message.replace(/\n/g, '<br>')}</p>`
+            html: `<p>${message.replace(/\n/g, '<br>')}</p>`
         };
 
         await transporter.sendMail(mailOptions);

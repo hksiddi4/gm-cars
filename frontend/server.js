@@ -74,8 +74,8 @@ const contactLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     keyGenerator: (req, res) => {
-        // Extract the actual user's IP from Cloudflare
-        return req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.ip;
+        const ip = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.ip;
+        return ipKeyGenerator(ip);
     },
     handler: (req, res) => {
         res.status(429).render('pages/contact', { error: 'Too many messages sent. Please try again later.' });

@@ -71,7 +71,7 @@ const sendDiscordAlert = async (ip, path, userAgent) => {
 
     try {
         await axios.post(webhookUrl, {
-            content: `🚨 **Rate Limit Tripped** 🚨\n**IP:** \`${ip}\`\n**Path:** \`${path}\`\n**User-Agent:** \`${userAgent || 'Unknown'}\``
+            content: `🚨 **Inhuman Search Pace Detected** 🚨\n**IP:** \`${ip}\`\n**Path:** \`${path}\`\n**User-Agent:** \`${userAgent || 'Unknown'}\``
         });
     } catch (err) {
         console.error("Discord webhook failed:", err.message);
@@ -122,8 +122,8 @@ const authLimiter = rateLimit({
 });
 
 const searchLimiter = rateLimit({
-    windowMs: 5 * 60 * 1000,
-    max: 30,
+    windowMs: 5 * 60 * 1000, // 5 minutes
+    max: 15,
     standardHeaders: true,
     legacyHeaders: false,
     keyGenerator: (req, res) => {
@@ -132,13 +132,16 @@ const searchLimiter = rateLimit({
     },
     handler: (req, res) => {
         const ip = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.ip;
-        // Fire the alert
-        sendDiscordAlert(ip, req.originalUrl, req.headers['user-agent']);
+        const userAgent = req.headers['user-agent'] || 'Unknown';
         
+        // 1. Fire the Discord alert silently in the background
+        sendDiscordAlert(ip, req.originalUrl, userAgent);
+        
+        // 2. Serve the user the 429 error gracefully
         res.status(429).render('pages/errors/400', { 
             pagePath: '/search', 
             canonicalPath: '/search',
-            error: 'Rate limit exceeded. Please slow down.'
+            error: 'You are searching too fast. Please wait 5 minutes before searching another VIN.'
         });
     }
 });

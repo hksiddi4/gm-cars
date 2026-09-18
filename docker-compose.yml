@@ -24,6 +24,9 @@ services:
       - TZ=${TZ:-UTC}
       - ADMIN_USER=${ADMIN_USER}
       - ADMIN_PASS=${ADMIN_PASS}
+      - TURNSTILE_SECRET_KEY=${TURNSTILE_SECRET_KEY}
+      - SMTP_PASS=${SMTP_PASS}
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /mnt/NVMe/Apps/GM-Vehicles/public:/app/public:ro

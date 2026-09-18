@@ -63,6 +63,85 @@ const TurndownService = require('turndown');
 const turndownService = new TurndownService();
 const fs = require('fs');
 const path = require('path');
+const nodemailer = require('nodemailer');
+
+// 1. Create a strict rate limiter for the contact form (e.g., 3 emails per hour per IP)
+const contactLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, 
+    max: 3, 
+    handler: (req, res) => {
+        res.status(429).render('pages/contact', { error: 'Too many messages sent. Please try again later.' });
+    }
+});
+
+// 2. Render the Contact Page
+app.get('/contact', (req, res) => {
+    res.render('pages/contact');
+});
+
+// 3. Handle the Form Submission
+app.post('/contact', contactLimiter, async (req, res) => {
+    const { name, email, message, 'cf-turnstile-response': turnstileToken } = req.body;
+
+    // --- A. Verify Cloudflare Turnstile ---
+    if (!turnstileToken) {
+        return res.render('pages/contact', { error: 'Please complete the bot check.' });
+    }
+
+    try {
+        const verifyUrl = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
+        const verifyResponse = await axios.post(verifyUrl, `secret=${process.env.TURNSTILE_SECRET_KEY}&response=${turnstileToken}`, {
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+        });
+
+        if (!verifyResponse.data.success) {
+            return res.render('pages/contact', { error: 'Bot verification failed. Please try again.' });
+        }
+    } catch (err) {
+        console.error('Turnstile verification error:', err);
+        return res.render('pages/contact', { error: 'Security service unavailable. Try again later.' });
+    }
+
+    // --- B. Send the Email ---
+    try {
+        const transporter = nodemailer.createTransport({
+            host: 'smtp.mail.me.com',
+            port: 587,
+            secure: false, // MUST be false for port 587 (this tells it to use STARTTLS)
+            auth: {
+                user: 'hussainks92@icloud.com', // MUST be @icloud.com address, NOT @gmail.com login
+                pass: process.env.SMTP_PASS
+            }
+        });
+
+        const mailOptions = {
+            // The email will appear to users as coming from custom domain
+            from: '"GM Buildcounts" <contact@gmbuildcounts.com>', 
+            
+            // This drops the message right into contact@ inbox
+            to: 'contact@gmbuildcounts.com',                      
+            
+            // When click "Reply" in Apple Mail, 
+            // it replies directly to the person who filled out the form.
+            replyTo: email,                                       
+            
+            subject: `New Contact Form Submission from ${name}`,
+            text: `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
+            html: `<p><strong>Name:</strong> ${name}</p>
+                <p><strong>Email:</strong> ${email}</p>
+                <p><strong>Message:</strong><br>${message.replace(/\n/g, '<br>')}</p>`
+        };
+
+        await transporter.sendMail(mailOptions);
+        
+        // Render success state
+        res.render('pages/contact', { success: true });
+
+    } catch (err) {
+        console.error('Email sending error:', err);
+        res.render('pages/contact', { error: 'Failed to send message. Please try again later.' });
+    }
+});
 
 // --- Discord Scraper Alert ---
 const sendDiscordAlert = async (ip, path, userAgent) => {

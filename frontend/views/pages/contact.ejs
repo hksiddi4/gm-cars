@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('../partials/head') %>
+    <title>Contact Us - GM Buildcounts</title>
+    <!-- Cloudflare Turnstile Script -->
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</head>
+<body class="bg-gray-100 text-gray-900">
+    <%- include('../partials/navbar') %>
+
+    <main class="container mx-auto max-w-2xl px-4 py-12">
+        <h1 class="text-3xl font-bold mb-6">Contact Us</h1>
+        
+        <% if (typeof success !== 'undefined') { %>
+            <div class="bg-green-100 text-green-800 p-4 rounded mb-6">
+                Your message has been sent successfully!
+            </div>
+        <% } else if (typeof error !== 'undefined') { %>
+            <div class="bg-red-100 text-red-800 p-4 rounded mb-6">
+                <%= error %>
+            </div>
+        <% } %>
+
+        <form action="/contact" method="POST" class="bg-white p-6 rounded-lg shadow-md">
+            <div class="mb-4">
+                <label class="block text-sm font-bold mb-2" for="name">Name</label>
+                <input type="text" id="name" name="name" required class="w-full px-3 py-2 border rounded">
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-bold mb-2" for="email">Email</label>
+                <input type="email" id="email" name="email" required class="w-full px-3 py-2 border rounded">
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-sm font-bold mb-2" for="message">Message</label>
+                <textarea id="message" name="message" rows="5" required class="w-full px-3 py-2 border rounded"></textarea>
+            </div>
+
+            <!-- Cloudflare Turnstile Widget -->
+            <div class="cf-turnstile mb-6" data-sitekey="0x4AAAAAAE8QF-U3kIwjQuEq" data-theme="light"></div>
+
+            <button type="submit" class="bg-blue-600 text-white font-bold py-2 px-4 rounded hover:bg-blue-700 w-full">
+                Send Message
+            </button>
+        </form>
+    </main>
+
+    <%- include('../partials/footer') %>
+</body>
+</html>

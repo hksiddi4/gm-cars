@@ -24,7 +24,8 @@ app.use(helmet({
                 "'self'",
                 (req, res) => `'nonce-${res.locals.nonce}'`,
                 "https://cdn.jsdelivr.net",
-                "https://www.googletagmanager.com"
+                "https://www.googletagmanager.com",
+                "https://challenges.cloudflare.com" // <-- ADD THIS FOR TURNSTILE
             ],
             styleSrc: [
                 "'self'",
@@ -37,9 +38,9 @@ app.use(helmet({
                 "https://www.gmbuildcounts.com",
                 "https://www.google-analytics.com",
                 "https://www.googletagmanager.com",
-                "https://www.cadillac.com",  // Added for wheel images
-                "https://www.chevrolet.com", // Added for wheel images
-                "https://www.gmc.com"        // Added for wheel images
+                "https://www.cadillac.com",  
+                "https://www.chevrolet.com", 
+                "https://www.gmc.com"        
             ],
             connectSrc: [
                 "'self'",
@@ -48,8 +49,11 @@ app.use(helmet({
                 "https://stats.g.doubleclick.net"
             ],
             fontSrc: ["'self'", "https://cdn.jsdelivr.net"],
-            objectSrc: ["'self'"], // Allows your Window Sticker PDFs to render
-            frameSrc: ["'self'"],  // Allows the iframe inside the PDF object
+            objectSrc: ["'self'"], 
+            frameSrc: [
+                "'self'",
+                "https://challenges.cloudflare.com" // <-- ADD THIS FOR TURNSTILE
+            ],  
             upgradeInsecureRequests: [],
         },
     },

@@ -64,6 +64,20 @@ const turndownService = new TurndownService();
 const fs = require('fs');
 const path = require('path');
 
+// --- Discord Scraper Alert ---
+const sendDiscordAlert = async (ip, path, userAgent) => {
+    const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
+    if (!webhookUrl) return;
+
+    try {
+        await axios.post(webhookUrl, {
+            content: `🚨 **Rate Limit Tripped** 🚨\n**IP:** \`${ip}\`\n**Path:** \`${path}\`\n**User-Agent:** \`${userAgent || 'Unknown'}\``
+        });
+    } catch (err) {
+        console.error("Discord webhook failed:", err.message);
+    }
+};
+
 const basicAuth = require('express-basic-auth');
 const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
 
@@ -116,6 +130,17 @@ const searchLimiter = rateLimit({
         const ip = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.ip;
         return ipKeyGenerator(ip);
     },
+    handler: (req, res) => {
+        const ip = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.ip;
+        // Fire the alert
+        sendDiscordAlert(ip, req.originalUrl, req.headers['user-agent']);
+        
+        res.status(429).render('pages/errors/400', { 
+            pagePath: '/search', 
+            canonicalPath: '/search',
+            error: 'Rate limit exceeded. Please slow down.'
+        });
+    }
 });
 
 const apiLimiter = rateLimit({

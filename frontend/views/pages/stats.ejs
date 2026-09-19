@@ -304,6 +304,12 @@
                                 let titlePrefix = "Daily Production: ";
                                 if (activeCategory === 'monthly') titlePrefix = "Monthly Production: ";
                                 if (activeCategory === 'yearly') titlePrefix = "Yearly Production: ";
+
+                                // Override title format if Model Year toggle is active
+                                if (typeof selectedModelYear !== 'undefined' && selectedModelYear) {
+                                    formattedDate = selectedModelYear;
+                                    titlePrefix = "Model Year Production: ";
+                                }
                             %>
                             <h1 class="daily-title mb-2 mb-md-0 text-nowrap"><%= titlePrefix %><%= formattedDate %></h1>
                         </div>
@@ -311,6 +317,24 @@
                         <!-- Filters & Actions Row -->
                         <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4 w-100">
                             <div class="d-flex align-items-center gap-3 flex-grow-1" style="max-width: max-content;">
+                                
+                                <!-- Toggle Switch -->
+                                <div class="form-check form-switch d-flex align-items-center m-0 p-0" title="Toggle Model Year Filtering">
+                                    <input class="form-check-input m-0 me-2" type="checkbox" id="modeToggle" <%= typeof selectedModelYear !== 'undefined' && selectedModelYear ? 'checked' : '' %> style="cursor: pointer; width: 36px; height: 18px;">
+                                    <label class="form-check-label text-white mb-0 text-nowrap" for="modeToggle" style="cursor: pointer; font-size: 0.85rem; font-weight: 600;">MY Filter</label>
+                                </div>
+
+                                <!-- Model Year Dropdown (Inserted dynamically) -->
+                                <div class="statsDropdown m-0" id="modelYearDropdownContainer" style="width: 100px; <%= typeof selectedModelYear !== 'undefined' && selectedModelYear ? '' : 'display: none;' %>">
+                                    <select id="modelYearFilter" class="form-select small-dropdown m-0 <%= typeof selectedModelYear !== 'undefined' && selectedModelYear ? 'active-filter' : '' %>" aria-label="Filter by model year">
+                                        <% if (typeof available_model_years !== 'undefined') { %>
+                                            <% available_model_years.forEach(function(my) { %>
+                                                <option value="<%= my %>" <%= typeof selectedModelYear !== 'undefined' && selectedModelYear == my ? 'selected' : '' %>><%= my %></option>
+                                            <% }); %>
+                                        <% } %>
+                                    </select>
+                                </div>
+
                                 <% if (stats.available_models && stats.available_models.length > 0) { %>
                                     <div class="statsDropdown m-0" style="width: 220px;">
                                         <select id="modelFilter" class="form-select small-dropdown m-0 <%= typeof selectedModel !== 'undefined' && selectedModel ? 'active-filter' : '' %>" aria-label="Filter by model">
@@ -330,8 +354,8 @@
                                 <% } %>
                             </div>
                             
-                            <!-- Calendar Icon -->
-                            <div id="openCalBtn" class="calendar-wrapper d-flex align-items-center justify-content-center mt-1" style="width: 36px; height: 36px; cursor: pointer;" title="View Full Year Matrix">
+                            <!-- Calendar Icon (Hidden when filtered by MY) -->
+                            <div id="openCalBtn" class="calendar-wrapper d-flex align-items-center justify-content-center mt-1" style="width: 36px; height: 36px; cursor: pointer; <%= typeof selectedModelYear !== 'undefined' && selectedModelYear ? 'display: none !important;' : '' %>" title="View Full Year Matrix">
                                 <i class="bi bi-calendar-date daily-cal-icon text-white"></i>
                             </div>
 
@@ -343,6 +367,9 @@
                                     if (activeCategory === 'yearly') queryDate = queryDate.substring(0, 4);
 
                                     let vehLink = `/vehicles?date=${queryDate}`;
+                                    if (typeof selectedModelYear !== 'undefined' && selectedModelYear) {
+                                        vehLink = `/vehicles?year=${selectedModelYear}`; // Redirects to year search instead of date search
+                                    }
                                     if (typeof selectedModel !== 'undefined' && selectedModel) {
                                         vehLink += `&model=${encodeURIComponent(selectedModel)}`;
                                     }
@@ -526,7 +553,11 @@
                                                                 const mappedRpo = specialToRpoMap[key]; 
                                                                 let pkgLink = '';
                                                                 if (mappedRpo) {
-                                                                    pkgLink = `/vehicles?date=${queryDate}&rpo=${mappedRpo}`;
+                                                                    if (typeof selectedModelYear !== 'undefined' && selectedModelYear) {
+                                                                        pkgLink = `/vehicles?year=${selectedModelYear}&rpo=${mappedRpo}`;
+                                                                    } else {
+                                                                        pkgLink = `/vehicles?date=${queryDate}&rpo=${mappedRpo}`;
+                                                                    }
                                                                     if (typeof selectedModel !== 'undefined' && selectedModel) {
                                                                         pkgLink += `&model=${encodeURIComponent(selectedModel)}`;
                                                                     }
@@ -843,6 +874,7 @@
             // Store current query scopes for click routing
             window.dashboardQueryDate = "<%= typeof stats !== 'undefined' && stats.current_date ? (activeCategory === 'monthly' ? stats.current_date.substring(0,7) : (activeCategory === 'yearly' ? stats.current_date.substring(0,4) : stats.current_date)) : '' %>";
             window.dashboardSelectedModel = "<%= typeof selectedModel !== 'undefined' ? selectedModel : '' %>";
+            window.dashboardSelectedModelYear = "<%= typeof selectedModelYear !== 'undefined' ? selectedModelYear : '' %>";
 
             const rawData = <%- JSON.stringify(stats) %>;
             
@@ -1052,7 +1084,12 @@
                             }
                             
                             const params = new URLSearchParams();
-                            if (window.dashboardQueryDate) params.set('date', window.dashboardQueryDate);
+                            if (window.dashboardSelectedModelYear) {
+                                params.set('year', window.dashboardSelectedModelYear);
+                            } else if (window.dashboardQueryDate) {
+                                params.set('date', window.dashboardQueryDate);
+                            }
+
                             if (window.dashboardSelectedModel && filterParam !== 'model') params.set('model', window.dashboardSelectedModel);
                             
                             params.set(filterParam, paramValue);
@@ -1982,6 +2019,30 @@
                 const params = new URLSearchParams(window.location.search);
                 if (this.value) params.set('model', this.value);
                 else params.delete('model');
+                window.location.search = params.toString();
+            });
+
+            // Handle the Model Year Toggle Switch
+            document.getElementById('modeToggle')?.addEventListener('change', function() {
+                const params = new URLSearchParams(window.location.search);
+                if (this.checked) {
+                    const dropdown = document.getElementById('modelYearFilter');
+                    if (dropdown && dropdown.options.length > 0) {
+                        // Default to the first (largest) model year when enabled
+                        params.set('modelYear', dropdown.options[0].value); 
+                    }
+                    params.delete('date'); 
+                } else {
+                    params.delete('modelYear');
+                }
+                window.location.search = params.toString();
+            });
+
+            // Handle the new Model Year Dropdown
+            document.getElementById('modelYearFilter')?.addEventListener('change', function() {
+                const params = new URLSearchParams(window.location.search);
+                if (this.value) params.set('modelYear', this.value);
+                else params.delete('modelYear');
                 window.location.search = params.toString();
             });
 

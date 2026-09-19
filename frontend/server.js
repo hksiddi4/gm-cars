@@ -666,6 +666,8 @@ app.get('/stats', async (req, res) => {
                 stats: statsResponse.data,
                 all_models: wheelsResponse.data.model,
                 selectedModel: req.query.model || '',
+                selectedModelYear: req.query.modelYear || '', // NEW: Capture selected MY
+                available_model_years: statsResponse.data.available_model_years || [], // NEW: Pass down the list
                 pagePath: '/stats',
                 canonicalPath: '/stats'
             });

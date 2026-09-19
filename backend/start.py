@@ -569,10 +569,16 @@ def daily_stats():
     model_filter = request.args.get('model')
     date_filter = request.args.get('date')
     category = request.args.get('category', 'daily')
-    conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
+    model_year_filter = request.args.get('modelYear') # NEW: Capture modelYear param
     
+    conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
     from datetime import date
     
+    # NEW: Get all available model years for the dropdown
+    my_sql = "SELECT DISTINCT modelYear FROM Vehicles WHERE modelYear IS NOT NULL ORDER BY modelYear DESC"
+    my_rows = execute_read_query(conn, my_sql)
+    available_model_years = [str(r['modelYear']) for r in my_rows] if my_rows else []
+
     bounds_params = []
     if model_filter:
         if model_filter == 'CORVETTE (C8)':
@@ -591,15 +597,20 @@ def daily_stats():
 
     curr_date_str = date_filter or max_date or date.today().strftime('%Y-%m-%d')
     
-    if category == 'monthly':
-        date_condition = "DATE_FORMAT(o.creation_date, '%%Y-%%m') = %s"
-        base_params = [curr_date_str[:7]] 
-    elif category == 'yearly':
-        date_condition = "YEAR(o.creation_date) = %s"
-        base_params = [curr_date_str[:4]] 
+    # MODIFIED: Override logic if model_year_filter is active
+    if model_year_filter:
+        date_condition = "v.modelYear = %s"
+        base_params = [model_year_filter]
     else:
-        date_condition = "DATE(o.creation_date) = %s"
-        base_params = [curr_date_str]
+        if category == 'monthly':
+            date_condition = "DATE_FORMAT(o.creation_date, '%%Y-%%m') = %s"
+            base_params = [curr_date_str[:7]] 
+        elif category == 'yearly':
+            date_condition = "YEAR(o.creation_date) = %s"
+            base_params = [curr_date_str[:4]] 
+        else:
+            date_condition = "DATE(o.creation_date) = %s"
+            base_params = [curr_date_str]
 
     models_sql = f"""
         SELECT DISTINCT v.model 
@@ -653,6 +664,7 @@ def daily_stats():
         'min_date': min_date,
         'max_date': max_date,
         'available_models': available_models,
+        'available_model_years': available_model_years, # NEW: Send to frontend
         'modelYear': {}, 'model': {}, 'body': {}, 'trim': {},
         'engine': {}, 'trans': {}, 'drivetrain': {}, 'color': {}, 'specialedition': {}
     }
@@ -689,7 +701,7 @@ def daily_stats():
                     stats['specialedition'][sp] = stats['specialedition'].get(sp, 0) + 1
 
     for key in stats:
-        if key not in ['total', 'current_date', 'min_date', 'max_date', 'available_models']:
+        if key not in ['total', 'current_date', 'min_date', 'max_date', 'available_models', 'available_model_years']:
             stats[key] = dict(sorted(stats[key].items(), key=lambda item: item[1], reverse=True))
 
     return jsonify(stats)

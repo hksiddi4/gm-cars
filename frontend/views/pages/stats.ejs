@@ -337,6 +337,18 @@
                                     </div>
                                 <% } %>
 
+                                <!-- 3-Way Order Type Toggle -->
+                                <div class="btn-group m-0 shadow-sm" role="group" aria-label="Order Type Filter" style="height: 31px; border: 1px solid #444; border-radius: 4px;">
+                                    <input type="radio" class="btn-check" name="orderType" id="typeRetail" value="retail" autocomplete="off" <%= typeof selectedOrderType !== 'undefined' && selectedOrderType === 'retail' ? 'checked' : '' %>>
+                                    <label class="btn btn-outline-secondary d-flex align-items-center m-0 border-0" for="typeRetail" style="font-size: 0.75rem; font-weight: 600;">Retail</label>
+
+                                    <input type="radio" class="btn-check" name="orderType" id="typeAll" value="all" autocomplete="off" <%= !selectedOrderType || selectedOrderType === 'all' ? 'checked' : '' %>>
+                                    <label class="btn btn-outline-secondary d-flex align-items-center m-0 border-0 border-start border-end" for="typeAll" style="font-size: 0.75rem; font-weight: 600; border-color: #444 !important;">All</label>
+
+                                    <input type="radio" class="btn-check" name="orderType" id="typeStock" value="stock" autocomplete="off" <%= typeof selectedOrderType !== 'undefined' && selectedOrderType === 'stock' ? 'checked' : '' %>>
+                                    <label class="btn btn-outline-secondary d-flex align-items-center m-0 border-0" for="typeStock" style="font-size: 0.75rem; font-weight: 600;">Stock</label>
+                                </div>
+
                                 <% if (stats.available_models && stats.available_models.length > 0) { %>
                                     <div class="statsDropdown m-0" style="width: 220px;">
                                         <select id="modelFilter" class="form-select small-dropdown m-0 <%= typeof selectedModel !== 'undefined' && selectedModel ? 'active-filter' : '' %>" aria-label="Filter by model">
@@ -370,10 +382,14 @@
 
                                     let vehLink = `/vehicles?date=${queryDate}`;
                                     if (typeof selectedModelYear !== 'undefined' && selectedModelYear) {
-                                        vehLink = `/vehicles?year=${selectedModelYear}`; 
+                                        vehLink = `/vehicles?year=${selectedModelYear}`; // Redirects to year search instead of date search
                                     }
                                     if (typeof selectedModel !== 'undefined' && selectedModel) {
                                         vehLink += `&model=${encodeURIComponent(selectedModel)}`;
+                                    }
+                                    if (typeof selectedOrderType !== 'undefined') {
+                                        if (selectedOrderType === 'retail') vehLink += `&rpo=SLL`;
+                                        else if (selectedOrderType === 'stock') vehLink += `&rpo=SLM`;
                                     }
                                 %>
                                 <a href="<%= vehLink %>" class="model-btn daily-veh-btn text-white text-decoration-none shadow-sm text-nowrap m-0 mt-1">
@@ -555,10 +571,15 @@
                                                                 const mappedRpo = specialToRpoMap[key]; 
                                                                 let pkgLink = '';
                                                                 if (mappedRpo) {
+                                                                    let rpos = [mappedRpo];
+                                                                    if (typeof selectedOrderType !== 'undefined') {
+                                                                        if (selectedOrderType === 'retail') rpos.push('SLL');
+                                                                        if (selectedOrderType === 'stock') rpos.push('SLM');
+                                                                    }
                                                                     if (typeof selectedModelYear !== 'undefined' && selectedModelYear) {
-                                                                        pkgLink = `/vehicles?year=${selectedModelYear}&rpo=${mappedRpo}`;
+                                                                        pkgLink = `/vehicles?year=${selectedModelYear}&rpo=${rpos.join(',')}`;
                                                                     } else {
-                                                                        pkgLink = `/vehicles?date=${queryDate}&rpo=${mappedRpo}`;
+                                                                        pkgLink = `/vehicles?date=${queryDate}&rpo=${rpos.join(',')}`;
                                                                     }
                                                                     if (typeof selectedModel !== 'undefined' && selectedModel) {
                                                                         pkgLink += `&model=${encodeURIComponent(selectedModel)}`;
@@ -877,6 +898,7 @@
             window.dashboardQueryDate = "<%= typeof stats !== 'undefined' && stats.current_date ? (activeCategory === 'monthly' ? stats.current_date.substring(0,7) : (activeCategory === 'yearly' ? stats.current_date.substring(0,4) : stats.current_date)) : '' %>";
             window.dashboardSelectedModel = "<%= typeof selectedModel !== 'undefined' ? selectedModel : '' %>";
             window.dashboardSelectedModelYear = "<%= typeof selectedModelYear !== 'undefined' ? selectedModelYear : '' %>";
+            window.dashboardSelectedOrderType = "<%= typeof selectedOrderType !== 'undefined' ? selectedOrderType : 'all' %>";
 
             const rawData = <%- JSON.stringify(stats) %>;
             
@@ -1094,7 +1116,21 @@
 
                             if (window.dashboardSelectedModel && filterParam !== 'model') params.set('model', window.dashboardSelectedModel);
                             
-                            params.set(filterParam, paramValue);
+                            // Inject Retail/Stock RPOs for the Search Page
+                            let rpoArr = [];
+                            if (window.dashboardSelectedOrderType === 'retail') rpoArr.push('SLL');
+                            if (window.dashboardSelectedOrderType === 'stock') rpoArr.push('SLM');
+                            
+                            if (filterParam === 'rpo' && paramValue) {
+                                rpoArr.push(paramValue);
+                            } else {
+                                params.set(filterParam, paramValue);
+                            }
+                            
+                            if (rpoArr.length > 0) {
+                                params.set('rpo', rpoArr.join(','));
+                            }
+                            
                             window.location.href = '/vehicles?' + params.toString();
                         }
                     },
@@ -2046,6 +2082,19 @@
                 if (this.value) params.set('modelYear', this.value);
                 else params.delete('modelYear');
                 window.location.search = params.toString();
+            });
+
+            // Handle the 3-Way Order Type Toggle
+            document.querySelectorAll('input[name="orderType"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    const params = new URLSearchParams(window.location.search);
+                    if (this.value === 'all') {
+                        params.delete('orderType');
+                    } else {
+                        params.set('orderType', this.value);
+                    }
+                    window.location.search = params.toString();
+                });
             });
 
             document.getElementById('openCalBtn')?.addEventListener('click', () => typeof openAnnualCalendar === 'function' && openAnnualCalendar());

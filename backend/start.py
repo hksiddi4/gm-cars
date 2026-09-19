@@ -530,13 +530,26 @@ def calendar_activity():
         else:
             model_cond = "AND v.model = %s"
             params.append(model_filter)
+
+    # --- NEW: Order Type Logic ---
+    order_type_filter = request.args.get('orderType')
+    order_cond = ""
+    if order_type_filter == 'retail':
+        order_cond = " AND EXISTS (SELECT 1 FROM Options opt WHERE opt.vehicle_id = v.vehicle_id AND opt.option_code = 'SLL')"
+    elif order_type_filter == 'stock':
+        order_cond = " AND EXISTS (SELECT 1 FROM Options opt WHERE opt.vehicle_id = v.vehicle_id AND opt.option_code = 'SLM')"
+        
+    # Ensure Vehicles table is joined if EITHER model_filter OR order_cond is active
+    if model_filter or order_cond:
+        model_join = "JOIN Vehicles v ON o.order_id = v.order_id"
+    # -----------------------------
             
     if category == 'yearly':
         sqlStatement = f"""
             SELECT CAST(YEAR(o.creation_date) AS CHAR) as prod_date, COUNT(o.order_id) as count
             FROM Orders o
             {model_join}
-            WHERE o.creation_date IS NOT NULL {model_cond}
+            WHERE o.creation_date IS NOT NULL {model_cond} {order_cond}
             GROUP BY prod_date
         """
     elif category == 'monthly':
@@ -544,7 +557,7 @@ def calendar_activity():
             SELECT DATE_FORMAT(o.creation_date, '%%Y-%%m') as prod_date, COUNT(o.order_id) as count
             FROM Orders o
             {model_join}
-            WHERE YEAR(o.creation_date) = %s {model_cond} AND o.creation_date IS NOT NULL
+            WHERE YEAR(o.creation_date) = %s {model_cond} {order_cond} AND o.creation_date IS NOT NULL
             GROUP BY prod_date
         """
         params.insert(0, year)
@@ -553,7 +566,7 @@ def calendar_activity():
             SELECT DATE_FORMAT(o.creation_date, '%%Y-%%m-%%d') as prod_date, COUNT(o.order_id) as count
             FROM Orders o
             {model_join}
-            WHERE YEAR(o.creation_date) = %s {model_cond} AND o.creation_date IS NOT NULL
+            WHERE YEAR(o.creation_date) = %s {model_cond} {order_cond} AND o.creation_date IS NOT NULL
             GROUP BY prod_date
         """
         params.insert(0, year)
@@ -597,7 +610,15 @@ def daily_stats():
 
     curr_date_str = date_filter or max_date or date.today().strftime('%Y-%m-%d')
     
-    # MODIFIED: Override logic if model_year_filter is active
+    # --- NEW: Order Type Filter Logic ---
+    order_type_filter = request.args.get('orderType')
+    order_cond = ""
+    if order_type_filter == 'retail':
+        order_cond = " AND EXISTS (SELECT 1 FROM Options opt WHERE opt.vehicle_id = v.vehicle_id AND opt.option_code = 'SLL')"
+    elif order_type_filter == 'stock':
+        order_cond = " AND EXISTS (SELECT 1 FROM Options opt WHERE opt.vehicle_id = v.vehicle_id AND opt.option_code = 'SLM')"
+    # ------------------------------------
+
     if model_year_filter:
         date_condition = "v.modelYear = %s"
         base_params = [model_year_filter]
@@ -616,7 +637,7 @@ def daily_stats():
         SELECT DISTINCT v.model 
         FROM Vehicles v 
         JOIN Orders o ON v.order_id = o.order_id 
-        WHERE {date_condition} AND v.model IS NOT NULL 
+        WHERE {date_condition} AND v.model IS NOT NULL {order_cond}
         ORDER BY v.model ASC
     """
     model_rows = execute_read_query(conn, models_sql, base_params)
@@ -645,6 +666,8 @@ def daily_stats():
         else:
             sqlStatement += " AND v.model = %s"
             params.append(model_filter)
+
+    sqlStatement += order_cond
         
     sqlStatement += """
         GROUP BY v.vehicle_id, v.modelYear, v.model, v.body, v.trim, 

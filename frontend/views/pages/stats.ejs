@@ -327,8 +327,8 @@
                                     </div>
 
                                     <!-- Model Year Dropdown (Inserted dynamically) -->
-                                    <div class="statsDropdown m-0" id="modelYearDropdownContainer" style="width: 100px; <%= typeof selectedModelYear !== 'undefined' && selectedModelYear ? '' : 'display: none;' %>">
-                                        <select id="modelYearFilter" class="form-select small-dropdown m-0 <%= typeof selectedModelYear !== 'undefined' && selectedModelYear ? 'active-filter' : '' %>" aria-label="Filter by model year" style="height: 36px;">
+                                    <div class="statsDropdown m-0" id="modelYearDropdownContainer" style="max-width: 100%; flex: 0 1 auto; <%= typeof selectedModelYear !== 'undefined' && selectedModelYear ? '' : 'display: none;' %>">
+                                        <select id="modelYearFilter" class="form-select small-dropdown m-0 <%= typeof selectedModelYear !== 'undefined' && selectedModelYear ? 'active-filter' : '' %>" aria-label="Filter by model year" style="height: 36px; width: auto; max-width: 100%; min-width: 80px;">
                                             <% if (typeof available_model_years !== 'undefined') { %>
                                                 <% available_model_years.forEach(function(my) { %>
                                                     <option value="<%= my %>" <%= typeof selectedModelYear !== 'undefined' && selectedModelYear == my ? 'selected' : '' %>><%= my %></option>

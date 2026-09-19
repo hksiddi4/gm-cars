@@ -396,6 +396,8 @@ const mmc = {
 };
 
 const camaroRpo = {
+  "SLL": "Retail Orders",
+  "SLM": "Stock Orders",
   "00T": "Convertible top color, Blue",
   "00V": "Not Equipped with Driver and Front Passenger Heated Seats",
   "00Y": "Not Equipped with Rear Park Assist",
@@ -759,6 +761,8 @@ const camaroRpo = {
 // 1. BASE CORVETTE (Shared by ALL Corvette models)
 // =========================================================
 const corvetteBaseRpo = {
+  "SLL": "Retail Orders",
+  "SLM": "Stock Orders",
   "36S": "Competition Yellow custom leather stitch",
   "379": "Seat belt color, Orange",
   "37S": "Santorini Blue custom leather stitch",
@@ -966,6 +970,8 @@ const corvetteBaseRpo = {
 // 2. GRAND SPORT FAMILY (Shared ONLY between GS & GSX)
 // =========================================================
 const corvetteGrandSportBaseRpo = {
+  "SLL": "Retail Orders",
+  "SLM": "Stock Orders",
   "17A": "Blade Silver Grand Sport Heritage Hash Marks",
   "20A": "Admiral Blue Grand Sport Heritage Hash Marks",
   "55A": "Competition Yellow Grand Sport Heritage Hash Marks",
@@ -1003,6 +1009,8 @@ const corvetteGrandSportBaseRpo = {
 // =========================================================
 
 const corvetteGSXRpo = {
+  "SLL": "Retail Orders",
+  "SLM": "Stock Orders",
   ...corvetteBaseRpo,
   ...corvetteGrandSportBaseRpo,
   "5ZV": "LPO, Three-Stanchion high wing spoiler, Carbon Flash Metallic-painted",
@@ -1031,6 +1039,8 @@ const corvetteGSXRpo = {
 };
 
 const corvetteGSRpo = {
+  "SLL": "Retail Orders",
+  "SLM": "Stock Orders",
   ...corvetteBaseRpo,
   ...corvetteGrandSportBaseRpo,
   "5ZB": "LPO, Grand Sport logo wheel center caps",
@@ -1064,6 +1074,8 @@ const corvetteGSRpo = {
 };
 
 const erayRpo = {
+  "SLL": "Retail Orders",
+  "SLM": "Stock Orders",
   ...corvetteBaseRpo,
   "5V5": "LPO, Spoiler, Visible Carbon Fiber",
   "5ZV": "LPO, Three-Stanchion high wing spoiler, Carbon Flash Metallic-painted",
@@ -1102,6 +1114,8 @@ const erayRpo = {
 };
 
 const zr1Rpo = {
+  "SLL": "Retail Orders",
+  "SLM": "Stock Orders",
   ...corvetteBaseRpo,
   "B6P": "Coupe Engine Appearance Package, includes carbon fiber trim and (SL9) engine specification plaque, LPO",
   "CFC": "Convertible top, retractable, power-folding hard top",
@@ -1148,6 +1162,8 @@ const zr1Rpo = {
 };
 
 const z06Rpo = {
+  "SLL": "Retail Orders",
+  "SLM": "Stock Orders",
   ...corvetteBaseRpo,
   "5DH": "LPO, 20\" x 10\" (50.8 cm x 25.4 cm) front and 21\" x 13\" (53.3 cm x 33 cm) rear Spider design, Satin Graphite forged aluminum with Red stripe wheels",
   "5DK": "LPO, 20\" x 10\" (50.8 cm x 25.4 cm) front and 21\" x 13\" (53.3 cm x 33 cm) rear Spider design, Tech Bronze forged aluminum wheels",
@@ -1212,6 +1228,8 @@ const z06Rpo = {
 };
 
 const stingrayRpo = {
+  "SLL": "Retail Orders",
+  "SLM": "Stock Orders",
   ...corvetteBaseRpo,
   "5DG": "LPO, 19\" x 8.5\" (48.3 cm x 21.6 cm) front and 20\" x 11\" (50.8 cm x 25.4 cm) rear 20-spoke Tech Bronze aluminum wheels",
   "5DO": "LPO, 19\" x 8.5\" (48.3 cm x 21.6 cm) front and 20\" x 11\" (50.8 cm x 25.4 cm) rear 15-spoke bright polished aluminum wheels",
@@ -1810,6 +1828,8 @@ const escaladeRpo = { // 2025-2026
 }
 
 const escaladeiqRpo = {
+  "SLL": "Retail Orders",
+  "SLM": "Stock Orders",
   "GAI": "DEEP SPACE METALLIC",
   "OAR": "Pre-Production Vehicle",
   "R7V": "Show Vehicle ID",
@@ -2061,6 +2081,8 @@ const escaladeiqRpo = {
 }
 
 const ct4Rpo = {
+  "SLL": "Retail Orders",
+  "SLM": "Stock Orders",
   "GAI": "DEEP SPACE METALLIC",
   "58F": "Wheels, 18\" (45.7 cm) alloy with Sterling Silver finish",
   "5A7": "Spare wheel delete",
@@ -2318,6 +2340,8 @@ const ct4Rpo = {
 }
 
 const ct4vRpo = {
+  "SLL": "Retail Orders",
+  "SLM": "Stock Orders",
   "GAI": "DEEP SPACE METALLIC",
   "00Z": "Not Equipped with Front and Rear Park Assist and Reverse Automatic Braking, see dealer for details",
   "04O": "Not Equipped with Driver and Front Passenger Ventilated Seat Cushion Blower Motor, see dealer for details",
@@ -2590,6 +2614,8 @@ const ct4vRpo = {
 }
 
 const ct5Rpo = {
+  "SLL": "Retail Orders",
+  "SLM": "Stock Orders",
   "GAI": "DEEP SPACE METALLIC",
   "53S": "Steering wheel, sueded microfiber",
   "57M": "Wheels, 19\" (48.3 cm) alloy with Satin Graphite finish",
@@ -2893,6 +2919,8 @@ const ct5Rpo = {
 }
 
 const ct5vRpo = {
+  "SLL": "Retail Orders",
+  "SLM": "Stock Orders",
   "GAI": "DEEP SPACE METALLIC",
   "00Z": "Not Equipped with Front and Rear Park Assist and Reverse Automatic Braking, see dealer for details",
   "04O": "Not Equipped with Driver and Front Passenger Ventilated Seat Cushion Blower Motor, see dealer for details",
@@ -3214,6 +3242,8 @@ const ct5vRpo = {
 }
 
 const hummerRpo = {
+  "SLL": "Retail Orders",
+  "SLM": "Stock Orders",
   "GAI": "GRAPHITE BLUE METALLIC",
   "OAR": "Pre-Production Vehicle",
   "R7V": "Show Vehicle ID",
@@ -3441,6 +3471,8 @@ const hummerRpo = {
 }
 
 const hummersuvRpo = {
+  "SLL": "Retail Orders",
+  "SLM": "Stock Orders",
   "GAI": "GRAPHITE BLUE METALLIC",
   "OAR": "Pre-Production Vehicle",
   "R7V": "Show Vehicle ID",
@@ -3658,11 +3690,15 @@ const hummersuvRpo = {
 }
 
 const celestiqRpo = {
+  "SLL": "Retail Orders",
+  "SLM": "Stock Orders",
   "EXN": "16 Module Battery Pack",
   "EHT": "16 Module Battery Pack, Config B"
 }
 
 const silveradoevRpo = {
+  "SLL": "Retail Orders",
+  "SLM": "Stock Orders",
   "GAI": "BLUE SMOKE METALLIC",
   "5AV": "LPO, GM Energy PowerShift Charger, Residential bidirectional EV charger",
   "5CH": "LPO, GM PowerUp 2 (J1772) Charger, Residential EV charger",

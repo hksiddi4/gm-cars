@@ -339,22 +339,22 @@
                                 <% } %>
 
                                 <% if (stats.available_models && stats.available_models.length > 0) { %>
-                                    <div class="statsDropdown m-0" style="width: 220px;">
-                                        <select id="modelFilter" class="form-select small-dropdown m-0 <%= typeof selectedModel !== 'undefined' && selectedModel ? 'active-filter' : '' %>" aria-label="Filter by model" style="height: 36px;">
-                                            <option value="">All Models</option>
-                                            <% 
-                                                let dailyModels = [...stats.available_models];
-                                                if (dailyModels.filter(m => m.startsWith('CORVETTE')).length > 1 && !dailyModels.includes('CORVETTE (C8)')) {
-                                                    dailyModels.push('CORVETTE (C8)');
-                                                }
-                                                dailyModels.sort((a, b) => a.localeCompare(b));
-                                                dailyModels.forEach(function(m) { 
-                                            %>
-                                                <option value="<%= m %>" <%= typeof selectedModel !== 'undefined' && selectedModel === m ? 'selected' : '' %>><%= m %></option>
-                                            <% }); %>
-                                        </select>
-                                    </div>
-                                <% } %>
+                                <div class="statsDropdown m-0" style="max-width: 100%; flex: 0 1 auto;">
+                                    <select id="modelFilter" class="form-select small-dropdown m-0 <%= typeof selectedModel !== 'undefined' && selectedModel ? 'active-filter' : '' %>" aria-label="Filter by model" style="height: 36px; width: auto; max-width: 100%; min-width: 160px;">
+                                        <option value="">All Models</option>
+                                        <% 
+                                            let dailyModels = [...stats.available_models];
+                                            if (dailyModels.filter(m => m.startsWith('CORVETTE')).length > 1 && !dailyModels.includes('CORVETTE (C8)')) {
+                                                dailyModels.push('CORVETTE (C8)');
+                                            }
+                                            dailyModels.sort((a, b) => a.localeCompare(b));
+                                            dailyModels.forEach(function(m) { 
+                                        %>
+                                            <option value="<%= m %>" <%= typeof selectedModel !== 'undefined' && selectedModel === m ? 'selected' : '' %>><%= m %></option>
+                                        <% }); %>
+                                    </select>
+                                </div>
+                            <% } %>
 
                                 <!-- 3-Way Order Type Toggle (Moved right, heights and padding standardized) -->
                                 <div class="btn-group m-0 shadow-sm" role="group" aria-label="Order Type Filter" style="height: 36px; border: 1px solid #444; border-radius: 4px;">
@@ -1245,7 +1245,7 @@
                 createChart('bodyChart', 'doughnut', rawData.body, 'body');
                 createChart('engineChart', 'doughnut', rawData.engine, 'engine');
                 createChart('transChart', 'doughnut', rawData.trans, 'trans');
-                createChart('drivetrainChart', 'pie', rawData.drivetrain, 'drivetrain');
+                createChart('drivetrainChart', 'doughnut', rawData.drivetrain, 'drivetrain');
                 
                 createChart('trimChart', 'bar', rawData.trim, 'trim', { indexAxis: 'y', scales: { y: { ticks: { autoSkip: false, font: { size: chartFontSize } } } } });
 

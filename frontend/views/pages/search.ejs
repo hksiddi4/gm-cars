@@ -354,26 +354,10 @@
       }
 
       const allRpoDescriptions = {
-        ...intColor,
-        ...invertedColorMap,
-        ...camaroRpo,
-        ...corvetteRpo,
-        ...corvetteGSXRpo,
-        ...corvetteGSRpo,
-        ...stingrayRpo,
-        ...z06Rpo,
-        ...erayRpo,
-        ...zr1Rpo,
-        ...escaladeRpo,
-        ...escaladeiqRpo,
-        ...ct4Rpo,
-        ...ct4vRpo,
-        ...ct5Rpo,
-        ...ct5vRpo,
-        ...hummerRpo,
-        ...hummersuvRpo,
-        ...celestiqRpo,
-        ...silveradoevRpo,
+        ...intColor, ...invertedColorMap, ...camaroRpo, ...corvetteRpo, ...corvetteGSXRpo,
+        ...corvetteGSRpo, ...stingrayRpo, ...z06Rpo, ...erayRpo, ...zr1Rpo, ...escaladeRpo,
+        ...escaladeiqRpo, ...ct4Rpo, ...ct4vRpo, ...ct5Rpo, ...ct5vRpo, ...hummerRpo,
+        ...hummersuvRpo, ...celestiqRpo, ...silveradoevRpo,
       };
 
       function renderRpoCards(vin) {
@@ -537,9 +521,10 @@
           options = options.filter(code => code !== "T3S");
         }
       } else {
-        if (["1YC07", "1YC67", "1YY07", "1YY67", "1YW07", "1YW67", "1YX07", "1YX67", "1YE07", "1YE67", "1YG07", "1YG67",].includes(mmc_code)) {
+        // E-Ray MMC codes (1YG) moved to the LZ array below
+        if (["1YC07", "1YC67", "1YY07", "1YY67", "1YW07", "1YW67", "1YX07", "1YX67", "1YE07", "1YE67"].includes(mmc_code)) {
           trim = options.find(opt => ["1LT", "2LT", "3LT"].includes(opt)) || trim;
-        } else if (["1YH07", "1YH67", "1YR07", "1YR67", "1YZ07", "1YZ67", "1YS07", "1YS67"].includes(mmc_code)) {
+        } else if (["1YH07", "1YH67", "1YR07", "1YR67", "1YZ07", "1YZ67", "1YS07", "1YS67", "1YG07", "1YG67"].includes(mmc_code)) {
           trim = options.find(opt => ["1LZ", "2LZ", "3LZ"].includes(opt)) || trim;
         } else if (["1YV07", "1YV67"].includes(mmc_code)) {
           trim = options.find(opt => ["1ZR", "3ZR"].includes(opt)) || trim;
@@ -702,9 +687,16 @@
           for (let i = 1; i <= intMax; i++) {
             urls.push(`/gm-images/mmgprod-us/dynres/prove/imageinterior.gen?i=${modelYear}/${mmc_code}/${mmc_code}__${trim}/${colorInt}_${rpos}gmds10.png&v=deg${String(i).padStart(2, '0')}&std=true&country=US&send404=true&transparentBackgroundPng=true`);
           }
-          //console.log('Generated URLs:', urls); // Debug line
         } else {
           urls = [ghostImg];
+          console.warn(`[ImageGen Blocked] Missing required parameters for image generation.`, {
+            Model: derivedModel,
+            Year: modelYear,
+            MMC_Code: mmc_code,
+            Trim: trim,
+            ExtColor: color,
+            IntColor: colorInt
+          });
         }
 
         gallery.innerHTML = '';
@@ -772,6 +764,15 @@
           if (!warningDiv.innerHTML.includes('Image generation does not support')) {
             warningDiv.innerHTML += (warningDiv.innerHTML ? '<br>' : '') + `Image generation does not support ${modelYear} ${derivedModel}`;
             warningDiv.style.color = '#e57373';
+            
+            console.warn(`[ImageGen 404] All generated image URLs were rejected by GM's server.`, {
+              Model: derivedModel,
+              Year: modelYear,
+              MMC_Code: mmc_code,
+              Trim: trim,
+              ExtColor: color,
+              IntColor: colorInt
+            });
           }
           
           urls = [ghostImg];

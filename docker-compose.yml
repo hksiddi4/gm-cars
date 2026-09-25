@@ -27,6 +27,7 @@ services:
       - TURNSTILE_SECRET_KEY=${TURNSTILE_SECRET_KEY}
       - SMTP_PASS=${SMTP_PASS}
       - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
+      - DISCORD_RATELIMIT_URL=${DISCORD_RATELIMIT_URL}
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /mnt/NVMe/Apps/GM-Vehicles/public:/app/public:ro

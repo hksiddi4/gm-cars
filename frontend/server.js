@@ -91,7 +91,7 @@ const contactLimiter = rateLimit({
 
 // --- Discord Scraper Alert ---
 const sendDiscordAlert = async (ip, path, userAgent) => {
-    const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
+    const webhookUrl = process.env.DISCORD_RATELIMIT_URL;
     if (!webhookUrl) return;
 
     try {

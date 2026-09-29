@@ -714,6 +714,7 @@
         gallery.innerHTML = '';
         if (urls.length === 1 && urls[0] === ghostImg) {
           gallery.style.display = 'none';
+          document.getElementById('corvette-roof-toggle').style.display = 'none'; // <-- ADD THIS LINE
         } else {
           gallery.style.display = 'flex';
           urls.forEach((imgSrc, index) => {
@@ -777,14 +778,18 @@
             warningDiv.innerHTML += (warningDiv.innerHTML ? '<br>' : '') + `Image generation does not support ${modelYear} ${derivedModel}`;
             warningDiv.style.color = '#e57373';
             
-            console.warn(`[ImageGen 404] All generated image URLs were rejected by GM's server.`, {
-              Model: derivedModel,
-              Year: modelYear,
-              MMC_Code: mmc_code,
-              Trim: trim,
-              ExtColor: color,
-              IntColor: colorInt
-            });
+            const failedCombo = `Year: ${modelYear}, MMC: ${mmc_code}, Trim: ${trim}, Ext: ${color}, Int: ${colorInt}`;
+            console.warn(`[ImageGen 404] GM rejected combination: ${failedCombo}`);
+
+            fetch('/report-missing-image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    vin: vin.vin || 'Unknown',
+                    model: derivedModel || 'Unknown Model',
+                    missing: `GM 404 Rejected \n**Combo:** ${failedCombo}`
+                })
+            }).catch(err => console.error("Failed to report 404 image to Discord", err));
           }
           
           urls = [ghostImg];
@@ -792,6 +797,7 @@
           gallery.innerHTML = ''; 
           document.getElementById('prev').style.display = 'none';
           document.getElementById('next').style.display = 'none';
+          document.getElementById('corvette-roof-toggle').style.display = 'none'; // <-- ADD THIS LINE
       }
 
       function showImage(index, forceUpdate = false) {

@@ -447,7 +447,7 @@ app.post('/contact', contactLimiter, async (req, res) => {
     }
 });
 
-app.post('/api/report-missing-image', express.json(), async (req, res) => {
+app.post('/report-missing-image', express.json(), async (req, res) => {
     try {
         const { vin, model, missing } = req.body;
         

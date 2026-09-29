@@ -700,7 +700,7 @@
 
           console.warn(`[ImageGen Blocked] Missing required parameters: ${missingString}`);
 
-          fetch('/api/report-missing-image', {
+          fetch('/report-missing-image', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({

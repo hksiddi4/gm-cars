@@ -521,11 +521,19 @@
           options = options.filter(code => code !== "T3S");
         }
       } else {
-        // E-Ray MMC codes (1YG) moved to the LZ array below
-        if (["1YC07", "1YC67", "1YY07", "1YY67", "1YW07", "1YW67", "1YX07", "1YX67", "1YE07", "1YE67", "1YG07", "1YG67"].includes(mmc_code)) {
-          trim = options.find(opt => ["1LT", "2LT", "3LT"].includes(opt)) || trim;
+        if (["1YC07", "1YC67", "1YY07", "1YY67", "1YW07", "1YW67", "1YX07", "1YX67", "1YE07", "1YE67"].includes(mmc_code)) {
+          trim = options.find(opt => ["1LT", "2LT", "3LT"].includes(opt)) 
+                 || trim 
+                 || (vehicleTrim.match(/[1-3]LT/) ? vehicleTrim.match(/[1-3]LT/)[0] : "2LT");
         } else if (["1YH07", "1YH67", "1YR07", "1YR67", "1YZ07", "1YZ67", "1YS07", "1YS67"].includes(mmc_code)) {
-          trim = options.find(opt => ["1LZ", "2LZ", "3LZ"].includes(opt)) || trim;
+          trim = options.find(opt => ["1LZ", "2LZ", "3LZ"].includes(opt)) 
+                 || trim 
+                 || (vehicleTrim.match(/[1-3]LZ/) ? vehicleTrim.match(/[1-3]LZ/)[0] : "2LZ");
+        } else if (["1YG07", "1YG67"].includes(mmc_code)) {
+          // Shared MMC: E-Ray uses LZ, Grand Sport X uses LT
+          trim = options.find(opt => ["1LZ", "2LZ", "3LZ", "1LT", "2LT", "3LT"].includes(opt)) 
+                 || trim 
+                 || (vehicleTrim.match(/[1-3]L[TZ]/) ? vehicleTrim.match(/[1-3]L[TZ]/)[0] : "2LZ");
         } else if (["1YV07", "1YV67"].includes(mmc_code)) {
           trim = options.find(opt => ["1ZR", "3ZR"].includes(opt)) || trim;
         } else if (["1AH37", "1AH67"].includes(mmc_code)) {

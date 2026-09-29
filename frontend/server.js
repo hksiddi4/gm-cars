@@ -447,6 +447,29 @@ app.post('/contact', contactLimiter, async (req, res) => {
     }
 });
 
+app.post('/api/report-missing-image', express.json(), async (req, res) => {
+    try {
+        const { vin, model, missing } = req.body;
+        
+        // Prevent abuse by ensuring the payload exists
+        if (!vin || !missing) {
+            return res.status(400).send('Invalid payload');
+        }
+
+        const alertMessage = `⚠️ **ImageGen Blocked**\nA user viewed a vehicle missing required image parameters.\n**VIN:** ${vin}\n**Model:** ${model}\n**Missing:** ${missing}`;
+        
+        // Fire your existing Discord webhook function
+        if (typeof sendDiscordAlert === 'function') {
+            await sendDiscordAlert(alertMessage);
+        }
+        
+        res.status(200).send({ success: true });
+    } catch (error) {
+        console.error('Error sending Discord image alert:', error);
+        res.status(500).send({ success: false });
+    }
+});
+
 app.get('/maintenance', (req, res) => {
     res.render('pages/errors/maintenance', {
         pagePath: '/maintenance',

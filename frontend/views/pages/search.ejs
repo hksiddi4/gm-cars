@@ -689,14 +689,26 @@
           }
         } else {
           urls = [ghostImg];
-          console.warn(`[ImageGen Blocked] Missing required parameters for image generation.`, {
-            Model: derivedModel,
-            Year: modelYear,
-            MMC_Code: mmc_code,
-            Trim: trim,
-            ExtColor: color,
-            IntColor: colorInt
-          });
+          const missingParams = [];
+          if (!modelYear) missingParams.push('Year');
+          if (!mmc_code) missingParams.push('MMC_Code');
+          if (!trim) missingParams.push('Trim');
+          if (!color) missingParams.push('ExtColor');
+          if (!colorInt) missingParams.push('IntColor');
+
+          const missingString = missingParams.join(', ');
+
+          console.warn(`[ImageGen Blocked] Missing required parameters: ${missingString}`);
+
+          fetch('/api/report-missing-image', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                  vin: vin.vin || 'Unknown',
+                  model: derivedModel || 'Unknown Model',
+                  missing: missingString
+              })
+          }).catch(err => console.error("Failed to report missing image", err));
         }
 
         gallery.innerHTML = '';

@@ -89,15 +89,21 @@ const contactLimiter = rateLimit({
     }
 });
 
-// --- Discord Scraper Alert ---
-const sendDiscordAlert = async (ip, path, userAgent) => {
+// --- Discord Alerts ---
+const sendDiscordAlert = async (type, payload) => {
     const webhookUrl = process.env.DISCORD_RATELIMIT_URL;
     if (!webhookUrl) return;
 
+    let content = '';
+
+    if (type === 'ratelimit') {
+        content = `🚨 **Inhuman Search Pace Detected** 🚨\n**IP:** \`${payload.ip}\`\n**Path:** \`${payload.path}\`\n**User-Agent:** \`${payload.userAgent || 'Unknown'}\``;
+    } else if (type === 'image') {
+        content = `⚠️ **ImageGen Blocked** ⚠️\nA user viewed a vehicle missing required image parameters.\n**VIN:** \`${payload.vin}\`\n**Model:** ${payload.model}\n**Missing:** ${payload.missing}`;
+    }
+
     try {
-        await axios.post(webhookUrl, {
-            content: `🚨 **Inhuman Search Pace Detected** 🚨\n**IP:** \`${ip}\`\n**Path:** \`${path}\`\n**User-Agent:** \`${userAgent || 'Unknown'}\``
-        });
+        await axios.post(webhookUrl, { content });
     } catch (err) {
         console.error("Discord webhook failed:", err.message);
     }
@@ -157,7 +163,7 @@ const searchLimiter = rateLimit({
         const userAgent = req.headers['user-agent'] || 'Unknown';
         
         // 1. Fire the Discord alert silently in the background
-        sendDiscordAlert(ip, req.originalUrl, userAgent);
+        sendDiscordAlert('ratelimit', { ip, path: req.originalUrl, userAgent });
         
         // 2. Serve the user the 429 error gracefully
         res.status(429).render('pages/errors/400', { 
@@ -456,11 +462,9 @@ app.post('/report-missing-image', express.json(), async (req, res) => {
             return res.status(400).send('Invalid payload');
         }
 
-        const alertMessage = `⚠️ **ImageGen Blocked**\nA user viewed a vehicle missing required image parameters.\n**VIN:** ${vin}\n**Model:** ${model}\n**Missing:** ${missing}`;
-        
         // Fire your existing Discord webhook function
         if (typeof sendDiscordAlert === 'function') {
-            await sendDiscordAlert(alertMessage);
+            await sendDiscordAlert('image', { vin, model, missing });
         }
         
         res.status(200).send({ success: true });

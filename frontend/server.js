@@ -99,7 +99,7 @@ const sendDiscordAlert = async (type, payload) => {
     if (type === 'ratelimit') {
         content = `🚨 **Inhuman Search Pace Detected** 🚨\n**IP:** \`${payload.ip}\`\n**Path:** \`${payload.path}\`\n**User-Agent:** \`${payload.userAgent || 'Unknown'}\``;
     } else if (type === 'image') {
-        content = `⚠️ **ImageGen Blocked** ⚠️\nA user viewed a vehicle missing required image parameters.\n**VIN:** \`${payload.vin}\`\n**Model:** ${payload.model}\n**Missing:** ${payload.missing}`;
+        content = `⚠️ **ImageGen Blocked** ⚠️\n**VIN:** \`${payload.vin}\`\n**Model:** ${payload.model}\n**Missing:** ${payload.missing}`;
     }
 
     try {

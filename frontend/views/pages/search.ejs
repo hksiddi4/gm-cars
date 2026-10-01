@@ -397,7 +397,7 @@
               const vCandidates = [
                   `${subPrefix}-${rpoCode}`,
                   (subPrefix === 'CORVETTE-GRAND_SPORT_X') ? `CORVETTE-GRAND_SPORT-${rpoCode}` : null,
-                  (subPrefix === 'CORVETTE-GRAND_SPORT_X' || subPrefix === 'CORVETTE-GRAND_SPORT') ? `CORVETTE-STINGRAY-${rpoCode}` : null,
+                  (subPrefix !== 'CORVETTE-STINGRAY') ? `CORVETTE-STINGRAY-${rpoCode}` : null,
                   (subPrefix === 'CORVETTE-ZR1X') ? `CORVETTE-ZR1-${rpoCode}` : null,
                   (subPrefix === 'CORVETTE-ZR1X') ? `CORVETTE-Z06-${rpoCode}` : null,
                   `CORVETTE-${rpoCode}` // Base Corvette shared folder

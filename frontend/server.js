@@ -332,15 +332,16 @@ function getRpoImageCandidates(modelUpper, vehicleTrim, rpoCode, options = []) {
         candidates.push(`${subPrefix}-${rpoCode}`);
 
         // Submodel fallbacks
-        if (subPrefix === 'CORVETTE-GRAND_SPORT_X') {
-            candidates.push(`CORVETTE-GRAND_SPORT-${rpoCode}`);
-            candidates.push(`CORVETTE-STINGRAY-${rpoCode}`);
-        } else if (subPrefix === 'CORVETTE-GRAND_SPORT') {
-            candidates.push(`CORVETTE-STINGRAY-${rpoCode}`);
-        } else if (subPrefix === 'CORVETTE-ZR1X') {
-            candidates.push(`CORVETTE-ZR1-${rpoCode}`);
-            candidates.push(`CORVETTE-Z06-${rpoCode}`);
-        }
+          if (subPrefix === 'CORVETTE-GRAND_SPORT_X') {
+              candidates.push(`CORVETTE-GRAND_SPORT-${rpoCode}`);
+          } else if (subPrefix === 'CORVETTE-ZR1X') {
+              candidates.push(`CORVETTE-ZR1-${rpoCode}`);
+              candidates.push(`CORVETTE-Z06-${rpoCode}`);
+          }
+
+          if (subPrefix !== 'CORVETTE-STINGRAY') {
+              candidates.push(`CORVETTE-STINGRAY-${rpoCode}`);
+          }
 
         // Base Corvette shared folder (/img/rpos/corvette/RPO.webp)
         candidates.push(`CORVETTE-${rpoCode}`);
@@ -887,3 +888,4 @@ const port = 80;
 app.listen(port, "0.0.0.0", () => {
     console.log(`Server running on port ${port}`);
 });
+

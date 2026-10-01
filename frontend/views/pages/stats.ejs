@@ -1656,7 +1656,7 @@
 
     <!-- Rarity / Trend Scripts -->
     <% if (!isDashboard && typeof stats_data !== 'undefined' && stats_data.length > 0) { %>
-        <script src="/js/scroll-sync.js" nonce="<%= nonce %>"></script>
+        <script src="/js/scroll-sync.js?v=1.1" nonce="<%= nonce %>"></script>
         <script nonce="<%= nonce %>">
             const stats_data = <%- JSON.stringify(stats_data) %>;
             const currentCategory = '<%= activeCategory %>';

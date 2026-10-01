@@ -389,29 +389,56 @@
           cardWrapper.className = 'rpo-wrapper';
           container.appendChild(cardWrapper);
 
-          let imgSrc = localRpoImageMap[`${prefixKey}-${rpoCode}`];
+          // Resolve RPO image hierarchically within this model's family only
+          let imgSrc = null;
+          
+          if (modelUpper.startsWith('CORVETTE')) {
+              let subPrefix = prefixKey;
+              const vCandidates = [
+                  `${subPrefix}-${rpoCode}`,
+                  (subPrefix === 'CORVETTE-GRAND_SPORT_X') ? `CORVETTE-GRAND_SPORT-${rpoCode}` : null,
+                  (subPrefix === 'CORVETTE-GRAND_SPORT_X' || subPrefix === 'CORVETTE-GRAND_SPORT') ? `CORVETTE-STINGRAY-${rpoCode}` : null,
+                  (subPrefix === 'CORVETTE-ZR1X') ? `CORVETTE-ZR1-${rpoCode}` : null,
+                  (subPrefix === 'CORVETTE-ZR1X') ? `CORVETTE-Z06-${rpoCode}` : null,
+                  `CORVETTE-${rpoCode}` // Base Corvette shared folder
+              ].filter(Boolean);
 
-          if (!imgSrc && modelUpper.startsWith('CORVETTE')) {
-              imgSrc = localRpoImageMap[`CORVETTE-GRAND_SPORT_X-${rpoCode}`] ||
-                       localRpoImageMap[`CORVETTE-GRAND_SPORT-${rpoCode}`] ||
-                       localRpoImageMap[`CORVETTE-Z06-${rpoCode}`] ||
-                       localRpoImageMap[`CORVETTE-ZR1X-${rpoCode}`] ||
-                       localRpoImageMap[`CORVETTE-ZR1-${rpoCode}`] ||
-                       localRpoImageMap[`CORVETTE-E-RAY-${rpoCode}`] ||
-                       localRpoImageMap[`CORVETTE-STINGRAY-${rpoCode}`];
+              for (const key of vCandidates) {
+                  if (localRpoImageMap[key]) {
+                      imgSrc = localRpoImageMap[key];
+                      break;
+                  }
+              }
+          } else if (modelUpper.startsWith('CT4')) {
+              const cCandidates = [
+                  vehicleTrim.startsWith('V-SERIES') ? `CT4V-${rpoCode}` : null,
+                  `CT4-${rpoCode}`,
+                  `CADILLAC-${rpoCode}`
+              ].filter(Boolean);
+              for (const key of cCandidates) {
+                  if (localRpoImageMap[key]) { imgSrc = localRpoImageMap[key]; break; }
+              }
+          } else if (modelUpper.startsWith('CT5')) {
+              const cCandidates = [
+                  vehicleTrim.startsWith('V-SERIES') ? `CT5V-${rpoCode}` : null,
+                  `CT5-${rpoCode}`,
+                  `CADILLAC-${rpoCode}`
+              ].filter(Boolean);
+              for (const key of cCandidates) {
+                  if (localRpoImageMap[key]) { imgSrc = localRpoImageMap[key]; break; }
+              }
+          } else if (modelUpper.startsWith('HUMMER')) {
+              const hCandidates = [`${prefixKey}-${rpoCode}`, `HUMMER-${rpoCode}`, `GMC-${rpoCode}`];
+              for (const key of hCandidates) {
+                  if (localRpoImageMap[key]) { imgSrc = localRpoImageMap[key]; break; }
+              }
+          } else {
+              imgSrc = localRpoImageMap[`${prefixKey}-${rpoCode}`];
           }
 
-          // Check the map first
-          imgSrc = imgSrc || localRpoImageMap[rpoCode];
-
-          // If not in the map, only try the folder path if the backend verified it exists
+          // If no model-family image exists, fall back to brand logo
           if (!imgSrc) {
-            if (typeof verifiedRpoImages !== 'undefined' && verifiedRpoImages.includes(rpoCode)) {
-              imgSrc = `/img/rpos/${folderName}/${rpoCode}.webp`;
-            } else {
-              // Skip the 404 entirely and go straight to the fallback logo
-              imgSrc = fallbackPath; 
-            }
+              imgSrc = fallbackPath;
           }
 
           const cardLink = document.createElement('a');
@@ -530,10 +557,16 @@
                  || trim 
                  || (vehicleTrim.match(/[1-3]LZ/) ? vehicleTrim.match(/[1-3]LZ/)[0] : "2LZ");
         } else if (["1YG07", "1YG67"].includes(mmc_code)) {
-          // Shared MMC: E-Ray uses LZ, Grand Sport X uses LT
-          trim = options.find(opt => ["1LZ", "2LZ", "3LZ", "1LT", "2LT", "3LT"].includes(opt)) 
-                 || trim 
-                 || (vehicleTrim.match(/[1-3]L[TZ]/) ? vehicleTrim.match(/[1-3]L[TZ]/)[0] : "2LZ");
+          // Shared MMC: E-Ray uses LZ, Grand Sport / GSX uses LT
+          if (derivedModel.includes('GRAND SPORT')) {
+              trim = options.find(opt => ["1LT", "2LT", "3LT"].includes(opt)) 
+                     || trim 
+                     || (vehicleTrim.match(/[1-3]LT/) ? vehicleTrim.match(/[1-3]LT/)[0] : "2LT");
+          } else {
+              trim = options.find(opt => ["1LZ", "2LZ", "3LZ"].includes(opt)) 
+                     || trim 
+                     || (vehicleTrim.match(/[1-3]LZ/) ? vehicleTrim.match(/[1-3]LZ/)[0] : "2LZ");
+          }
         } else if (["1YV07", "1YV67"].includes(mmc_code)) {
           trim = options.find(opt => ["1ZR", "3ZR"].includes(opt)) || trim;
         } else if (["1AH37", "1AH67"].includes(mmc_code)) {

@@ -309,10 +309,102 @@ function getHeaderImages() {
     }
 }
 
+// --- Helper to get hierarchical RPO image candidate keys ---
+function getRpoImageCandidates(modelUpper, vehicleTrim, rpoCode, options = []) {
+    const candidates = [];
+    
+    if (modelUpper.startsWith('CORVETTE')) {
+        let subPrefix = 'CORVETTE-STINGRAY';
+        if (modelUpper.includes('ZR1X') || (options.includes('LT7') && options.includes('ZTK')) || vehicleTrim.includes('ZR1X')) {
+            subPrefix = 'CORVETTE-ZR1X';
+        } else if (modelUpper.includes('ZR1') || options.includes('LT7')) {
+            subPrefix = 'CORVETTE-ZR1';
+        } else if (modelUpper.includes('Z06') || options.includes('LT6')) {
+            subPrefix = 'CORVETTE-Z06';
+        } else if (modelUpper.includes('GRAND SPORT X') || (options.includes('LS6') && (vehicleTrim.includes('GSX') || modelUpper.includes('X')))) {
+            subPrefix = 'CORVETTE-GRAND_SPORT_X';
+        } else if (modelUpper.includes('GRAND SPORT') || options.includes('LS6')) {
+            subPrefix = 'CORVETTE-GRAND_SPORT';
+        } else if (modelUpper.includes('E-RAY') || options.includes('HP1')) {
+            subPrefix = 'CORVETTE-E-RAY';
+        }
+
+        candidates.push(`${subPrefix}-${rpoCode}`);
+
+        // Submodel fallbacks
+        if (subPrefix === 'CORVETTE-GRAND_SPORT_X') {
+            candidates.push(`CORVETTE-GRAND_SPORT-${rpoCode}`);
+            candidates.push(`CORVETTE-STINGRAY-${rpoCode}`);
+        } else if (subPrefix === 'CORVETTE-GRAND_SPORT') {
+            candidates.push(`CORVETTE-STINGRAY-${rpoCode}`);
+        } else if (subPrefix === 'CORVETTE-ZR1X') {
+            candidates.push(`CORVETTE-ZR1-${rpoCode}`);
+            candidates.push(`CORVETTE-Z06-${rpoCode}`);
+        }
+
+        // Base Corvette shared folder (/img/rpos/corvette/RPO.webp)
+        candidates.push(`CORVETTE-${rpoCode}`);
+
+    } else if (modelUpper === 'CAMARO') {
+        candidates.push(`CAMARO-${rpoCode}`);
+
+    } else if (modelUpper.startsWith('CT4')) {
+        if (vehicleTrim.startsWith('V-SERIES') || modelUpper.includes('V')) {
+            candidates.push(`CT4V-${rpoCode}`);
+            candidates.push(`CT4-${rpoCode}`);
+        } else {
+            candidates.push(`CT4-${rpoCode}`);
+        }
+        candidates.push(`CADILLAC-${rpoCode}`);
+
+    } else if (modelUpper.startsWith('CT5')) {
+        if (vehicleTrim.startsWith('V-SERIES') || modelUpper.includes('V')) {
+            candidates.push(`CT5V-${rpoCode}`);
+            candidates.push(`CT5-${rpoCode}`);
+        } else {
+            candidates.push(`CT5-${rpoCode}`);
+        }
+        candidates.push(`CADILLAC-${rpoCode}`);
+
+    } else if (modelUpper.includes('ESCALADE IQ')) {
+        candidates.push(`ESCALADEIQ-${rpoCode}`);
+        candidates.push(`ESCALADE-IQ-${rpoCode}`);
+        candidates.push(`ESCALADE-${rpoCode}`);
+        candidates.push(`CADILLAC-${rpoCode}`);
+
+    } else if (modelUpper.startsWith('ESCALADE')) {
+        candidates.push(`ESCALADE-${rpoCode}`);
+        candidates.push(`CADILLAC-${rpoCode}`);
+
+    } else if (modelUpper === 'HUMMER EV SUV') {
+        candidates.push(`HUMMERSUV-${rpoCode}`);
+        candidates.push(`HUMMER-${rpoCode}`);
+        candidates.push(`GMC-${rpoCode}`);
+
+    } else if (modelUpper === 'HUMMER EV PICKUP') {
+        candidates.push(`HUMMER-${rpoCode}`);
+        candidates.push(`GMC-${rpoCode}`);
+
+    } else if (modelUpper === 'SIERRA EV') {
+        candidates.push(`SIERRAEV-${rpoCode}`);
+        candidates.push(`SIERRA-EV-${rpoCode}`);
+        candidates.push(`GMC-${rpoCode}`);
+
+    } else if (modelUpper === 'SILVERADO EV') {
+        candidates.push(`SILVERADOEV-${rpoCode}`);
+        candidates.push(`SILVERADO-EV-${rpoCode}`);
+        candidates.push(`CHEVROLET-${rpoCode}`);
+    } else {
+        candidates.push(`${modelUpper.replace(/ /g, '-')}-${rpoCode}`);
+        candidates.push(`${modelUpper.replace(/ /g, '')}-${rpoCode}`);
+    }
+
+    return candidates;
+}
+
 function getLocalImageRPOs() {
     const localRpoImages = {};
     try {
-        // Recursive function to dig into nested folders like corvette/z06
         function scanDirectory(currentPath, prefix = '') {
             const entries = fs.readdirSync(currentPath, { withFileTypes: true });
             entries.forEach(entry => {
@@ -320,11 +412,14 @@ function getLocalImageRPOs() {
                     scanDirectory(path.join(currentPath, entry.name), prefix ? `${prefix}/${entry.name}` : entry.name);
                 } else if (/\.(webp)$/i.test(entry.name)) {
                     const rpoCode = path.parse(entry.name).name.toUpperCase();
-                    const imagePath = `/img/rpos/${prefix}/${entry.name}`;
+                    const imagePath = `/img/rpos/${prefix ? prefix + '/' : ''}${entry.name}`;
                     
-                    // Add to map (e.g., CORVETTE-Z06-RPO or just RPO)
-                    localRpoImages[`${prefix.replace(/\//g, '-').toUpperCase()}-${rpoCode}`] = imagePath;
-                    if (!localRpoImages[rpoCode]) localRpoImages[rpoCode] = imagePath;
+                    if (prefix) {
+                        const formattedPrefix = prefix.replace(/\//g, '-').toUpperCase();
+                        localRpoImages[`${formattedPrefix}-${rpoCode}`] = imagePath;
+                    } else {
+                        localRpoImages[rpoCode] = imagePath;
+                    }
                 }
             });
         }
@@ -578,36 +673,9 @@ app.get('/search', searchLimiter, async (req, res) => {
             const modelUpper = vehicle.model?.toUpperCase() || '';
             const vehicleTrim = vehicle.trim || '';
             
-            // Generate the exact prefix matching localRpoImageMap for instant memory lookups
-            let prefixKey = modelUpper.replace(/ /g, '-');
-            
-            if (modelUpper.startsWith('CORVETTE')) {
-                if (vehicle.rpo_codes.includes('LT6')) {
-                    prefixKey = 'CORVETTE-Z06';
-                } else if (vehicle.rpo_codes.includes('LT7')) {
-                    prefixKey = (vehicleTrim.includes('ZR1X') || vehicle.rpo_codes.includes('ZTK')) ? 'CORVETTE-ZR1X' : 'CORVETTE-ZR1';
-                } else if (vehicle.rpo_codes.includes('HP1')) {
-                    prefixKey = 'CORVETTE-E-RAY';
-                } else if (vehicle.rpo_codes.includes('LS6')) {
-                    prefixKey = (vehicleTrim === 'GRAND SPORT X') ? 'CORVETTE-GRAND_SPORT_X' : 'CORVETTE-GRAND_SPORT';
-                } else {
-                    prefixKey = 'CORVETTE-STINGRAY';
-                }
-            } else if (modelUpper === 'ESCALADE IQ') {
-                prefixKey = 'ESCALADEIQ';
-            } else if (modelUpper === 'CT4' && vehicleTrim.startsWith('V-SERIES')) {
-                prefixKey = 'CT4V';
-            } else if (modelUpper === 'CT5' && vehicleTrim.startsWith('V-SERIES')) {
-                prefixKey = 'CT5V';
-            } else if (modelUpper === 'HUMMER EV PICKUP') {
-                prefixKey = 'HUMMER';
-            } else if (modelUpper === 'HUMMER EV SUV') {
-                prefixKey = 'HUMMERSUV';
-            }
-
             vehicle.rpo_codes.forEach(rpoCode => {
-                // Instantly checks the in-memory map instead of slow file system operations
-                if (localRpoImageMap[`${prefixKey}-${rpoCode}`] || localRpoImageMap[rpoCode]) {
+                const candidates = getRpoImageCandidates(modelUpper, vehicleTrim, rpoCode, vehicle.rpo_codes);
+                if (candidates.some(key => localRpoImageMap[key])) {
                     verifiedRpoImages.push(rpoCode);
                 }
             });

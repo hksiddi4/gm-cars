@@ -82,16 +82,17 @@
         }
         .annual-modal-overlay.show { 
             display: flex; 
-            align-items: flex-end; 
+            align-items: center; 
             justify-content: center; 
+            padding: 2rem;
         }
         .annual-modal-content {
             background-color: #2b2b2b;
             border: 1px solid #444;
-            border-radius: 16px 16px 0 0;
+            border-radius: 16px;
             width: 100%;
             max-width: 1200px;
-            margin: 0; 
+            margin: auto; 
             padding: 1.5rem;
             color: #e0e0e0;
             box-shadow: 0 -8px 24px rgba(0,0,0,0.5);
@@ -230,8 +231,9 @@
                 padding: 0.4rem 0.7rem !important;
             }
             .daily-cal-icon { font-size: 1.35rem; }
-            .annual-modal-overlay {
+            .annual-modal-overlay.show {
                 align-items: flex-end;
+                padding: 0;
             }
             .annual-modal-content {
                 padding: 1rem;

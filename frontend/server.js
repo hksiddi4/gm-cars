@@ -250,6 +250,21 @@ const baseURL = 'http://backend:5000';
 // Axios instance with default timeout
 const axiosInstance = axios.create({ timeout: 240000 });
 
+// API Request Caching
+const apiCache = new Map();
+const originalGet = axiosInstance.get;
+axiosInstance.get = async (url, config) => {
+    const key = url + JSON.stringify(config?.params || {});
+    const cached = apiCache.get(key);
+    if (cached && Date.now() - cached.timestamp < 5 * 60 * 1000) {
+        return { data: cached.data };
+    }
+    const response = await originalGet.call(axiosInstance, url, config);
+    if (apiCache.size > 1000) apiCache.clear();
+    apiCache.set(key, { timestamp: Date.now(), data: response.data });
+    return response;
+};
+
 // App Configuration
 app.use(compression());
 app.set('trust proxy', 1);
@@ -695,7 +710,13 @@ app.get('/search', searchLimiter, async (req, res) => {
         const absoluteStickerPath = path.resolve(baseStickerDir, `${vehicle.vin}.pdf`);
         const relativeStickerPath = path.relative(baseStickerDir, absoluteStickerPath);
 
-        const hasSticker = !relativeStickerPath.startsWith('..') && !path.isAbsolute(relativeStickerPath) && fs.existsSync(absoluteStickerPath);
+        let hasSticker = false;
+        if (!relativeStickerPath.startsWith('..') && !path.isAbsolute(relativeStickerPath)) {
+            try {
+                await fs.promises.access(absoluteStickerPath);
+                hasSticker = true;
+            } catch (err) {}
+        }
         const stickerPath = `/window-stickers/${formattedModel}_${vehicle.modelYear}/${vehicle.vin}.pdf`; 
 
         res.render('pages/search', {
@@ -888,4 +909,6 @@ const port = 80;
 app.listen(port, "0.0.0.0", () => {
     console.log(`Server running on port ${port}`);
 });
+
+
 

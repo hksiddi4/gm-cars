@@ -51,7 +51,9 @@ app.use(helmet({
                 "https://www.google.com"
             ],
             fontSrc: ["'self'", "https://cdn.jsdelivr.net"],
-            objectSrc: ["'self'"], 
+            objectSrc: ["'none'"],
+            formAction: ["'self'"],
+            frameAncestors: ["'self'"], 
             frameSrc: [
                 "'self'",
                 "https://challenges.cloudflare.com" // <-- ADD THIS FOR TURNSTILE
@@ -60,9 +62,16 @@ app.use(helmet({
         },
     },
     referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
-    hsts: { maxAge: 31536000, includeSubDomains: true, preload: true }
+    hsts: { maxAge: 31536000, includeSubDomains: true, preload: false },
+    frameguard: false
 }));
 // --- END SECURITY REQUIREMENTS ---
+
+// 4. Set Permissions-Policy (Feature Policy replacement)
+app.use((req, res, next) => {
+    res.setHeader('Permissions-Policy', 'geolocation=(), camera=(), microphone=()');
+    next();
+});
 
 const axios = require('axios');
 const TurndownService = require('turndown');
@@ -913,6 +922,8 @@ const port = 80;
 app.listen(port, "0.0.0.0", () => {
     console.log(`Server running on port ${port}`);
 });
+
+
 
 
 

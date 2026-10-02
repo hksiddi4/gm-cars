@@ -405,6 +405,9 @@
                                     if (typeof selectedModel !== 'undefined' && selectedModel) {
                                         vehLink += `&model=${encodeURIComponent(selectedModel)}`;
                                     }
+                                    if (typeof selectedTrim !== 'undefined' && selectedTrim) {
+                                        vehLink += `&trim=${encodeURIComponent(selectedTrim)}`;
+                                    }
                                     if (typeof selectedOrderType !== 'undefined') {
                                         if (selectedOrderType === 'retail') vehLink += `&rpo=SLL`;
                                         else if (selectedOrderType === 'stock') vehLink += `&rpo=SLM`;
@@ -591,7 +594,10 @@
                                                                 let pkgLink = '';
                                                                 if (mappedRpo) {
                                                                     let rpos = [mappedRpo];
-                                                                    if (typeof selectedOrderType !== 'undefined') {
+                                                                    if (typeof selectedTrim !== 'undefined' && selectedTrim) {
+                                        vehLink += `&trim=${encodeURIComponent(selectedTrim)}`;
+                                    }
+                                    if (typeof selectedOrderType !== 'undefined') {
                                                                         if (selectedOrderType === 'retail') rpos.push('SLL');
                                                                         if (selectedOrderType === 'stock') rpos.push('SLM');
                                                                     }
@@ -1152,6 +1158,9 @@
                             }
 
                             if (window.dashboardSelectedModel && filterParam !== 'model') params.set('model', window.dashboardSelectedModel);
+
+                            const currentUrlParams = new URLSearchParams(window.location.search);
+                            if (currentUrlParams.has('trim') && filterParam !== 'trim') params.set('trim', currentUrlParams.get('trim'));
                             
                             // Inject Retail/Stock RPOs for the Search Page
                             let rpoArr = [];
@@ -2008,11 +2017,23 @@
                                     }
                                     
                                     const params = new URLSearchParams();
-                                    const selectedYearFilter = document.getElementById('filterYear').value;
+                                    const selectedYearFilter = document.getElementById('filterYear')?.value;
                                     if (selectedYearFilter) params.set('year', selectedYearFilter);
                                     
-                                    const selectedModelFilter = document.getElementById('filterModel').value;
+                                    const selectedModelFilter = document.getElementById('filterModel')?.value;
                                     if (selectedModelFilter) params.set('model', selectedModelFilter);
+                                    
+                                    const selectedBodyFilter = document.getElementById('filterBody')?.value;
+                                    if (selectedBodyFilter) params.set('body', selectedBodyFilter);
+                                    
+                                    const selectedTrimFilter = document.getElementById('filterTrim')?.value;
+                                    if (selectedTrimFilter) params.set('trim', selectedTrimFilter);
+                                    
+                                    const selectedEngineFilter = document.getElementById('filterEngine')?.value;
+                                    if (selectedEngineFilter) params.set('engine', selectedEngineFilter);
+                                    
+                                    const selectedTransFilter = document.getElementById('filterTrans')?.value;
+                                    if (selectedTransFilter) params.set('trans', selectedTransFilter);
                                     
                                     params.set(currentCategory, paramValue);
                                     window.location.href = '/vehicles?' + params.toString();
@@ -2186,6 +2207,13 @@
     </script>
 </body>
 </html>
+
+
+
+
+
+
+
 
 
 

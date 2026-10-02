@@ -2,7 +2,11 @@
 <footer class="footer">
     <div class="container d-flex justify-content-between align-items-center px-3">
         <span style="color: rgb(113, 113, 113);">&copy; 2023 - <%= new Date().getFullYear() %> Bumbleboy92</span>
-        <a href="/contact" class="text-decoration-underline" style="color: #717171;" onmouseover="this.style.color='#ffffff'" onmouseout="this.style.color='#717171'">Contact Us</a>
+        <style>
+    .footer-contact-link { color: #717171; transition: color 0.2s; }
+    .footer-contact-link:hover { color: #ffffff; }
+</style>
+        <a href="/contact" class="text-decoration-underline footer-contact-link">Contact Us</a>
     </div>
     <!-- Secure Image Fallback Handler -->
     <script nonce="<%= nonce %>">

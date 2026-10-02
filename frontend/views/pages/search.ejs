@@ -476,7 +476,7 @@
             : `<div style="color: gray; font-style: italic;">No description available</div>`;
 
           card.innerHTML = `
-            <img src="${imgSrc}" alt="${rpoCode}" data-fallback="${fallbackPath}" onerror="this.onerror=null; this.src=this.getAttribute('data-fallback');">
+            <img src="${imgSrc}" alt="${rpoCode}" data-fallback="${fallbackPath}" >
             <p>${rpoCode}</p>
             <div class="rpo-description">${descHTML}</div>
           `;
@@ -1053,6 +1053,7 @@
   </script>
 </body>
 </html>
+
 
 
 

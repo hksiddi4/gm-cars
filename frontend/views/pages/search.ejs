@@ -772,7 +772,8 @@
             thumbWrapper.style.minHeight = '56px';
             thumbWrapper.style.borderRadius = '4px';
             thumbWrapper.style.overflow = 'hidden';
-            thumbWrapper.style.border = '2px solid transparent';
+            thumbWrapper.style.border = '2px solid rgba(209, 209, 209, 0)';
+            thumbWrapper.style.transition = 'border-color 0.3s ease-in-out, opacity 0.3s ease-in-out';
             thumbWrapper.style.cursor = 'pointer';
             
             const thumb = document.createElement('img');
@@ -882,7 +883,9 @@
           }
 
           [...gallery.children].forEach((wrapper, i) => {
-            wrapper.style.border = (i === currentIndex && urls[i]) ? '2px solid #d1d1d1' : '2px solid transparent';
+            const isSelected = (i === currentIndex && urls[i]);
+            wrapper.style.border = isSelected ? '2px solid #d1d1d1' : '2px solid rgba(209, 209, 209, 0)';
+            wrapper.style.opacity = isSelected ? '1' : '0.5';
           });
 
           const el = gallery.children[currentIndex];
@@ -1050,6 +1053,7 @@
   </script>
 </body>
 </html>
+
 
 
 

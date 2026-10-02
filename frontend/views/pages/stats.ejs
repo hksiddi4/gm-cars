@@ -1356,13 +1356,6 @@
                     if (row2) row2.classList.add('justify-content-center');
                 }
                 // ---------------------------------
-                
-                createChart('trimChart', 'bar', rawData.trim, 'trim', { indexAxis: 'y', scales: { y: { ticks: { autoSkip: false, font: { size: chartFontSize } } } } });
-
-                const colorDataToUse = rawData.color || {};
-                if (Object.keys(colorDataToUse).length > 0) {
-                    createChart('colorChart', 'bar', colorDataToUse, 'color', { indexAxis: 'y', scales: { y: { ticks: { autoSkip: false, font: { size: chartFontSize } } } } });
-                }
             }
         </script>
 
@@ -2193,6 +2186,7 @@
     </script>
 </body>
 </html>
+
 
 
 

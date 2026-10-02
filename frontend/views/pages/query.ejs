@@ -179,6 +179,7 @@
         // Global variables for local sorting
         let currentResults = [];
         let currentElapsedTime = '0.00';
+        let currentElapsedMs = 0;
         let sortState = { column: null, direction: 'asc' };
 
         // API Call Logic
@@ -232,7 +233,8 @@
 
                 // --- SUCCESS LOGIC ---
                 currentResults = data.results;
-                currentElapsedTime = ((Date.now() - startTime) / 1000).toFixed(2);
+                currentElapsedMs = Date.now() - startTime;
+                currentElapsedTime = (currentElapsedMs / 1000).toFixed(2);
                 
                 renderTable();
                 setTimeout(updateTopInnerWidth, 100);
@@ -287,12 +289,14 @@
             tBody.innerHTML = '';
 
             if (!currentResults || currentResults.length === 0) {
-                document.getElementById('rowCount').textContent = `Retrieved 0 vehicles in ${currentElapsedTime} seconds`;
+                const timeString = currentElapsedTime === '0.00' ? `${currentElapsedMs} ms` : `${currentElapsedTime} seconds`;
+                document.getElementById('rowCount').textContent = `Retrieved 0 vehicles in ${timeString}`;
                 tBody.innerHTML = '<tr><td class="text-center" colspan="100%">No results found for this query.</td></tr>';
                 return;
             }
 
-            document.getElementById('rowCount').textContent = `Retrieved ${currentResults.length.toLocaleString()} vehicles in ${currentElapsedTime} seconds`;
+            const timeStringSuccess = currentElapsedTime === '0.00' ? `${currentElapsedMs} ms` : `${currentElapsedTime} seconds`;
+            document.getElementById('rowCount').textContent = `Retrieved ${currentResults.length.toLocaleString()} vehicles in ${timeStringSuccess}`;
 
             // Build Header Row dynamically
             const columns = Object.keys(currentResults[0]);
@@ -447,5 +451,7 @@
     </script>
 </body>
 </html>
+
+
 
 

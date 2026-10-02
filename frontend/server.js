@@ -654,6 +654,7 @@ app.get('/vehicles', async (req, res) => {
             totalItems: data.total,
             limit: limit,
             elapsedTime: ((Date.now() - startTime) / 1000).toFixed(2),
+            elapsedMs: Date.now() - startTime,
             selectedYear: req.query.year,
             selectedBody: req.query.body,
             selectedTrim: req.query.trim,
@@ -922,6 +923,7 @@ const port = 80;
 app.listen(port, "0.0.0.0", () => {
     console.log(`Server running on port ${port}`);
 });
+
 
 
 

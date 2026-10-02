@@ -75,7 +75,11 @@
             </div>
             <div class="col-12 stats mt-2 mb-2">
                 <p id="totalCount" class="mb-0 text-start">
-                    Retrieved <%= totalItems.toLocaleString() %> vehicles in <%= elapsedTime.toLocaleString() %> seconds
+                    <% if (elapsedTime === "0.00") { %>
+                    Retrieved <%= totalItems.toLocaleString() %> vehicles in <%= elapsedMs %> ms
+                    <% } else { %>
+                    Retrieved <%= totalItems.toLocaleString() %> vehicles in <%= elapsedTime %> seconds
+                    <% } %>
                 </p>
             </div>
             <%
@@ -817,4 +821,5 @@
     </script>
 </body>
 </html>
+
 

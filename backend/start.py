@@ -583,6 +583,7 @@ def daily_stats():
     date_filter = request.args.get('date')
     category = request.args.get('category', 'daily')
     model_year_filter = request.args.get('modelYear') # NEW: Capture modelYear param
+    trim_filter = request.args.get('trim') # NEW: Capture trim param
     
     conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
     from datetime import date
@@ -666,6 +667,10 @@ def daily_stats():
         else:
             sqlStatement += " AND v.model = %s"
             params.append(model_filter)
+
+    if trim_filter:
+        sqlStatement += " AND v.trim = %s"
+        params.append(trim_filter)
 
     sqlStatement += order_cond
         
@@ -960,3 +965,4 @@ def about_stats():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+

@@ -783,6 +783,7 @@ app.get('/stats', async (req, res) => {
                 stats: statsResponse.data,
                 all_models: wheelsResponse.data.model,
                 selectedModel: req.query.model || '',
+                selectedTrim: req.query.trim || '',
                 selectedModelYear: req.query.modelYear || '', // NEW: Capture selected MY
                 selectedOrderType: req.query.orderType || 'all',
                 available_model_years: statsResponse.data.available_model_years || [], // NEW: Pass down the list
@@ -809,6 +810,7 @@ app.get('/stats', async (req, res) => {
                 drivetrain_list: data.drivetrain || [],
                 selectedYear: req.query.year || '',
                 selectedModel: req.query.model || '',
+                selectedTrim: req.query.trim || '',
                 selectedBody: req.query.body || '',
                 selectedTrim: req.query.trim || '',
                 selectedEngine: req.query.engine || '',
@@ -909,6 +911,7 @@ const port = 80;
 app.listen(port, "0.0.0.0", () => {
     console.log(`Server running on port ${port}`);
 });
+
 
 
 

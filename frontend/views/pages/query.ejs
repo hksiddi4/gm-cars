@@ -187,7 +187,7 @@
             const prompt = document.getElementById('promptInput').value.trim();
             if (!prompt) return alert('Please enter a question.');
 
-            const startTime = Date.now();
+            const startTime = performance.now();
 
             // UI Reset
             document.getElementById('errorAlert').style.display = 'none';
@@ -233,7 +233,7 @@
 
                 // --- SUCCESS LOGIC ---
                 currentResults = data.results;
-                currentElapsedMs = Date.now() - startTime;
+                currentElapsedMs = (performance.now() - startTime).toFixed(2);
                 currentElapsedTime = (currentElapsedMs / 1000).toFixed(2);
                 
                 renderTable();

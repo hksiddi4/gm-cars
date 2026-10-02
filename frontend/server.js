@@ -625,7 +625,7 @@ app.get('/about', async (req, res) => {
 });
 
 app.get('/vehicles', async (req, res) => {
-    const startTime = Date.now();
+    const startTime = performance.now();
     try {
         // Axios 'params' automatically converts req.query into a URL string
         const response = await axiosInstance.get(`${baseURL}/vehicles`, { params: req.query });
@@ -653,8 +653,8 @@ app.get('/vehicles', async (req, res) => {
             totalPages: Math.ceil(data.total / limit),
             totalItems: data.total,
             limit: limit,
-            elapsedTime: ((Date.now() - startTime) / 1000).toFixed(2),
-            elapsedMs: Date.now() - startTime,
+            elapsedTime: ((performance.now() - startTime) / 1000).toFixed(2),
+            elapsedMs: (performance.now() - startTime).toFixed(2),
             selectedYear: req.query.year,
             selectedBody: req.query.body,
             selectedTrim: req.query.trim,
@@ -923,6 +923,7 @@ const port = 80;
 app.listen(port, "0.0.0.0", () => {
     console.log(`Server running on port ${port}`);
 });
+
 
 
 

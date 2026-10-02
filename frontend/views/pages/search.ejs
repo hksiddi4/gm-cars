@@ -772,7 +772,7 @@
             thumbWrapper.style.minHeight = '56px';
             thumbWrapper.style.borderRadius = '4px';
             thumbWrapper.style.overflow = 'hidden';
-            thumbWrapper.style.border = '1px solid transparent';
+            thumbWrapper.style.border = '2px solid transparent';
             thumbWrapper.style.cursor = 'pointer';
             
             const thumb = document.createElement('img');
@@ -882,7 +882,7 @@
           }
 
           [...gallery.children].forEach((wrapper, i) => {
-            wrapper.style.border = (i === currentIndex && urls[i]) ? '1px solid #141414' : '1px solid transparent';
+            wrapper.style.border = (i === currentIndex && urls[i]) ? '2px solid #648FFF' : '2px solid transparent';
           });
 
           const el = gallery.children[currentIndex];
@@ -1050,4 +1050,5 @@
   </script>
 </body>
 </html>
+
 

@@ -520,6 +520,11 @@
           return;
         }
 
+        if (allRpoDescriptions[rpoCode]) {
+          element.innerHTML = `<div>${allRpoDescriptions[rpoCode]}</div>`;
+          return;
+        }
+
         element.innerHTML = `<div style="color: gray; font-style: italic;">No description available</div>`;
       });
 
@@ -1045,3 +1050,4 @@
   </script>
 </body>
 </html>
+

@@ -246,6 +246,14 @@
             }
         }
     </style>
+<style>
+    .small-dropdown {
+        padding-right: 32px !important;
+        text-overflow: ellipsis !important;
+        overflow: hidden !important;
+        white-space: nowrap !important;
+    }
+</style>
 </head>
 <body>
     <%- include('../partials/header'); %>
@@ -360,7 +368,7 @@
                             
                             <% if (stats.trim && Object.keys(stats.trim).length > 0) { %>
                                 <div class="statsDropdown m-0" style="max-width: 100%; flex: 0 1 auto;">
-                                    <select id="yearlyTrimFilter" class="form-select small-dropdown m-0 <%= typeof selectedTrim !== 'undefined' && selectedTrim ? 'active-filter' : '' %>" aria-label="Filter by trim" style="height: 36px; width: auto; max-width: 100%; min-width: 120px;">
+                                    <select id="yearlyTrimFilter" class="form-select small-dropdown m-0 <%= typeof selectedTrim !== 'undefined' && selectedTrim ? 'active-filter' : '' %>" aria-label="Filter by trim" style="height: 36px; width: auto; max-width: 100%; min-width: 180px; padding-right: 30px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
                                         <option value="">All Trims</option>
                                         <% 
                                             let dailyTrims = Object.keys(stats.trim).sort((a, b) => a.localeCompare(b));
@@ -2207,6 +2215,8 @@
     </script>
 </body>
 </html>
+
+
 
 
 

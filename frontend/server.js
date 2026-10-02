@@ -47,7 +47,8 @@ app.use(helmet({
                 "https://www.google-analytics.com",
                 "https://analytics.google.com",
                 "https://stats.g.doubleclick.net",
-                "https://cdn.jsdelivr.net"
+                "https://cdn.jsdelivr.net",
+                "https://www.google.com"
             ],
             fontSrc: ["'self'", "https://cdn.jsdelivr.net"],
             objectSrc: ["'self'"], 
@@ -912,6 +913,7 @@ const port = 80;
 app.listen(port, "0.0.0.0", () => {
     console.log(`Server running on port ${port}`);
 });
+
 
 
 

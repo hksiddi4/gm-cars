@@ -1319,9 +1319,43 @@
                 createChart('modelChart', 'bar', rawData.model, 'model');
                 createChart('yearChart', 'doughnut', rawData.modelYear, 'year');
                 createChart('bodyChart', 'doughnut', rawData.body, 'body');
+                createChart('trimChart', 'bar', rawData.trim, 'trim', { indexAxis: 'y', scales: { y: { ticks: { autoSkip: false, font: { size: chartFontSize } } } } });
+
+                const colorDataToUse = rawData.color || {};
+                if (Object.keys(colorDataToUse).length > 0) {
+                    createChart('colorChart', 'bar', colorDataToUse, 'color', { indexAxis: 'y', scales: { y: { ticks: { autoSkip: false, font: { size: chartFontSize } } } } });
+                }
+                
                 createChart('engineChart', 'doughnut', rawData.engine, 'engine');
                 createChart('transChart', 'doughnut', rawData.trans, 'trans');
                 createChart('drivetrainChart', 'doughnut', rawData.drivetrain, 'drivetrain');
+
+                // --- NEW: Layout Optimization ---
+                // If only 1 nested circle chart remains, expand it so it centers next to Exterior Color
+                const nestedCols = [
+                    document.getElementById('engineChartContainer')?.closest('.col-12.col-sm-6'),
+                    document.getElementById('transChartContainer')?.closest('.col-12.col-sm-6'),
+                    document.getElementById('drivetrainChartContainer')?.closest('.col-12.col-sm-6')
+                ];
+                const visibleNested = nestedCols.filter(c => c && c.style.display !== 'none');
+                if (visibleNested.length === 1) {
+                    visibleNested[0].classList.remove('col-sm-6');
+                    // It already has col-12, so it will now take full width of the left column and naturally center
+                }
+
+                // If Trim is hidden AND all nested charts are hidden, completely hide the LEFT COLUMN
+                const trimCard = document.getElementById('trimChartContainer')?.closest('.dashboard-card');
+                const leftColumn = trimCard?.closest('.col-12.col-lg-6');
+                if (trimCard && trimCard.style.display === 'none' && visibleNested.length === 0 && leftColumn) {
+                    leftColumn.style.display = 'none';
+                }
+
+                // If Trim is hidden, ensure the main row centers any remaining columns
+                if (trimCard && trimCard.style.display === 'none') {
+                    const row2 = leftColumn?.parentElement;
+                    if (row2) row2.classList.add('justify-content-center');
+                }
+                // ---------------------------------
                 
                 createChart('trimChart', 'bar', rawData.trim, 'trim', { indexAxis: 'y', scales: { y: { ticks: { autoSkip: false, font: { size: chartFontSize } } } } });
 
@@ -2159,6 +2193,8 @@
     </script>
 </body>
 </html>
+
+
 
 
 

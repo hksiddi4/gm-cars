@@ -272,6 +272,7 @@ CROSS JOIN (
     UNION ALL SELECT 'ZTK', 'ZTK Track Performance Package'
     UNION ALL SELECT 'Z6X', 'Extreme Off-Road Package'
     UNION ALL SELECT 'WFP', 'Omega Edition'
+    UNION ALL SELECT 'WOX', 'Curated by Cadillac'
 	UNION ALL SELECT 'ZRA', 'Quail Silver Limited Edition'
 	UNION ALL SELECT 'USA', 'Stars & Steel Limited Edition'
 	UNION ALL SELECT 'V8V', 'Precision Package'
@@ -287,7 +288,8 @@ WHERE NOT EXISTS (
     WHERE se.vehicle_id = v.vehicle_id 
     AND se.special_desc = special_map.special_desc
 )
-AND (special_map.rpo_code != 'PCK' OR v.model = 'CT5');
+AND (special_map.rpo_code != 'PCK' OR v.model = 'CT5')
+AND (special_map.rpo_code != 'WOX' OR v.model IN ('CT5', 'ESCALADE IQ'));
 drop table SpecialEditions;
 
 -- Add ZLZ dual-meaning special edition logic
@@ -495,3 +497,4 @@ WHERE
     v.model = 'CORVETTE ZR1X'
 ORDER BY 
     o.option_code;
+

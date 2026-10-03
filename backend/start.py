@@ -308,6 +308,7 @@ def sort_price():
             "ZLR": ["v.modelYear = '2024'", "v.model = 'CT4'", "v.trim = 'V-SERIES BLACKWING'", "c.color_name = 'VELOCITY RED'"],
             "ZLZ4": ["v.modelYear = '2025'", "v.model ='CT4'", "v.trim = 'V-SERIES BLACKWING'", "c.color_name = 'MAGNUS METAL FROST'"],
             "ZLZ5": ["v.modelYear = '2025'", "v.model ='CT5'", "v.trim = 'V-SERIES BLACKWING'", "c.color_name = 'MAGNUS METAL FROST'"],
+            "WOX": ["v.model IN ('CT5', 'ESCALADE IQ')"],
             "ABQ": ["v.modelYear = '2023'", "v.model = 'CT5'", "v.trim = 'V-SERIES BLACKWING'", "v.msrp > '118000'"],
             "ZLT": ["v.modelYear = '2024'", "v.model = 'CT5'", "v.trim = 'V-SERIES BLACKWING'", "opt.option_code IN ('ZLT', 'ZLV')"],
             "V8V": ["v.model = 'CT5'", "v.trim = 'V-SERIES BLACKWING'"],
@@ -965,4 +966,5 @@ def about_stats():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+
 

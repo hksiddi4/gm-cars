@@ -1831,6 +1831,7 @@ const escaladeRpo = { // 2025-2026
 }
 
 const escaladeiqRpo = {
+  "WOX": "Cadillac Curated Customization",
   "SLL": "Retail Orders",
   "SLM": "Stock Orders",
   "GAI": "DEEP SPACE METALLIC",
@@ -2617,6 +2618,7 @@ const ct4vRpo = {
 }
 
 const ct5Rpo = {
+  "WOX": "Cadillac Curated Customization",
   "SLL": "Retail Orders",
   "SLM": "Stock Orders",
   "GAI": "DEEP SPACE METALLIC",
@@ -2922,6 +2924,7 @@ const ct5Rpo = {
 }
 
 const ct5vRpo = {
+  "WOX": "Cadillac Curated Customization",
   "SLL": "Retail Orders",
   "SLM": "Stock Orders",
   "GAI": "DEEP SPACE METALLIC",

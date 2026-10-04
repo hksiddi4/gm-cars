@@ -1229,7 +1229,16 @@
                             callbacks: {
                                 title: function(context) { 
                                     let label = context[0].label;
-                                    if (Array.isArray(label)) return label[0] + ' - ' + label.slice(1).join(' ');
+                                    if (Array.isArray(label)) {
+                                        if (label.length > 1) {
+                                            return `${label[0]} | ${label.slice(1).join(' ')}`;
+                                        }
+                                        return label[0];
+                                    }
+                                    if (typeof label === 'string' && label.includes(' - ')) {
+                                        const parts = label.split(' - ');
+                                        return `${parts[0].trim()} | ${parts.slice(1).join(' - ').trim()}`;
+                                    }
                                     return label; 
                                 },
                                 label: function(context) {
@@ -2089,8 +2098,40 @@
                                     enabled: true,
                                     callbacks: {
                                         title: function(context) {
+                                            const item = displayData[context[0].dataIndex];
+                                            if (item) {
+                                                if (currentCategory === 'color') {
+                                                    const rpo = item.rpo_code || item.label;
+                                                    const name = item.color_names ? item.color_names.split(',')[0].trim() : '';
+                                                    if (name && rpo !== name) {
+                                                        return `${rpo} | ${name}`;
+                                                    }
+                                                    return rpo;
+                                                } else if (currentCategory === 'engine') {
+                                                    let rpo = item.engine_rpo;
+                                                    let name = item.engine_type || item.label;
+                                                    if (!rpo && item.label && item.label.includes(' - ')) {
+                                                        const parts = item.label.split(' - ');
+                                                        rpo = parts[0].trim();
+                                                        name = parts.slice(1).join(' - ').trim();
+                                                    }
+                                                    if (rpo && name && rpo !== name) {
+                                                        return `${rpo} | ${name}`;
+                                                    }
+                                                    return name || rpo || item.label;
+                                                }
+                                            }
                                             let label = context[0].label;
-                                            if (Array.isArray(label)) return label.join(' - ');
+                                            if (Array.isArray(label)) {
+                                                if (label.length > 1) {
+                                                    return `${label[0]} | ${label.slice(1).join(' ')}`;
+                                                }
+                                                return label[0];
+                                            }
+                                            if (typeof label === 'string' && label.includes(' - ')) {
+                                                const parts = label.split(' - ');
+                                                return `${parts[0].trim()} | ${parts.slice(1).join(' - ').trim()}`;
+                                            }
                                             return label;
                                         },
                                         label: function(context) {

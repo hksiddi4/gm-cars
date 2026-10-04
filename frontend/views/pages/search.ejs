@@ -654,6 +654,12 @@
       if (color === 'GKA' && modelUpper === 'CT4' && modelYear >= 2024) {
         unsupportedColors = color;
         color = 'GXD';
+      } else if (options.includes('WOX')) {
+        unsupportedColors = colorName || 'GBA';
+        if (!color) color = 'GBA';
+        if (colorInt) {
+          unsupportedInts = colorInt;
+        }
       } else if (color === 'GBA') {
         const specialColors = {
           'ABALONE WHITE': 'GAZ', 'BAEGE METALLIC': 'GAZ', 'TACTICAL TINT': 'G7C',
@@ -668,6 +674,9 @@
 
         if (unsupportedColorNames.includes(colorName)) {
           unsupportedColors = unsupportedColors ? unsupportedColors + ', ' + colorName : colorName;
+        } else if (colorName && !['BLACK', 'BLACK RAVEN', 'ONYX BLACK', 'VOID BLACK'].includes(colorName.toUpperCase())) {
+          unsupportedColors = colorName;
+          if (colorInt) unsupportedInts = colorInt;
         }
         if (rpos.includes(unsupportedColors)) {
           rpos = rpos.replace(new RegExp(unsupportedColors, 'g'), color);

@@ -112,9 +112,7 @@ BEGIN
         JSON_EXTRACT(s.allJson, '$.Options'),
         '$[*]' COLUMNS(option_value VARCHAR(50) PATH '$')
     ) AS opt
-    JOIN Vehicles v ON v.vin = s.vin
-    LEFT JOIN Options o ON o.vehicle_id = v.vehicle_id AND o.option_code = opt.option_value
-    WHERE o.option_id IS NULL;
+    JOIN Vehicles v ON v.vin = s.vin;
 
     -- 6. Insert Edge Features (SpecialEditions) - SCOPED TO STAGING
     INSERT IGNORE INTO SpecialEditions (vehicle_id, special_desc)

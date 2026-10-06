@@ -777,9 +777,9 @@
                                                                 }
                                                                 if (!imgSrc) imgSrc = localRpoImageMap[data.rpo_code];
                                                             }
-                                                            if (!imgSrc) imgSrc = '/img/rpos/default.webp';
+                                                            if (!imgSrc) imgSrc = '/img/extColors/default.webp';
                                                         %>
-                                                        <img src="<%= imgSrc %>" alt="<%= data.label %> color swatch" data-fallback="/img/rpos/default.webp" width="20" height="20" style="margin-right: 8px; border-radius: 50%;">
+                                                        <img src="<%= imgSrc %>" alt="<%= data.label %> color swatch" data-fallback="/img/extColors/default.webp" width="20" height="20" style="margin-right: 8px; border-radius: 50%;">
                                                         <%= data.label %>
                                                     <% } else if (activeCategory === 'engine') { %>
                                                         <% const is2019Engine = data.engine_rpo === 'LT5' || data.engine_rpo === 'LTA' || (data.engine_type && (data.engine_type.includes('LT5') || data.engine_type.includes('LTA'))); %>
@@ -850,9 +850,9 @@
                                                                         }
                                                                         if (!imgSrc) imgSrc = localRpoImageMap[data.rpo_code];
                                                                     }
-                                                                    if (!imgSrc) imgSrc = '/img/rpos/default.webp';
+                                                                    if (!imgSrc) imgSrc = '/img/extColors/default.webp';
                                                                 %>
-                                                                <img src="<%= imgSrc %>" alt="<%= data.label %> color swatch" data-fallback="/img/rpos/default.webp" width="20" height="20" style="margin-right: 8px; border-radius: 50%;">
+                                                                <img src="<%= imgSrc %>" alt="<%= data.label %> color swatch" data-fallback="/img/extColors/default.webp" width="20" height="20" style="margin-right: 8px; border-radius: 50%;">
                                                                 <%= data.label %>
                                                             <% } %>
                                                         </td>

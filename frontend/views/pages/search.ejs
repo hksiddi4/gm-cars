@@ -441,6 +441,10 @@
               imgSrc = localRpoImageMap[`${prefixKey}-${rpoCode}`];
           }
 
+          if (!imgSrc && localRpoImageMap[rpoCode]) {
+              imgSrc = localRpoImageMap[rpoCode];
+          }
+
           // If no model-family image exists, skip rendering this card
           if (!imgSrc) {
               return;

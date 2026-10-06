@@ -423,33 +423,44 @@ function getRpoImageCandidates(modelUpper, vehicleTrim, rpoCode, options = []) {
         candidates.push(`${modelUpper.replace(/ /g, '')}-${rpoCode}`);
     }
 
+    candidates.push(rpoCode);
+
     return candidates;
 }
 
 function getLocalImageRPOs() {
     const localRpoImages = {};
     try {
-        function scanDirectory(currentPath, prefix = '') {
+        function scanDirectory(currentPath, prefix = '', urlBase = '/img/rpos/') {
+            if (!fs.existsSync(currentPath)) return;
             const entries = fs.readdirSync(currentPath, { withFileTypes: true });
             entries.forEach(entry => {
                 if (entry.isDirectory()) {
-                    scanDirectory(path.join(currentPath, entry.name), prefix ? `${prefix}/${entry.name}` : entry.name);
+                    scanDirectory(require('path').join(currentPath, entry.name), prefix ? `${prefix}/${entry.name}` : entry.name, urlBase);
                 } else if (/\.(webp)$/i.test(entry.name)) {
-                    const rpoCode = path.parse(entry.name).name.toUpperCase();
-                    const imagePath = `/img/rpos/${prefix ? prefix + '/' : ''}${entry.name}`;
+                    const rpoCode = require('path').parse(entry.name).name.toUpperCase();
+                    const imagePath = `${urlBase}${prefix ? prefix + '/' : ''}${entry.name}`;
                     
                     if (prefix) {
                         const formattedPrefix = prefix.replace(/\//g, '-').toUpperCase();
-                        localRpoImages[`${formattedPrefix}-${rpoCode}`] = imagePath;
+                        if (!localRpoImages[`${formattedPrefix}-${rpoCode}`]) {
+                            localRpoImages[`${formattedPrefix}-${rpoCode}`] = imagePath;
+                        }
                     } else {
-                        localRpoImages[rpoCode] = imagePath;
+                        if (!localRpoImages[rpoCode]) {
+                            localRpoImages[rpoCode] = imagePath;
+                        }
                     }
                 }
             });
         }
-        scanDirectory(rpoWheelsDir);
+        scanDirectory(rpoWheelsDir, '', '/img/rpos/');
+        
+        const extColorsDir = require('path').join(__dirname, 'public', 'img', 'extColors');
+        scanDirectory(extColorsDir, '', '/img/extColors/');
+        
     } catch (error) {
-        console.warn(`Warning: Could not read RPO wheel image directory: ${error.message}`);
+        console.warn(`Warning: Could not read RPO image directories: ${error.message}`);
     }
     return localRpoImages;
 }

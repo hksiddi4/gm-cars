@@ -490,6 +490,7 @@ app.use((req, res, next) => {
     res.locals.headerImages = cachedHeaderImages;
     res.locals.currentHeaderImage = cachedHeaderImages[Math.floor(Math.random() * cachedHeaderImages.length)];
     res.locals.localRpoImageMap = localRpoImageMap;
+    res.locals.getRpoImageCandidates = getRpoImageCandidates;
     res.locals.formatCurrency = formatCurrency;
     
     // 3. Inject all RPO modules (camaroRpo, corvetteRpo, etc.)

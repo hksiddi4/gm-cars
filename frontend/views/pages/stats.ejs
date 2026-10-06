@@ -738,7 +738,7 @@
                                 let multiItems = stats_data;
                                 let singleItems = [];
                                 
-                                if (activeCategory === 'color') {
+                                if (activeCategory === 'color' || activeCategory === 'interior') {
                                     multiItems = stats_data.filter(d => Number(String(d.total_count).replace(/,/g, '')) > 1);
                                     singleItems = stats_data.filter(d => Number(String(d.total_count).replace(/,/g, '')) === 1);
                                 }
@@ -767,16 +767,19 @@
                                                     <% } else if (activeCategory === 'interior') { %>
                                                         <%
                                                             let imgSrc = '';
-                                                            if (typeof localRpoImageMap !== 'undefined') {
-                                                                if (typeof active_model !== 'undefined' && active_model) {
-                                                                    const prefixKey = active_model.replace(/ /g, '').toUpperCase();
-                                                                    imgSrc = localRpoImageMap[`${prefixKey}-${data.rpo_code}`];
+                                                            if (typeof localRpoImageMap !== 'undefined' && typeof getRpoImageCandidates === 'function') {
+                                                                const candidates = getRpoImageCandidates(selectedModel || '', selectedTrim || '', data.rpo_code, []);
+                                                                for (const cand of candidates) {
+                                                                    if (localRpoImageMap[cand]) {
+                                                                        imgSrc = localRpoImageMap[cand];
+                                                                        break;
+                                                                    }
                                                                 }
                                                                 if (!imgSrc) imgSrc = localRpoImageMap[data.rpo_code];
                                                             }
-                                                            if (!imgSrc) imgSrc = '/img/extColors/default.webp';
+                                                            if (!imgSrc) imgSrc = '/img/rpos/default.webp';
                                                         %>
-                                                        <img src="<%= imgSrc %>" alt="<%= data.label %> color swatch" data-fallback="/img/extColors/default.webp" width="20" height="20" style="margin-right: 8px; border-radius: 50%;">
+                                                        <img src="<%= imgSrc %>" alt="<%= data.label %> color swatch" data-fallback="/img/rpos/default.webp" width="20" height="20" style="margin-right: 8px; border-radius: 50%;">
                                                         <%= data.label %>
                                                     <% } else if (activeCategory === 'engine') { %>
                                                         <% const is2019Engine = data.engine_rpo === 'LT5' || data.engine_rpo === 'LTA' || (data.engine_type && (data.engine_type.includes('LT5') || data.engine_type.includes('LTA'))); %>
@@ -797,13 +800,13 @@
                                                                 linkHref += "&rpo=" + encodeURIComponent(data.rpo_code);
                                                             }
                                                         %>
-                                                            <a class="color-link" href="<%= linkHref %>"><%= trimmedName %></a><%= i < data.color_names.split(',').length - 1 ? ', ' : '' %>
+                                                            <a class="color-link" href="<%= linkHref %>"><%= trimmedName.toUpperCase() %></a><%= i < data.color_names.split(',').length - 1 ? ', ' : '' %>
                                                         <% }) %>
                                                     <% } %>
                                                     </td>
                                                 <% } else if (activeCategory === 'interior') { %>
                                                     <td scope="row" style="text-align: left;">
-                                                        <% const intName = (typeof intColor !== 'undefined' && intColor[data.rpo_code]) ? intColor[data.rpo_code] : 'N/A'; %>
+                                                        <% const intName = (typeof intColor !== 'undefined' && intColor[data.rpo_code]) ? intColor[data.rpo_code].toUpperCase() : 'N/A'; %>
                                                         <a class="color-link" href="/vehicles?rpo=<%= encodeURIComponent(data.rpo_code) %>"><%= intName %></a>
                                                     </td>
                                                 <% } %>
@@ -837,16 +840,19 @@
                                                             <% } else if (activeCategory === 'interior') { %>
                                                                 <%
                                                                     let imgSrc = '';
-                                                                    if (typeof localRpoImageMap !== 'undefined') {
-                                                                        if (typeof active_model !== 'undefined' && active_model) {
-                                                                            const prefixKey = active_model.replace(/ /g, '').toUpperCase();
-                                                                            imgSrc = localRpoImageMap[`${prefixKey}-${data.rpo_code}`];
+                                                                    if (typeof localRpoImageMap !== 'undefined' && typeof getRpoImageCandidates === 'function') {
+                                                                        const candidates = getRpoImageCandidates(selectedModel || '', selectedTrim || '', data.rpo_code, []);
+                                                                        for (const cand of candidates) {
+                                                                            if (localRpoImageMap[cand]) {
+                                                                                imgSrc = localRpoImageMap[cand];
+                                                                                break;
+                                                                            }
                                                                         }
                                                                         if (!imgSrc) imgSrc = localRpoImageMap[data.rpo_code];
                                                                     }
-                                                                    if (!imgSrc) imgSrc = '/img/extColors/default.webp';
+                                                                    if (!imgSrc) imgSrc = '/img/rpos/default.webp';
                                                                 %>
-                                                                <img src="<%= imgSrc %>" alt="<%= data.label %> color swatch" data-fallback="/img/extColors/default.webp" width="20" height="20" style="margin-right: 8px; border-radius: 50%;">
+                                                                <img src="<%= imgSrc %>" alt="<%= data.label %> color swatch" data-fallback="/img/rpos/default.webp" width="20" height="20" style="margin-right: 8px; border-radius: 50%;">
                                                                 <%= data.label %>
                                                             <% } %>
                                                         </td>
@@ -858,11 +864,11 @@
                                                                         let linkHref = "/vehicles?color=" + encodeURIComponent(trimmedName);
                                                                         if (data.rpo_code && data.rpo_code !== trimmedName) linkHref += "&rpo=" + encodeURIComponent(data.rpo_code);
                                                                     %>
-                                                                        <a class="color-link" href="<%= linkHref %>"><%= trimmedName %></a><%= i < data.color_names.split(',').length - 1 ? ', ' : '' %>
+                                                                        <a class="color-link" href="<%= linkHref %>"><%= trimmedName.toUpperCase() %></a><%= i < data.color_names.split(',').length - 1 ? ', ' : '' %>
                                                                     <% }) %>
                                                                 <% } %>
                                                             <% } else if (activeCategory === 'interior') { %>
-                                                                <% const intName = (typeof intColor !== 'undefined' && intColor[data.rpo_code]) ? intColor[data.rpo_code] : 'N/A'; %>
+                                                                <% const intName = (typeof intColor !== 'undefined' && intColor[data.rpo_code]) ? intColor[data.rpo_code].toUpperCase() : 'N/A'; %>
                                                                 <a class="color-link" href="/vehicles?rpo=<%= encodeURIComponent(data.rpo_code) %>"><%= intName %></a>
                                                             <% } %>
                                                         </td>
@@ -1887,7 +1893,7 @@
                         engine_type: data.engine_type || ''
                     }));
 
-                    if (currentCategory === 'color') {
+                    if (currentCategory === 'color' || currentCategory === 'interior') {
                         rawData = rawData.filter(d => d.count > 1);
                     }
 

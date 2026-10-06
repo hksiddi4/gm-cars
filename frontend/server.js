@@ -337,6 +337,7 @@ function getHeaderImages() {
 
 // --- Helper to get hierarchical RPO image candidate keys ---
 function getRpoImageCandidates(modelUpper, vehicleTrim, rpoCode, options = []) {
+    if (rpoCode === 'WOX') rpoCode = 'HMR';
     const candidates = [];
     const prefixKey = modelUpper.replace(/ /g, '').toUpperCase();
     
@@ -445,6 +446,9 @@ function getLocalImageRPOs() {
                         const formattedPrefix = prefix.replace(/\//g, '-').toUpperCase();
                         if (!localRpoImages[`${formattedPrefix}-${rpoCode}`]) {
                             localRpoImages[`${formattedPrefix}-${rpoCode}`] = imagePath;
+                        }
+                        if (!localRpoImages[rpoCode]) {
+                            localRpoImages[rpoCode] = imagePath;
                         }
                     } else {
                         if (!localRpoImages[rpoCode]) {

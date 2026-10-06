@@ -125,6 +125,7 @@
                       let matchedIntColor = 'N/A';
                       let matchedSeat = 'N/A';
                       data.rpo_codes.forEach(function(rpo) {
+                        if (data.rpo_codes.includes('WOX') && rpo === 'HMR') return;
                         if (intColor[rpo]) {
                           matchedIntColor = intColor[rpo];
                         }
@@ -681,6 +682,11 @@
       let color = options.find(opt => Object.values(colorMap).includes(opt));
       let colorInt = options.find(opt => Object.keys(intColor).includes(opt));
       
+      // Force HMR for image generation on WOX cars if available
+      if (options.includes('WOX') && options.includes('HMR')) {
+        colorInt = 'HMR';
+      }
+
       if (!colorInt && vinIntColor[vin.vin]) {
         colorInt = 'HJD'; // Default to Jet Black RPO for the image generator
       }
@@ -711,7 +717,8 @@
         unsupportedColors = colorName || 'GBA';
         if (!color) color = 'GBA';
         if (colorInt) {
-          unsupportedInts = vinIntColor[vin.vin] || colorInt;
+          let customIntRpo = options.find(opt => opt !== 'HMR' && Object.keys(intColor).includes(opt));
+          unsupportedInts = vinIntColor[vin.vin] || customIntRpo || colorInt;
         }
       } else if (color === 'GBA') {
         const specialColors = {

@@ -52,6 +52,14 @@
               cgiTrim = options.find(opt => ["1SC", "1SF", "1SD", "1SG"].includes(opt)) || cgiTrim;
           } else if (["6C10706", "6K10706", "6C10906", "6K10906"].includes(mmc_code)) {
               cgiTrim = options.find(opt => ["1SA", "1SB", "1SC", "1SG", "1SH", "1SD"].includes(opt)) || cgiTrim;
+          } else if (["6KL69"].includes(mmc_code) || (modelUpper === 'CT6' && !cgiTrim)) {
+              cgiTrim = options.find(opt => ["1SJ", "1SD", "1SP", "1SV", "1SB"].includes(opt)) 
+                     || cgiTrim 
+                     || (trim.toUpperCase().includes('SPORT') ? '1SJ' : '')
+                     || (trim.toUpperCase().includes('PLATINUM') ? '1SP' : '')
+                     || (trim.toUpperCase().includes('V-SERIES') ? '1SV' : '')
+                     || (trim.toUpperCase().includes('PREMIUM LUXURY') ? '1SD' : '')
+                     || (trim.toUpperCase().includes('LUXURY') ? '1SB' : '');
           }
 
           if (modelUpper === 'CAMARO' && year >= 2020 && (options.includes('A1Y') || options.includes('A1Z'))) {

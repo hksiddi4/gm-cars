@@ -590,6 +590,14 @@
           trim = options.find(opt => ["1SA", "1SB", "1SC", "1SG", "1SH", "1SD"].includes(opt)) || trim;
         } else if (["6C10906", "6K10906"].includes(mmc_code)) {
           trim = options.find(opt => ["1SA", "1SB", "1SC", "1SG", "1SH", "1SD"].includes(opt)) || trim;
+        } else if (["6KL69"].includes(mmc_code) || (modelUpper === 'CT6' && !trim)) {
+          trim = options.find(opt => ["1SJ", "1SD", "1SP", "1SV", "1SB"].includes(opt)) 
+                 || trim 
+                 || (vehicleTrim.toUpperCase().includes('SPORT') ? '1SJ' : '')
+                 || (vehicleTrim.toUpperCase().includes('PLATINUM') ? '1SP' : '')
+                 || (vehicleTrim.toUpperCase().includes('V-SERIES') ? '1SV' : '')
+                 || (vehicleTrim.toUpperCase().includes('PREMIUM LUXURY') ? '1SD' : '')
+                 || (vehicleTrim.toUpperCase().includes('LUXURY') ? '1SB' : '');
         }
       }
 

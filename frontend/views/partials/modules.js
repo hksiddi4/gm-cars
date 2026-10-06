@@ -388,6 +388,7 @@ const mmc = {
   "6KM69": "1SP", // CT6 PLATINUM
   "6KH69": "1SB", // CT6 LUXURY
   "6KJ69": "1SD", // CT6 PREMIUM LUXURY
+  "6KL69": "1SJ", // CT6 SPORT
   "6KN69": "1SV", // CT6 V-SERIES
   // Hummer EV
   "TT35526": "", // SUV

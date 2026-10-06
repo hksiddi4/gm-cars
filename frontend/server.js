@@ -808,6 +808,8 @@ app.get('/stats', async (req, res) => {
                 selectedModelYear: req.query.modelYear || '', // NEW: Capture selected MY
                 selectedOrderType: req.query.orderType || 'all',
                 available_model_years: statsResponse.data.available_model_years || [], // NEW: Pass down the list
+                localRpoImageMap: res.locals.localRpoImageMap,
+                intColor: modules.intColor,
                 pagePath: '/stats',
                 canonicalPath: '/stats'
             });
@@ -837,6 +839,8 @@ app.get('/stats', async (req, res) => {
                 selectedEngine: req.query.engine || '',
                 selectedTrans: req.query.trans || '',
                 selectedDrivetrain: req.query.drivetrain || '',
+                localRpoImageMap: res.locals.localRpoImageMap,
+                intColor: modules.intColor,
                 pagePath: '/stats',
                 canonicalPath: req.originalUrl
             });

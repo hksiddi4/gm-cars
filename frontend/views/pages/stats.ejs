@@ -643,7 +643,7 @@
             <% } else { %>
                 <div class="container-fluid px-0">
                     <!-- Dynamic Dropdowns for Ranked Stats -->
-                    <% if (['color', 'engine'].includes(activeCategory)) { %>
+                    <% if (['color', 'engine', 'interior'].includes(activeCategory)) { %>
                         <div class="d-flex flex-wrap gap-2 mb-3 w-100">
                             <div class="statsDropdown">
                                 <select id="filterYear" class="form-select small-dropdown <%= typeof selectedYear !== 'undefined' && selectedYear ? 'active-filter' : '' %>" aria-label="Filter by year">

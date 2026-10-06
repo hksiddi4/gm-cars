@@ -1787,6 +1787,7 @@
         <script nonce="<%= nonce %>">
             const stats_data = <%- JSON.stringify(stats_data) %>;
             const currentCategory = '<%= activeCategory %>';
+            const intColorMap = <%- typeof intColor !== 'undefined' ? JSON.stringify(intColor) : '{}' %>;
             const displayYear = '<%= typeof selectedYear !== "undefined" ? selectedYear : "2027" %>';
             
             document.addEventListener('DOMContentLoaded', function () {
@@ -1950,6 +1951,13 @@
                         if (currentCategory === 'color') {
                             const rpo = d.rpo_code || d.label;
                             const name = d.color_names ? d.color_names.split(',')[0].trim() : '';
+                            
+                            if (!name || rpo === name) return rpo;
+                            return [rpo, ...wrapText(name, 22)];
+                            
+                        } else if (currentCategory === 'interior') {
+                            const rpo = d.rpo_code || d.label;
+                            const name = intColorMap[rpo] ? intColorMap[rpo].toUpperCase() : '';
                             
                             if (!name || rpo === name) return rpo;
                             return [rpo, ...wrapText(name, 22)];
@@ -2151,6 +2159,13 @@
                                                 if (currentCategory === 'color') {
                                                     const rpo = item.rpo_code || item.label;
                                                     const name = item.color_names ? item.color_names.split(',')[0].trim() : '';
+                                                    if (name && rpo !== name) {
+                                                        return `${rpo} | ${name}`;
+                                                    }
+                                                    return rpo;
+                                                } else if (currentCategory === 'interior') {
+                                                    const rpo = item.rpo_code || item.label;
+                                                    const name = intColorMap[rpo] ? intColorMap[rpo].toUpperCase() : '';
                                                     if (name && rpo !== name) {
                                                         return `${rpo} | ${name}`;
                                                     }

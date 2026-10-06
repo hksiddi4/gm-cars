@@ -1228,7 +1228,7 @@
                         tooltip: {
                             callbacks: {
                                 title: function(context) { 
-                                    let label = context[0].label;
+                                    let label = context[0].chart.data.labels[context[0].dataIndex];
                                     if (Array.isArray(label)) {
                                         if (label.length > 1) {
                                             return `${label[0]} | ${label.slice(1).join(' ')}`;

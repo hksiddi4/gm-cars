@@ -57,7 +57,7 @@
               <label class="btn btn-outline-secondary" style="font-weight: 600;" for="roofDown">Top Down</label>
             </div>
           </div>
-          <div id="carousel-container">
+          <div id="carousel-container" style="display: flex; flex-direction: column;">
             <div id="image-warning"></div>
             <div id="main-image-wrapper" style="position: relative; display: block; width: 100%; aspect-ratio: 16 / 9; max-height: 600px; overflow: hidden; border-radius: 4px;">
               <div id="loading-animation" class="shimmer" style="position: absolute; inset: 0; z-index: 5; display: none; border-radius: 4px;">
@@ -385,9 +385,6 @@
         }
 
         rposToRender.forEach(rpoCode => {
-          const cardWrapper = document.createElement('div');
-          cardWrapper.className = 'rpo-wrapper';
-          container.appendChild(cardWrapper);
 
           // Resolve RPO image hierarchically within this model's family only
           let imgSrc = null;
@@ -413,7 +410,7 @@
               const cCandidates = [
                   vehicleTrim.startsWith('V-SERIES') ? `CT4V-${rpoCode}` : null,
                   `CT4-${rpoCode}`,
-                  `CADILLAC-${rpoCode}`
+                  null
               ].filter(Boolean);
               for (const key of cCandidates) {
                   if (localRpoImageMap[key]) { imgSrc = localRpoImageMap[key]; break; }
@@ -422,13 +419,21 @@
               const cCandidates = [
                   vehicleTrim.startsWith('V-SERIES') ? `CT5V-${rpoCode}` : null,
                   `CT5-${rpoCode}`,
-                  `CADILLAC-${rpoCode}`
+                  null
+              ].filter(Boolean);
+              for (const key of cCandidates) {
+                  if (localRpoImageMap[key]) { imgSrc = localRpoImageMap[key]; break; }
+              }
+          } else if (modelUpper.startsWith('CT6')) {
+              const cCandidates = [
+                  vehicleTrim.startsWith('V-SERIES') ? `CT6V-${rpoCode}` : null,
+                  `CT6-${rpoCode}`
               ].filter(Boolean);
               for (const key of cCandidates) {
                   if (localRpoImageMap[key]) { imgSrc = localRpoImageMap[key]; break; }
               }
           } else if (modelUpper.startsWith('HUMMER')) {
-              const hCandidates = [`${prefixKey}-${rpoCode}`, `HUMMER-${rpoCode}`, `GMC-${rpoCode}`];
+              const hCandidates = [`${prefixKey}-${rpoCode}`, `HUMMER-${rpoCode}`, null];
               for (const key of hCandidates) {
                   if (localRpoImageMap[key]) { imgSrc = localRpoImageMap[key]; break; }
               }
@@ -436,10 +441,14 @@
               imgSrc = localRpoImageMap[`${prefixKey}-${rpoCode}`];
           }
 
-          // If no model-family image exists, fall back to brand logo
+          // If no model-family image exists, skip rendering this card
           if (!imgSrc) {
-              imgSrc = fallbackPath;
+              return;
           }
+
+          const cardWrapper = document.createElement('div');
+          cardWrapper.className = 'rpo-wrapper';
+          container.appendChild(cardWrapper);
 
           const cardLink = document.createElement('a');
           cardLink.href = `/vehicles?model=${encodeURIComponent(vin.model)}&rpo=${encodeURIComponent(rpoCode)}`;
@@ -470,6 +479,16 @@
             (derivedModel === 'SILVERADO EV' && silveradoevRpo[rpoCode]) ||
             invertedColorMap[rpoCode] ||
             allRpoDescriptions[rpoCode];
+
+          if (rpoCode === 'GBA') {
+              if (['CT4', 'CT5', 'CT6', 'ESCALADE', 'CELESTIQ', 'CADILLAC'].some(brand => modelUpper.includes(brand))) {
+                  descText = "BLACK RAVEN";
+              } else if (['CORVETTE', 'CAMARO', 'SILVERADO', 'CHEVROLET'].some(brand => modelUpper.includes(brand))) {
+                  descText = "BLACK";
+              } else {
+                  descText = "ONYX BLACK"; // GMC
+              }
+          }
 
           const descHTML = descText 
             ? `<div>${descText}</div>` 
@@ -515,6 +534,19 @@
         if (derivedModel === 'HUMMER EV SUV' && hummersuvRpo[rpoCode]) { element.innerHTML = `<div>${hummersuvRpo[rpoCode]}</div>`; return; }
         if (derivedModel === 'CELESTIQ' && celestiqRpo[rpoCode]) { element.innerHTML = `<div>${celestiqRpo[rpoCode]}</div>`; return; }
         if (derivedModel === 'SILVERADO EV' && silveradoevRpo[rpoCode]) { element.innerHTML = `<div>${silveradoevRpo[rpoCode]}</div>`; return; }
+        if (rpoCode === 'GBA') {
+            if (['CT4', 'CT5', 'CT6', 'ESCALADE', 'CELESTIQ', 'CADILLAC'].some(brand => modelUpper.includes(brand))) {
+                element.innerHTML = `<div>BLACK RAVEN</div>`;
+                return;
+            } else if (['CORVETTE', 'CAMARO', 'SILVERADO', 'CHEVROLET'].some(brand => modelUpper.includes(brand))) {
+                element.innerHTML = `<div>BLACK</div>`;
+                return;
+            } else {
+                element.innerHTML = `<div>ONYX BLACK</div>`;
+                return;
+            }
+        }
+
         if (invertedColorMap[rpoCode]) {
           element.innerHTML = `<div>${invertedColorMap[rpoCode]}</div>`;
           return;
@@ -718,7 +750,8 @@
         }
         if (unsupportedColors && unsupportedInts) msg += ', ';
         if (unsupportedInts) {
-          msg += `Int. color <i>${unsupportedInts}</i>`;
+          const intName = intColor[unsupportedInts] || unsupportedInts;
+          msg += `Int. color <i>${intName}</i>`;
           const intCell = document.getElementById('intColorCell');
           if (intCell) intCell.style.cssText = 'color:#e57373;';
         }

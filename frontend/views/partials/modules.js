@@ -1832,7 +1832,7 @@ const escaladeRpo = { // 2025-2026
 }
 
 const escaladeiqRpo = {
-  "WOX": "Cadillac Curated Customization",
+  "WOX": "Curated by Cadillac",
   "SLL": "Retail Orders",
   "SLM": "Stock Orders",
   "GAI": "DEEP SPACE METALLIC",
@@ -2619,7 +2619,7 @@ const ct4vRpo = {
 }
 
 const ct5Rpo = {
-  "WOX": "Cadillac Curated Customization",
+  "WOX": "Curated by Cadillac",
   "SLL": "Retail Orders",
   "SLM": "Stock Orders",
   "GAI": "DEEP SPACE METALLIC",
@@ -2925,7 +2925,7 @@ const ct5Rpo = {
 }
 
 const ct5vRpo = {
-  "WOX": "Cadillac Curated Customization",
+  "WOX": "Curated by Cadillac",
   "SLL": "Retail Orders",
   "SLM": "Stock Orders",
   "GAI": "DEEP SPACE METALLIC",
@@ -3228,7 +3228,7 @@ const ct5vRpo = {
   "W2D": "LPO, Cargo net",
   "WK7": "Super Cruise 1 Package",
   "WKA": "Super Cruise 2 Package",
-  "WOX": "Cadillac Curated Customization",
+  "WOX": "Curated by Cadillac",
   "XES": "Enclosed shipping carrier",
   "XLC": "Launch Control",
   "XVR": "Surround Vision Recorder",

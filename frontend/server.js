@@ -338,12 +338,14 @@ function getHeaderImages() {
 // --- Helper to get hierarchical RPO image candidate keys ---
 function getRpoImageCandidates(modelUpper, vehicleTrim, rpoCode, options = []) {
     const candidates = [];
+    const prefixKey = modelUpper.replace(/ /g, '').toUpperCase();
     
     if (modelUpper.startsWith('CORVETTE')) {
         let subPrefix = 'CORVETTE-STINGRAY';
-        if (modelUpper.includes('ZR1X') || (options.includes('LT7') && options.includes('ZTK')) || vehicleTrim.includes('ZR1X')) {
+        
+        if (modelUpper.includes('ZR1X') || (options.includes('LS9') && (vehicleTrim.includes('ZR1X') || modelUpper.includes('X')))) {
             subPrefix = 'CORVETTE-ZR1X';
-        } else if (modelUpper.includes('ZR1') || options.includes('LT7')) {
+        } else if (modelUpper.includes('ZR1') || options.includes('LS9')) {
             subPrefix = 'CORVETTE-ZR1';
         } else if (modelUpper.includes('Z06') || options.includes('LT6')) {
             subPrefix = 'CORVETTE-Z06';
@@ -378,49 +380,44 @@ function getRpoImageCandidates(modelUpper, vehicleTrim, rpoCode, options = []) {
     } else if (modelUpper.startsWith('CT4')) {
         if (vehicleTrim.startsWith('V-SERIES') || modelUpper.includes('V')) {
             candidates.push(`CT4V-${rpoCode}`);
-            candidates.push(`CT4-${rpoCode}`);
-        } else {
-            candidates.push(`CT4-${rpoCode}`);
         }
-        candidates.push(`CADILLAC-${rpoCode}`);
+        candidates.push(`CT4-${rpoCode}`);
 
     } else if (modelUpper.startsWith('CT5')) {
         if (vehicleTrim.startsWith('V-SERIES') || modelUpper.includes('V')) {
             candidates.push(`CT5V-${rpoCode}`);
-            candidates.push(`CT5-${rpoCode}`);
-        } else {
-            candidates.push(`CT5-${rpoCode}`);
         }
-        candidates.push(`CADILLAC-${rpoCode}`);
+        candidates.push(`CT5-${rpoCode}`);
+
+    } else if (modelUpper.startsWith('CT6')) {
+        if (vehicleTrim.startsWith('V-SERIES') || modelUpper.includes('V')) {
+            candidates.push(`CT6V-${rpoCode}`);
+        }
+        candidates.push(`CT6-${rpoCode}`);
 
     } else if (modelUpper.includes('ESCALADE IQ')) {
         candidates.push(`ESCALADEIQ-${rpoCode}`);
         candidates.push(`ESCALADE-IQ-${rpoCode}`);
         candidates.push(`ESCALADE-${rpoCode}`);
-        candidates.push(`CADILLAC-${rpoCode}`);
 
     } else if (modelUpper.startsWith('ESCALADE')) {
         candidates.push(`ESCALADE-${rpoCode}`);
-        candidates.push(`CADILLAC-${rpoCode}`);
 
     } else if (modelUpper === 'HUMMER EV SUV') {
         candidates.push(`HUMMERSUV-${rpoCode}`);
         candidates.push(`HUMMER-${rpoCode}`);
-        candidates.push(`GMC-${rpoCode}`);
 
     } else if (modelUpper === 'HUMMER EV PICKUP') {
         candidates.push(`HUMMER-${rpoCode}`);
-        candidates.push(`GMC-${rpoCode}`);
 
     } else if (modelUpper === 'SIERRA EV') {
         candidates.push(`SIERRAEV-${rpoCode}`);
         candidates.push(`SIERRA-EV-${rpoCode}`);
-        candidates.push(`GMC-${rpoCode}`);
 
     } else if (modelUpper === 'SILVERADO EV') {
         candidates.push(`SILVERADOEV-${rpoCode}`);
         candidates.push(`SILVERADO-EV-${rpoCode}`);
-        candidates.push(`CHEVROLET-${rpoCode}`);
+
     } else {
         candidates.push(`${modelUpper.replace(/ /g, '-')}-${rpoCode}`);
         candidates.push(`${modelUpper.replace(/ /g, '')}-${rpoCode}`);

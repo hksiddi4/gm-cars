@@ -815,7 +815,9 @@ app.get('/stats', async (req, res) => {
             });
         } else {
             // Fetch Rankings/Trends Data (Color/Engine/Production)
-            const response = await axiosInstance.get(`${baseURL}/stats`, { params: req.query });
+            const queryParams = { ...req.query };
+            if (category === 'interior') queryParams.interiorRPOs = Object.keys(modules.intColor).join(',');
+            const response = await axiosInstance.get(`${baseURL}/stats`, { params: queryParams });
             const data = response.data;
             
             const stats_data = Array.isArray(data.stats_data) ? data.stats_data : [];

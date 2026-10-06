@@ -746,6 +746,7 @@ app.get('/search', searchLimiter, async (req, res) => {
             verifiedRpoImages,
             colorMap: modules.colorMap,
             intColor: modules.intColor,
+            vinIntColor: modules.vinIntColor,
             pagePath: '/search',
             canonicalPath: `/search?vin=${vinQuery}`
         });

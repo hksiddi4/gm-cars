@@ -827,21 +827,21 @@ def stats():
         rpo_list_str = "'" + "','".join(interior_rpos) + "'" if interior_rpos else "''"
         
         # If where_clause is empty, we must start it with WHERE instead of AND
-        rpo_where = f" AND opt.rpo_code IN ({rpo_list_str})"
+        rpo_where = f" AND opt.option_code IN ({rpo_list_str})"
         if not where_clause:
-            rpo_where = f"WHERE opt.rpo_code IN ({rpo_list_str})"
+            rpo_where = f"WHERE opt.option_code IN ({rpo_list_str})"
 
         sqlStatement = f"""
             WITH InteriorCounts AS (
                 SELECT
-                    opt.rpo_code AS rpo_code,
+                    opt.option_code AS rpo_code,
                     COUNT(*) AS total_count
                 FROM Vehicles v
                 JOIN Options opt ON v.vehicle_id = opt.vehicle_id
                 {join_clause}
                 {where_clause}
                 {rpo_where}
-                GROUP BY opt.rpo_code
+                GROUP BY opt.option_code
             ),
             Ranked AS (
                 SELECT

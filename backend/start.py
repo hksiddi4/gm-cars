@@ -286,6 +286,7 @@ def sort_price():
             "A1X": ["v.modelYear IN ('2019', '2020', '2021')", "v.model = 'CAMARO'", "v.body = 'COUPE'", "v.trim IN ('1LT', '2LT', '3LT')"],
             "H40": ["((v.modelYear = '2024' AND v.model = 'CAMARO' AND v.trim = '2SS' AND c.color_name = 'RADIANT RED TINTCOAT' AND opt.option_code = 'SL1') OR v.vin IN ('1G1FK1R65R0117449', '1G1FK3D62R0118478'))"],
             "PEH": ["v.modelYear = '2020'", "v.model = 'CAMARO'", "v.body = 'COUPE'", "v.trim IN ('2SS', 'ZL1')", "t.transmission_type = 'A10'", "c.color_name = 'BLACK'"],
+            "INDY26": ["EXISTS (SELECT 1 FROM SpecialEditions se WHERE se.vehicle_id = v.vehicle_id AND se.special_desc = '2026 Indianapolis 500 Festival Vehicle')"],
             "Z4Z": ["v.model = 'CAMARO'", "v.body = 'CONVERTIBLE'", "v.trim = '2SS'", "c.color_name IN ('WILD CHERRY TINTCOAT', 'SUMMIT WHITE', 'SHARKSKIN METALLIC', 'SATIN STEEL GRAY METALLIC')"],
             "WBL": ["v.modelYear IN ('2020', '2021', '2022', '2023', '2024')", "v.model = 'CAMARO'", "v.trim NOT IN ('ZL1', '1LS')", "c.color_name IN ('BLACK', 'SUMMIT WHITE', 'SHARKSKIN METALLIC', 'SATIN STEEL GRAY METALLIC')"],
             "B2E": ["v.model = 'CAMARO'", "v.trim IN ('2LT', '2SS', '3LT')", "v.modelYear IN ('2020', '2021', '2022', '2023')", "c.color_name IN ('BLACK', 'SUMMIT WHITE', 'RAPID BLUE', 'SHARKSKIN METALLIC', 'SATIN STEEL GRAY METALLIC', 'SHOCK')"],

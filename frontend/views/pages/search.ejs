@@ -363,7 +363,7 @@
         ...intColor, ...invertedColorMap, ...camaroRpo, ...corvetteRpo, ...corvetteGSXRpo,
         ...corvetteGSRpo, ...stingrayRpo, ...z06Rpo, ...erayRpo, ...zr1Rpo, ...escaladeRpo,
         ...escaladeiqRpo, ...ct4Rpo, ...ct4vRpo, ...ct5Rpo, ...ct5vRpo, ...hummerRpo,
-        ...hummersuvRpo, ...celestiqRpo, ...silveradoevRpo,
+        ...hummersuvRpo, ...celestiqRpo, ...silveradoevRpo, ...sierraevRpo,
       };
 
       function renderRpoCards(vin) {
@@ -544,6 +544,7 @@
         if (derivedModel === 'HUMMER EV SUV' && hummersuvRpo[rpoCode]) { element.innerHTML = `<div>${hummersuvRpo[rpoCode]}</div>`; return; }
         if (derivedModel === 'CELESTIQ' && celestiqRpo[rpoCode]) { element.innerHTML = `<div>${celestiqRpo[rpoCode]}</div>`; return; }
         if (derivedModel === 'SILVERADO EV' && silveradoevRpo[rpoCode]) { element.innerHTML = `<div>${silveradoevRpo[rpoCode]}</div>`; return; }
+        if (derivedModel === 'SIERRA EV' && sierraevRpo[rpoCode]) { element.innerHTML = `<div>${sierraevRpo[rpoCode]}</div>`; return; }
         if (rpoCode === 'GBA') {
             if (['CT4', 'CT5', 'CT6', 'ESCALADE', 'CELESTIQ', 'CADILLAC'].some(brand => modelUpper.includes(brand))) {
                 element.innerHTML = `<div>BLACK RAVEN</div>`;

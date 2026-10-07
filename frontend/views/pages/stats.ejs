@@ -1956,11 +1956,7 @@
                             return [rpo, ...wrapText(name, 22)];
                             
                         } else if (currentCategory === 'interior') {
-                            const rpo = d.rpo_code || d.label;
-                            const name = intColorMap[rpo] ? intColorMap[rpo].toUpperCase() : '';
-                            
-                            if (!name || rpo === name) return rpo;
-                            return [rpo, ...wrapText(name, 22)];
+                            return d.rpo_code || d.label;
                             
                         } else if (currentCategory === 'engine') {
                             let rpo = d.engine_rpo;

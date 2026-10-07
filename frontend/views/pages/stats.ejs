@@ -305,6 +305,15 @@
                                     formattedDate = stats.current_date;
                                 }
 
+                                
+                                let baseParams = "";
+                                if (typeof selectedYear !== 'undefined' && selectedYear) baseParams += "&year=" + encodeURIComponent(selectedYear);
+                                if (typeof selectedModel !== 'undefined' && selectedModel) baseParams += "&model=" + encodeURIComponent(selectedModel);
+                                if (typeof selectedBody !== 'undefined' && selectedBody) baseParams += "&body=" + encodeURIComponent(selectedBody);
+                                if (typeof selectedTrim !== 'undefined' && selectedTrim) baseParams += "&trim=" + encodeURIComponent(selectedTrim);
+                                if (typeof selectedEngine !== 'undefined' && selectedEngine) baseParams += "&engine=" + encodeURIComponent(selectedEngine);
+                                if (typeof selectedTrans !== 'undefined' && selectedTrans) baseParams += "&trans=" + encodeURIComponent(selectedTrans);
+
                                 let titlePrefix = "Daily Production: ";
                                 if (activeCategory === 'monthly') titlePrefix = "Monthly Production: ";
                                 if (activeCategory === 'yearly') titlePrefix = "Yearly Production: ";
@@ -783,7 +792,7 @@
                                                         <%= data.label %>
                                                     <% } else if (activeCategory === 'engine') { %>
                                                         <% const is2019Engine = data.engine_rpo === 'LT5' || data.engine_rpo === 'LTA' || (data.engine_type && (data.engine_type.includes('LT5') || data.engine_type.includes('LTA'))); %>
-                                                        <a class="color-link" href="/vehicles?engine=<%= encodeURIComponent(data.engine_type) %>" style="<%= is2019Engine ? 'color: #aaaaaa;' : '' %>">
+                                                        <a class="color-link" href="/vehicles?engine=<%= encodeURIComponent(data.engine_type) %><%= baseParams %>" style="<%= is2019Engine ? 'color: #aaaaaa;' : '' %>">
                                                             <% if (data.engine_rpo) { %><strong><%= data.engine_rpo %></strong> - <% } %>
                                                             <%= data.engine_type %>
                                                         </a>
@@ -795,7 +804,7 @@
                                                     <% if (data.color_names) { %>
                                                         <% data.color_names.split(',').forEach((name, i) => { 
                                                             const trimmedName = name.trim();
-                                                            let linkHref = "/vehicles?color=" + encodeURIComponent(trimmedName);
+                                                            let linkHref = "/vehicles?color=" + encodeURIComponent(trimmedName) + baseParams;
                                                             if (data.rpo_code && data.rpo_code !== trimmedName) {
                                                                 linkHref += "&rpo=" + encodeURIComponent(data.rpo_code);
                                                             }
@@ -807,7 +816,7 @@
                                                 <% } else if (activeCategory === 'interior') { %>
                                                     <td scope="row" class="align-middle" style="text-align: left;">
                                                         <% const intName = (typeof intColor !== 'undefined' && intColor[data.rpo_code]) ? intColor[data.rpo_code].toUpperCase() : 'N/A'; %>
-                                                        <a class="color-link" href="/vehicles?rpo=<%= encodeURIComponent(data.rpo_code) %>"><%= intName %></a>
+                                                        <a class="color-link" href="/vehicles?rpo=<%= encodeURIComponent(data.rpo_code) %><%= baseParams %>"><%= intName %></a>
                                                     </td>
                                                 <% } %>
                                                 <td scope="row" class="align-middle"><%= data.percent %>%</td>
@@ -861,7 +870,7 @@
                                                                 <% if (data.color_names) { %>
                                                                     <% data.color_names.split(',').forEach((name, i) => { 
                                                                         const trimmedName = name.trim();
-                                                                        let linkHref = "/vehicles?color=" + encodeURIComponent(trimmedName);
+                                                                        let linkHref = "/vehicles?color=" + encodeURIComponent(trimmedName) + baseParams;
                                                                         if (data.rpo_code && data.rpo_code !== trimmedName) linkHref += "&rpo=" + encodeURIComponent(data.rpo_code);
                                                                     %>
                                                                         <a class="color-link" href="<%= linkHref %>"><%= trimmedName.toUpperCase() %></a><%= i < data.color_names.split(',').length - 1 ? ', ' : '' %>
@@ -869,7 +878,7 @@
                                                                 <% } %>
                                                             <% } else if (activeCategory === 'interior') { %>
                                                                 <% const intName = (typeof intColor !== 'undefined' && intColor[data.rpo_code]) ? intColor[data.rpo_code].toUpperCase() : 'N/A'; %>
-                                                                <a class="color-link" href="/vehicles?rpo=<%= encodeURIComponent(data.rpo_code) %>"><%= intName %></a>
+                                                                <a class="color-link" href="/vehicles?rpo=<%= encodeURIComponent(data.rpo_code) %><%= baseParams %>"><%= intName %></a>
                                                             <% } %>
                                                         </td>
                                                     </tr>

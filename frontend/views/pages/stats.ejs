@@ -759,10 +759,10 @@
                                     <tbody>
                                         <% multiItems.forEach(function(data, index) { %>
                                             <tr>
-                                                <td scope="row"><%= index + 1 %></td>
-                                                <td scope="row" style="white-space: nowrap; text-align: left;">
+                                                <td scope="row" class="align-middle"><%= index + 1 %></td>
+                                                <td scope="row" class="align-middle" style="white-space: nowrap; text-align: left;">
                                                     <% if (activeCategory === 'color') { %>
-                                                        <img src="/img/extColors/<%= data.rpo_code %>.webp" alt="<%= data.label %> color swatch" data-fallback="/img/extColors/default.webp" width="20" height="20" style="margin-right: 8px; border-radius: 50%;">
+                                                        <img src="/img/extColors/<%= data.rpo_code %>.webp" alt="<%= data.label %> color swatch" data-fallback="/img/extColors/default.webp" width="80" height="80" style="margin-right: 15px; border-radius: 50%; object-fit: cover; vertical-align: middle;">
                                                         <%= data.label %>
                                                     <% } else if (activeCategory === 'interior') { %>
                                                         <%
@@ -779,7 +779,7 @@
                                                             }
                                                             if (!imgSrc) imgSrc = '/img/extColors/default.webp';
                                                         %>
-                                                        <img src="<%= imgSrc %>" alt="<%= data.label %> color swatch" data-fallback="/img/extColors/default.webp" width="20" height="20" style="margin-right: 8px; border-radius: 50%;">
+                                                        <img src="<%= imgSrc %>" alt="<%= data.label %> color swatch" data-fallback="/img/extColors/default.webp" width="80" height="80" style="margin-right: 15px; border-radius: 50%; object-fit: cover; vertical-align: middle;">
                                                         <%= data.label %>
                                                     <% } else if (activeCategory === 'engine') { %>
                                                         <% const is2019Engine = data.engine_rpo === 'LT5' || data.engine_rpo === 'LTA' || (data.engine_type && (data.engine_type.includes('LT5') || data.engine_type.includes('LTA'))); %>
@@ -789,9 +789,9 @@
                                                         </a>
                                                     <% } %>
                                                 </td>
-                                                <td scope="row"><%= data.total_count %></td>
+                                                <td scope="row" class="align-middle"><%= data.total_count %></td>
                                                 <% if (activeCategory === 'color') { %>
-                                                    <td scope="row" style="text-align: left;">
+                                                    <td scope="row" class="align-middle" style="text-align: left;">
                                                     <% if (data.color_names) { %>
                                                         <% data.color_names.split(',').forEach((name, i) => { 
                                                             const trimmedName = name.trim();
@@ -805,12 +805,12 @@
                                                     <% } %>
                                                     </td>
                                                 <% } else if (activeCategory === 'interior') { %>
-                                                    <td scope="row" style="text-align: left;">
+                                                    <td scope="row" class="align-middle" style="text-align: left;">
                                                         <% const intName = (typeof intColor !== 'undefined' && intColor[data.rpo_code]) ? intColor[data.rpo_code].toUpperCase() : 'N/A'; %>
                                                         <a class="color-link" href="/vehicles?rpo=<%= encodeURIComponent(data.rpo_code) %>"><%= intName %></a>
                                                     </td>
                                                 <% } %>
-                                                <td scope="row"><%= data.percent %>%</td>
+                                                <td scope="row" class="align-middle"><%= data.percent %>%</td>
                                             </tr>
                                         <% }) %>
                                     </tbody>
@@ -833,9 +833,9 @@
                                             <tbody>
                                                 <% singleItems.forEach(function(data) { %>
                                                     <tr>
-                                                        <td scope="row" style="white-space: nowrap; text-align: left; width: 200px;">
+                                                        <td scope="row" class="align-middle" style="white-space: nowrap; text-align: left; width: 200px;">
                                                             <% if (activeCategory === 'color') { %>
-                                                                <img src="/img/extColors/<%= data.rpo_code %>.webp" alt="<%= data.label %> color swatch" data-fallback="/img/extColors/default.webp" width="20" height="20" style="margin-right: 8px; border-radius: 50%;">
+                                                                <img src="/img/extColors/<%= data.rpo_code %>.webp" alt="<%= data.label %> color swatch" data-fallback="/img/extColors/default.webp" width="80" height="80" style="margin-right: 15px; border-radius: 50%; object-fit: cover; vertical-align: middle;">
                                                                 <%= data.label %>
                                                             <% } else if (activeCategory === 'interior') { %>
                                                                 <%
@@ -852,11 +852,11 @@
                                                                     }
                                                                     if (!imgSrc) imgSrc = '/img/extColors/default.webp';
                                                                 %>
-                                                                <img src="<%= imgSrc %>" alt="<%= data.label %> color swatch" data-fallback="/img/extColors/default.webp" width="20" height="20" style="margin-right: 8px; border-radius: 50%;">
+                                                                <img src="<%= imgSrc %>" alt="<%= data.label %> color swatch" data-fallback="/img/extColors/default.webp" width="80" height="80" style="margin-right: 15px; border-radius: 50%; object-fit: cover; vertical-align: middle;">
                                                                 <%= data.label %>
                                                             <% } %>
                                                         </td>
-                                                        <td scope="row" style="text-align: left;">
+                                                        <td scope="row" class="align-middle" style="text-align: left;">
                                                             <% if (activeCategory === 'color') { %>
                                                                 <% if (data.color_names) { %>
                                                                     <% data.color_names.split(',').forEach((name, i) => { 

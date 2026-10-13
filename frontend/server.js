@@ -160,6 +160,22 @@ const authLimiter = rateLimit({
     legacyHeaders: false,
 });
 
+const renderRateLimitPage = (req, res) => {
+    const ip = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.ip;
+    const rayId = req.headers['cf-ray'] || (crypto.randomBytes(8).toString('hex') + '-ORD');
+    const host = req.headers.host || 'gmbuildcounts.com';
+    const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+
+    res.status(429).render('pages/errors/429', { 
+        rayId,
+        clientIp: ip,
+        host,
+        timestamp,
+        pagePath: req.path || '/search', 
+        canonicalPath: req.originalUrl || '/search'
+    });
+};
+
 const searchLimiter = rateLimit({
     windowMs: 5 * 60 * 1000, // 5 minutes
     max: 25,
@@ -176,12 +192,8 @@ const searchLimiter = rateLimit({
         // 1. Fire the Discord alert silently in the background
         sendDiscordAlert('ratelimit', { ip, path: req.originalUrl, userAgent });
         
-        // 2. Serve the user the 429 error gracefully
-        res.status(429).render('pages/errors/400', { 
-            pagePath: '/search', 
-            canonicalPath: '/search',
-            error: 'You are searching too fast. Please wait 5 minutes before searching another VIN.'
-        });
+        // 2. Serve the user the Cloudflare 1015 rate limit error page
+        renderRateLimitPage(req, res);
     }
 });
 
@@ -768,6 +780,9 @@ app.get('/search', searchLimiter, async (req, res) => {
     } catch (error) {
         // Output the VIN and only the error message to keep the logs clean
         console.error(`Search Route Error for VIN [${vinQuery}]:`, error.message);
+        if (error.response?.status === 429 || error.status === 429) {
+            return renderRateLimitPage(req, res);
+        }
         res.status(400).render('pages/errors/400', { pagePath: '/search', canonicalPath: '/search' });
     }
 });
@@ -945,6 +960,9 @@ app.use((req, res) => {
 
 app.use((err, req, res, next) => {
     console.error(err.stack);
+    if (err.status === 429 || err.statusCode === 429) {
+        return renderRateLimitPage(req, res);
+    }
     res.status(500).render('pages/errors/500', {
         error: err.message || err,
         pagePath: '/500',

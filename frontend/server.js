@@ -336,7 +336,7 @@ function getHeaderImages() {
 }
 
 // --- Helper to get hierarchical RPO image candidate keys ---
-function getRpoImageCandidates(modelUpper, vehicleTrim, rpoCode, options = []) {
+function getRpoImageCandidates(modelUpper, vehicleTrim, rpoCode, options = [], modelYear = null) {
     if (rpoCode === 'WOX') rpoCode = 'HMR';
     const candidates = [];
     const prefixKey = modelUpper.replace(/ /g, '').toUpperCase();
@@ -356,6 +356,11 @@ function getRpoImageCandidates(modelUpper, vehicleTrim, rpoCode, options = []) {
             subPrefix = 'CORVETTE-GRAND_SPORT';
         } else if (modelUpper.includes('E-RAY') || options.includes('HP1')) {
             subPrefix = 'CORVETTE-E-RAY';
+        }
+
+        const is2019 = String(modelYear) === '2019' || modelUpper.includes('2019');
+        if (is2019) {
+            candidates.push(`CORVETTE-2019-${rpoCode}`);
         }
 
         candidates.push(`${subPrefix}-${rpoCode}`);
@@ -438,7 +443,7 @@ function getLocalImageRPOs() {
             entries.forEach(entry => {
                 if (entry.isDirectory()) {
                     scanDirectory(require('path').join(currentPath, entry.name), prefix ? `${prefix}/${entry.name}` : entry.name, urlBase);
-                } else if (/\.(webp)$/i.test(entry.name)) {
+                } else if (/\.(webp|png|jpe?g)$/i.test(entry.name)) {
                     const rpoCode = require('path').parse(entry.name).name.toUpperCase();
                     const imagePath = `${urlBase}${prefix ? prefix + '/' : ''}${entry.name}`;
                     
@@ -715,7 +720,7 @@ app.get('/search', searchLimiter, async (req, res) => {
             const vehicleTrim = vehicle.trim || '';
             
             vehicle.rpo_codes.forEach(rpoCode => {
-                const candidates = getRpoImageCandidates(modelUpper, vehicleTrim, rpoCode, vehicle.rpo_codes);
+                const candidates = getRpoImageCandidates(modelUpper, vehicleTrim, rpoCode, vehicle.rpo_codes, vehicle.modelYear || vehicle.year);
                 if (candidates.some(key => localRpoImageMap[key])) {
                     verifiedRpoImages.push(rpoCode);
                 }

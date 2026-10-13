@@ -54,6 +54,7 @@
                     <option value="grand_sport_x">Grand Sport X</option>
                     <option value="zr1">ZR1</option>
                     <option value="zr1x">ZR1X</option>
+                    <option value="2019">2019</option>
                 </select>
             </div>
         </div>
@@ -76,6 +77,7 @@
             grand_sport_x: <%- JSON.stringify(corvetteGSXRpo || {}) %>,
             zr1: <%- JSON.stringify(zr1Rpo || {}) %>,
             zr1x: <%- JSON.stringify(zr1Rpo || {}) %>, // ZR1 and ZR1X share RPOs
+            '2019': <%- JSON.stringify(corvetteRpo || {}) %>,
             escalade: <%- JSON.stringify(escaladeRpo || {}) %>,
             escaladeiq: <%- JSON.stringify(escaladeiqRpo || {}) %>,
             ct4: <%- JSON.stringify(ct4Rpo || {}) %>,
@@ -152,6 +154,11 @@
                 };
 
                 img.onerror = function() {
+                    if (safeModel === 'corvette' && submodel === '2019' && !this.dataset.fallbackCorvette) {
+                        this.dataset.fallbackCorvette = 'true';
+                        this.src = `../img/rpos/corvette/${encodeURIComponent(rpo)}.webp`;
+                        return;
+                    }
                     if (!this.dataset.fallback) {
                         this.dataset.fallback = 'true';
                         const cadillacModels = ['escalade', 'escaladeiq', 'ct4', 'ct4v', 'ct5', 'ct5v'];

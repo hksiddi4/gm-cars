@@ -778,7 +778,7 @@
                                                         <%
                                                             let imgSrc = '';
                                                             if (typeof localRpoImageMap !== 'undefined' && typeof getRpoImageCandidates === 'function') {
-                                                                const candidates = getRpoImageCandidates(selectedModel || '', selectedTrim || '', data.rpo_code, []);
+                                                                const candidates = getRpoImageCandidates(selectedModel || '', selectedTrim || '', data.rpo_code, [], (typeof selectedYear !== 'undefined' && selectedYear) || (typeof selectedModelYear !== 'undefined' && selectedModelYear) || '');
                                                                 for (const cand of candidates) {
                                                                     if (localRpoImageMap[cand]) {
                                                                         imgSrc = localRpoImageMap[cand];
@@ -803,14 +803,19 @@
                                                 <% if (activeCategory === 'color') { %>
                                                     <td scope="row" class="align-middle" style="text-align: left;">
                                                     <% if (data.color_names) { %>
-                                                        <% data.color_names.split(',').forEach((name, i) => { 
-                                                            const trimmedName = name.trim();
-                                                            let linkHref = "/vehicles?color=" + encodeURIComponent(trimmedName) + baseParams;
-                                                            if (data.rpo_code && data.rpo_code !== trimmedName) {
-                                                                linkHref += "&rpo=" + encodeURIComponent(data.rpo_code);
-                                                            }
+                                                        <% 
+                                                            const rawColors = data.color_names.split(',').map(n => n.trim()).filter(Boolean);
+                                                            const uniqueColorsMap = new Map();
+                                                            rawColors.forEach(c => uniqueColorsMap.set(c.toUpperCase(), c));
+                                                            const colorList = Array.from(uniqueColorsMap.values());
+                                                            
+                                                            colorList.forEach((trimmedName, i) => { 
+                                                                let linkHref = "/vehicles?color=" + encodeURIComponent(trimmedName) + baseParams;
+                                                                if (colorList.length > 1 && data.rpo_code && data.rpo_code.toUpperCase() !== trimmedName.toUpperCase()) {
+                                                                    linkHref += "&rpo=" + encodeURIComponent(data.rpo_code);
+                                                                }
                                                         %>
-                                                            <a class="color-link" href="<%= linkHref %>"><%= trimmedName.toUpperCase() %></a><%= i < data.color_names.split(',').length - 1 ? ', ' : '' %>
+                                                            <a class="color-link" href="<%= linkHref %>"><%= trimmedName.toUpperCase() %></a><%= i < colorList.length - 1 ? ', ' : '' %>
                                                         <% }) %>
                                                     <% } %>
                                                     </td>
@@ -851,7 +856,7 @@
                                                                 <%
                                                                     let imgSrc = '';
                                                                     if (typeof localRpoImageMap !== 'undefined' && typeof getRpoImageCandidates === 'function') {
-                                                                        const candidates = getRpoImageCandidates(selectedModel || '', selectedTrim || '', data.rpo_code, []);
+                                                                        const candidates = getRpoImageCandidates(selectedModel || '', selectedTrim || '', data.rpo_code, [], (typeof selectedYear !== 'undefined' && selectedYear) || (typeof selectedModelYear !== 'undefined' && selectedModelYear) || '');
                                                                         for (const cand of candidates) {
                                                                             if (localRpoImageMap[cand]) {
                                                                                 imgSrc = localRpoImageMap[cand];
@@ -869,12 +874,19 @@
                                                         <td scope="row" class="align-middle" style="text-align: left;">
                                                             <% if (activeCategory === 'color') { %>
                                                                 <% if (data.color_names) { %>
-                                                                    <% data.color_names.split(',').forEach((name, i) => { 
-                                                                        const trimmedName = name.trim();
-                                                                        let linkHref = "/vehicles?color=" + encodeURIComponent(trimmedName) + baseParams;
-                                                                        if (data.rpo_code && data.rpo_code !== trimmedName) linkHref += "&rpo=" + encodeURIComponent(data.rpo_code);
+                                                                    <% 
+                                                                        const rawColors = data.color_names.split(',').map(n => n.trim()).filter(Boolean);
+                                                                        const uniqueColorsMap = new Map();
+                                                                        rawColors.forEach(c => uniqueColorsMap.set(c.toUpperCase(), c));
+                                                                        const colorList = Array.from(uniqueColorsMap.values());
+                                                                        
+                                                                        colorList.forEach((trimmedName, i) => { 
+                                                                            let linkHref = "/vehicles?color=" + encodeURIComponent(trimmedName) + baseParams;
+                                                                            if (colorList.length > 1 && data.rpo_code && data.rpo_code.toUpperCase() !== trimmedName.toUpperCase()) {
+                                                                                linkHref += "&rpo=" + encodeURIComponent(data.rpo_code);
+                                                                            }
                                                                     %>
-                                                                        <a class="color-link" href="<%= linkHref %>"><%= trimmedName.toUpperCase() %></a><%= i < data.color_names.split(',').length - 1 ? ', ' : '' %>
+                                                                        <a class="color-link" href="<%= linkHref %>"><%= trimmedName.toUpperCase() %></a><%= i < colorList.length - 1 ? ', ' : '' %>
                                                                     <% }) %>
                                                                 <% } %>
                                                             <% } else if (activeCategory === 'interior') { %>
@@ -2109,6 +2121,17 @@
                                     if (selectedTransFilter) params.set('trans', selectedTransFilter);
                                     
                                     params.set(currentCategory, paramValue);
+                                    if (currentCategory === 'color') {
+                                        let cNames = d.color_names ? d.color_names.split(',').map(n => n.trim()).filter(Boolean) : [];
+                                        if (cNames.length > 0) {
+                                            const uniqueMap = new Map();
+                                            cNames.forEach(c => uniqueMap.set(c.toUpperCase(), c));
+                                            cNames = Array.from(uniqueMap.values());
+                                        }
+                                        if (cNames.length > 1 && d.rpo_code && d.rpo_code.toUpperCase() !== paramValue.toUpperCase()) {
+                                            params.set('rpo', d.rpo_code);
+                                        }
+                                    }
                                     window.location.href = '/vehicles?' + params.toString();
                                 }
                             },

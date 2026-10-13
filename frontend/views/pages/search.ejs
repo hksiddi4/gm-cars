@@ -398,7 +398,9 @@
           
           if (modelUpper.startsWith('CORVETTE')) {
               let subPrefix = prefixKey;
+              const is2019 = String(modelYear) === '2019' || (typeof vin !== 'undefined' && String(vin?.modelYear) === '2019') || modelUpper.includes('2019');
               const vCandidates = [
+                  is2019 ? `CORVETTE-2019-${rpoCode}` : null,
                   `${subPrefix}-${rpoCode}`,
                   (subPrefix === 'CORVETTE-GRAND_SPORT_X') ? `CORVETTE-GRAND_SPORT-${rpoCode}` : null,
                   (subPrefix !== 'CORVETTE-STINGRAY') ? `CORVETTE-STINGRAY-${rpoCode}` : null,

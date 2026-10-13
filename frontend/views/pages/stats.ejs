@@ -255,25 +255,54 @@
         }
         .drill-state-row, .drill-city-row, .dealer-row {
             cursor: pointer;
-            transition: background-color 0.15s ease-in-out;
+            transition: background-color 0.3s ease;
         }
-        .drill-state-row:hover, .drill-city-row:hover, .dealer-row:hover {
-            background-color: rgba(0, 0, 0, 0.05) !important;
+        /* Exact same hover shade (#cacaca) as the vehicles table (.table-veh) */
+        .drill-state-row:hover,
+        .drill-city-row:hover,
+        .dealer-row:hover,
+        #tableStates tbody tr:hover,
+        #tableCities tbody tr:hover,
+        #tableDealers tbody tr:hover {
+            background-color: #cacaca !important;
+        }
+        .drill-state-row:hover > *,
+        .drill-city-row:hover > *,
+        .dealer-row:hover > *,
+        #tableStates tbody tr:hover > *,
+        #tableCities tbody tr:hover > *,
+        #tableDealers tbody tr:hover > * {
+            background-color: #cacaca !important;
+            --bs-table-accent-bg: #cacaca !important;
+            --bs-table-hover-bg: #cacaca !important;
         }
 
-        /* Consistent grey buttons matching other stats pages */
+        /* Exact same color/hover shade as the Vehicles Added button (.model-btn) */
         .btn-stats-veh {
             background-color: #3d3d3d !important;
             border: 1px solid #444 !important;
             color: #ffffff !important;
             font-weight: 600;
             border-radius: 6px;
-            transition: background-color 0.2s ease, color 0.2s ease;
+            transition: color 0.2s ease, background-color 0.2s ease;
+            text-decoration: none !important;
         }
-        .btn-stats-veh:hover {
+        .btn-stats-veh i {
+            color: #ffffff !important;
+            transition: color 0.2s ease;
+        }
+        .btn-stats-veh:hover,
+        .btn-stats-veh:focus,
+        .btn-stats-veh:active {
             background-color: #2b2b2b !important;
-            color: #adb5bd !important;
-            border-color: #555 !important;
+            color: #787878 !important;
+            border-color: #444 !important;
+            text-decoration: none !important;
+        }
+        .btn-stats-veh:hover i,
+        .btn-stats-veh:focus i,
+        .btn-stats-veh:active i {
+            color: #787878 !important;
         }
     </style>
 
@@ -2303,7 +2332,7 @@
                         <td class="align-middle">${d.percent_of_city}%</td>
                         <td class="align-middle text-center" onclick="event.stopPropagation();">
                             <a href="${vehLink}" class="btn model-btn btn-stats-veh btn-sm text-nowrap" title="View matching vehicles at ${d.dealer_name}">
-                                <i class="bi bi-car-front-fill me-1"></i> View Vehicles (${formatNumber(d.total_count)})
+                                <i class="bi bi-car-front-fill me-1"></i> View Vehicles
                             </a>
                         </td>
                     `;

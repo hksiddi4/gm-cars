@@ -309,6 +309,24 @@
 </head>
 <body>
 <% 
+    function formatPercent(val) {
+        if (val === null || val === undefined || val === '') return '0%';
+        const str = String(val).trim();
+        if (str.endsWith('%')) return str;
+        const num = Number(str);
+        if (isNaN(num) || num <= 0) return '0%';
+        if (num >= 0.01) {
+            return parseFloat(num.toFixed(2)) + '%';
+        }
+        const decimals = -Math.floor(Math.log10(num));
+        const rounded = Number(num.toFixed(decimals));
+        if (rounded >= 0.01) {
+            return parseFloat(rounded.toFixed(2)) + '%';
+        }
+        const formatted = rounded.toFixed(decimals).replace(/\.?0+$/, '');
+        return formatted + '%';
+    }
+
     let baseParams = "";
     if (typeof selectedYear !== 'undefined' && selectedYear) baseParams += "&year=" + encodeURIComponent(selectedYear);
     if (typeof selectedModel !== 'undefined' && selectedModel) baseParams += "&model=" + encodeURIComponent(selectedModel);
@@ -909,7 +927,7 @@
                                                     <%= s.state_name %> (<%= s.state %>)
                                                 </td>
                                                 <td class="align-middle fw-bold"><%= formatCurrency(s.total_count) %></td>
-                                                <td class="align-middle"><%= s.percent %>%</td>
+                                                <td class="align-middle"><%= formatPercent(s.percent) %></td>
                                                 <td class="align-middle"><%= formatCurrency(s.city_count) %></td>
                                                 <td class="align-middle"><%= formatCurrency(s.dealer_count) %></td>
                                                 <td class="align-middle text-center" onclick="event.stopPropagation();">
@@ -1088,7 +1106,7 @@
                                                         <a class="color-link" href="/vehicles?rpo=<%= encodeURIComponent(data.rpo_code) %><%= baseParams %>"><%= intName %></a>
                                                     </td>
                                                 <% } %>
-                                                <td scope="row" class="align-middle"><%= data.percent %>%</td>
+                                                <td scope="row" class="align-middle"><%= formatPercent(data.percent) %></td>
                                             </tr>
                                         <% }) %>
                                     </tbody>
@@ -2083,6 +2101,43 @@
                 return (num || 0).toLocaleString();
             }
 
+            function formatPercent(val) {
+                if (val === null || val === undefined || val === '') return '0%';
+                const str = String(val).trim();
+                if (str.endsWith('%')) return str;
+                const num = Number(str);
+                if (isNaN(num) || num <= 0) return '0%';
+                if (num >= 0.01) {
+                    return parseFloat(num.toFixed(2)) + '%';
+                }
+                const decimals = -Math.floor(Math.log10(num));
+                const rounded = Number(num.toFixed(decimals));
+                if (rounded >= 0.01) {
+                    return parseFloat(rounded.toFixed(2)) + '%';
+                }
+                const formatted = rounded.toFixed(decimals).replace(/\.?0+$/, '');
+                return formatted + '%';
+            }
+
+            function extractZip(loc) {
+                if (!loc || typeof loc !== 'string') return '';
+                const trimmed = loc.trim();
+                if (!trimmed) return '';
+                if (trimmed.includes(',')) {
+                    const parts = trimmed.split(',');
+                    const lastPart = parts[parts.length - 1].trim();
+                    const tokens = lastPart.split(/\s+/).filter(Boolean);
+                    if (tokens.length > 1) {
+                        return tokens.slice(1).join(' ').trim();
+                    }
+                    return '';
+                }
+                if (/^\d{5}(-\d{4})?$/.test(trimmed) || /^[A-Z]\d[A-Z]\s*\d[A-Z]\d$/i.test(trimmed)) {
+                    return trimmed;
+                }
+                return '';
+            }
+
             function initTopStatesChart() {
                 const canvas = document.getElementById('dealerTopStatesChart');
                 if (!canvas) return;
@@ -2144,7 +2199,7 @@
                             },
                             tooltip: {
                                 callbacks: {
-                                    label: ctx => `Vehicles: ${formatNumber(ctx.raw)} (${top15[ctx.dataIndex].percent}%)`
+                                    label: ctx => `Vehicles: ${formatNumber(ctx.raw)} (${formatPercent(top15[ctx.dataIndex].percent)})`
                                 }
                             }
                         },
@@ -2266,7 +2321,7 @@
                             ${c.city}
                         </td>
                         <td class="align-middle fw-bold">${formatNumber(c.total_count)}</td>
-                        <td class="align-middle">${c.percent_of_state}%</td>
+                        <td class="align-middle">${formatPercent(c.percent_of_state)}</td>
                         <td class="align-middle">${formatNumber(c.dealer_count)}</td>
                         <td class="align-middle text-center" onclick="event.stopPropagation();">
                             <a href="/vehicles?state=${encodeURIComponent(stateObj.state)}&city=${encodeURIComponent(c.city)}${baseParams}" class="btn model-btn btn-stats-veh btn-sm text-nowrap" title="View matching vehicles in ${c.city}">
@@ -2322,14 +2377,16 @@
                     const tr = document.createElement('tr');
                     tr.className = 'dealer-row';
                     tr.style.cursor = 'pointer';
-                    tr.title = `Click to view matching vehicles at ${d.dealer_name}`;
+                    const zipDisplay = d.zip || extractZip(d.location) || 'N/A';
+                    tr.title = `Click to view matching vehicles at ${d.dealer_name}${d.location ? ' - ' + d.location : ''}`;
+                    tr.dataset.location = d.location || '';
                     const vehLink = `/vehicles?dealer_id=${d.dealer_id}&dealer_name=${encodeURIComponent(d.dealer_name)}&state=${encodeURIComponent(currentSelectedState.state)}&city=${encodeURIComponent(cityObj.city)}${baseParams}`;
                     tr.innerHTML = `
                         <td class="align-middle">${idx + 1}</td>
                         <td class="align-middle text-start fw-bold text-dark">${d.dealer_name}</td>
-                        <td class="align-middle text-start text-muted small">${d.location || 'N/A'}</td>
+                        <td class="align-middle text-start text-muted small">${zipDisplay}</td>
                         <td class="align-middle fw-bold">${formatNumber(d.total_count)}</td>
-                        <td class="align-middle">${d.percent_of_city}%</td>
+                        <td class="align-middle">${formatPercent(d.percent_of_city)}</td>
                         <td class="align-middle text-center" onclick="event.stopPropagation();">
                             <a href="${vehLink}" class="btn model-btn btn-stats-veh btn-sm text-nowrap" title="View matching vehicles at ${d.dealer_name}">
                                 <i class="bi bi-car-front-fill me-1"></i> View Vehicles
@@ -2393,7 +2450,7 @@
                     const rows = document.querySelectorAll('#tbodyDealers tr');
                     let visibleCount = 0;
                     rows.forEach(r => {
-                        const text = r.textContent.toLowerCase();
+                        const text = (r.textContent + ' ' + (r.dataset.location || '')).toLowerCase();
                         if (!query || text.includes(query)) {
                             r.style.display = '';
                             visibleCount++;

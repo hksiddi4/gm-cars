@@ -2,6 +2,7 @@ from gevent import monkey
 monkey.patch_all()
 
 import sql
+import math
 import flask
 import requests
 from flask import request, jsonify
@@ -35,19 +36,43 @@ STATE_NAMES = {
 
 def parse_dealer_location(location_str):
     if not location_str or not isinstance(location_str, str):
-        return 'OTHER', 'UNKNOWN'
+        return 'OTHER', 'UNKNOWN', ''
     loc = location_str.strip()
     if not loc:
-        return 'OTHER', 'UNKNOWN'
+        return 'OTHER', 'UNKNOWN', ''
     parts = loc.split(',')
-    city = parts[0].strip().upper() if parts[0] else 'UNKNOWN'
+    if len(parts) > 2:
+        city = parts[-2].strip().upper() if parts[-2] else 'UNKNOWN'
+    else:
+        city = parts[0].strip().upper() if parts[0] else 'UNKNOWN'
     state = 'OTHER'
+    zip_code = ''
     if len(parts) > 1:
-        rest = parts[1].strip()
-        tokens = rest.split()
+        last_part = parts[-1].strip()
+        tokens = last_part.split()
         if tokens:
             state = tokens[0].strip().upper()
-    return state, city
+            if len(tokens) > 1:
+                zip_code = ' '.join(tokens[1:]).strip()
+    elif len(parts) == 1:
+        tokens = loc.split()
+        if len(tokens) > 1:
+            zip_code = ' '.join(tokens[1:]).strip()
+        elif loc.isdigit():
+            zip_code = loc
+    return state, city, zip_code
+ 
+def format_percent(count, total):
+    if not count or not total or total <= 0 or count <= 0:
+        return 0
+    raw = (100.0 * count) / total
+    if raw >= 0.01:
+        return round(raw, 2)
+    decimals = -int(math.floor(math.log10(raw)))
+    val = round(raw, decimals)
+    if val >= 0.01:
+        return round(val, 2)
+    return f"{val:.{decimals}f}".rstrip('0').rstrip('.')
 
 OLLAMA_URL = "http://192.168.1.126:11434/api/generate"
 AI_MODEL = "qwen2.5-coder:7b"
@@ -989,7 +1014,7 @@ def stats():
             dealer_id = row.get('dealer_id')
             unique_dealers.add(dealer_id)
 
-            state_code, city_name = parse_dealer_location(row.get('location'))
+            state_code, city_name, zip_code = parse_dealer_location(row.get('location'))
             unique_cities.add(f"{state_code}:{city_name}")
 
             if state_code not in states_map:
@@ -1019,6 +1044,7 @@ def stats():
                 'dealer_id': dealer_id,
                 'dealer_name': row.get('dealer_name') or 'Unknown Dealer',
                 'location': row.get('location') or '',
+                'zip': zip_code,
                 'sitedealer_code': row.get('sitedealer_code') or '',
                 'total_count': count
             })
@@ -1047,13 +1073,13 @@ def stats():
         states_list.sort(key=lambda s: s['total_count'], reverse=True)
 
         for s in states_list:
-            s['percent'] = round((100.0 * s['total_count'] / total_vehicles), 2) if total_vehicles > 0 else 0
+            s['percent'] = format_percent(s['total_count'], total_vehicles)
             for c in s['cities']:
-                c['percent_of_state'] = round((100.0 * c['total_count'] / s['total_count']), 2) if s['total_count'] > 0 else 0
-                c['percent_of_total'] = round((100.0 * c['total_count'] / total_vehicles), 2) if total_vehicles > 0 else 0
+                c['percent_of_state'] = format_percent(c['total_count'], s['total_count'])
+                c['percent_of_total'] = format_percent(c['total_count'], total_vehicles)
                 for d in c['dealers']:
-                    d['percent_of_city'] = round((100.0 * d['total_count'] / c['total_count']), 2) if c['total_count'] > 0 else 0
-                    d['percent_of_total'] = round((100.0 * d['total_count'] / total_vehicles), 2) if total_vehicles > 0 else 0
+                    d['percent_of_city'] = format_percent(d['total_count'], c['total_count'])
+                    d['percent_of_total'] = format_percent(d['total_count'], total_vehicles)
 
         dealer_summary = {
             'total_vehicles': total_vehicles,

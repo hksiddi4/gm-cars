@@ -2,6 +2,7 @@ from gevent import monkey
 monkey.patch_all()
 
 import sql
+import re
 import math
 import flask
 import requests
@@ -37,7 +38,7 @@ STATE_NAMES = {
 def parse_dealer_location(location_str):
     if not location_str or not isinstance(location_str, str):
         return 'OTHER', 'UNKNOWN', ''
-    loc = location_str.strip()
+    loc = location_str.strip().rstrip('.')
     if not loc:
         return 'OTHER', 'UNKNOWN', ''
     parts = loc.split(',')
@@ -45,22 +46,40 @@ def parse_dealer_location(location_str):
         city = parts[-2].strip().upper() if parts[-2] else 'UNKNOWN'
     else:
         city = parts[0].strip().upper() if parts[0] else 'UNKNOWN'
+    city = re.sub(r'[^\w\s]', '', city).strip()
     state = 'OTHER'
     zip_code = ''
     if len(parts) > 1:
-        last_part = parts[-1].strip()
+        last_part = parts[-1].strip().rstrip('.')
         tokens = last_part.split()
         if tokens:
-            state = tokens[0].strip().upper()
+            state = re.sub(r'[^\w]', '', tokens[0]).strip().upper()
             if len(tokens) > 1:
-                zip_code = ' '.join(tokens[1:]).strip()
+                zip_code = ' '.join(tokens[1:]).strip().rstrip('.')
     elif len(parts) == 1:
         tokens = loc.split()
         if len(tokens) > 1:
-            zip_code = ' '.join(tokens[1:]).strip()
+            zip_code = ' '.join(tokens[1:]).strip().rstrip('.')
         elif loc.isdigit():
             zip_code = loc
     return state, city, zip_code
+
+def normalize_dealer_name(name):
+    if not name:
+        return ''
+    s = name.strip()
+    s = re.sub(r'&', ' AND ', s)
+    s = re.sub(r"['’]", "", s)
+    s = re.sub(r'[^\w\s]', ' ', s)
+    return ' '.join(s.split()).upper()
+
+def normalize_location_key(state_code, city_name, zip_code, raw_loc):
+    base_zip = zip_code.split('-')[0].strip() if '-' in zip_code else zip_code.strip()
+    norm_city = ' '.join(re.sub(r'[^\w\s]', ' ', city_name).split()).upper()
+    if base_zip:
+        return f"{state_code}:{norm_city}:{base_zip}"
+    norm_raw = ' '.join(re.sub(r'[^\w\s]', ' ', raw_loc).split()).upper()
+    return f"{state_code}:{norm_city}:{norm_raw}"
  
 def format_percent(count, total):
     if not count or not total or total <= 0 or count <= 0:
@@ -995,16 +1014,16 @@ def stats():
     elif category == 'dealers':
         sqlStatement = f"""
             SELECT 
-                GROUP_CONCAT(DISTINCT dl.dealer_id ORDER BY dl.dealer_id SEPARATOR ',') AS dealer_id,
-                MIN(dl.dealer_name) AS dealer_name,
-                MIN(dl.location) AS location,
-                GROUP_CONCAT(DISTINCT dl.sitedealer_code ORDER BY dl.sitedealer_code SEPARATOR ', ') AS sitedealer_code,
+                dl.dealer_id,
+                dl.dealer_name,
+                dl.location,
+                dl.sitedealer_code,
                 COUNT(*) AS total_count
             FROM Vehicles v
             JOIN Dealers dl ON v.dealer_id = dl.dealer_id
             {join_clause}
             {where_clause}
-            GROUP BY TRIM(dl.dealer_name), TRIM(COALESCE(dl.location, ''))
+            GROUP BY dl.dealer_id, dl.dealer_name, dl.location, dl.sitedealer_code
             ORDER BY total_count DESC;
         """
     else:
@@ -1034,9 +1053,9 @@ def stats():
             state_code, city_name, zip_code = parse_dealer_location(raw_loc)
             unique_cities.add(f"{state_code}:{city_name}")
 
-            norm_name = ' '.join(raw_name.split()).upper()
-            norm_loc = ' '.join(raw_loc.split()).upper()
-            dealer_key = (norm_name, norm_loc)
+            norm_name = normalize_dealer_name(raw_name)
+            loc_key = normalize_location_key(state_code, city_name, zip_code, raw_loc)
+            dealer_key = (norm_name, loc_key)
             unique_dealers.add(dealer_key)
 
             if state_code not in states_map:
@@ -1063,14 +1082,17 @@ def stats():
             city_obj = state_obj['cities_map'][city_name]
             city_obj['total_count'] += count
 
+            clean_display_name = raw_name.rstrip('.').rstrip(',').strip()
+
             if dealer_key not in city_obj['dealers_map']:
                 city_obj['dealers_map'][dealer_key] = {
                     'dealer_ids': [x.strip() for x in raw_dealer_id.split(',') if x.strip()],
-                    'dealer_name': raw_name,
+                    'dealer_name': clean_display_name,
                     'location': raw_loc,
                     'zip': zip_code,
                     'sitedealer_codes': [x.strip() for x in raw_code.split(',') if x.strip()],
-                    'total_count': count
+                    'total_count': count,
+                    'max_count': count
                 }
             else:
                 existing = city_obj['dealers_map'][dealer_key]
@@ -1083,10 +1105,13 @@ def stats():
                     x = x.strip()
                     if x and x not in existing['sitedealer_codes']:
                         existing['sitedealer_codes'].append(x)
-                if not existing['zip'] and zip_code:
+                if len(zip_code) > len(existing['zip']):
                     existing['zip'] = zip_code
-                if not existing['location'] and raw_loc:
+                if len(raw_loc) > len(existing['location']):
                     existing['location'] = raw_loc
+                if count > existing['max_count']:
+                    existing['dealer_name'] = clean_display_name
+                    existing['max_count'] = count
 
         for state_code, s_info in states_map.items():
             cities_list = []

@@ -262,6 +262,7 @@ def sort_price():
     city = request.args.get('city')
     dealer = request.args.get('dealer')
     dealer_id = request.args.get('dealer_id')
+    dealer_name = request.args.get('dealer_name')
     
     limit = 100
     try:
@@ -336,7 +337,7 @@ def sort_price():
             conditions.append("DATE(o.creation_date) = %s")
         params.append(date)
 
-    if state or city or dealer or dealer_id:
+    if state or city or dealer or dealer_id or dealer_name:
         filter_join_clause += " JOIN Dealers dl ON v.dealer_id = dl.dealer_id"
 
     if state:
@@ -354,15 +355,29 @@ def sort_price():
             params.append(city.strip().upper())
 
     if dealer_id:
-        conditions.append("v.dealer_id = %s")
-        params.append(int(dealer_id))
+        d_ids = [int(x.strip()) for x in str(dealer_id).split(',') if x.strip().isdigit()]
+        if len(d_ids) == 1:
+            conditions.append("v.dealer_id = %s")
+            params.append(d_ids[0])
+        elif len(d_ids) > 1:
+            placeholders = ', '.join(['%s'] * len(d_ids))
+            conditions.append(f"v.dealer_id IN ({placeholders})")
+            params.extend(d_ids)
     elif dealer:
         if str(dealer).strip().isdigit():
             conditions.append("v.dealer_id = %s")
             params.append(int(dealer))
+        elif ',' in str(dealer) and all(x.strip().isdigit() for x in str(dealer).split(',') if x.strip()):
+            d_ids = [int(x.strip()) for x in str(dealer).split(',') if x.strip().isdigit()]
+            placeholders = ', '.join(['%s'] * len(d_ids))
+            conditions.append(f"v.dealer_id IN ({placeholders})")
+            params.extend(d_ids)
         else:
             conditions.append("dl.dealer_name = %s")
             params.append(dealer.strip())
+    elif dealer_name:
+        conditions.append("dl.dealer_name = %s")
+        params.append(dealer_name.strip())
 
     if rpo:
         rpo_list = rpo.split(',') if ',' in rpo else [rpo]
@@ -980,16 +995,16 @@ def stats():
     elif category == 'dealers':
         sqlStatement = f"""
             SELECT 
-                dl.dealer_id,
-                dl.dealer_name,
-                dl.location,
-                dl.sitedealer_code,
+                GROUP_CONCAT(DISTINCT dl.dealer_id ORDER BY dl.dealer_id SEPARATOR ',') AS dealer_id,
+                MIN(dl.dealer_name) AS dealer_name,
+                MIN(dl.location) AS location,
+                GROUP_CONCAT(DISTINCT dl.sitedealer_code ORDER BY dl.sitedealer_code SEPARATOR ', ') AS sitedealer_code,
                 COUNT(*) AS total_count
             FROM Vehicles v
             JOIN Dealers dl ON v.dealer_id = dl.dealer_id
             {join_clause}
             {where_clause}
-            GROUP BY dl.dealer_id, dl.dealer_name, dl.location, dl.sitedealer_code
+            GROUP BY TRIM(dl.dealer_name), TRIM(COALESCE(dl.location, ''))
             ORDER BY total_count DESC;
         """
     else:
@@ -1011,61 +1026,95 @@ def stats():
         for row in raw_dealers:
             count = row.get('total_count') or 0
             total_vehicles += count
-            dealer_id = row.get('dealer_id')
-            unique_dealers.add(dealer_id)
+            raw_dealer_id = str(row.get('dealer_id') or '')
+            raw_name = (row.get('dealer_name') or 'Unknown Dealer').strip()
+            raw_loc = (row.get('location') or '').strip()
+            raw_code = str(row.get('sitedealer_code') or '').strip()
 
-            state_code, city_name, zip_code = parse_dealer_location(row.get('location'))
+            state_code, city_name, zip_code = parse_dealer_location(raw_loc)
             unique_cities.add(f"{state_code}:{city_name}")
+
+            norm_name = ' '.join(raw_name.split()).upper()
+            norm_loc = ' '.join(raw_loc.split()).upper()
+            dealer_key = (norm_name, norm_loc)
+            unique_dealers.add(dealer_key)
 
             if state_code not in states_map:
                 states_map[state_code] = {
                     'state': state_code,
                     'state_name': STATE_NAMES.get(state_code, state_code),
                     'total_count': 0,
-                    'dealers_count': 0,
+                    'dealers_set': set(),
                     'cities_map': {}
                 }
 
             state_obj = states_map[state_code]
             state_obj['total_count'] += count
-            state_obj['dealers_count'] += 1
+            state_obj['dealers_set'].add(dealer_key)
 
             if city_name not in state_obj['cities_map']:
                 state_obj['cities_map'][city_name] = {
                     'city': city_name,
                     'state': state_code,
                     'total_count': 0,
-                    'dealers': []
+                    'dealers_map': {}
                 }
 
             city_obj = state_obj['cities_map'][city_name]
             city_obj['total_count'] += count
-            city_obj['dealers'].append({
-                'dealer_id': dealer_id,
-                'dealer_name': row.get('dealer_name') or 'Unknown Dealer',
-                'location': row.get('location') or '',
-                'zip': zip_code,
-                'sitedealer_code': row.get('sitedealer_code') or '',
-                'total_count': count
-            })
+
+            if dealer_key not in city_obj['dealers_map']:
+                city_obj['dealers_map'][dealer_key] = {
+                    'dealer_ids': [x.strip() for x in raw_dealer_id.split(',') if x.strip()],
+                    'dealer_name': raw_name,
+                    'location': raw_loc,
+                    'zip': zip_code,
+                    'sitedealer_codes': [x.strip() for x in raw_code.split(',') if x.strip()],
+                    'total_count': count
+                }
+            else:
+                existing = city_obj['dealers_map'][dealer_key]
+                existing['total_count'] += count
+                for x in raw_dealer_id.split(','):
+                    x = x.strip()
+                    if x and x not in existing['dealer_ids']:
+                        existing['dealer_ids'].append(x)
+                for x in raw_code.split(','):
+                    x = x.strip()
+                    if x and x not in existing['sitedealer_codes']:
+                        existing['sitedealer_codes'].append(x)
+                if not existing['zip'] and zip_code:
+                    existing['zip'] = zip_code
+                if not existing['location'] and raw_loc:
+                    existing['location'] = raw_loc
 
         for state_code, s_info in states_map.items():
             cities_list = []
             for city_name, c_info in s_info['cities_map'].items():
-                c_info['dealers'].sort(key=lambda d: d['total_count'], reverse=True)
+                dealers_list = []
+                for d_key, d_obj in c_info['dealers_map'].items():
+                    dealers_list.append({
+                        'dealer_id': ','.join(d_obj['dealer_ids']),
+                        'dealer_name': d_obj['dealer_name'],
+                        'location': d_obj['location'],
+                        'zip': d_obj['zip'],
+                        'sitedealer_code': ', '.join(d_obj['sitedealer_codes']),
+                        'total_count': d_obj['total_count']
+                    })
+                dealers_list.sort(key=lambda d: d['total_count'], reverse=True)
                 cities_list.append({
                     'city': city_name,
                     'state': state_code,
                     'total_count': c_info['total_count'],
-                    'dealer_count': len(c_info['dealers']),
-                    'dealers': c_info['dealers']
+                    'dealer_count': len(dealers_list),
+                    'dealers': dealers_list
                 })
             cities_list.sort(key=lambda c: c['total_count'], reverse=True)
             states_list.append({
                 'state': state_code,
                 'state_name': s_info['state_name'],
                 'total_count': s_info['total_count'],
-                'dealer_count': s_info['dealers_count'],
+                'dealer_count': len(s_info['dealers_set']),
                 'city_count': len(cities_list),
                 'cities': cities_list
             })

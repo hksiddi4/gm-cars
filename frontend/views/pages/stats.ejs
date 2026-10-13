@@ -2380,7 +2380,7 @@
                     const zipDisplay = d.zip || extractZip(d.location) || 'N/A';
                     tr.title = `Click to view matching vehicles at ${d.dealer_name}${d.location ? ' - ' + d.location : ''}`;
                     tr.dataset.location = d.location || '';
-                    const vehLink = `/vehicles?dealer_id=${d.dealer_id}&dealer_name=${encodeURIComponent(d.dealer_name)}&state=${encodeURIComponent(currentSelectedState.state)}&city=${encodeURIComponent(cityObj.city)}${baseParams}`;
+                    const vehLink = `/vehicles?dealer_id=${encodeURIComponent(d.dealer_id || '')}&dealer_name=${encodeURIComponent(d.dealer_name)}&state=${encodeURIComponent(currentSelectedState.state)}&city=${encodeURIComponent(cityObj.city)}${baseParams}`;
                     tr.innerHTML = `
                         <td class="align-middle">${idx + 1}</td>
                         <td class="align-middle text-start fw-bold text-dark">${d.dealer_name}</td>

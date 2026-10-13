@@ -245,6 +245,36 @@
                 margin: 0;
             }
         }
+
+        /* Dealership Statistics Tables */
+        #tableStates, #tableCities, #tableDealers {
+            color: #000000 !important;
+        }
+        #tableStates tbody td, #tableCities tbody td, #tableDealers tbody td {
+            color: #000000 !important;
+        }
+        .drill-state-row, .drill-city-row, .dealer-row {
+            cursor: pointer;
+            transition: background-color 0.15s ease-in-out;
+        }
+        .drill-state-row:hover, .drill-city-row:hover, .dealer-row:hover {
+            background-color: rgba(0, 0, 0, 0.05) !important;
+        }
+
+        /* Consistent grey buttons matching other stats pages */
+        .btn-stats-veh {
+            background-color: #3d3d3d !important;
+            border: 1px solid #444 !important;
+            color: #ffffff !important;
+            font-weight: 600;
+            border-radius: 6px;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+        .btn-stats-veh:hover {
+            background-color: #2b2b2b !important;
+            color: #adb5bd !important;
+            border-color: #555 !important;
+        }
     </style>
 
 </head>
@@ -761,7 +791,7 @@
                             </div>
                             <div class="col-6 col-md-3">
                                 <div class="dashboard-card text-center py-3 h-100">
-                                    <div class="text-white-50 small text-uppercase fw-bold mb-1">States / Provinces</div>
+                                    <div class="text-white-50 small text-uppercase fw-bold mb-1">Subdivisions</div>
                                     <div class="fs-3 fw-bold text-white"><%= formatCurrency(safeSummary.total_states || 0) %></div>
                                 </div>
                             </div>
@@ -779,10 +809,10 @@
                             </div>
                         </div>
 
-                        <!-- Top States Bar Chart -->
+                        <!-- Top Subdivisions Bar Chart -->
                         <div class="dashboard-card mb-4" id="dealerChartCard">
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h5 class="text-white fw-bold mb-0">Top States & Provinces by Vehicle Volume</h5>
+                                <h5 class="text-white fw-bold mb-0">Top Subdivisions by Vehicle Volume</h5>
                                 <span class="text-white-50 small">Click any bar to drill down</span>
                             </div>
                             <div style="position: relative; width: 100%; height: 320px;">
@@ -795,7 +825,7 @@
                             <div class="d-flex align-items-center flex-wrap gap-2">
                                 <span class="text-white-50 small fw-bold me-1 text-uppercase"><i class="bi bi-diagram-3-fill me-1"></i>Location Drill-Down:</span>
                                 <button type="button" class="btn btn-sm btn-outline-light active d-inline-flex align-items-center gap-1" id="crumbRoot" style="font-weight: 600;">
-                                    All States (<%= safeDealersData.length %>)
+                                    All Subdivisions (<%= safeDealersData.length %>)
                                 </button>
                                 <span class="text-secondary d-none" id="crumbArrowState">&gt;</span>
                                 <button type="button" class="btn btn-sm btn-outline-light d-none align-items-center gap-1" id="crumbState" style="font-weight: 600;">
@@ -819,11 +849,11 @@
                         <div id="viewStatesContainer">
                             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
                                 <div class="d-flex align-items-center gap-2">
-                                    <h4 class="text-white fw-bold mb-0">State & Province Breakdown</h4>
-                                    <span class="badge bg-secondary text-white" id="stateCounterBadge"><%= safeDealersData.length %> States</span>
+                                    <h4 class="text-white fw-bold mb-0">Subdivision Breakdown</h4>
+                                    <span class="badge bg-secondary text-white" id="stateCounterBadge"><%= safeDealersData.length %> Subdivisions</span>
                                 </div>
                                 <div>
-                                    <a href="<%= rootVehiclesLink %>" class="btn btn-primary btn-sm d-inline-flex align-items-center shadow-sm">
+                                    <a href="<%= rootVehiclesLink %>" class="btn model-btn btn-stats-veh btn-sm d-inline-flex align-items-center shadow-sm">
                                         <i class="bi bi-car-front-fill me-1"></i> View All Matching Vehicles (<%= formatCurrency(totalVehiclesCount) %>)
                                     </a>
                                 </div>
@@ -834,36 +864,29 @@
                                     <thead>
                                         <tr>
                                             <th scope="col" style="width: 70px;">Rank</th>
-                                            <th scope="col" style="text-align: left;">State / Province</th>
+                                            <th scope="col" style="text-align: left;">Subdivision</th>
                                             <th scope="col" style="width: 140px;">Vehicles</th>
                                             <th scope="col" style="width: 110px;">% Total</th>
                                             <th scope="col" style="width: 100px;">Cities</th>
                                             <th scope="col" style="width: 100px;">Dealers</th>
-                                            <th scope="col" style="width: 250px; text-align: center;">Actions</th>
+                                            <th scope="col" style="width: 160px; text-align: center;">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody id="tbodyStates">
                                         <% safeDealersData.forEach(function(s, idx) { %>
-                                            <tr class="drill-state-row" data-state="<%= s.state %>" style="cursor: pointer;">
+                                            <tr class="drill-state-row" data-state="<%= s.state %>" style="cursor: pointer;" title="Click to drill down into <%= s.state_name %>">
                                                 <td class="align-middle"><%= idx + 1 %></td>
-                                                <td class="align-middle text-start fw-bold">
-                                                    <span class="text-primary text-decoration-none">
-                                                        <%= s.state_name %> (<%= s.state %>)
-                                                    </span>
+                                                <td class="align-middle text-start fw-bold text-dark">
+                                                    <%= s.state_name %> (<%= s.state %>)
                                                 </td>
                                                 <td class="align-middle fw-bold"><%= formatCurrency(s.total_count) %></td>
                                                 <td class="align-middle"><%= s.percent %>%</td>
                                                 <td class="align-middle"><%= formatCurrency(s.city_count) %></td>
                                                 <td class="align-middle"><%= formatCurrency(s.dealer_count) %></td>
                                                 <td class="align-middle text-center" onclick="event.stopPropagation();">
-                                                    <div class="d-inline-flex gap-2">
-                                                        <button type="button" class="btn btn-outline-info btn-sm btn-drill-state" data-state="<%= s.state %>" title="Drill down to cities in <%= s.state_name %>">
-                                                            Drill Down <i class="bi bi-chevron-right"></i>
-                                                        </button>
-                                                        <a href="/vehicles?state=<%= encodeURIComponent(s.state) %><%= baseParams %>" class="btn btn-primary btn-sm text-nowrap" title="View matching vehicles in <%= s.state_name %>">
-                                                            <i class="bi bi-car-front-fill me-1"></i> View Vehicles
-                                                        </a>
-                                                    </div>
+                                                    <a href="/vehicles?state=<%= encodeURIComponent(s.state) %><%= baseParams %>" class="btn model-btn btn-stats-veh btn-sm text-nowrap" title="View matching vehicles in <%= s.state_name %>">
+                                                        <i class="bi bi-car-front-fill me-1"></i> View Vehicles
+                                                    </a>
                                                 </td>
                                             </tr>
                                         <% }); %>
@@ -877,14 +900,14 @@
                             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
                                 <div class="d-flex align-items-center gap-2 flex-wrap">
                                     <button type="button" class="btn btn-outline-secondary btn-sm me-2" id="btnBackToAllStates">
-                                        <i class="bi bi-arrow-left me-1"></i> All States
+                                        <i class="bi bi-arrow-left me-1"></i> All Subdivisions
                                     </button>
                                     <h4 class="text-white fw-bold mb-0">Cities in <span id="citiesStateNameTitle"></span></h4>
                                     <span class="badge bg-secondary text-white" id="citiesCounterBadge">0 Cities</span>
                                 </div>
                                 <div>
-                                    <a href="#" id="btnViewAllStateVehicles" class="btn btn-primary btn-sm d-inline-flex align-items-center shadow-sm">
-                                        <i class="bi bi-car-front-fill me-1"></i> View All State Vehicles
+                                    <a href="#" id="btnViewAllStateVehicles" class="btn model-btn btn-stats-veh btn-sm d-inline-flex align-items-center shadow-sm">
+                                        <i class="bi bi-car-front-fill me-1"></i> View All Subdivision Vehicles
                                     </a>
                                 </div>
                             </div>
@@ -896,9 +919,9 @@
                                             <th scope="col" style="width: 70px;">Rank</th>
                                             <th scope="col" style="text-align: left;">City</th>
                                             <th scope="col" style="width: 140px;">Vehicles</th>
-                                            <th scope="col" style="width: 110px;">% State</th>
+                                            <th scope="col" style="width: 120px;">% Subdivision</th>
                                             <th scope="col" style="width: 100px;">Dealers</th>
-                                            <th scope="col" style="width: 250px; text-align: center;">Actions</th>
+                                            <th scope="col" style="width: 160px; text-align: center;">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody id="tbodyCities">
@@ -918,7 +941,7 @@
                                     <span class="badge bg-secondary text-white" id="dealersCounterBadge">0 Dealers</span>
                                 </div>
                                 <div>
-                                    <a href="#" id="btnViewAllCityVehicles" class="btn btn-primary btn-sm d-inline-flex align-items-center shadow-sm">
+                                    <a href="#" id="btnViewAllCityVehicles" class="btn model-btn btn-stats-veh btn-sm d-inline-flex align-items-center shadow-sm">
                                         <i class="bi bi-car-front-fill me-1"></i> View All City Vehicles
                                     </a>
                                 </div>
@@ -930,8 +953,7 @@
                                         <tr>
                                             <th scope="col" style="width: 70px;">Rank</th>
                                             <th scope="col" style="text-align: left;">Dealership Name</th>
-                                            <th scope="col" style="text-align: left;">Location / Address</th>
-                                            <th scope="col" style="width: 110px;">Dealer Code</th>
+                                            <th scope="col" style="text-align: left;">Location</th>
                                             <th scope="col" style="width: 130px;">Vehicles</th>
                                             <th scope="col" style="width: 100px;">% City</th>
                                             <th scope="col" style="width: 180px; text-align: center;">Action</th>
@@ -2058,12 +2080,28 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        onClick: (event, elements) => {
-                            if (elements && elements.length > 0) {
-                                const index = elements[0].index;
+                        onClick: (event, elements, chart) => {
+                            const active = elements && elements.length > 0 ? elements : (chart ? chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false) : []);
+                            if (active && active.length > 0) {
+                                const index = active[0].index;
                                 const clickedState = top15[index];
                                 if (clickedState) drillDownToState(clickedState.state);
                             }
+                        },
+                        onHover: (event, elements, chart) => {
+                            const target = event?.native?.target || canvas;
+                            if (!target) return;
+                            if (!chart.chartArea) {
+                                target.style.cursor = 'default';
+                                return;
+                            }
+                            const { top, bottom, left, right } = chart.chartArea;
+                            if (event.x < left || event.x > right || event.y < top || event.y > bottom) {
+                                target.style.cursor = 'default';
+                                return;
+                            }
+                            const active = elements && elements.length > 0 ? elements : chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
+                            target.style.cursor = (active && active.length > 0) ? 'pointer' : 'default';
                         },
                         plugins: {
                             legend: { display: false },
@@ -2094,6 +2132,10 @@
                             }
                         }
                     }
+                });
+
+                canvas.addEventListener('mouseleave', () => {
+                    canvas.style.cursor = 'default';
                 });
             }
 
@@ -2187,32 +2229,23 @@
                     const tr = document.createElement('tr');
                     tr.className = 'drill-city-row';
                     tr.style.cursor = 'pointer';
+                    tr.title = `Click to view dealerships in ${c.city}`;
                     tr.dataset.city = c.city;
                     tr.innerHTML = `
                         <td class="align-middle">${idx + 1}</td>
-                        <td class="align-middle text-start fw-bold">
-                            <span class="text-primary">${c.city}</span>
+                        <td class="align-middle text-start fw-bold text-dark">
+                            ${c.city}
                         </td>
                         <td class="align-middle fw-bold">${formatNumber(c.total_count)}</td>
                         <td class="align-middle">${c.percent_of_state}%</td>
                         <td class="align-middle">${formatNumber(c.dealer_count)}</td>
                         <td class="align-middle text-center" onclick="event.stopPropagation();">
-                            <div class="d-inline-flex gap-2">
-                                <button type="button" class="btn btn-outline-info btn-sm btn-drill-city" data-city="${c.city}" title="View dealerships in ${c.city}">
-                                    View Dealers <i class="bi bi-chevron-right"></i>
-                                </button>
-                                <a href="/vehicles?state=${encodeURIComponent(stateObj.state)}&city=${encodeURIComponent(c.city)}${baseParams}" class="btn btn-primary btn-sm text-nowrap" title="View matching vehicles in ${c.city}">
-                                    <i class="bi bi-car-front-fill me-1"></i> View Vehicles
-                                </a>
-                            </div>
+                            <a href="/vehicles?state=${encodeURIComponent(stateObj.state)}&city=${encodeURIComponent(c.city)}${baseParams}" class="btn model-btn btn-stats-veh btn-sm text-nowrap" title="View matching vehicles in ${c.city}">
+                                <i class="bi bi-car-front-fill me-1"></i> View Vehicles
+                            </a>
                         </td>
                     `;
                     tr.addEventListener('click', () => drillDownToCity(c.city));
-                    const drillBtn = tr.querySelector('.btn-drill-city');
-                    if (drillBtn) drillBtn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        drillDownToCity(c.city);
-                    });
                     tbody.appendChild(tr);
                 });
 
@@ -2259,20 +2292,24 @@
                 cityObj.dealers.forEach((d, idx) => {
                     const tr = document.createElement('tr');
                     tr.className = 'dealer-row';
+                    tr.style.cursor = 'pointer';
+                    tr.title = `Click to view matching vehicles at ${d.dealer_name}`;
                     const vehLink = `/vehicles?dealer_id=${d.dealer_id}&dealer_name=${encodeURIComponent(d.dealer_name)}&state=${encodeURIComponent(currentSelectedState.state)}&city=${encodeURIComponent(cityObj.city)}${baseParams}`;
                     tr.innerHTML = `
                         <td class="align-middle">${idx + 1}</td>
-                        <td class="align-middle text-start fw-bold text-white">${d.dealer_name}</td>
-                        <td class="align-middle text-start text-white-50 small">${d.location || 'N/A'}</td>
-                        <td class="align-middle text-center">${d.sitedealer_code || 'N/A'}</td>
+                        <td class="align-middle text-start fw-bold text-dark">${d.dealer_name}</td>
+                        <td class="align-middle text-start text-muted small">${d.location || 'N/A'}</td>
                         <td class="align-middle fw-bold">${formatNumber(d.total_count)}</td>
                         <td class="align-middle">${d.percent_of_city}%</td>
-                        <td class="align-middle text-center">
-                            <a href="${vehLink}" class="btn btn-success btn-sm text-nowrap" title="View matching vehicles at ${d.dealer_name}">
+                        <td class="align-middle text-center" onclick="event.stopPropagation();">
+                            <a href="${vehLink}" class="btn model-btn btn-stats-veh btn-sm text-nowrap" title="View matching vehicles at ${d.dealer_name}">
                                 <i class="bi bi-car-front-fill me-1"></i> View Vehicles (${formatNumber(d.total_count)})
                             </a>
                         </td>
                     `;
+                    tr.addEventListener('click', () => {
+                        window.location.href = vehLink;
+                    });
                     tbody.appendChild(tr);
                 });
 
@@ -2308,7 +2345,7 @@
                         }
                     });
                     const badge = document.getElementById('stateCounterBadge');
-                    if (badge) badge.textContent = `${visibleCount} States`;
+                    if (badge) badge.textContent = `${visibleCount} Subdivisions`;
                 } else if (currentDrillLevel === 'city') {
                     const rows = document.querySelectorAll('#tbodyCities tr');
                     let visibleCount = 0;
@@ -2347,14 +2384,6 @@
                 document.querySelectorAll('.drill-state-row').forEach(row => {
                     row.addEventListener('click', () => {
                         const state = row.dataset.state;
-                        if (state) drillDownToState(state);
-                    });
-                });
-
-                document.querySelectorAll('.btn-drill-state').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        const state = btn.dataset.state;
                         if (state) drillDownToState(state);
                     });
                 });

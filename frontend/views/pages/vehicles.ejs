@@ -130,8 +130,8 @@
                             delete qState.page;
                         %>
                         <span class="badge bg-secondary text-white d-inline-flex align-items-center gap-1 px-2 py-1" style="font-size: 0.85rem;">
-                            State: <%= selectedState %>
-                            <a href="/vehicles?<%= buildQuery(qState) %>" class="text-white text-decoration-none ms-1 fw-bold" title="Remove State filter">&times;</a>
+                            Subdivision: <%= selectedState %>
+                            <a href="/vehicles?<%= buildQuery(qState) %>" class="text-white text-decoration-none ms-1 fw-bold" title="Remove Subdivision filter">&times;</a>
                         </span>
                     <% } %>
                     <% if (typeof selectedCity !== 'undefined' && selectedCity) { %>

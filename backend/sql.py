@@ -65,7 +65,7 @@ def execute_read_query(connection, query, params=None):
         if result is not None:
             QUERY_CACHE[cache_key] = {'time': now, 'result': result}
             
-    except MySQLError as e:
+    except Exception as e:
         print(f"The error {e} occurred.")
     finally:
         if cursor:

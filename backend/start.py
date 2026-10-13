@@ -830,7 +830,7 @@ def stats():
 
     if model:
         if model == "CORVETTE (C8)":
-            conditions.append("v.model LIKE 'CORVETTE%'")
+            conditions.append("v.model LIKE 'CORVETTE%%'")
             conditions.append("v.modelYear >= '2020'")
         else:
             conditions.append("v.model = %s")
@@ -971,9 +971,6 @@ def stats():
         close_connection(conn)
         return jsonify([])
 
-    distinct_sql = f"SELECT DISTINCT v.modelYear, v.model, v.body, v.trim, e.engine_type, t.transmission_type, d.drivetrain_type FROM Vehicles v {join_clause} {where_clause}"
-    distinct_results = execute_read_query(conn, distinct_sql, params)
-
     states_list = []
     dealer_summary = {}
 
@@ -1093,7 +1090,7 @@ def stats():
     year_where = f"WHERE {' AND '.join(year_agnostic_conds)}" if year_agnostic_conds else ""
 
     year_sql = f"SELECT DISTINCT v.modelYear FROM Vehicles v {join_clause} {year_where} ORDER BY v.modelYear DESC"
-    all_years_raw = execute_read_query(conn, year_sql, year_agnostic_params)
+    all_years_raw = execute_read_query(conn, year_sql, year_agnostic_params) or []
     all_years = [r['modelYear'] for r in all_years_raw if r.get('modelYear')]
 
     distinct_sql = f"""
@@ -1102,7 +1099,7 @@ def stats():
         {join_clause}
         {where_clause}
     """
-    distinct_results = execute_read_query(conn, distinct_sql, params)
+    distinct_results = execute_read_query(conn, distinct_sql, params) or []
 
     close_connection(conn)
 

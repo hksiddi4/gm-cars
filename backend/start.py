@@ -15,6 +15,40 @@ CORS(app)
 
 myCreds = sql.Creds()
 
+STATE_NAMES = {
+    'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California',
+    'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware', 'FL': 'Florida', 'GA': 'Georgia',
+    'HI': 'Hawaii', 'ID': 'Idaho', 'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa',
+    'KS': 'Kansas', 'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland',
+    'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi', 'MO': 'Missouri',
+    'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada', 'NH': 'New Hampshire', 'NJ': 'New Jersey',
+    'NM': 'New Mexico', 'NY': 'New York', 'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio',
+    'OK': 'Oklahoma', 'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
+    'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah', 'VT': 'Vermont',
+    'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming',
+    'DC': 'District of Columbia', 'PR': 'Puerto Rico', 'GU': 'Guam', 'VI': 'Virgin Islands',
+    'AB': 'Alberta', 'BC': 'British Columbia', 'MB': 'Manitoba', 'NB': 'New Brunswick',
+    'NL': 'Newfoundland and Labrador', 'NF': 'Newfoundland', 'NS': 'Nova Scotia',
+    'NT': 'Northwest Territories', 'NU': 'Nunavut', 'ON': 'Ontario',
+    'PE': 'Prince Edward Island', 'QC': 'Quebec', 'PQ': 'Quebec', 'SK': 'Saskatchewan', 'YT': 'Yukon'
+}
+
+def parse_dealer_location(location_str):
+    if not location_str or not isinstance(location_str, str):
+        return 'OTHER', 'UNKNOWN'
+    loc = location_str.strip()
+    if not loc:
+        return 'OTHER', 'UNKNOWN'
+    parts = loc.split(',')
+    city = parts[0].strip().upper() if parts[0] else 'UNKNOWN'
+    state = 'OTHER'
+    if len(parts) > 1:
+        rest = parts[1].strip()
+        tokens = rest.split()
+        if tokens:
+            state = tokens[0].strip().upper()
+    return state, city
+
 OLLAMA_URL = "http://192.168.1.126:11434/api/generate"
 AI_MODEL = "qwen2.5-coder:7b"
 
@@ -199,6 +233,10 @@ def sort_price():
     date = request.args.get('date')
     order = request.args.get('order')
     page = request.args.get('page', 1)
+    state = request.args.get('state')
+    city = request.args.get('city')
+    dealer = request.args.get('dealer')
+    dealer_id = request.args.get('dealer_id')
     
     limit = 100
     try:
@@ -272,6 +310,34 @@ def sort_price():
         else:
             conditions.append("DATE(o.creation_date) = %s")
         params.append(date)
+
+    if state or city or dealer or dealer_id:
+        filter_join_clause += " JOIN Dealers dl ON v.dealer_id = dl.dealer_id"
+
+    if state:
+        if state.upper() == 'OTHER':
+            conditions.append("(dl.location IS NULL OR dl.location NOT LIKE '%%,%%')")
+        else:
+            conditions.append("TRIM(SUBSTRING_INDEX(TRIM(SUBSTRING_INDEX(dl.location, ',', -1)), ' ', 1)) = %s")
+            params.append(state.strip().upper())
+
+    if city:
+        if city.upper() == 'UNKNOWN':
+            conditions.append("(dl.location IS NULL OR TRIM(dl.location) = '')")
+        else:
+            conditions.append("TRIM(SUBSTRING_INDEX(dl.location, ',', 1)) = %s")
+            params.append(city.strip().upper())
+
+    if dealer_id:
+        conditions.append("v.dealer_id = %s")
+        params.append(int(dealer_id))
+    elif dealer:
+        if str(dealer).strip().isdigit():
+            conditions.append("v.dealer_id = %s")
+            params.append(int(dealer))
+        else:
+            conditions.append("dl.dealer_name = %s")
+            params.append(dealer.strip())
 
     if rpo:
         rpo_list = rpo.split(',') if ',' in rpo else [rpo]
@@ -458,7 +524,7 @@ def sort_price():
     select = f"""
         SELECT v.vehicle_id, v.vin, v.modelYear, v.model, v.body, v.trim,
             e.engine_type, t.transmission_type, d.drivetrain_type,
-            c.color_name, v.msrp, o.country,
+            c.color_name, v.msrp, o.country, dl.dealer_name, dl.location,
             GROUP_CONCAT(DISTINCT se.special_desc ORDER BY se.special_desc ASC SEPARATOR ', ') AS special_desc
         FROM (
             {inner_sql}
@@ -469,10 +535,11 @@ def sort_price():
         JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id
         JOIN Colors c ON v.color_id = c.color_id
         JOIN Orders o ON v.order_id = o.order_id
+        LEFT JOIN Dealers dl ON v.dealer_id = dl.dealer_id
         LEFT JOIN SpecialEditions se ON v.vehicle_id = se.vehicle_id
         GROUP BY v.vehicle_id, v.vin, v.modelYear, v.model, v.body, v.trim,
                  e.engine_type, t.transmission_type, d.drivetrain_type,
-                 c.color_name, v.msrp, o.country
+                 c.color_name, v.msrp, o.country, dl.dealer_name, dl.location
         {order_clause}
     """
     
@@ -885,6 +952,21 @@ def stats():
             {full_where}
             GROUP BY label ORDER BY label ASC;
         """
+    elif category == 'dealers':
+        sqlStatement = f"""
+            SELECT 
+                dl.dealer_id,
+                dl.dealer_name,
+                dl.location,
+                dl.sitedealer_code,
+                COUNT(*) AS total_count
+            FROM Vehicles v
+            JOIN Dealers dl ON v.dealer_id = dl.dealer_id
+            {join_clause}
+            {where_clause}
+            GROUP BY dl.dealer_id, dl.dealer_name, dl.location, dl.sitedealer_code
+            ORDER BY total_count DESC;
+        """
     else:
         close_connection(conn)
         return jsonify([])
@@ -892,8 +974,107 @@ def stats():
     distinct_sql = f"SELECT DISTINCT v.modelYear, v.model, v.body, v.trim, e.engine_type, t.transmission_type, d.drivetrain_type FROM Vehicles v {join_clause} {where_clause}"
     distinct_results = execute_read_query(conn, distinct_sql, params)
 
+    states_list = []
+    dealer_summary = {}
+
     if category == 'production':
         viewTable = execute_read_query(conn, sqlStatement, prod_params)
+    elif category == 'dealers':
+        raw_dealers = execute_read_query(conn, sqlStatement, params) or []
+        states_map = {}
+        total_vehicles = 0
+        unique_dealers = set()
+        unique_cities = set()
+
+        for row in raw_dealers:
+            count = row.get('total_count') or 0
+            total_vehicles += count
+            dealer_id = row.get('dealer_id')
+            unique_dealers.add(dealer_id)
+
+            state_code, city_name = parse_dealer_location(row.get('location'))
+            unique_cities.add(f"{state_code}:{city_name}")
+
+            if state_code not in states_map:
+                states_map[state_code] = {
+                    'state': state_code,
+                    'state_name': STATE_NAMES.get(state_code, state_code),
+                    'total_count': 0,
+                    'dealers_count': 0,
+                    'cities_map': {}
+                }
+
+            state_obj = states_map[state_code]
+            state_obj['total_count'] += count
+            state_obj['dealers_count'] += 1
+
+            if city_name not in state_obj['cities_map']:
+                state_obj['cities_map'][city_name] = {
+                    'city': city_name,
+                    'state': state_code,
+                    'total_count': 0,
+                    'dealers': []
+                }
+
+            city_obj = state_obj['cities_map'][city_name]
+            city_obj['total_count'] += count
+            city_obj['dealers'].append({
+                'dealer_id': dealer_id,
+                'dealer_name': row.get('dealer_name') or 'Unknown Dealer',
+                'location': row.get('location') or '',
+                'sitedealer_code': row.get('sitedealer_code') or '',
+                'total_count': count
+            })
+
+        for state_code, s_info in states_map.items():
+            cities_list = []
+            for city_name, c_info in s_info['cities_map'].items():
+                c_info['dealers'].sort(key=lambda d: d['total_count'], reverse=True)
+                cities_list.append({
+                    'city': city_name,
+                    'state': state_code,
+                    'total_count': c_info['total_count'],
+                    'dealer_count': len(c_info['dealers']),
+                    'dealers': c_info['dealers']
+                })
+            cities_list.sort(key=lambda c: c['total_count'], reverse=True)
+            states_list.append({
+                'state': state_code,
+                'state_name': s_info['state_name'],
+                'total_count': s_info['total_count'],
+                'dealer_count': s_info['dealers_count'],
+                'city_count': len(cities_list),
+                'cities': cities_list
+            })
+
+        states_list.sort(key=lambda s: s['total_count'], reverse=True)
+
+        for s in states_list:
+            s['percent'] = round((100.0 * s['total_count'] / total_vehicles), 2) if total_vehicles > 0 else 0
+            for c in s['cities']:
+                c['percent_of_state'] = round((100.0 * c['total_count'] / s['total_count']), 2) if s['total_count'] > 0 else 0
+                c['percent_of_total'] = round((100.0 * c['total_count'] / total_vehicles), 2) if total_vehicles > 0 else 0
+                for d in c['dealers']:
+                    d['percent_of_city'] = round((100.0 * d['total_count'] / c['total_count']), 2) if c['total_count'] > 0 else 0
+                    d['percent_of_total'] = round((100.0 * d['total_count'] / total_vehicles), 2) if total_vehicles > 0 else 0
+
+        dealer_summary = {
+            'total_vehicles': total_vehicles,
+            'total_states': len(states_list),
+            'total_cities': len(unique_cities),
+            'total_dealers': len(unique_dealers)
+        }
+
+        viewTable = [
+            {
+                'label': f"{s['state_name']} ({s['state']})",
+                'rpo_code': s['state'],
+                'state': s['state'],
+                'total_count': s['total_count'],
+                'percent': s['percent']
+            }
+            for s in states_list[:15]
+        ]
     elif category:
         viewTable = execute_read_query(conn, sqlStatement, params)
     else:
@@ -928,7 +1109,7 @@ def stats():
     if model == "CORVETTE (C8)":
         all_years = [y for y in all_years if y and int(y) >= 2020]
 
-    return jsonify({
+    response_payload = {
         'stats_data': viewTable,
         'year': all_years,
         'selectedYear': target_year,
@@ -939,7 +1120,12 @@ def stats():
         'trans': sorted(set(r['transmission_type'] for r in distinct_results if r.get('transmission_type'))),
         'drivetrain': sorted(set(r['drivetrain_type'] for r in distinct_results if r.get('drivetrain_type'))),
         'category': category
-    })
+    }
+    if category == 'dealers':
+        response_payload['dealers_data'] = states_list
+        response_payload['dealer_summary'] = dealer_summary
+
+    return jsonify(response_payload)
 
 @app.route('/wheels', methods=['GET'])
 def wheel_stats():

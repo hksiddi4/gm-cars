@@ -61,7 +61,7 @@
                         }) %>
 
                         <button type="submit" class="btn btn-primary mt-3 w-100">Apply Filters</button>
-                        <% if (selectedModels.length > 0 || selectedRPO || selectedTrim || selectedEngine || selectedTrans || selectedDrivetrain || selectedYear || selectedBody || selectedColor || selectedCountry || selectedOrder) { %>
+                        <% if (selectedModels.length > 0 || selectedRPO || selectedTrim || selectedEngine || selectedTrans || selectedDrivetrain || selectedYear || selectedBody || selectedColor || selectedCountry || selectedOrder || (typeof selectedState !== 'undefined' && selectedState) || (typeof selectedCity !== 'undefined' && selectedCity) || (typeof selectedDealer !== 'undefined' && selectedDealer) || (typeof selectedDealerId !== 'undefined' && selectedDealerId)) { %>
                             <button type="button" id="clearFilters" class="btn btn-secondary mt-2 w-100">Clear All</button>
                         <% } %>
                     </form>
@@ -112,9 +112,56 @@
                 color: selectedColor,
                 country: selectedCountry,
                 order: selectedOrder,
-                date: typeof selectedDate !== 'undefined' ? selectedDate : undefined
+                date: typeof selectedDate !== 'undefined' ? selectedDate : undefined,
+                state: typeof selectedState !== 'undefined' && selectedState ? selectedState : undefined,
+                city: typeof selectedCity !== 'undefined' && selectedCity ? selectedCity : undefined,
+                dealer: typeof selectedDealer !== 'undefined' && selectedDealer ? selectedDealer : undefined,
+                dealer_id: typeof selectedDealerId !== 'undefined' && selectedDealerId ? selectedDealerId : undefined,
+                dealer_name: typeof selectedDealerName !== 'undefined' && selectedDealerName ? selectedDealerName : undefined
             };
             %>
+            <% if ((typeof selectedState !== 'undefined' && selectedState) || (typeof selectedCity !== 'undefined' && selectedCity) || (typeof selectedDealerId !== 'undefined' && selectedDealerId) || (typeof selectedDealer !== 'undefined' && selectedDealer)) { %>
+                <div class="col-12 mb-2 d-flex flex-wrap align-items-center gap-2">
+                    <span class="text-white-50 small fw-bold">Location Filters:</span>
+                    <% if (typeof selectedState !== 'undefined' && selectedState) { %>
+                        <% 
+                            let qState = { ...baseQuery };
+                            delete qState.state;
+                            delete qState.page;
+                        %>
+                        <span class="badge bg-secondary text-white d-inline-flex align-items-center gap-1 px-2 py-1" style="font-size: 0.85rem;">
+                            State: <%= selectedState %>
+                            <a href="/vehicles?<%= buildQuery(qState) %>" class="text-white text-decoration-none ms-1 fw-bold" title="Remove State filter">&times;</a>
+                        </span>
+                    <% } %>
+                    <% if (typeof selectedCity !== 'undefined' && selectedCity) { %>
+                        <% 
+                            let qCity = { ...baseQuery };
+                            delete qCity.city;
+                            delete qCity.page;
+                        %>
+                        <span class="badge bg-secondary text-white d-inline-flex align-items-center gap-1 px-2 py-1" style="font-size: 0.85rem;">
+                            City: <%= selectedCity %>
+                            <a href="/vehicles?<%= buildQuery(qCity) %>" class="text-white text-decoration-none ms-1 fw-bold" title="Remove City filter">&times;</a>
+                        </span>
+                    <% } %>
+                    <% if ((typeof selectedDealerId !== 'undefined' && selectedDealerId) || (typeof selectedDealer !== 'undefined' && selectedDealer)) { %>
+                        <% 
+                            let qDealer = { ...baseQuery };
+                            delete qDealer.dealer;
+                            delete qDealer.dealer_id;
+                            delete qDealer.dealer_name;
+                            delete qDealer.page;
+                            const dName = (typeof selectedDealerName !== 'undefined' && selectedDealerName) ? selectedDealerName : (selectedDealerId || selectedDealer);
+                        %>
+                        <span class="badge bg-secondary text-white d-inline-flex align-items-center gap-1 px-2 py-1" style="font-size: 0.85rem;">
+                            Dealer: <%= dName %>
+                            <a href="/vehicles?<%= buildQuery(qDealer) %>" class="text-white text-decoration-none ms-1 fw-bold" title="Remove Dealer filter">&times;</a>
+                        </span>
+                    <% } %>
+                </div>
+            <% } %>
+
             <% if (selectedYear === '2019') { %>
                 <div style="color: #cc6666; margin-bottom: 10px;">
                     Data available from May 17, 2019 onward
@@ -289,7 +336,7 @@
                     </thead>
                     <tbody>
                         <% vehicle_data.forEach(function(data) { %>
-                            <tr style="cursor: pointer;" data-url="/search?vin=<%= data.vin %>">
+                            <tr style="cursor: pointer;" data-url="/search?vin=<%= data.vin %>"<% if (data.dealer_name) { %> title="<%= data.dealer_name %><% if (data.location) { %> - <%= data.location %><% } %>"<% } %>>
                                 <td scope="row" style="text-align: left;" class="<%= data.special_desc && data.special_desc.includes('Pre-Production Vehicle') ? 'highlight' : '' %> <%= data.special_desc && data.special_desc.includes('Show Vehicle') ? 'text-highlight' : '' %>">
                                     <%= data.vin.slice(0, 9) %><strong><%= data.vin.slice(9) %></strong>
                                 </td>
@@ -770,6 +817,21 @@
                 }
                 if (currentUrlParams.has('date')) {
                     params.set('date', currentUrlParams.get('date'));
+                }
+                if (currentUrlParams.has('state')) {
+                    params.set('state', currentUrlParams.get('state'));
+                }
+                if (currentUrlParams.has('city')) {
+                    params.set('city', currentUrlParams.get('city'));
+                }
+                if (currentUrlParams.has('dealer')) {
+                    params.set('dealer', currentUrlParams.get('dealer'));
+                }
+                if (currentUrlParams.has('dealer_id')) {
+                    params.set('dealer_id', currentUrlParams.get('dealer_id'));
+                }
+                if (currentUrlParams.has('dealer_name')) {
+                    params.set('dealer_name', currentUrlParams.get('dealer_name'));
                 }
 
                 const checkboxes = filterForm.querySelectorAll('input[type="checkbox"]');

@@ -279,6 +279,7 @@
                     <a href="/stats?category=interior" class="btn btn-outline-primary <%= activeCategory === 'interior' ? 'active' : '' %>">Interior Colors</a>
                     <a href="/stats?category=engine" class="btn btn-outline-primary <%= activeCategory === 'engine' ? 'active' : '' %>">Engine Rankings</a>
                     <a href="/stats?category=production" class="btn btn-outline-primary <%= activeCategory === 'production' ? 'active' : '' %>">Production Trends</a>
+                    <a href="/stats?category=dealers" class="btn btn-outline-primary <%= activeCategory === 'dealers' ? 'active' : '' %>">Dealerships</a>
                 </div>
             </div>
 
@@ -653,7 +654,7 @@
             <% } else { %>
                 <div class="container-fluid px-0">
                     <!-- Dynamic Dropdowns for Ranked Stats -->
-                    <% if (['color', 'engine', 'interior'].includes(activeCategory)) { %>
+                    <% if (['color', 'engine', 'interior', 'dealers'].includes(activeCategory)) { %>
                         <div class="d-flex flex-wrap gap-2 mb-3 w-100">
                             <div class="statsDropdown">
                                 <select id="filterYear" class="form-select small-dropdown <%= typeof selectedYear !== 'undefined' && selectedYear ? 'active-filter' : '' %>" aria-label="Filter by year">
@@ -731,7 +732,218 @@
                         </div>
                     <% } %>
 
-                    <% if (typeof stats_data !== 'undefined' && stats_data.length > 0) { %>
+                    <% if (activeCategory === 'dealers') { %>
+                    <%
+                        const safeSummary = typeof dealer_summary !== 'undefined' ? dealer_summary : {};
+                        const safeDealersData = typeof dealers_data !== 'undefined' ? dealers_data : [];
+                        const totalVehiclesCount = safeSummary.total_vehicles || 0;
+                        let rootVehiclesLink = baseParams ? ('/vehicles?' + (baseParams.startsWith('&') ? baseParams.substring(1) : baseParams)) : '/vehicles';
+                    %>
+
+                    <% if (safeDealersData.length === 0) { %>
+                        <div class="response-container" style="padding: 40px 0;">
+                            <div class="response" role="status">
+                                <p>No dealership or location statistics found for the selected filters.</p>
+                                <div style="margin-top: 12px; display:flex; gap:10px; justify-content:center;">
+                                    <button type="button" class="btn btn-outline-light" id="statsGoBackBtn">Go Back</button>
+                                    <button type="button" class="btn btn-secondary" id="statsClearBtn">Clear Filters</button>
+                                </div>
+                            </div>
+                        </div>
+                    <% } else { %>
+                        <!-- Summary Metric Cards -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-6 col-md-3">
+                                <div class="dashboard-card text-center py-3 h-100">
+                                    <div class="text-white-50 small text-uppercase fw-bold mb-1">Vehicles Tracked</div>
+                                    <div class="fs-3 fw-bold text-white"><%= formatCurrency(safeSummary.total_vehicles || 0) %></div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="dashboard-card text-center py-3 h-100">
+                                    <div class="text-white-50 small text-uppercase fw-bold mb-1">States / Provinces</div>
+                                    <div class="fs-3 fw-bold text-white"><%= formatCurrency(safeSummary.total_states || 0) %></div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="dashboard-card text-center py-3 h-100">
+                                    <div class="text-white-50 small text-uppercase fw-bold mb-1">Cities</div>
+                                    <div class="fs-3 fw-bold text-white"><%= formatCurrency(safeSummary.total_cities || 0) %></div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="dashboard-card text-center py-3 h-100">
+                                    <div class="text-white-50 small text-uppercase fw-bold mb-1">Dealerships</div>
+                                    <div class="fs-3 fw-bold text-white"><%= formatCurrency(safeSummary.total_dealers || 0) %></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Top States Bar Chart -->
+                        <div class="dashboard-card mb-4" id="dealerChartCard">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h5 class="text-white fw-bold mb-0">Top States & Provinces by Vehicle Volume</h5>
+                                <span class="text-white-50 small">Click any bar to drill down</span>
+                            </div>
+                            <div style="position: relative; width: 100%; height: 320px;">
+                                <canvas id="dealerTopStatesChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Interactive Drill-Down Navigation & Breadcrumbs Bar -->
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 p-3 mb-3" style="background-color: #2b2b2b; border: 1px solid #444; border-radius: 8px;">
+                            <div class="d-flex align-items-center flex-wrap gap-2">
+                                <span class="text-white-50 small fw-bold me-1 text-uppercase"><i class="bi bi-diagram-3-fill me-1"></i>Location Drill-Down:</span>
+                                <button type="button" class="btn btn-sm btn-outline-light active d-inline-flex align-items-center gap-1" id="crumbRoot" style="font-weight: 600;">
+                                    All States (<%= safeDealersData.length %>)
+                                </button>
+                                <span class="text-secondary d-none" id="crumbArrowState">&gt;</span>
+                                <button type="button" class="btn btn-sm btn-outline-light d-none align-items-center gap-1" id="crumbState" style="font-weight: 600;">
+                                    <span id="crumbStateText"></span>
+                                </button>
+                                <span class="text-secondary d-none" id="crumbArrowCity">&gt;</span>
+                                <button type="button" class="btn btn-sm btn-outline-light d-none align-items-center gap-1" id="crumbCity" style="font-weight: 600;">
+                                    <span id="crumbCityText"></span>
+                                </button>
+                            </div>
+
+                            <!-- In-View Search Input -->
+                            <div class="input-group input-group-sm" style="max-width: 280px;">
+                                <span class="input-group-text bg-dark border-secondary text-secondary"><i class="bi bi-search"></i></span>
+                                <input type="text" id="dealerSearchInput" class="form-control bg-dark border-secondary text-white" placeholder="Search current view..." aria-label="Search current view">
+                                <button class="btn btn-outline-secondary" type="button" id="clearDealerSearch" style="display: none;">&times;</button>
+                            </div>
+                        </div>
+
+                        <!-- LEVEL 1: STATES VIEW -->
+                        <div id="viewStatesContainer">
+                            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                                <div class="d-flex align-items-center gap-2">
+                                    <h4 class="text-white fw-bold mb-0">State & Province Breakdown</h4>
+                                    <span class="badge bg-secondary text-white" id="stateCounterBadge"><%= safeDealersData.length %> States</span>
+                                </div>
+                                <div>
+                                    <a href="<%= rootVehiclesLink %>" class="btn btn-primary btn-sm d-inline-flex align-items-center shadow-sm">
+                                        <i class="bi bi-car-front-fill me-1"></i> View All Matching Vehicles (<%= formatCurrency(totalVehiclesCount) %>)
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table-stats-veh table-hover border shadow" id="tableStates">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col" style="width: 70px;">Rank</th>
+                                            <th scope="col" style="text-align: left;">State / Province</th>
+                                            <th scope="col" style="width: 140px;">Vehicles</th>
+                                            <th scope="col" style="width: 110px;">% Total</th>
+                                            <th scope="col" style="width: 100px;">Cities</th>
+                                            <th scope="col" style="width: 100px;">Dealers</th>
+                                            <th scope="col" style="width: 250px; text-align: center;">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbodyStates">
+                                        <% safeDealersData.forEach(function(s, idx) { %>
+                                            <tr class="drill-state-row" data-state="<%= s.state %>" style="cursor: pointer;">
+                                                <td class="align-middle"><%= idx + 1 %></td>
+                                                <td class="align-middle text-start fw-bold">
+                                                    <span class="text-primary text-decoration-none">
+                                                        <%= s.state_name %> (<%= s.state %>)
+                                                    </span>
+                                                </td>
+                                                <td class="align-middle fw-bold"><%= formatCurrency(s.total_count) %></td>
+                                                <td class="align-middle"><%= s.percent %>%</td>
+                                                <td class="align-middle"><%= formatCurrency(s.city_count) %></td>
+                                                <td class="align-middle"><%= formatCurrency(s.dealer_count) %></td>
+                                                <td class="align-middle text-center" onclick="event.stopPropagation();">
+                                                    <div class="d-inline-flex gap-2">
+                                                        <button type="button" class="btn btn-outline-info btn-sm btn-drill-state" data-state="<%= s.state %>" title="Drill down to cities in <%= s.state_name %>">
+                                                            Drill Down <i class="bi bi-chevron-right"></i>
+                                                        </button>
+                                                        <a href="/vehicles?state=<%= encodeURIComponent(s.state) %><%= baseParams %>" class="btn btn-primary btn-sm text-nowrap" title="View matching vehicles in <%= s.state_name %>">
+                                                            <i class="bi bi-car-front-fill me-1"></i> View Vehicles
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        <% }); %>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- LEVEL 2: CITIES VIEW (Hidden initially) -->
+                        <div id="viewCitiesContainer" style="display: none;">
+                            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm me-2" id="btnBackToAllStates">
+                                        <i class="bi bi-arrow-left me-1"></i> All States
+                                    </button>
+                                    <h4 class="text-white fw-bold mb-0">Cities in <span id="citiesStateNameTitle"></span></h4>
+                                    <span class="badge bg-secondary text-white" id="citiesCounterBadge">0 Cities</span>
+                                </div>
+                                <div>
+                                    <a href="#" id="btnViewAllStateVehicles" class="btn btn-primary btn-sm d-inline-flex align-items-center shadow-sm">
+                                        <i class="bi bi-car-front-fill me-1"></i> View All State Vehicles
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table-stats-veh table-hover border shadow" id="tableCities">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col" style="width: 70px;">Rank</th>
+                                            <th scope="col" style="text-align: left;">City</th>
+                                            <th scope="col" style="width: 140px;">Vehicles</th>
+                                            <th scope="col" style="width: 110px;">% State</th>
+                                            <th scope="col" style="width: 100px;">Dealers</th>
+                                            <th scope="col" style="width: 250px; text-align: center;">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbodyCities">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- LEVEL 3: DEALERS VIEW (Hidden initially) -->
+                        <div id="viewDealersContainer" style="display: none;">
+                            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm me-2" id="btnBackToStateCities">
+                                        <i class="bi bi-arrow-left me-1"></i> <span id="backToStateCitiesBtnText">Cities</span>
+                                    </button>
+                                    <h4 class="text-white fw-bold mb-0">Dealerships in <span id="dealersCityNameTitle"></span>, <span id="dealersStateNameTitle"></span></h4>
+                                    <span class="badge bg-secondary text-white" id="dealersCounterBadge">0 Dealers</span>
+                                </div>
+                                <div>
+                                    <a href="#" id="btnViewAllCityVehicles" class="btn btn-primary btn-sm d-inline-flex align-items-center shadow-sm">
+                                        <i class="bi bi-car-front-fill me-1"></i> View All City Vehicles
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table-stats-veh table-hover border shadow" id="tableDealers">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col" style="width: 70px;">Rank</th>
+                                            <th scope="col" style="text-align: left;">Dealership Name</th>
+                                            <th scope="col" style="text-align: left;">Location / Address</th>
+                                            <th scope="col" style="width: 110px;">Dealer Code</th>
+                                            <th scope="col" style="width: 130px;">Vehicles</th>
+                                            <th scope="col" style="width: 100px;">% City</th>
+                                            <th scope="col" style="width: 180px; text-align: center;">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbodyDealers">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    <% } %>
+<% } else if (typeof stats_data !== 'undefined' && stats_data.length > 0) { %>
                         <!-- CHANGED ID: Bypasses the strict 600px max-height in main.css -->
                         <div id="dynamicChartWrapper" style="position: relative; width: 100%; min-height: 600px; margin-bottom: 20px;">
                             <canvas id="mainDataChart"></canvas>
@@ -1803,8 +2015,414 @@
         </script>
     <% } %>
 
+    <!-- Dealerships Interactive Drill-Down & Chart Script -->
+    <% if (activeCategory === 'dealers') { %>
+        <script nonce="<%= nonce %>">
+            const dealersData = <%- JSON.stringify(dealers_data || []) %>;
+            const baseParams = "<%= baseParams %>";
+            const initialSelectedState = "<%= typeof selectedState !== 'undefined' ? selectedState : '' %>";
+            const initialSelectedCity = "<%= typeof selectedCity !== 'undefined' ? selectedCity : '' %>";
+
+            let currentSelectedState = null;
+            let currentSelectedCity = null;
+            let currentDrillLevel = 'state';
+            let dealerChartInstance = null;
+
+            function formatNumber(num) {
+                return (num || 0).toLocaleString();
+            }
+
+            function initTopStatesChart() {
+                const canvas = document.getElementById('dealerTopStatesChart');
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) return;
+
+                const top15 = dealersData.slice(0, 15);
+                const labels = top15.map(s => `${s.state} - ${s.state_name}`);
+                const dataValues = top15.map(s => s.total_count);
+
+                dealerChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Vehicles',
+                            data: dataValues,
+                            backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1,
+                            hoverBackgroundColor: 'rgba(54, 162, 235, 0.95)'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        onClick: (event, elements) => {
+                            if (elements && elements.length > 0) {
+                                const index = elements[0].index;
+                                const clickedState = top15[index];
+                                if (clickedState) drillDownToState(clickedState.state);
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            datalabels: {
+                                color: '#ffffff',
+                                anchor: 'end',
+                                align: 'top',
+                                offset: 4,
+                                font: { weight: 'bold', size: 11 },
+                                formatter: val => formatNumber(val)
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: ctx => `Vehicles: ${formatNumber(ctx.raw)} (${top15[ctx.dataIndex].percent}%)`
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                ticks: { color: '#ffffff', maxRotation: 45, minRotation: 20 },
+                                grid: { display: false }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                grace: '10%',
+                                ticks: { color: '#ffffff' },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                            }
+                        }
+                    }
+                });
+            }
+
+            function updateBreadcrumb() {
+                const rootBtn = document.getElementById('crumbRoot');
+                const arrowState = document.getElementById('crumbArrowState');
+                const stateBtn = document.getElementById('crumbState');
+                const arrowCity = document.getElementById('crumbArrowCity');
+                const cityBtn = document.getElementById('crumbCity');
+
+                if (currentDrillLevel === 'state') {
+                    rootBtn.classList.add('active');
+                    arrowState.classList.add('d-none');
+                    stateBtn.classList.add('d-none');
+                    stateBtn.classList.remove('active');
+                    arrowCity.classList.add('d-none');
+                    cityBtn.classList.add('d-none');
+                    cityBtn.classList.remove('active');
+                } else if (currentDrillLevel === 'city') {
+                    rootBtn.classList.remove('active');
+                    arrowState.classList.remove('d-none');
+                    stateBtn.classList.remove('d-none');
+                    stateBtn.classList.add('active');
+                    document.getElementById('crumbStateText').textContent = `${currentSelectedState.state_name} (${currentSelectedState.state})`;
+                    arrowCity.classList.add('d-none');
+                    cityBtn.classList.add('d-none');
+                    cityBtn.classList.remove('active');
+                } else if (currentDrillLevel === 'dealer') {
+                    rootBtn.classList.remove('active');
+                    arrowState.classList.remove('d-none');
+                    stateBtn.classList.remove('d-none');
+                    stateBtn.classList.remove('active');
+                    arrowCity.classList.remove('d-none');
+                    cityBtn.classList.remove('d-none');
+                    cityBtn.classList.add('active');
+                    document.getElementById('crumbCityText').textContent = currentSelectedCity.city;
+                }
+            }
+
+            function showStatesView(updateHistory = true) {
+                currentDrillLevel = 'state';
+                currentSelectedState = null;
+                currentSelectedCity = null;
+
+                document.getElementById('viewStatesContainer').style.display = 'block';
+                document.getElementById('viewCitiesContainer').style.display = 'none';
+                document.getElementById('viewDealersContainer').style.display = 'none';
+                const chartCard = document.getElementById('dealerChartCard');
+                if (chartCard) chartCard.style.display = 'block';
+
+                updateBreadcrumb();
+                filterCurrentView('');
+                const searchEl = document.getElementById('dealerSearchInput');
+                if (searchEl) searchEl.value = '';
+                const clearEl = document.getElementById('clearDealerSearch');
+                if (clearEl) clearEl.style.display = 'none';
+
+                if (updateHistory) {
+                    const url = new URL(window.location);
+                    url.searchParams.delete('state');
+                    url.searchParams.delete('city');
+                    history.pushState({ level: 'state' }, '', url);
+                }
+            }
+
+            function drillDownToState(stateCode, updateHistory = true) {
+                const stateObj = dealersData.find(s => s.state.toUpperCase() === stateCode.toUpperCase());
+                if (!stateObj) return;
+
+                currentDrillLevel = 'city';
+                currentSelectedState = stateObj;
+                currentSelectedCity = null;
+
+                document.getElementById('viewStatesContainer').style.display = 'none';
+                document.getElementById('viewCitiesContainer').style.display = 'block';
+                document.getElementById('viewDealersContainer').style.display = 'none';
+                const chartCard = document.getElementById('dealerChartCard');
+                if (chartCard) chartCard.style.display = 'none';
+
+                document.getElementById('citiesStateNameTitle').textContent = `${stateObj.state_name} (${stateObj.state})`;
+                document.getElementById('citiesCounterBadge').textContent = `${stateObj.cities.length} Cities`;
+
+                const btnStateVeh = document.getElementById('btnViewAllStateVehicles');
+                btnStateVeh.href = `/vehicles?state=${encodeURIComponent(stateObj.state)}${baseParams}`;
+                btnStateVeh.innerHTML = `<i class="bi bi-car-front-fill me-1"></i> View All ${stateObj.state} Vehicles (${formatNumber(stateObj.total_count)})`;
+
+                const tbody = document.getElementById('tbodyCities');
+                tbody.innerHTML = '';
+
+                stateObj.cities.forEach((c, idx) => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'drill-city-row';
+                    tr.style.cursor = 'pointer';
+                    tr.dataset.city = c.city;
+                    tr.innerHTML = `
+                        <td class="align-middle">${idx + 1}</td>
+                        <td class="align-middle text-start fw-bold">
+                            <span class="text-primary">${c.city}</span>
+                        </td>
+                        <td class="align-middle fw-bold">${formatNumber(c.total_count)}</td>
+                        <td class="align-middle">${c.percent_of_state}%</td>
+                        <td class="align-middle">${formatNumber(c.dealer_count)}</td>
+                        <td class="align-middle text-center" onclick="event.stopPropagation();">
+                            <div class="d-inline-flex gap-2">
+                                <button type="button" class="btn btn-outline-info btn-sm btn-drill-city" data-city="${c.city}" title="View dealerships in ${c.city}">
+                                    View Dealers <i class="bi bi-chevron-right"></i>
+                                </button>
+                                <a href="/vehicles?state=${encodeURIComponent(stateObj.state)}&city=${encodeURIComponent(c.city)}${baseParams}" class="btn btn-primary btn-sm text-nowrap" title="View matching vehicles in ${c.city}">
+                                    <i class="bi bi-car-front-fill me-1"></i> View Vehicles
+                                </a>
+                            </div>
+                        </td>
+                    `;
+                    tr.addEventListener('click', () => drillDownToCity(c.city));
+                    const drillBtn = tr.querySelector('.btn-drill-city');
+                    if (drillBtn) drillBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        drillDownToCity(c.city);
+                    });
+                    tbody.appendChild(tr);
+                });
+
+                updateBreadcrumb();
+                const searchEl = document.getElementById('dealerSearchInput');
+                if (searchEl) searchEl.value = '';
+                const clearEl = document.getElementById('clearDealerSearch');
+                if (clearEl) clearEl.style.display = 'none';
+
+                if (updateHistory) {
+                    const url = new URL(window.location);
+                    url.searchParams.set('state', stateCode);
+                    url.searchParams.delete('city');
+                    history.pushState({ level: 'city', state: stateCode }, '', url);
+                }
+            }
+
+            function drillDownToCity(cityName, updateHistory = true) {
+                if (!currentSelectedState) return;
+                const cityObj = currentSelectedState.cities.find(c => c.city.toUpperCase() === cityName.toUpperCase());
+                if (!cityObj) return;
+
+                currentDrillLevel = 'dealer';
+                currentSelectedCity = cityObj;
+
+                document.getElementById('viewStatesContainer').style.display = 'none';
+                document.getElementById('viewCitiesContainer').style.display = 'none';
+                document.getElementById('viewDealersContainer').style.display = 'block';
+                const chartCard = document.getElementById('dealerChartCard');
+                if (chartCard) chartCard.style.display = 'none';
+
+                document.getElementById('dealersCityNameTitle').textContent = cityObj.city;
+                document.getElementById('dealersStateNameTitle').textContent = currentSelectedState.state;
+                document.getElementById('dealersCounterBadge').textContent = `${cityObj.dealers.length} Dealers`;
+                document.getElementById('backToStateCitiesBtnText').textContent = `Cities in ${currentSelectedState.state}`;
+
+                const btnCityVeh = document.getElementById('btnViewAllCityVehicles');
+                btnCityVeh.href = `/vehicles?state=${encodeURIComponent(currentSelectedState.state)}&city=${encodeURIComponent(cityObj.city)}${baseParams}`;
+                btnCityVeh.innerHTML = `<i class="bi bi-car-front-fill me-1"></i> View All ${cityObj.city} Vehicles (${formatNumber(cityObj.total_count)})`;
+
+                const tbody = document.getElementById('tbodyDealers');
+                tbody.innerHTML = '';
+
+                cityObj.dealers.forEach((d, idx) => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'dealer-row';
+                    const vehLink = `/vehicles?dealer_id=${d.dealer_id}&dealer_name=${encodeURIComponent(d.dealer_name)}&state=${encodeURIComponent(currentSelectedState.state)}&city=${encodeURIComponent(cityObj.city)}${baseParams}`;
+                    tr.innerHTML = `
+                        <td class="align-middle">${idx + 1}</td>
+                        <td class="align-middle text-start fw-bold text-white">${d.dealer_name}</td>
+                        <td class="align-middle text-start text-white-50 small">${d.location || 'N/A'}</td>
+                        <td class="align-middle text-center">${d.sitedealer_code || 'N/A'}</td>
+                        <td class="align-middle fw-bold">${formatNumber(d.total_count)}</td>
+                        <td class="align-middle">${d.percent_of_city}%</td>
+                        <td class="align-middle text-center">
+                            <a href="${vehLink}" class="btn btn-success btn-sm text-nowrap" title="View matching vehicles at ${d.dealer_name}">
+                                <i class="bi bi-car-front-fill me-1"></i> View Vehicles (${formatNumber(d.total_count)})
+                            </a>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+                updateBreadcrumb();
+                const searchEl = document.getElementById('dealerSearchInput');
+                if (searchEl) searchEl.value = '';
+                const clearEl = document.getElementById('clearDealerSearch');
+                if (clearEl) clearEl.style.display = 'none';
+
+                if (updateHistory) {
+                    const url = new URL(window.location);
+                    url.searchParams.set('state', currentSelectedState.state);
+                    url.searchParams.set('city', cityName);
+                    history.pushState({ level: 'dealer', state: currentSelectedState.state, city: cityName }, '', url);
+                }
+            }
+
+            function filterCurrentView(term) {
+                const query = (term || '').trim().toLowerCase();
+                const clearEl = document.getElementById('clearDealerSearch');
+                if (clearEl) clearEl.style.display = query ? 'inline-block' : 'none';
+
+                if (currentDrillLevel === 'state') {
+                    const rows = document.querySelectorAll('#tbodyStates tr');
+                    let visibleCount = 0;
+                    rows.forEach(r => {
+                        const text = r.textContent.toLowerCase();
+                        if (!query || text.includes(query)) {
+                            r.style.display = '';
+                            visibleCount++;
+                        } else {
+                            r.style.display = 'none';
+                        }
+                    });
+                    const badge = document.getElementById('stateCounterBadge');
+                    if (badge) badge.textContent = `${visibleCount} States`;
+                } else if (currentDrillLevel === 'city') {
+                    const rows = document.querySelectorAll('#tbodyCities tr');
+                    let visibleCount = 0;
+                    rows.forEach(r => {
+                        const text = r.textContent.toLowerCase();
+                        if (!query || text.includes(query)) {
+                            r.style.display = '';
+                            visibleCount++;
+                        } else {
+                            r.style.display = 'none';
+                        }
+                    });
+                    const badge = document.getElementById('citiesCounterBadge');
+                    if (badge) badge.textContent = `${visibleCount} Cities`;
+                } else if (currentDrillLevel === 'dealer') {
+                    const rows = document.querySelectorAll('#tbodyDealers tr');
+                    let visibleCount = 0;
+                    rows.forEach(r => {
+                        const text = r.textContent.toLowerCase();
+                        if (!query || text.includes(query)) {
+                            r.style.display = '';
+                            visibleCount++;
+                        } else {
+                            r.style.display = 'none';
+                        }
+                    });
+                    const badge = document.getElementById('dealersCounterBadge');
+                    if (badge) badge.textContent = `${visibleCount} Dealers`;
+                }
+            }
+
+            document.addEventListener('DOMContentLoaded', () => {
+                initTopStatesChart();
+
+                // Level 1 States Row Click Listeners
+                document.querySelectorAll('.drill-state-row').forEach(row => {
+                    row.addEventListener('click', () => {
+                        const state = row.dataset.state;
+                        if (state) drillDownToState(state);
+                    });
+                });
+
+                document.querySelectorAll('.btn-drill-state').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const state = btn.dataset.state;
+                        if (state) drillDownToState(state);
+                    });
+                });
+
+                // Breadcrumb Click Listeners
+                document.getElementById('crumbRoot')?.addEventListener('click', () => showStatesView());
+                document.getElementById('crumbState')?.addEventListener('click', () => {
+                    if (currentSelectedState) drillDownToState(currentSelectedState.state);
+                });
+
+                // Back Buttons
+                document.getElementById('btnBackToAllStates')?.addEventListener('click', () => showStatesView());
+                document.getElementById('btnBackToStateCities')?.addEventListener('click', () => {
+                    if (currentSelectedState) drillDownToState(currentSelectedState.state);
+                });
+
+                // Search Input
+                const searchInput = document.getElementById('dealerSearchInput');
+                if (searchInput) {
+                    searchInput.addEventListener('input', (e) => filterCurrentView(e.target.value));
+                }
+                document.getElementById('clearDealerSearch')?.addEventListener('click', () => {
+                    if (searchInput) searchInput.value = '';
+                    filterCurrentView('');
+                });
+
+                // Browser Back/Forward navigation
+                window.addEventListener('popstate', (e) => {
+                    const params = new URLSearchParams(window.location.search);
+                    const state = params.get('state');
+                    const city = params.get('city');
+
+                    if (city && state) {
+                        const sObj = dealersData.find(s => s.state.toUpperCase() === state.toUpperCase());
+                        if (sObj) {
+                            currentSelectedState = sObj;
+                            drillDownToCity(city, false);
+                        }
+                    } else if (state) {
+                        drillDownToState(state, false);
+                    } else {
+                        showStatesView(false);
+                    }
+                });
+
+                // Check initial state/city from URL parameters
+                if (initialSelectedState) {
+                    const stateObj = dealersData.find(s => s.state.toUpperCase() === initialSelectedState.toUpperCase());
+                    if (stateObj) {
+                        if (initialSelectedCity) {
+                            const cityObj = stateObj.cities.find(c => c.city.toUpperCase() === initialSelectedCity.toUpperCase());
+                            if (cityObj) {
+                                currentSelectedState = stateObj;
+                                drillDownToCity(cityObj.city, false);
+                            } else {
+                                drillDownToState(stateObj.state, false);
+                            }
+                        } else {
+                            drillDownToState(stateObj.state, false);
+                        }
+                    }
+                }
+            });
+        </script>
+    <% } %>
+
     <!-- Rarity / Trend Scripts -->
-    <% if (!isDashboard && typeof stats_data !== 'undefined' && stats_data.length > 0) { %>
+    <% if (!isDashboard && activeCategory !== 'dealers' && typeof stats_data !== 'undefined' && stats_data.length > 0) { %>
         <script src="/js/scroll-sync.js?v=1.1" nonce="<%= nonce %>"></script>
         <script nonce="<%= nonce %>">
             const stats_data = <%- JSON.stringify(stats_data) %>;

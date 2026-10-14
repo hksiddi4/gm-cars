@@ -163,7 +163,7 @@ const authLimiter = rateLimit({
 const renderRateLimitPage = (req, res) => {
     const ip = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.ip;
     const rayId = req.headers['cf-ray'] || (crypto.randomBytes(8).toString('hex') + '-ORD');
-    const host = req.headers.host || 'gmbuildcounts.com';
+    const host = req.headers.host || 'www.gmbuildcounts.com';
     const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
 
     res.status(429).render('pages/errors/429', { 
@@ -171,6 +171,7 @@ const renderRateLimitPage = (req, res) => {
         clientIp: ip,
         host,
         timestamp,
+        nonce: res.locals.nonce || '',
         pagePath: req.path || '/search', 
         canonicalPath: req.originalUrl || '/search'
     });

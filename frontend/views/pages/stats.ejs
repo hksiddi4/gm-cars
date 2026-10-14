@@ -22,12 +22,57 @@
                 width: 100%;
                 display: flex;
                 flex-direction: column;
-                gap: 0.5rem;
+                gap: 0.6rem;
+                margin-bottom: 2rem !important;
             }
-            .nav-btn-group .btn-group {
+            .nav-btn-group .nav-timeframe-group {
                 width: 100%;
                 display: flex;
             }
+            .nav-btn-group .nav-timeframe-group .btn {
+                flex: 1 1 0;
+                padding: 0.45rem 0.5rem;
+                font-size: 0.85rem;
+                text-align: center;
+            }
+            .nav-btn-group .nav-detailed-group {
+                width: 100%;
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 6px;
+                box-shadow: none !important;
+            }
+            .nav-btn-group .nav-detailed-group .btn {
+                width: 100%;
+                margin-left: 0 !important;
+                border-radius: 6px !important;
+                padding: 0.5rem 0.4rem;
+                font-size: 0.82rem;
+                text-align: center;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                line-height: 1.25;
+                white-space: normal;
+                word-break: normal;
+            }
+            .nav-btn-group .nav-detailed-group .btn:last-child {
+                grid-column: span 2;
+            }
+        }
+        @media (max-width: 360px) {
+            .nav-btn-group .nav-detailed-group .btn {
+                font-size: 0.78rem;
+                padding: 0.4rem 0.25rem;
+            }
+            .nav-btn-group .nav-timeframe-group .btn {
+                font-size: 0.78rem;
+                padding: 0.4rem 0.25rem;
+            }
+        }
+        html, body {
+            overflow-x: hidden;
+            overflow-x: clip;
         }
 
         /* Dashboard Styles */
@@ -346,12 +391,12 @@
 
             <!-- Unified Top Navigation -->
             <div class="d-flex flex-wrap justify-content-center gap-3 mb-5 nav-btn-group">
-                <div class="btn-group shadow-sm" role="group" aria-label="Timeframe Dashboards">
+                <div class="btn-group shadow-sm nav-timeframe-group" role="group" aria-label="Timeframe Dashboards">
                     <a href="/stats?category=daily" class="btn btn-outline-secondary <%= activeCategory === 'daily' ? 'active' : '' %>">Daily</a>
                     <a href="/stats?category=monthly" class="btn btn-outline-secondary <%= activeCategory === 'monthly' ? 'active' : '' %>">Monthly</a>
                     <a href="/stats?category=yearly" class="btn btn-outline-secondary <%= activeCategory === 'yearly' ? 'active' : '' %>">Yearly</a>
                 </div>
-                <div class="btn-group shadow-sm" role="group" aria-label="Detailed Statistics">
+                <div class="btn-group shadow-sm nav-detailed-group" role="group" aria-label="Detailed Statistics">
                     <a href="/stats?category=color" class="btn btn-outline-primary <%= activeCategory === 'color' ? 'active' : '' %>">Exterior Colors</a>
                     <a href="/stats?category=interior" class="btn btn-outline-primary <%= activeCategory === 'interior' ? 'active' : '' %>">Interior Colors</a>
                     <a href="/stats?category=engine" class="btn btn-outline-primary <%= activeCategory === 'engine' ? 'active' : '' %>">Engine Rankings</a>
@@ -403,7 +448,7 @@
                                     titlePrefix = "Model Year Production: ";
                                 }
                             %>
-                            <h1 class="daily-title mb-2 mb-md-0 text-nowrap"><%= titlePrefix %><%= formattedDate %></h1>
+                            <h1 class="daily-title mb-2 mb-md-0 text-md-nowrap"><%= titlePrefix %><%= formattedDate %></h1>
                         </div>
 
                         <!-- Filters & Actions Row -->
@@ -868,19 +913,36 @@
                         </div>
 
                         <!-- Interactive Drill-Down Navigation & Breadcrumbs Bar -->
+                        <%
+                            let initDrillLevel = 'state';
+                            let initSelectedStateObj = null;
+                            let initSelectedCityObj = null;
+                            if (typeof selectedState !== 'undefined' && selectedState && safeDealersData.length > 0) {
+                                initSelectedStateObj = safeDealersData.find(s => s.state && s.state.toUpperCase() === selectedState.toUpperCase());
+                                if (initSelectedStateObj) {
+                                    initDrillLevel = 'city';
+                                    if (typeof selectedCity !== 'undefined' && selectedCity && initSelectedStateObj.cities) {
+                                        initSelectedCityObj = initSelectedStateObj.cities.find(c => c.city && c.city.toUpperCase() === selectedCity.toUpperCase());
+                                        if (initSelectedCityObj) {
+                                            initDrillLevel = 'dealer';
+                                        }
+                                    }
+                                }
+                            }
+                        %>
                         <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 p-3 mb-3" style="background-color: #2b2b2b; border: 1px solid #444; border-radius: 8px;">
                             <div class="d-flex align-items-center flex-wrap gap-2">
                                 <span class="text-white-50 small fw-bold me-1 text-uppercase"><i class="bi bi-diagram-3-fill me-1"></i>Location Drill-Down:</span>
-                                <button type="button" class="btn btn-sm btn-outline-light active d-inline-flex align-items-center gap-1" id="crumbRoot" style="font-weight: 600;">
+                                <button type="button" class="btn btn-sm btn-outline-light <%= initDrillLevel === 'state' ? 'active' : '' %> d-inline-flex align-items-center gap-1" id="crumbRoot" style="font-weight: 600;">
                                     All Subdivisions (<%= safeDealersData.length %>)
                                 </button>
-                                <span class="text-secondary d-none" id="crumbArrowState">&gt;</span>
-                                <button type="button" class="btn btn-sm btn-outline-light d-none align-items-center gap-1" id="crumbState" style="font-weight: 600;">
-                                    <span id="crumbStateText"></span>
+                                <span class="text-secondary <%= initDrillLevel !== 'state' ? '' : 'd-none' %>" id="crumbArrowState">&gt;</span>
+                                <button type="button" class="btn btn-sm btn-outline-light <%= initDrillLevel !== 'state' ? '' : 'd-none' %> <%= initDrillLevel === 'city' ? 'active' : '' %> align-items-center gap-1" id="crumbState" style="font-weight: 600;">
+                                    <span id="crumbStateText"><%= initSelectedStateObj ? (initSelectedStateObj.state_name ? `${initSelectedStateObj.state_name} (${initSelectedStateObj.state})` : initSelectedStateObj.state) : '' %></span>
                                 </button>
-                                <span class="text-secondary d-none" id="crumbArrowCity">&gt;</span>
-                                <button type="button" class="btn btn-sm btn-outline-light d-none align-items-center gap-1" id="crumbCity" style="font-weight: 600;">
-                                    <span id="crumbCityText"></span>
+                                <span class="text-secondary <%= initDrillLevel === 'dealer' ? '' : 'd-none' %>" id="crumbArrowCity">&gt;</span>
+                                <button type="button" class="btn btn-sm btn-outline-light <%= initDrillLevel === 'dealer' ? '' : 'd-none' %> <%= initDrillLevel === 'dealer' ? 'active' : '' %> align-items-center gap-1" id="crumbCity" style="font-weight: 600;">
+                                    <span id="crumbCityText"><%= initSelectedCityObj ? initSelectedCityObj.city : '' %></span>
                                 </button>
                             </div>
 
@@ -2229,33 +2291,69 @@
                 const stateBtn = document.getElementById('crumbState');
                 const arrowCity = document.getElementById('crumbArrowCity');
                 const cityBtn = document.getElementById('crumbCity');
+                const stateText = document.getElementById('crumbStateText');
+                const cityText = document.getElementById('crumbCityText');
+
+                // Fallback: If currentSelectedState is null but we are drilled into city or dealer level, resolve it
+                if (!currentSelectedState && currentDrillLevel !== 'state') {
+                    const params = new URLSearchParams(window.location.search);
+                    const stateParam = params.get('state') || initialSelectedState;
+                    if (stateParam) {
+                        currentSelectedState = dealersData.find(s => s.state.toUpperCase() === stateParam.toUpperCase()) || null;
+                    }
+                }
+
+                const getStateLabel = () => {
+                    if (!currentSelectedState) return '';
+                    return currentSelectedState.state_name 
+                        ? `${currentSelectedState.state_name} (${currentSelectedState.state})` 
+                        : (currentSelectedState.state || '');
+                };
 
                 if (currentDrillLevel === 'state') {
-                    rootBtn.classList.add('active');
-                    arrowState.classList.add('d-none');
-                    stateBtn.classList.add('d-none');
-                    stateBtn.classList.remove('active');
-                    arrowCity.classList.add('d-none');
-                    cityBtn.classList.add('d-none');
-                    cityBtn.classList.remove('active');
+                    if (rootBtn) rootBtn.classList.add('active');
+                    if (arrowState) arrowState.classList.add('d-none');
+                    if (stateBtn) {
+                        stateBtn.classList.add('d-none');
+                        stateBtn.classList.remove('active');
+                    }
+                    if (stateText) stateText.textContent = '';
+                    if (arrowCity) arrowCity.classList.add('d-none');
+                    if (cityBtn) {
+                        cityBtn.classList.add('d-none');
+                        cityBtn.classList.remove('active');
+                    }
+                    if (cityText) cityText.textContent = '';
                 } else if (currentDrillLevel === 'city') {
-                    rootBtn.classList.remove('active');
-                    arrowState.classList.remove('d-none');
-                    stateBtn.classList.remove('d-none');
-                    stateBtn.classList.add('active');
-                    document.getElementById('crumbStateText').textContent = `${currentSelectedState.state_name} (${currentSelectedState.state})`;
-                    arrowCity.classList.add('d-none');
-                    cityBtn.classList.add('d-none');
-                    cityBtn.classList.remove('active');
+                    if (rootBtn) rootBtn.classList.remove('active');
+                    if (arrowState) arrowState.classList.remove('d-none');
+                    if (stateBtn) {
+                        stateBtn.classList.remove('d-none');
+                        stateBtn.classList.add('active');
+                    }
+                    if (stateText) stateText.textContent = getStateLabel();
+                    if (arrowCity) arrowCity.classList.add('d-none');
+                    if (cityBtn) {
+                        cityBtn.classList.add('d-none');
+                        cityBtn.classList.remove('active');
+                    }
+                    if (cityText) cityText.textContent = '';
                 } else if (currentDrillLevel === 'dealer') {
-                    rootBtn.classList.remove('active');
-                    arrowState.classList.remove('d-none');
-                    stateBtn.classList.remove('d-none');
-                    stateBtn.classList.remove('active');
-                    arrowCity.classList.remove('d-none');
-                    cityBtn.classList.remove('d-none');
-                    cityBtn.classList.add('active');
-                    document.getElementById('crumbCityText').textContent = currentSelectedCity.city;
+                    if (rootBtn) rootBtn.classList.remove('active');
+                    if (arrowState) arrowState.classList.remove('d-none');
+                    if (stateBtn) {
+                        stateBtn.classList.remove('d-none');
+                        stateBtn.classList.remove('active');
+                    }
+                    if (stateText) stateText.textContent = getStateLabel();
+                    if (arrowCity) arrowCity.classList.remove('d-none');
+                    if (cityBtn) {
+                        cityBtn.classList.remove('d-none');
+                        cityBtn.classList.add('active');
+                    }
+                    if (cityText && currentSelectedCity) {
+                        cityText.textContent = currentSelectedCity.city || '';
+                    }
                 }
             }
 
@@ -2348,6 +2446,14 @@
             }
 
             function drillDownToCity(cityName, updateHistory = true) {
+                if (!cityName) return;
+                if (!currentSelectedState) {
+                    const params = new URLSearchParams(window.location.search);
+                    const stateParam = params.get('state') || initialSelectedState;
+                    if (stateParam) {
+                        currentSelectedState = dealersData.find(s => s.state.toUpperCase() === stateParam.toUpperCase()) || null;
+                    }
+                }
                 if (!currentSelectedState) return;
                 const cityObj = currentSelectedState.cities.find(c => c.city.toUpperCase() === cityName.toUpperCase());
                 if (!cityObj) return;
@@ -2463,6 +2569,29 @@
                 }
             }
 
+            function syncViewFromUrl(updateHistory = false) {
+                const params = new URLSearchParams(window.location.search);
+                const stateParam = params.get('state') || initialSelectedState;
+                const cityParam = params.get('city') || initialSelectedCity;
+
+                if (stateParam) {
+                    const sObj = dealersData.find(s => s.state.toUpperCase() === stateParam.toUpperCase());
+                    if (sObj) {
+                        currentSelectedState = sObj;
+                        if (cityParam) {
+                            const cObj = sObj.cities.find(c => c.city.toUpperCase() === cityParam.toUpperCase());
+                            if (cObj) {
+                                drillDownToCity(cObj.city, updateHistory);
+                                return;
+                            }
+                        }
+                        drillDownToState(sObj.state, updateHistory);
+                        return;
+                    }
+                }
+                showStatesView(updateHistory);
+            }
+
             document.addEventListener('DOMContentLoaded', () => {
                 initTopStatesChart();
 
@@ -2477,13 +2606,25 @@
                 // Breadcrumb Click Listeners
                 document.getElementById('crumbRoot')?.addEventListener('click', () => showStatesView());
                 document.getElementById('crumbState')?.addEventListener('click', () => {
-                    if (currentSelectedState) drillDownToState(currentSelectedState.state);
+                    if (currentSelectedState) {
+                        drillDownToState(currentSelectedState.state);
+                    } else {
+                        const params = new URLSearchParams(window.location.search);
+                        const stateParam = params.get('state') || initialSelectedState;
+                        if (stateParam) drillDownToState(stateParam);
+                    }
                 });
 
                 // Back Buttons
                 document.getElementById('btnBackToAllStates')?.addEventListener('click', () => showStatesView());
                 document.getElementById('btnBackToStateCities')?.addEventListener('click', () => {
-                    if (currentSelectedState) drillDownToState(currentSelectedState.state);
+                    if (currentSelectedState) {
+                        drillDownToState(currentSelectedState.state);
+                    } else {
+                        const params = new URLSearchParams(window.location.search);
+                        const stateParam = params.get('state') || initialSelectedState;
+                        if (stateParam) drillDownToState(stateParam);
+                    }
                 });
 
                 // Search Input
@@ -2496,41 +2637,19 @@
                     filterCurrentView('');
                 });
 
-                // Browser Back/Forward navigation
-                window.addEventListener('popstate', (e) => {
-                    const params = new URLSearchParams(window.location.search);
-                    const state = params.get('state');
-                    const city = params.get('city');
-
-                    if (city && state) {
-                        const sObj = dealersData.find(s => s.state.toUpperCase() === state.toUpperCase());
-                        if (sObj) {
-                            currentSelectedState = sObj;
-                            drillDownToCity(city, false);
-                        }
-                    } else if (state) {
-                        drillDownToState(state, false);
-                    } else {
-                        showStatesView(false);
-                    }
-                });
-
                 // Check initial state/city from URL parameters
-                if (initialSelectedState) {
-                    const stateObj = dealersData.find(s => s.state.toUpperCase() === initialSelectedState.toUpperCase());
-                    if (stateObj) {
-                        if (initialSelectedCity) {
-                            const cityObj = stateObj.cities.find(c => c.city.toUpperCase() === initialSelectedCity.toUpperCase());
-                            if (cityObj) {
-                                currentSelectedState = stateObj;
-                                drillDownToCity(cityObj.city, false);
-                            } else {
-                                drillDownToState(stateObj.state, false);
-                            }
-                        } else {
-                            drillDownToState(stateObj.state, false);
-                        }
-                    }
+                syncViewFromUrl(false);
+            });
+
+            // Browser Back/Forward navigation
+            window.addEventListener('popstate', (e) => {
+                syncViewFromUrl(false);
+            });
+
+            // Back/Forward Cache (bfcache) restore handler
+            window.addEventListener('pageshow', (e) => {
+                if (e.persisted) {
+                    syncViewFromUrl(false);
                 }
             });
         </script>

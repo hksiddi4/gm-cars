@@ -1065,7 +1065,6 @@
                                             <th scope="col" style="text-align: left;">Location</th>
                                             <th scope="col" style="width: 130px;">Vehicles</th>
                                             <th scope="col" style="width: 100px;">% City</th>
-                                            <th scope="col" style="width: 180px; text-align: center;">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody id="tbodyDealers">
@@ -2493,11 +2492,6 @@
                         <td class="align-middle text-start text-muted small">${zipDisplay}</td>
                         <td class="align-middle fw-bold">${formatNumber(d.total_count)}</td>
                         <td class="align-middle">${formatPercent(d.percent_of_city)}</td>
-                        <td class="align-middle text-center" onclick="event.stopPropagation();">
-                            <a href="${vehLink}" class="btn model-btn btn-stats-veh btn-sm text-nowrap" title="View matching vehicles at ${d.dealer_name}">
-                                <i class="bi bi-car-front-fill me-1"></i> View Vehicles
-                            </a>
-                        </td>
                     `;
                     tr.addEventListener('click', () => {
                         window.location.href = vehLink;

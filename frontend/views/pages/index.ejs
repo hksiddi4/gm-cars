@@ -4,6 +4,17 @@
     <%- include('../partials/head'); %>
     <title>GM Build Counts</title>
     <%- include('../partials/analytics'); %>
+    <style>
+        .btn-stats-pill {
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 0.15rem 0.45rem;
+            line-height: 1.25;
+            border-radius: 4px;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+    </style>
 </head>
 <body>
     <%- include('../partials/header'); %>
@@ -155,7 +166,16 @@
                                 <i class="bi bi-list-ol me-1"></i>Statistics
                             </a>
                         </h2>
-                        <p class="mt-2">Statistics and charts on vehicle data including: Exterior Paint, Engines, and Production.</p>
+                        <div class="d-flex flex-wrap gap-1 mt-2">
+                            <a href="/stats?category=daily" class="btn btn-outline-secondary btn-stats-pill">Daily</a>
+                            <a href="/stats?category=monthly" class="btn btn-outline-secondary btn-stats-pill">Monthly</a>
+                            <a href="/stats?category=yearly" class="btn btn-outline-secondary btn-stats-pill">Yearly</a>
+                            <a href="/stats?category=color" class="btn btn-outline-primary btn-stats-pill">Exterior Colors</a>
+                            <a href="/stats?category=interior" class="btn btn-outline-primary btn-stats-pill">Interior Colors</a>
+                            <a href="/stats?category=engine" class="btn btn-outline-primary btn-stats-pill">Engines</a>
+                            <a href="/stats?category=production" class="btn btn-outline-primary btn-stats-pill">Production</a>
+                            <a href="/stats?category=dealers" class="btn btn-outline-primary btn-stats-pill">Dealerships</a>
+                        </div>
                     </div>
                     
                     <div class="col-12 col-sm-6 col-xl-3">
@@ -165,7 +185,7 @@
                     
                     <div class="col-12 col-sm-6 col-xl-3">
                         <h2 class="i-link"><a href="/rpos"><i class="bi bi-database-fill me-1"></i>RPOs</a></h2>
-                        <p>Images & Descriptions of RPOs for a given model. Only RPOs with official images are listed.</p>
+                        <p>Descriptions and available images of all RPOs for a given model.</p>
                     </div>
                     
                     <div class="col-12 col-sm-6 col-xl-3">

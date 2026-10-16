@@ -903,11 +903,11 @@
 
                         <!-- Top Subdivisions Bar Chart -->
                         <div class="dashboard-card mb-4" id="dealerChartCard">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="d-flex flex-wrap justify-content-between align-items-baseline gap-1 mb-2">
                                 <h5 class="text-white fw-bold mb-0">Top Subdivisions by Vehicle Volume</h5>
                                 <span class="text-white-50 small">Click any bar to drill down</span>
                             </div>
-                            <div style="position: relative; width: 100%; height: 320px;">
+                            <div id="dealerChartWrapper" style="position: relative; width: 100%; height: 340px;">
                                 <canvas id="dealerTopStatesChart"></canvas>
                             </div>
                         </div>
@@ -2199,15 +2199,44 @@
                 return '';
             }
 
+            let dealerChartIsHorizontal = null;
+
             function initTopStatesChart() {
                 const canvas = document.getElementById('dealerTopStatesChart');
                 if (!canvas) return;
                 const ctx = canvas.getContext('2d');
                 if (!ctx) return;
 
+                const isCompact = window.innerWidth <= 991;
+                dealerChartIsHorizontal = isCompact;
+
                 const top15 = dealersData.slice(0, 15);
-                const labels = top15.map(s => `${s.state} - ${s.state_name}`);
+                const labels = top15.map(s => s.state_name ? `${s.state} - ${s.state_name}` : s.state);
                 const dataValues = top15.map(s => s.total_count);
+
+                const wrapper = document.getElementById('dealerChartWrapper');
+                if (wrapper) {
+                    wrapper.style.height = isCompact
+                        ? `${Math.max(360, top15.length * 32)}px`
+                        : '340px';
+                }
+
+                if (dealerChartInstance) {
+                    dealerChartInstance.destroy();
+                    dealerChartInstance = null;
+                }
+
+                const getActiveElements = (event, elements, chart) => {
+                    if (elements && elements.length > 0) return elements;
+                    if (!chart) return [];
+                    if (isCompact && chart.chartArea) {
+                        const { top, bottom, left, right } = chart.chartArea;
+                        if (event.x >= left && event.x <= right && event.y >= top && event.y <= bottom) {
+                            return chart.getElementsAtEventForMode(event, 'index', { intersect: false, axis: 'y' }, false);
+                        }
+                    }
+                    return chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
+                };
 
                 dealerChartInstance = new Chart(ctx, {
                     type: 'bar',
@@ -2216,17 +2245,26 @@
                         datasets: [{
                             label: 'Vehicles',
                             data: dataValues,
-                            backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                            backgroundColor: 'rgba(54, 162, 235, 0.75)',
                             borderColor: 'rgba(54, 162, 235, 1)',
                             borderWidth: 1,
+                            borderRadius: 4,
+                            barPercentage: isCompact ? 0.78 : 0.75,
+                            categoryPercentage: isCompact ? 0.86 : 0.82,
                             hoverBackgroundColor: 'rgba(54, 162, 235, 0.95)'
                         }]
                     },
                     options: {
+                        indexAxis: isCompact ? 'y' : 'x',
                         responsive: true,
                         maintainAspectRatio: false,
+                        layout: {
+                            padding: isCompact
+                                ? { top: 4, right: 48, bottom: 4, left: 0 }
+                                : { top: 14, right: 18, bottom: 0, left: 4 }
+                        },
                         onClick: (event, elements, chart) => {
-                            const active = elements && elements.length > 0 ? elements : (chart ? chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false) : []);
+                            const active = getActiveElements(event, elements, chart);
                             if (active && active.length > 0) {
                                 const index = active[0].index;
                                 const clickedState = top15[index];
@@ -2245,7 +2283,7 @@
                                 target.style.cursor = 'default';
                                 return;
                             }
-                            const active = elements && elements.length > 0 ? elements : chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
+                            const active = getActiveElements(event, elements, chart);
                             target.style.cursor = (active && active.length > 0) ? 'pointer' : 'default';
                         },
                         plugins: {
@@ -2253,8 +2291,9 @@
                             datalabels: {
                                 color: '#ffffff',
                                 anchor: 'end',
-                                align: 'top',
-                                offset: 4,
+                                align: isCompact ? 'right' : 'top',
+                                offset: isCompact ? 6 : 4,
+                                clamp: true,
                                 font: { weight: 'bold', size: 11 },
                                 formatter: val => formatNumber(val)
                             },
@@ -2264,14 +2303,46 @@
                                 }
                             }
                         },
-                        scales: {
+                        scales: isCompact ? {
                             x: {
-                                ticks: { color: '#ffffff', maxRotation: 45, minRotation: 20 },
+                                beginAtZero: true,
+                                grace: '12%',
+                                ticks: {
+                                    color: 'rgba(255, 255, 255, 0.75)',
+                                    maxTicksLimit: 5,
+                                    font: { size: 10 },
+                                    callback: val => {
+                                        const num = Number(val);
+                                        if (num >= 1000) {
+                                            return (num / 1000).toFixed(num % 1000 === 0 ? 0 : 1) + 'k';
+                                        }
+                                        return formatNumber(num);
+                                    }
+                                },
+                                grid: { color: 'rgba(255, 255, 255, 0.08)' }
+                            },
+                            y: {
+                                ticks: {
+                                    color: '#ffffff',
+                                    autoSkip: false,
+                                    font: { size: 11 }
+                                },
+                                grid: { display: false }
+                            }
+                        } : {
+                            x: {
+                                ticks: {
+                                    color: '#ffffff',
+                                    autoSkip: false,
+                                    maxRotation: 40,
+                                    minRotation: 25,
+                                    font: { size: 11 }
+                                },
                                 grid: { display: false }
                             },
                             y: {
                                 beginAtZero: true,
-                                grace: '10%',
+                                grace: '12%',
                                 ticks: { color: '#ffffff' },
                                 grid: { color: 'rgba(255, 255, 255, 0.1)' }
                             }
@@ -2279,9 +2350,12 @@
                     }
                 });
 
-                canvas.addEventListener('mouseleave', () => {
-                    canvas.style.cursor = 'default';
-                });
+                if (!canvas.dataset.mouseLeaveBound) {
+                    canvas.addEventListener('mouseleave', () => {
+                        canvas.style.cursor = 'default';
+                    });
+                    canvas.dataset.mouseLeaveBound = 'true';
+                }
             }
 
             function updateBreadcrumb() {
@@ -2366,6 +2440,9 @@
                 document.getElementById('viewDealersContainer').style.display = 'none';
                 const chartCard = document.getElementById('dealerChartCard');
                 if (chartCard) chartCard.style.display = 'block';
+                if (dealerChartInstance) {
+                    dealerChartInstance.resize();
+                }
 
                 updateBreadcrumb();
                 filterCurrentView('');
@@ -2645,6 +2722,18 @@
                 if (e.persisted) {
                     syncViewFromUrl(false);
                 }
+            });
+
+            // Re-render chart if screen crosses mobile/desktop orientation breakpoint
+            let dealerResizeTimer = null;
+            window.addEventListener('resize', () => {
+                clearTimeout(dealerResizeTimer);
+                dealerResizeTimer = setTimeout(() => {
+                    const isCompactNow = window.innerWidth <= 991;
+                    if (dealerChartIsHorizontal !== null && isCompactNow !== dealerChartIsHorizontal) {
+                        initTopStatesChart();
+                    }
+                }, 150);
             });
         </script>
     <% } %>

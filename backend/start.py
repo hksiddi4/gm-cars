@@ -158,7 +158,8 @@ def natural_language_query():
         response.raise_for_status()
         generated_sql = response.json().get('response', '').strip()
     except Exception as e:
-        return jsonify({'error': f'Failed to communicate with AI model: {str(e)}'}), 500
+        app.logger.error("Failed to communicate with AI model: %s", e)
+        return jsonify({'error': 'Failed to communicate with AI model'}), 500
 
     if generated_sql.startswith("```"):
         generated_sql = generated_sql.replace("```sql", "").replace("```", "").strip()
@@ -178,11 +179,12 @@ def natural_language_query():
             }), 400
             
     except Exception as e:
+        app.logger.error("AI SQL execution error: %s", e)
         close_connection(conn)
         return jsonify({
             'error': 'Execution error', 
             'generated_sql': generated_sql, 
-            'details': str(e)
+            'details': 'An error occurred while executing the generated SQL query.'
         }), 400
     
     close_connection(conn)
@@ -940,13 +942,20 @@ def stats():
         """
     elif category == 'interior':
         interior_rpos_param = request.args.get('interiorRPOs', '')
-        interior_rpos = [x.strip() for x in interior_rpos_param.split(',')] if interior_rpos_param else []
-        rpo_list_str = "'" + "','".join(interior_rpos) + "'" if interior_rpos else "''"
+        interior_rpos = [
+            x.strip().upper()
+            for x in interior_rpos_param.split(',')
+            if re.fullmatch(r'[A-Z0-9]{1,10}', x.strip().upper())
+        ] if interior_rpos_param else []
+        if not interior_rpos:
+            interior_rpos = ['__NONE__']
+        placeholders = ", ".join(["%s"] * len(interior_rpos))
+        interior_params = params + interior_rpos
         
         # If where_clause is empty, we must start it with WHERE instead of AND
-        rpo_where = f" AND opt.option_code IN ({rpo_list_str})"
+        rpo_where = f" AND opt.option_code IN ({placeholders})"
         if not where_clause:
-            rpo_where = f"WHERE opt.option_code IN ({rpo_list_str})"
+            rpo_where = f"WHERE opt.option_code IN ({placeholders})"
 
         sqlStatement = f"""
             WITH InteriorCounts AS (
@@ -1035,6 +1044,8 @@ def stats():
 
     if category == 'production':
         viewTable = execute_read_query(conn, sqlStatement, prod_params)
+    elif category == 'interior':
+        viewTable = execute_read_query(conn, sqlStatement, interior_params)
     elif category == 'dealers':
         raw_dealers = execute_read_query(conn, sqlStatement, params) or []
         states_map = {}

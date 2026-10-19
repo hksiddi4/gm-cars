@@ -626,7 +626,7 @@ def sort_price():
             v.vehicle_id, v.vin, v.modelYear, v.model, v.body, v.trim,
             e.engine_type, t.transmission_type, d.drivetrain_type,
             c.color_name, v.msrp, o.country, dl.dealer_name, dl.location,
-            (SELECT GROUP_CONCAT(DISTINCT se.special_desc ORDER BY se.special_desc ASC SEPARATOR ', ')
+            (SELECT GROUP_CONCAT(se.special_desc ORDER BY se.special_desc ASC SEPARATOR ', ')
              FROM SpecialEditions se
              WHERE se.vehicle_id = v.vehicle_id) AS special_desc
         FROM (
@@ -822,7 +822,7 @@ def daily_stats():
     sqlStatement = f"""
         SELECT v.modelYear, v.model, v.body, v.trim, e.engine_type, e.engine_rpo,
                t.transmission_type, d.drivetrain_type, c.color_name, c.rpo_code,
-               (SELECT GROUP_CONCAT(DISTINCT se.special_desc SEPARATOR ', ')
+               (SELECT GROUP_CONCAT(se.special_desc SEPARATOR ', ')
                 FROM SpecialEditions se
                 WHERE se.vehicle_id = v.vehicle_id) AS special_desc
         FROM Vehicles v

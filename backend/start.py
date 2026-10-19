@@ -4,6 +4,7 @@ monkey.patch_all()
 import sql
 import re
 import math
+import time
 import calendar
 import flask
 import requests
@@ -17,6 +18,8 @@ app.json.sort_keys = False
 CORS(app)
 
 myCreds = sql.Creds()
+_VEHICLE_FILTER_CACHE = {}
+_VEHICLE_FILTER_CACHE_TTL = 300
 
 def build_creation_date_cond(date_str, mode=None):
     s = (date_str or '').strip()
@@ -312,16 +315,9 @@ def sort_price():
 
     rpo_list = []
     rpo_list_for_filtering = []
+    rpo_n = 0
     conditions = []
     params = []
-
-    filter_join_clause = """
-        JOIN Engines e ON v.engine_id = e.engine_id
-        JOIN Transmissions t ON v.transmission_id = t.transmission_id
-        JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id
-        JOIN Colors c ON v.color_id = c.color_id
-        JOIN Orders o ON v.order_id = o.order_id
-    """
 
     country_map = {
         "CAN": "CANADA",
@@ -352,16 +348,16 @@ def sort_price():
         conditions.append("v.trim = %s")
         params.append(trim)
     if engine:
-        conditions.append("e.engine_type = %s")
+        conditions.append("v.engine_id = (SELECT engine_id FROM Engines WHERE engine_type = %s LIMIT 1)")
         params.append(engine)
     if trans:
-        conditions.append("t.transmission_type = %s")
+        conditions.append("v.transmission_id = (SELECT transmission_id FROM Transmissions WHERE transmission_type = %s LIMIT 1)")
         params.append(trans)
     if drivetrain:
-        conditions.append("d.drivetrain_type = %s")
+        conditions.append("v.drivetrain_id = (SELECT drivetrain_id FROM Drivetrains WHERE drivetrain_type = %s LIMIT 1)")
         params.append(drivetrain)
     if color:
-        conditions.append("c.color_name = %s")
+        conditions.append("v.color_id = (SELECT color_id FROM Colors WHERE color_name = %s LIMIT 1)")
         params.append(color)
     if country:
         conditions.append("o.country = %s")
@@ -370,9 +366,6 @@ def sort_price():
         d_cond, d_params = build_creation_date_cond(date)
         conditions.append(d_cond)
         params.extend(d_params)
-
-    if state or city or dealer or dealer_id or dealer_name:
-        filter_join_clause += " JOIN Dealers dl ON v.dealer_id = dl.dealer_id"
 
     if state:
         if state.upper() == 'OTHER':
@@ -415,47 +408,46 @@ def sort_price():
 
     if rpo:
         rpo_list = rpo.split(',') if ',' in rpo else [rpo]
-        filter_join_clause += " JOIN Options opt ON v.vehicle_id = opt.vehicle_id"
         
         rpo_conditions = {
-            "Z4B": ["v.modelYear = '2024'", "v.model = 'CAMARO'", "c.color_name IN ('PANTHER BLACK MATTE', 'PANTHER BLACK METALLIC TINTCOAT')"],
-            "ZL4B": ["v.modelYear = '2024'", "v.model = 'CAMARO'", "v.trim = 'ZL1'", "c.color_name = 'PANTHER BLACK MATTE'"],
-            "X56": ["v.modelYear = '2024'", "v.model = 'CAMARO'", "v.body = 'COUPE'", "v.trim = 'ZL1'", "t.transmission_type = 'M6'", "c.color_name = 'RIPTIDE BLUE METALLIC'", "v.msrp = '89185'"],
+            "Z4B": ["v.modelYear = '2024'", "v.model = 'CAMARO'", "v.color_id IN (SELECT color_id FROM Colors WHERE color_name IN ('PANTHER BLACK MATTE', 'PANTHER BLACK METALLIC TINTCOAT'))"],
+            "ZL4B": ["v.modelYear = '2024'", "v.model = 'CAMARO'", "v.trim = 'ZL1'", "v.color_id = (SELECT color_id FROM Colors WHERE color_name = 'PANTHER BLACK MATTE' LIMIT 1)"],
+            "X56": ["v.modelYear = '2024'", "v.model = 'CAMARO'", "v.body = 'COUPE'", "v.trim = 'ZL1'", "v.transmission_id = (SELECT transmission_id FROM Transmissions WHERE transmission_type = 'M6' LIMIT 1)", "v.color_id = (SELECT color_id FROM Colors WHERE color_name = 'RIPTIDE BLUE METALLIC' LIMIT 1)", "v.msrp = '89185'"],
             "A1Z": ["v.model = 'CAMARO'", "v.body = 'COUPE'", "v.trim = 'ZL1'"],
             "A1Y": ["v.model = 'CAMARO'", "v.body = 'COUPE'", "v.trim IN ('1SS', '2SS')"],
             "A1X": ["v.modelYear IN ('2019', '2020', '2021')", "v.model = 'CAMARO'", "v.body = 'COUPE'", "v.trim IN ('1LT', '2LT', '3LT')"],
-            "H40": ["((v.modelYear = '2024' AND v.model = 'CAMARO' AND v.trim = '2SS' AND c.color_name = 'RADIANT RED TINTCOAT' AND opt.option_code = 'SL1') OR v.vin IN ('1G1FK1R65R0117449', '1G1FK3D62R0118478'))"],
-            "PEH": ["v.modelYear = '2020'", "v.model = 'CAMARO'", "v.body = 'COUPE'", "v.trim IN ('2SS', 'ZL1')", "t.transmission_type = 'A10'", "c.color_name = 'BLACK'"],
+            "H40": ["((v.modelYear = '2024' AND v.model = 'CAMARO' AND v.trim = '2SS' AND v.color_id = (SELECT color_id FROM Colors WHERE color_name = 'RADIANT RED TINTCOAT' LIMIT 1) AND opt.option_code = 'SL1') OR v.vin IN ('1G1FK1R65R0117449', '1G1FK3D62R0118478'))"],
+            "PEH": ["v.modelYear = '2020'", "v.model = 'CAMARO'", "v.body = 'COUPE'", "v.trim IN ('2SS', 'ZL1')", "v.transmission_id = (SELECT transmission_id FROM Transmissions WHERE transmission_type = 'A10' LIMIT 1)", "v.color_id = (SELECT color_id FROM Colors WHERE color_name = 'BLACK' LIMIT 1)"],
             "INDY26": ["EXISTS (SELECT 1 FROM SpecialEditions se WHERE se.vehicle_id = v.vehicle_id AND se.special_desc = '2026 Indianapolis 500 Festival Vehicle')"],
-            "Z4Z": ["v.model = 'CAMARO'", "v.body = 'CONVERTIBLE'", "v.trim = '2SS'", "c.color_name IN ('WILD CHERRY TINTCOAT', 'SUMMIT WHITE', 'SHARKSKIN METALLIC', 'SATIN STEEL GRAY METALLIC')"],
-            "WBL": ["v.modelYear IN ('2020', '2021', '2022', '2023', '2024')", "v.model = 'CAMARO'", "v.trim NOT IN ('ZL1', '1LS')", "c.color_name IN ('BLACK', 'SUMMIT WHITE', 'SHARKSKIN METALLIC', 'SATIN STEEL GRAY METALLIC')"],
-            "B2E": ["v.model = 'CAMARO'", "v.trim IN ('2LT', '2SS', '3LT')", "v.modelYear IN ('2020', '2021', '2022', '2023')", "c.color_name IN ('BLACK', 'SUMMIT WHITE', 'RAPID BLUE', 'SHARKSKIN METALLIC', 'SATIN STEEL GRAY METALLIC', 'SHOCK')"],
-            "ZCR": ["v.model = 'CORVETTE STINGRAY'", "v.modelYear = '2022'", "v.trim = '3LT'", "(c.color_name = 'HYPERSONIC GRAY METALLIC' OR c.color_name = 'ACCELERATE YELLOW METALLIC')"],
+            "Z4Z": ["v.model = 'CAMARO'", "v.body = 'CONVERTIBLE'", "v.trim = '2SS'", "v.color_id IN (SELECT color_id FROM Colors WHERE color_name IN ('WILD CHERRY TINTCOAT', 'SUMMIT WHITE', 'SHARKSKIN METALLIC', 'SATIN STEEL GRAY METALLIC'))"],
+            "WBL": ["v.modelYear IN ('2020', '2021', '2022', '2023', '2024')", "v.model = 'CAMARO'", "v.trim NOT IN ('ZL1', '1LS')", "v.color_id IN (SELECT color_id FROM Colors WHERE color_name IN ('BLACK', 'SUMMIT WHITE', 'SHARKSKIN METALLIC', 'SATIN STEEL GRAY METALLIC'))"],
+            "B2E": ["v.model = 'CAMARO'", "v.trim IN ('2LT', '2SS', '3LT')", "v.modelYear IN ('2020', '2021', '2022', '2023')", "v.color_id IN (SELECT color_id FROM Colors WHERE color_name IN ('BLACK', 'SUMMIT WHITE', 'RAPID BLUE', 'SHARKSKIN METALLIC', 'SATIN STEEL GRAY METALLIC', 'SHOCK'))"],
+            "ZCR": ["v.model = 'CORVETTE STINGRAY'", "v.modelYear = '2022'", "v.trim = '3LT'", "v.color_id IN (SELECT color_id FROM Colors WHERE color_name IN ('HYPERSONIC GRAY METALLIC', 'ACCELERATE YELLOW METALLIC'))"],
             "ZTK": ["v.model IN ('CORVETTE ZR1', 'CORVETTE ZR1X')", "v.modelYear IN ('2019', '2025', '2026', '2027')"],
             "Z07": ["v.model = 'CORVETTE Z06'"],
             "Z51": ["v.model = 'CORVETTE STINGRAY'"],
             "Z25": ["v.model = 'CORVETTE GRAND SPORT'"],
             "FEB": ["v.model = 'CORVETTE GRAND SPORT'"],
             "FEY": ["v.model = 'CORVETTE GRAND SPORT'"],
-            "Y70": ["v.model IN ('CORVETTE STINGRAY', 'CORVETTE Z06')", "v.modelYear = '2023'", "v.trim IN ('3LT', '3LZ')", "(c.color_name = 'WHITE PEARL METALLIC TRICOAT' OR c.color_name = 'CARBON FLASH METALLIC')"],
-            "I26": ["v.model = 'CORVETTE E-RAY'", "v.modelYear = '2026'", "v.trim = '3LZ'", "c.color_name = 'ARCTIC WHITE'", "o.country = 'USA'", "v.body = 'CONVERTIBLE'", "v.msrp = '160835'"],
-            "USA": ["v.model IN ('CORVETTE STINGRAY', 'CORVETTE Z06', 'CORVETTE E-RAY', 'CORVETTE ZR1', 'CORVETTE ZR1X')", "v.modelYear = '2026'", "v.trim IN ('3LT', '3LZ')", "(c.color_name = 'ARCTIC WHITE' OR c.color_name = 'BLACK')"],
-            "ZRA": ["v.model = 'CORVETTE ZR1X'", "v.modelYear = '2026'", "v.trim = '3LZ'", "c.color_name = 'BLADE SILVER MATTE'"],
-            "ZLE": ["v.modelYear = '2023'", "v.model = 'CT4'", "v.trim = 'V-SERIES BLACKWING'", "c.color_name = 'ELECTRIC BLUE'"],
-            "ZLD": ["v.modelYear = '2023'", "v.model = 'CT4'", "v.trim = 'V-SERIES BLACKWING'", "c.color_name = 'MAVERICK NOIR FROST'"],
-            "ZLG": ["v.modelYear = '2023'", "v.model = 'CT4'", "v.trim = 'V-SERIES BLACKWING'", "c.color_name = 'RIFT METALLIC'"],
-            "ZLK": ["v.modelYear = '2024'", "v.model = 'CT4'", "v.trim = 'V-SERIES BLACKWING'", "c.color_name = 'MERCURY SILVER METALLIC'"],
-            "ZLJ": ["v.modelYear = '2024'", "v.model = 'CT4'", "v.trim = 'V-SERIES BLACKWING'", "c.color_name = 'BLACK RAVEN'"],
-            "ZLR": ["v.modelYear = '2024'", "v.model = 'CT4'", "v.trim = 'V-SERIES BLACKWING'", "c.color_name = 'VELOCITY RED'"],
-            "ZLZ4": ["v.modelYear = '2025'", "v.model ='CT4'", "v.trim = 'V-SERIES BLACKWING'", "c.color_name = 'MAGNUS METAL FROST'"],
-            "ZLZ5": ["v.modelYear = '2025'", "v.model ='CT5'", "v.trim = 'V-SERIES BLACKWING'", "c.color_name = 'MAGNUS METAL FROST'"],
+            "Y70": ["v.model IN ('CORVETTE STINGRAY', 'CORVETTE Z06')", "v.modelYear = '2023'", "v.trim IN ('3LT', '3LZ')", "v.color_id IN (SELECT color_id FROM Colors WHERE color_name IN ('WHITE PEARL METALLIC TRICOAT', 'CARBON FLASH METALLIC'))"],
+            "I26": ["v.model = 'CORVETTE E-RAY'", "v.modelYear = '2026'", "v.trim = '3LZ'", "v.color_id = (SELECT color_id FROM Colors WHERE color_name = 'ARCTIC WHITE' LIMIT 1)", "o.country = 'USA'", "v.body = 'CONVERTIBLE'", "v.msrp = '160835'"],
+            "USA": ["v.model IN ('CORVETTE STINGRAY', 'CORVETTE Z06', 'CORVETTE E-RAY', 'CORVETTE ZR1', 'CORVETTE ZR1X')", "v.modelYear = '2026'", "v.trim IN ('3LT', '3LZ')", "v.color_id IN (SELECT color_id FROM Colors WHERE color_name IN ('ARCTIC WHITE', 'BLACK'))"],
+            "ZRA": ["v.model = 'CORVETTE ZR1X'", "v.modelYear = '2026'", "v.trim = '3LZ'", "v.color_id = (SELECT color_id FROM Colors WHERE color_name = 'BLADE SILVER MATTE' LIMIT 1)"],
+            "ZLE": ["v.modelYear = '2023'", "v.model = 'CT4'", "v.trim = 'V-SERIES BLACKWING'", "v.color_id = (SELECT color_id FROM Colors WHERE color_name = 'ELECTRIC BLUE' LIMIT 1)"],
+            "ZLD": ["v.modelYear = '2023'", "v.model = 'CT4'", "v.trim = 'V-SERIES BLACKWING'", "v.color_id = (SELECT color_id FROM Colors WHERE color_name = 'MAVERICK NOIR FROST' LIMIT 1)"],
+            "ZLG": ["v.modelYear = '2023'", "v.model = 'CT4'", "v.trim = 'V-SERIES BLACKWING'", "v.color_id = (SELECT color_id FROM Colors WHERE color_name = 'RIFT METALLIC' LIMIT 1)"],
+            "ZLK": ["v.modelYear = '2024'", "v.model = 'CT4'", "v.trim = 'V-SERIES BLACKWING'", "v.color_id = (SELECT color_id FROM Colors WHERE color_name = 'MERCURY SILVER METALLIC' LIMIT 1)"],
+            "ZLJ": ["v.modelYear = '2024'", "v.model = 'CT4'", "v.trim = 'V-SERIES BLACKWING'", "v.color_id = (SELECT color_id FROM Colors WHERE color_name = 'BLACK RAVEN' LIMIT 1)"],
+            "ZLR": ["v.modelYear = '2024'", "v.model = 'CT4'", "v.trim = 'V-SERIES BLACKWING'", "v.color_id = (SELECT color_id FROM Colors WHERE color_name = 'VELOCITY RED' LIMIT 1)"],
+            "ZLZ4": ["v.modelYear = '2025'", "v.model ='CT4'", "v.trim = 'V-SERIES BLACKWING'", "v.color_id = (SELECT color_id FROM Colors WHERE color_name = 'MAGNUS METAL FROST' LIMIT 1)"],
+            "ZLZ5": ["v.modelYear = '2025'", "v.model ='CT5'", "v.trim = 'V-SERIES BLACKWING'", "v.color_id = (SELECT color_id FROM Colors WHERE color_name = 'MAGNUS METAL FROST' LIMIT 1)"],
             "WOX": ["v.modelYear = '2026'", "v.model ='CT5'", "v.trim = 'V-SERIES BLACKWING'"],
             "ABQ": ["v.modelYear = '2023'", "v.model = 'CT5'", "v.trim = 'V-SERIES BLACKWING'", "v.msrp > '118000'"],
             "ZLT": ["v.modelYear = '2024'", "v.model = 'CT5'", "v.trim = 'V-SERIES BLACKWING'", "opt.option_code IN ('ZLT', 'ZLV')"],
             "V8V": ["v.model = 'CT5'", "v.trim = 'V-SERIES BLACKWING'"],
-            "PCK1": ["v.modelYear = '2026'", "v.model = 'CT5'", "v.trim = 'V-SERIES BLACKWING'", "c.color_name = 'DEEP OCEAN TINTCOAT'"],
+            "PCK1": ["v.modelYear = '2026'", "v.model = 'CT5'", "v.trim = 'V-SERIES BLACKWING'", "v.color_id = (SELECT color_id FROM Colors WHERE color_name = 'DEEP OCEAN TINTCOAT' LIMIT 1)"],
             "Z6X": ["v.model IN ('HUMMER EV SUV', 'HUMMER EV PICKUP')"],
-            "WFP": ["v.modelYear = '2024'", "v.model = 'HUMMER EV SUV'", "v.trim = '3X'", "c.color_name = 'NEPTUNE BLUE MATTE'"],
+            "WFP": ["v.modelYear = '2024'", "v.model = 'HUMMER EV SUV'", "v.trim = '3X'", "v.color_id = (SELECT color_id FROM Colors WHERE color_name = 'NEPTUNE BLUE MATTE' LIMIT 1)"],
         }
 
         for rpo_code in rpo_list:
@@ -489,10 +481,11 @@ def sort_price():
 
     where_clause = "WHERE " + " AND ".join(conditions) if conditions else ""
 
-    if not rpo_list_for_filtering or 'H40' in rpo_list:
-        rpo_clause = ""
-    else:
+    needs_group_by = bool(rpo and (rpo_n > 1 or 'ZLT' in rpo_list or 'H40' in rpo_list))
+    if rpo_n > 1 and 'H40' not in rpo_list:
         rpo_clause = f"HAVING COUNT(DISTINCT opt.option_code) = {rpo_n}"
+    else:
+        rpo_clause = ""
 
     if any(code in ["ZL4B", "X56", "PEH"] for code in rpo_list) and order not in ["ASC", "DESC"]:
         order_clause = "ORDER BY SUBSTRING(v.vin, -6)"
@@ -503,28 +496,20 @@ def sort_price():
     else:
         order_clause = "ORDER BY v.vehicle_id DESC"
 
-    # Build minimal joins containing ONLY tables referenced by active filters
+    # Build minimal joins containing ONLY tables actually referenced in where_clause
     minimal_joins = []
-    if engine:
-        minimal_joins.append("JOIN Engines e ON v.engine_id = e.engine_id")
-    if trans or rpo:
-        minimal_joins.append("JOIN Transmissions t ON v.transmission_id = t.transmission_id")
-    if drivetrain:
-        minimal_joins.append("JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id")
-    if color or rpo:
-        minimal_joins.append("JOIN Colors c ON v.color_id = c.color_id")
-    if country or date or rpo:
+    if "o." in where_clause:
         minimal_joins.append("JOIN Orders o ON v.order_id = o.order_id")
-    if state or city or dealer or dealer_id or dealer_name:
+    if "dl." in where_clause:
         minimal_joins.append("JOIN Dealers dl ON v.dealer_id = dl.dealer_id")
-    if rpo:
+    if "opt." in where_clause or rpo_clause:
         minimal_joins.append("JOIN Options opt ON v.vehicle_id = opt.vehicle_id")
     minimal_join_clause = "\n        ".join(minimal_joins)
-    inner_group_by = "GROUP BY v.vehicle_id" if rpo else ""
+    inner_group_by = "GROUP BY v.vehicle_id" if needs_group_by else ""
 
     conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
 
-    def get_all_distinct_values(db_conn, current_where, current_params, current_filter_joins, current_rpo_clause):
+    def get_all_distinct_values(db_conn, current_where, current_params, current_rpo_clause):
         if not current_where:
             veh_distinct = execute_read_query(db_conn, "SELECT DISTINCT modelYear, model, body, trim FROM Vehicles") or []
             engines = execute_read_query(db_conn, "SELECT engine_rpo AS rpo, engine_type AS name FROM Engines ORDER BY engine_rpo ASC")
@@ -551,8 +536,10 @@ def sort_price():
 
         else:
             columns = ['modelYear', 'body', 'trim', 'transmission_type', 'drivetrain_type', 'model', 'color_name', 'country']
-            
-            if current_rpo_clause:
+            distinct_values = {col: set() for col in columns}
+            distinct_engines = set()
+
+            if needs_group_by:
                 sqlStatement = f"""
                     SELECT DISTINCT v.modelYear, v.model, v.body, v.trim, e.engine_type, e.engine_rpo,
                                     t.transmission_type, d.drivetrain_type, c.color_name, o.country
@@ -571,24 +558,75 @@ def sort_price():
                     JOIN Colors c ON v.color_id = c.color_id
                     JOIN Orders o ON v.order_id = o.order_id
                 """
+                results = execute_read_query(db_conn, sqlStatement, current_params) or []
+                for result in results:
+                    for col in columns:
+                        if result.get(col) is not None:
+                            distinct_values[col].add(result[col])
+                    if result.get('engine_type') is not None:
+                        distinct_engines.add((result['engine_rpo'], result['engine_type']))
             else:
                 sqlStatement = f"""
-                    SELECT DISTINCT v.modelYear, v.model, v.body, v.trim, e.engine_type, e.engine_rpo,
-                                    t.transmission_type, d.drivetrain_type, c.color_name, o.country
-                    FROM Vehicles v
-                    {current_filter_joins}
-                    {current_where}
+                    SELECT
+                        vc.modelYear, vc.model, vc.body, vc.trim,
+                        e.engine_type, e.engine_rpo,
+                        t.transmission_type, d.drivetrain_type, c.color_name
+                    FROM (
+                        SELECT DISTINCT v.modelYear, v.model, v.body, v.trim,
+                                        v.engine_id, v.transmission_id, v.drivetrain_id, v.color_id
+                        FROM Vehicles v
+                        {minimal_join_clause}
+                        {current_where}
+                    ) AS vc
+                    JOIN Engines e ON vc.engine_id = e.engine_id
+                    JOIN Transmissions t ON vc.transmission_id = t.transmission_id
+                    JOIN Drivetrains d ON vc.drivetrain_id = d.drivetrain_id
+                    JOIN Colors c ON vc.color_id = c.color_id
                 """
-            results = execute_read_query(db_conn, sqlStatement, current_params)
+                results = execute_read_query(db_conn, sqlStatement, current_params) or []
+                for result in results:
+                    for col in ['modelYear', 'body', 'trim', 'transmission_type', 'drivetrain_type', 'model', 'color_name']:
+                        if result.get(col) is not None:
+                            distinct_values[col].add(result[col])
+                    if result.get('engine_type') is not None:
+                        distinct_engines.add((result['engine_rpo'], result['engine_type']))
 
-            distinct_values = {col: set() for col in columns}
-            distinct_engines = set()
-            for result in results:
-                for col in columns:
-                    if result[col] is not None:
-                        distinct_values[col].add(result[col])
-                if result['engine_type'] is not None:
-                    distinct_engines.add((result['engine_rpo'], result['engine_type']))
+                if results:
+                    if country:
+                        distinct_values['country'].add(country_map.get(country, 'USA'))
+                    elif "o.country = 'USA'" in current_where:
+                        distinct_values['country'].add('USA')
+                    else:
+                        non_order_joins = "\n                            ".join([j for j in minimal_joins if "Orders o" not in j])
+                        country_sql = f"""
+                            (SELECT 'CANADA' AS country
+                             FROM Vehicles v
+                             {non_order_joins}
+                             STRAIGHT_JOIN Orders o ON v.order_id = o.order_id
+                             {current_where}
+                             AND o.country = 'CANADA'
+                             LIMIT 1)
+                            UNION ALL
+                            (SELECT 'MEXICO' AS country
+                             FROM Orders o
+                             STRAIGHT_JOIN Vehicles v ON v.order_id = o.order_id
+                             {non_order_joins}
+                             {current_where}
+                             AND o.country = 'MEXICO'
+                             LIMIT 1)
+                            UNION ALL
+                            (SELECT 'USA' AS country
+                             FROM Vehicles v
+                             {non_order_joins}
+                             STRAIGHT_JOIN Orders o ON v.order_id = o.order_id
+                             {current_where}
+                             AND o.country = 'USA'
+                             LIMIT 1)
+                        """
+                        c_rows = execute_read_query(db_conn, country_sql, current_params * 3) or []
+                        for r in c_rows:
+                            if r.get('country') is not None:
+                                distinct_values['country'].add(r['country'])
 
             sorted_values = {
                 'modelYear': sorted(list(distinct_values['modelYear']), reverse=True),
@@ -600,7 +638,36 @@ def sort_price():
             ]
             return sorted_values, sorted_engines
 
-    distinct_values, engine_list = get_all_distinct_values(conn, where_clause, params, filter_join_clause, rpo_clause)
+    cache_key = (where_clause, tuple(params), rpo_clause)
+    now_ts = time.time()
+    cached_meta = _VEHICLE_FILTER_CACHE.get(cache_key)
+    if cached_meta and (now_ts - cached_meta[0]) < _VEHICLE_FILTER_CACHE_TTL:
+        distinct_values, engine_list, total_items = cached_meta[1], cached_meta[2], cached_meta[3]
+    else:
+        distinct_values, engine_list = get_all_distinct_values(conn, where_clause, params, rpo_clause)
+        if where_clause:
+            if needs_group_by:
+                totalSql = f"""
+                    SELECT COUNT(*) AS total FROM (
+                        SELECT v.vehicle_id 
+                        FROM Vehicles v {minimal_join_clause}
+                        {where_clause}
+                        GROUP BY v.vehicle_id {rpo_clause}
+                    ) AS filtered_vehicles
+                """
+            else:
+                totalSql = f"""
+                    SELECT COUNT(v.vehicle_id) AS total
+                    FROM Vehicles v {minimal_join_clause}
+                    {where_clause}
+                """
+            total_items = execute_read_query(conn, totalSql, params)[0]['total']
+        else:
+            total_items = execute_read_query(conn, "SELECT COUNT(vehicle_id) AS total FROM Vehicles")[0]['total']
+
+        if len(_VEHICLE_FILTER_CACHE) > 256:
+            _VEHICLE_FILTER_CACHE.clear()
+        _VEHICLE_FILTER_CACHE[cache_key] = (now_ts, distinct_values, engine_list, total_items)
 
     year_list = distinct_values['modelYear']
     body_list = distinct_values['body']
@@ -642,29 +709,8 @@ def sort_price():
         {order_clause}
     """
 
-    
     query_params = params + [limit, offset]
     viewTable = execute_read_query(conn, select, query_params)
-
-    if where_clause:
-        if rpo:
-            totalSql = f"""
-                SELECT COUNT(*) AS total FROM (
-                    SELECT v.vehicle_id 
-                    FROM Vehicles v {minimal_join_clause}
-                    {where_clause}
-                    GROUP BY v.vehicle_id {rpo_clause}
-                ) AS filtered_vehicles
-            """
-        else:
-            totalSql = f"""
-                SELECT COUNT(v.vehicle_id) AS total
-                FROM Vehicles v {minimal_join_clause}
-                {where_clause}
-            """
-        total_items = execute_read_query(conn, totalSql, params)[0]['total']
-    else:
-        total_items = execute_read_query(conn, "SELECT COUNT(vehicle_id) AS total FROM Vehicles")[0]['total']
 
     close_connection(conn)
 

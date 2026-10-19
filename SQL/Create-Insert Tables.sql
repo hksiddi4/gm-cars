@@ -272,7 +272,6 @@ CROSS JOIN (
     UNION ALL SELECT 'ZTK', 'ZTK Track Performance Package'
     UNION ALL SELECT 'Z6X', 'Extreme Off-Road Package'
     UNION ALL SELECT 'WFP', 'Omega Edition'
-    UNION ALL SELECT 'WOX', 'Curated by Cadillac'
 	UNION ALL SELECT 'ZRA', 'Quail Silver Limited Edition'
 	UNION ALL SELECT 'USA', 'Stars & Steel Limited Edition'
 	UNION ALL SELECT 'V8V', 'Precision Package'
@@ -280,6 +279,7 @@ CROSS JOIN (
     UNION ALL SELECT 'Z25', 'Grand Sport Launch Edition'
     UNION ALL SELECT 'FEB', 'Z52 Sport Performance Package'
     UNION ALL SELECT 'FEY', 'Z52 Track Performance Package'
+    UNION ALL SELECT 'WOX', 'Curated by Cadillac'
 	-- UNION ALL SELECT '', 'F1 Collector Edition'
 ) AS special_map ON opt.option_code = special_map.rpo_code
 WHERE NOT EXISTS (
@@ -288,8 +288,7 @@ WHERE NOT EXISTS (
     WHERE se.vehicle_id = v.vehicle_id 
     AND se.special_desc = special_map.special_desc
 )
-AND (special_map.rpo_code != 'PCK' OR v.model = 'CT5')
-AND (special_map.rpo_code != 'WOX' OR v.model IN ('CT5', 'ESCALADE IQ'));
+AND (special_map.rpo_code != 'PCK' OR v.model = 'CT5');
 drop table SpecialEditions;
 
 -- Add ZLZ dual-meaning special edition logic
@@ -314,6 +313,18 @@ WHERE opt.option_code = 'ZLZ'
                     ELSE 'Le Monstre Special Edition'
                 END
     );
+    
+-- Add 2026 Indianapolis 500 Festival Vehicles
+INSERT INTO SpecialEditions (vehicle_id, special_desc)
+SELECT vehicle_id, '2026 Indianapolis 500 Festival Vehicle'
+FROM Vehicles v
+WHERE vin IN ('1G1YM3D4XT5500561', '1G1YM3D4XT5500558', '1G1YM3D48T5500591', '1G1YM3D48T5500574', '1G1YM3D48T5500560', '1G1YM3D48T5500557', '1G1YM3D47T5500548', '1G1YM3D46T5500590', '1G1YM3D44T5500555', '1G1YM3D41T5500562', '1G1YM3D40T5500584', '1G1YM3D40T5500567', '1G1YM3D40T5500553')
+  AND NOT EXISTS (
+      SELECT 1 
+      FROM SpecialEditions se 
+      WHERE se.vehicle_id = v.vehicle_id 
+        AND se.special_desc = '2026 Indianapolis 500 Festival Vehicle'
+  );
 
 select * from SpecialEditions;
 
@@ -478,9 +489,17 @@ UPDATE Colors SET rpo_code = 'GGA' WHERE color_name = 'DEEP AMETHYST METALLIC';
 UPDATE Colors SET rpo_code = 'GHG' WHERE color_name = 'CARNELIAN METALLIC';
 UPDATE Colors SET rpo_code = 'G8X' WHERE color_name = 'BOYSENBERRY METALLIC';
 UPDATE Colors SET rpo_code = 'GEC' WHERE color_name = 'PITCH GRAY METALLIC';
+UPDATE Colors SET rpo_code = 'GBL' WHERE color_name = 'MAGNUS GRAY MATTE METALLIC';
+UPDATE Colors SET rpo_code = 'G4J' WHERE color_name = 'POLAR WHITE TRICOAT';
+UPDATE Colors SET rpo_code = 'G42' WHERE color_name = 'WHITE SANDS';
 
 UPDATE Colors SET rpo_code = 'G' WHERE color_name = '';
 SELECT * FROM Colors;
+
+INSERT INTO Colors (color_name, rpo_code) VALUES ('PLUTO', 'N/A');
+SELECT * FROM Colors where color_name = 'PLUTO';
+SELECT * FROM Vehicles where vin = '1G6D35R69TA710030';
+UPDATE Vehicles SET color_id = 186 where vin = '1G6D35R69TA710030';
 
 -- Set Engine RPO
 select * from Engines;
@@ -494,7 +513,19 @@ FROM
 JOIN 
     Vehicles v ON o.vehicle_id = v.vehicle_id
 WHERE 
-    v.model = 'CORVETTE ZR1X'
+    v.model = 'SIERRA EV'
 ORDER BY 
     o.option_code;
+    
+select * from Vehicles where dealer_id = 276;
+select * from Vehicles where dealer_id = 120006;
+select * from Dealers where dealer_name = 'JACK HANANIA CHEVROLET';
+update Vehicles set dealer_id = 120006 where vin = '1G1YA2D4XS5101800';
+select * from Vehicles where vin = '1G1YF3D32T5605046';
 
+DELETE FROM Dealers
+WHERE NOT EXISTS (
+    SELECT 1 
+    FROM Vehicles v 
+    WHERE v.dealer_id = Dealers.dealer_id
+);

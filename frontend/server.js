@@ -578,13 +578,21 @@ app.post('/contact', contactLimiter, async (req, res) => {
             }
         });
 
+        const safeMessageHtml = String(message || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;')
+            .replace(/\n/g, '<br>');
+
         const mailOptions = {
             from: '"GM Build Counts" <contact@gmbuildcounts.com>', 
             to: 'contact@gmbuildcounts.com',                      
             replyTo: email,                                       
             subject: `New Contact Form Submission from ${name}`,
             text: `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
-            html: `<p>${message.replace(/\n/g, '<br>')}</p>`
+            html: `<p>${safeMessageHtml}</p>`
         };
 
         await transporter.sendMail(mailOptions);
@@ -780,7 +788,7 @@ app.get('/search', searchLimiter, async (req, res) => {
         });
     } catch (error) {
         // Output the VIN and only the error message to keep the logs clean
-        console.error(`Search Route Error for VIN [${vinQuery}]:`, error.message);
+        console.error('Search Route Error for VIN [%s]:', vinQuery, error.message);
         if (error.response?.status === 429 || error.status === 429) {
             return renderRateLimitPage(req, res);
         }

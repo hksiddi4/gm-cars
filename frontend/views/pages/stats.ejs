@@ -731,10 +731,7 @@
                                                                 let pkgLink = '';
                                                                 if (mappedRpo) {
                                                                     let rpos = [mappedRpo];
-                                                                    if (typeof selectedTrim !== 'undefined' && selectedTrim) {
-                                        vehLink += `&trim=${encodeURIComponent(selectedTrim)}`;
-                                    }
-                                    if (typeof selectedOrderType !== 'undefined') {
+                                                                    if (typeof selectedOrderType !== 'undefined') {
                                                                         if (selectedOrderType === 'retail') rpos.push('SLL');
                                                                         if (selectedOrderType === 'stock') rpos.push('SLM');
                                                                     }
@@ -745,6 +742,9 @@
                                                                     }
                                                                     if (typeof selectedModel !== 'undefined' && selectedModel) {
                                                                         pkgLink += `&model=${encodeURIComponent(selectedModel)}`;
+                                                                    }
+                                                                    if (typeof selectedTrim !== 'undefined' && selectedTrim) {
+                                                                        pkgLink += `&trim=${encodeURIComponent(selectedTrim)}`;
                                                                     }
                                                                 }
                                                             %>
@@ -3267,7 +3267,25 @@
 
             // Package Rows
             document.querySelectorAll('.pkg-row').forEach(row => {
-                row.addEventListener('click', () => window.location.href = row.getAttribute('data-url'));
+                row.addEventListener('click', () => {
+                    const rawUrl = row.getAttribute('data-url');
+                    if (!rawUrl) return;
+                    try {
+                        const parsed = new URL(rawUrl, window.location.origin);
+                        if (parsed.origin !== window.location.origin || parsed.pathname !== '/vehicles') return;
+                        const allowedKeys = ['year', 'date', 'rpo', 'model', 'trim'];
+                        const safePairs = [];
+                        for (const key of allowedKeys) {
+                            const val = parsed.searchParams.get(key);
+                            if (val && /^[A-Za-z0-9 _.,:+/-]{1,100}$/.test(val)) {
+                                safePairs.push(`${key}=${encodeURIComponent(val)}`);
+                            }
+                        }
+                        if (safePairs.length > 0) {
+                            window.location.assign('/vehicles?' + safePairs.join('&'));
+                        }
+                    } catch (e) {}
+                });
             });
 
             // Empty State Buttons

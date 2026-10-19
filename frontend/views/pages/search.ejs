@@ -263,16 +263,12 @@
 
       try {
         const parsed = new URL(rawUrl, window.location.origin);
-        const isHttp = parsed.protocol === 'http:' || parsed.protocol === 'https:';
-        const isSameOrigin = parsed.origin === window.location.origin;
+        if (parsed.origin !== window.location.origin || parsed.pathname !== '/vehicles') return null;
 
-        if (!isHttp || !isSameOrigin) return null;
-        if (!parsed.pathname.startsWith('/')) return null;
+        const rpo = parsed.searchParams.get('rpo');
+        if (!rpo || !/^[A-Za-z0-9,_-]{1,50}$/.test(rpo)) return null;
 
-        const safeUrl = parsed.pathname + parsed.search + parsed.hash;
-        if (/%0d|%0a/i.test(safeUrl)) return null;
-
-        return safeUrl;
+        return `/vehicles?rpo=${encodeURIComponent(rpo)}`;
       } catch (e) {
         return null;
       }

@@ -3,20 +3,32 @@
     <div class="container d-flex justify-content-between align-items-center px-3">
         <span style="color: rgb(113, 113, 113);">&copy; 2023 - <%= new Date().getFullYear() %> Bumbleboy92</span>
         <style>
-    .footer-contact-link { color: #717171; transition: color 0.2s; }
-    .footer-contact-link:hover { color: #ffffff; }
-</style>
+            .footer-contact-link { color: #717171; transition: color 0.2s; }
+            .footer-contact-link:hover { color: #ffffff; }
+        </style>
         <a href="/contact" class="text-decoration-underline footer-contact-link">Contact Us</a>
     </div>
     <!-- Secure Image Fallback Handler -->
     <script nonce="<%= nonce %>">
-        document.addEventListener('error', function(event) {
-            if (event.target && event.target.tagName && event.target.tagName.toLowerCase() === 'img') {
-                const fallbackSrc = event.target.getAttribute('data-fallback');
-                if (fallbackSrc && event.target.src !== new URL(fallbackSrc, window.location.href).href) {
-                    event.target.src = fallbackSrc;
+        (function() {
+            const SAFE_FALLBACKS = {
+                '/img/extColors/default.webp': '/img/extColors/default.webp',
+                '../../img/extColors/default.webp': '/img/extColors/default.webp',
+                '/img/brand-logos/cadillac.webp': '/img/brand-logos/cadillac.webp',
+                '/img/brand-logos/gmc.webp': '/img/brand-logos/gmc.webp',
+                '/img/brand-logos/chevrolet.webp': '/img/brand-logos/chevrolet.webp'
+            };
+            document.addEventListener('error', function(event) {
+                if (event.target && event.target.tagName && event.target.tagName.toLowerCase() === 'img') {
+                    const rawFallback = event.target.getAttribute('data-fallback');
+                    const safeSrc = rawFallback && Object.prototype.hasOwnProperty.call(SAFE_FALLBACKS, rawFallback)
+                        ? SAFE_FALLBACKS[rawFallback]
+                        : null;
+                    if (safeSrc && !event.target.src.endsWith(safeSrc)) {
+                        event.target.src = safeSrc;
+                    }
                 }
-            }
-        }, true);
+            }, true);
+        })();
     </script>
 </footer>

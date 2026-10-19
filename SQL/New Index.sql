@@ -62,4 +62,11 @@ ALTER TABLE Vehicles DROP INDEX idx_veh_common_lookup;
 -- This is redundant because idx_orders_covering already starts with country.
 ALTER TABLE Orders DROP INDEX idx_orders_country;
 
-ALTER TABLE Orders DROP INDEX idx_orders_country;
+-- Targeted indexes for model-first filtering, dealer lookup, date range queries, and SpecialEditions covering lookup
+CREATE INDEX idx_se_covering ON SpecialEditions (vehicle_id, special_desc);
+CREATE INDEX idx_orders_date ON Orders (creation_date, order_id, country);
+CREATE INDEX idx_dealers_lookup ON Dealers (dealer_name, location, sitedealer_code);
+CREATE INDEX idx_veh_model_year ON Vehicles (model, modelYear, trim, body, order_id);
+CREATE INDEX idx_veh_dealer ON Vehicles (dealer_id);
+
+ANALYZE TABLE Vehicles, Orders, SpecialEditions, Dealers, Colors, Engines, Transmissions, Drivetrains;

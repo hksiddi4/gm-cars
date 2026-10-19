@@ -4,6 +4,7 @@ monkey.patch_all()
 import sql
 import re
 import math
+import calendar
 import flask
 import requests
 from flask import request, jsonify
@@ -16,6 +17,22 @@ app.json.sort_keys = False
 CORS(app)
 
 myCreds = sql.Creds()
+
+def build_creation_date_cond(date_str, mode=None):
+    s = (date_str or '').strip()
+    if mode == 'yearly' or (mode is None and len(s) == 4):
+        yr = s[:4]
+        return "o.creation_date >= %s AND o.creation_date <= %s", [f"{yr}-01-01", f"{yr}-12-31"]
+    if mode == 'monthly' or (mode is None and len(s) == 7):
+        ym = s[:7]
+        try:
+            y_int, m_int = int(ym[:4]), int(ym[5:7])
+            last_day = calendar.monthrange(y_int, m_int)[1]
+        except Exception:
+            last_day = 31
+        return "o.creation_date >= %s AND o.creation_date <= %s", [f"{ym}-01", f"{ym}-{last_day:02d}"]
+    return "o.creation_date = %s", [s[:10]]
+
 
 STATE_NAMES = {
     'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California',
@@ -350,13 +367,9 @@ def sort_price():
         conditions.append("o.country = %s")
         params.append(country_map.get(country, 'USA'))
     if date:
-        if len(date) == 4:
-            conditions.append("YEAR(o.creation_date) = %s")
-        elif len(date) == 7:
-            conditions.append("DATE_FORMAT(o.creation_date, '%%Y-%%m') = %s")
-        else:
-            conditions.append("DATE(o.creation_date) = %s")
-        params.append(date)
+        d_cond, d_params = build_creation_date_cond(date)
+        conditions.append(d_cond)
+        params.extend(d_params)
 
     if state or city or dealer or dealer_id or dealer_name:
         filter_join_clause += " JOIN Dealers dl ON v.dealer_id = dl.dealer_id"
@@ -490,26 +503,46 @@ def sort_price():
     else:
         order_clause = "ORDER BY v.vehicle_id DESC"
 
-    def get_all_distinct_values(current_where, current_params, current_filter_joins, current_rpo_clause):
-        conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
+    # Build minimal joins containing ONLY tables referenced by active filters
+    minimal_joins = []
+    if engine:
+        minimal_joins.append("JOIN Engines e ON v.engine_id = e.engine_id")
+    if trans or rpo:
+        minimal_joins.append("JOIN Transmissions t ON v.transmission_id = t.transmission_id")
+    if drivetrain:
+        minimal_joins.append("JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id")
+    if color or rpo:
+        minimal_joins.append("JOIN Colors c ON v.color_id = c.color_id")
+    if country or date or rpo:
+        minimal_joins.append("JOIN Orders o ON v.order_id = o.order_id")
+    if state or city or dealer or dealer_id or dealer_name:
+        minimal_joins.append("JOIN Dealers dl ON v.dealer_id = dl.dealer_id")
+    if rpo:
+        minimal_joins.append("JOIN Options opt ON v.vehicle_id = opt.vehicle_id")
+    minimal_join_clause = "\n        ".join(minimal_joins)
+    inner_group_by = "GROUP BY v.vehicle_id" if rpo else ""
 
+    conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
+
+    def get_all_distinct_values(db_conn, current_where, current_params, current_filter_joins, current_rpo_clause):
         if not current_where:
-            years = execute_read_query(conn, "SELECT DISTINCT modelYear FROM Vehicles ORDER BY modelYear DESC")
-            models = execute_read_query(conn, "SELECT DISTINCT model FROM Vehicles ORDER BY model ASC")
-            bodies = execute_read_query(conn, "SELECT DISTINCT body FROM Vehicles ORDER BY body ASC")
-            trims = execute_read_query(conn, "SELECT DISTINCT trim FROM Vehicles ORDER BY trim ASC")
-            engines = execute_read_query(conn, "SELECT engine_rpo AS rpo, engine_type AS name FROM Engines ORDER BY engine_rpo ASC")
-            trans = execute_read_query(conn, "SELECT DISTINCT transmission_type FROM Transmissions ORDER BY transmission_type ASC")
-            drivetrains = execute_read_query(conn, "SELECT DISTINCT drivetrain_type FROM Drivetrains ORDER BY drivetrain_type ASC")
-            colors = execute_read_query(conn, "SELECT DISTINCT color_name FROM Colors ORDER BY color_name ASC")
-            countries = execute_read_query(conn, "SELECT DISTINCT country FROM Orders ORDER BY country ASC")
-            close_connection(conn)
+            veh_distinct = execute_read_query(db_conn, "SELECT DISTINCT modelYear, model, body, trim FROM Vehicles") or []
+            engines = execute_read_query(db_conn, "SELECT engine_rpo AS rpo, engine_type AS name FROM Engines ORDER BY engine_rpo ASC")
+            trans = execute_read_query(db_conn, "SELECT DISTINCT transmission_type FROM Transmissions ORDER BY transmission_type ASC")
+            drivetrains = execute_read_query(db_conn, "SELECT DISTINCT drivetrain_type FROM Drivetrains ORDER BY drivetrain_type ASC")
+            colors = execute_read_query(db_conn, "SELECT DISTINCT color_name FROM Colors ORDER BY color_name ASC")
+            countries = execute_read_query(db_conn, "SELECT DISTINCT country FROM Orders ORDER BY country ASC")
+
+            years_set = {r['modelYear'] for r in veh_distinct if r.get('modelYear') is not None}
+            models_set = {r['model'] for r in veh_distinct if r.get('model') is not None}
+            bodies_set = {r['body'] for r in veh_distinct if r.get('body') is not None}
+            trims_set = {r['trim'] for r in veh_distinct if r.get('trim') is not None}
 
             return {
-                'modelYear': [r['modelYear'] for r in years],
-                'model': [r['model'] for r in models],
-                'body': [r['body'] for r in bodies],
-                'trim': [r['trim'] for r in trims],
+                'modelYear': sorted(years_set, reverse=True),
+                'model': sorted(models_set),
+                'body': sorted(bodies_set),
+                'trim': sorted(trims_set),
                 'transmission_type': [r['transmission_type'] for r in trans],
                 'drivetrain_type': [r['drivetrain_type'] for r in drivetrains],
                 'color_name': [r['color_name'] for r in colors],
@@ -519,26 +552,34 @@ def sort_price():
         else:
             columns = ['modelYear', 'body', 'trim', 'transmission_type', 'drivetrain_type', 'model', 'color_name', 'country']
             
-            sqlStatement = f"""
-                SELECT DISTINCT v.modelYear, v.model, v.body, v.trim, e.engine_type, e.engine_rpo,
-                                t.transmission_type, d.drivetrain_type, c.color_name, o.country
-                FROM (
-                    SELECT v.vehicle_id
+            if current_rpo_clause:
+                sqlStatement = f"""
+                    SELECT DISTINCT v.modelYear, v.model, v.body, v.trim, e.engine_type, e.engine_rpo,
+                                    t.transmission_type, d.drivetrain_type, c.color_name, o.country
+                    FROM (
+                        SELECT v.vehicle_id
+                        FROM Vehicles v
+                        {minimal_join_clause}
+                        {current_where}
+                        GROUP BY v.vehicle_id
+                        {current_rpo_clause}
+                    ) AS filtered_ids
+                    JOIN Vehicles v ON v.vehicle_id = filtered_ids.vehicle_id
+                    JOIN Engines e ON v.engine_id = e.engine_id
+                    JOIN Transmissions t ON v.transmission_id = t.transmission_id
+                    JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id
+                    JOIN Colors c ON v.color_id = c.color_id
+                    JOIN Orders o ON v.order_id = o.order_id
+                """
+            else:
+                sqlStatement = f"""
+                    SELECT DISTINCT v.modelYear, v.model, v.body, v.trim, e.engine_type, e.engine_rpo,
+                                    t.transmission_type, d.drivetrain_type, c.color_name, o.country
                     FROM Vehicles v
                     {current_filter_joins}
                     {current_where}
-                    GROUP BY v.vehicle_id
-                    {current_rpo_clause}
-                ) AS filtered_ids
-                JOIN Vehicles v ON v.vehicle_id = filtered_ids.vehicle_id
-                JOIN Engines e ON v.engine_id = e.engine_id
-                JOIN Transmissions t ON v.transmission_id = t.transmission_id
-                JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id
-                JOIN Colors c ON v.color_id = c.color_id
-                JOIN Orders o ON v.order_id = o.order_id
-            """
-            results = execute_read_query(conn, sqlStatement, current_params)
-            close_connection(conn)
+                """
+            results = execute_read_query(db_conn, sqlStatement, current_params)
 
             distinct_values = {col: set() for col in columns}
             distinct_engines = set()
@@ -559,7 +600,7 @@ def sort_price():
             ]
             return sorted_values, sorted_engines
 
-    distinct_values, engine_list = get_all_distinct_values(where_clause, params, filter_join_clause, rpo_clause)
+    distinct_values, engine_list = get_all_distinct_values(conn, where_clause, params, filter_join_clause, rpo_clause)
 
     year_list = distinct_values['modelYear']
     body_list = distinct_values['body']
@@ -569,24 +610,25 @@ def sort_price():
     model_list = distinct_values['model']
     color_list = distinct_values['color_name']
     country_list = distinct_values['country']
-
-    conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
     
     inner_sql = f"""
         SELECT v.vehicle_id
-        FROM Vehicles v {filter_join_clause}
+        FROM Vehicles v {minimal_join_clause}
         {where_clause}
-        GROUP BY v.vehicle_id
+        {inner_group_by}
         {rpo_clause}
         {order_clause}
         LIMIT %s OFFSET %s
     """
 
     select = f"""
-        SELECT v.vehicle_id, v.vin, v.modelYear, v.model, v.body, v.trim,
+        SELECT STRAIGHT_JOIN
+            v.vehicle_id, v.vin, v.modelYear, v.model, v.body, v.trim,
             e.engine_type, t.transmission_type, d.drivetrain_type,
             c.color_name, v.msrp, o.country, dl.dealer_name, dl.location,
-            GROUP_CONCAT(DISTINCT se.special_desc ORDER BY se.special_desc ASC SEPARATOR ', ') AS special_desc
+            (SELECT GROUP_CONCAT(DISTINCT se.special_desc ORDER BY se.special_desc ASC SEPARATOR ', ')
+             FROM SpecialEditions se
+             WHERE se.vehicle_id = v.vehicle_id) AS special_desc
         FROM (
             {inner_sql}
         ) AS page_keys
@@ -597,25 +639,29 @@ def sort_price():
         JOIN Colors c ON v.color_id = c.color_id
         JOIN Orders o ON v.order_id = o.order_id
         LEFT JOIN Dealers dl ON v.dealer_id = dl.dealer_id
-        LEFT JOIN SpecialEditions se ON v.vehicle_id = se.vehicle_id
-        GROUP BY v.vehicle_id, v.vin, v.modelYear, v.model, v.body, v.trim,
-                 e.engine_type, t.transmission_type, d.drivetrain_type,
-                 c.color_name, v.msrp, o.country, dl.dealer_name, dl.location
         {order_clause}
     """
+
     
     query_params = params + [limit, offset]
     viewTable = execute_read_query(conn, select, query_params)
 
     if where_clause:
-        totalSql = f"""
-            SELECT COUNT(*) AS total FROM (
-                SELECT v.vehicle_id 
-                FROM Vehicles v {filter_join_clause}
+        if rpo:
+            totalSql = f"""
+                SELECT COUNT(*) AS total FROM (
+                    SELECT v.vehicle_id 
+                    FROM Vehicles v {minimal_join_clause}
+                    {where_clause}
+                    GROUP BY v.vehicle_id {rpo_clause}
+                ) AS filtered_vehicles
+            """
+        else:
+            totalSql = f"""
+                SELECT COUNT(v.vehicle_id) AS total
+                FROM Vehicles v {minimal_join_clause}
                 {where_clause}
-                GROUP BY v.vehicle_id {rpo_clause}
-            ) AS filtered_vehicles
-        """
+            """
         total_items = execute_read_query(conn, totalSql, params)[0]['total']
     else:
         total_items = execute_read_query(conn, "SELECT COUNT(vehicle_id) AS total FROM Vehicles")[0]['total']
@@ -683,23 +729,25 @@ def calendar_activity():
             GROUP BY prod_date
         """
     elif category == 'monthly':
+        d_cond, d_params = build_creation_date_cond(str(year), 'yearly')
         sqlStatement = f"""
             SELECT DATE_FORMAT(o.creation_date, '%%Y-%%m') as prod_date, COUNT(o.order_id) as count
             FROM Orders o
             {model_join}
-            WHERE YEAR(o.creation_date) = %s {model_cond} {order_cond} AND o.creation_date IS NOT NULL
+            WHERE {d_cond} {model_cond} {order_cond}
             GROUP BY prod_date
         """
-        params.insert(0, year)
+        params = d_params + params
     else:
+        d_cond, d_params = build_creation_date_cond(str(year), 'yearly')
         sqlStatement = f"""
             SELECT DATE_FORMAT(o.creation_date, '%%Y-%%m-%%d') as prod_date, COUNT(o.order_id) as count
             FROM Orders o
             {model_join}
-            WHERE YEAR(o.creation_date) = %s {model_cond} {order_cond} AND o.creation_date IS NOT NULL
+            WHERE {d_cond} {model_cond} {order_cond}
             GROUP BY prod_date
         """
-        params.insert(0, year)
+        params = d_params + params
     
     rows = execute_read_query(conn, sqlStatement, params)
     close_connection(conn)
@@ -755,14 +803,11 @@ def daily_stats():
         base_params = [model_year_filter]
     else:
         if category == 'monthly':
-            date_condition = "DATE_FORMAT(o.creation_date, '%%Y-%%m') = %s"
-            base_params = [curr_date_str[:7]] 
+            date_condition, base_params = build_creation_date_cond(curr_date_str, 'monthly')
         elif category == 'yearly':
-            date_condition = "YEAR(o.creation_date) = %s"
-            base_params = [curr_date_str[:4]] 
+            date_condition, base_params = build_creation_date_cond(curr_date_str, 'yearly')
         else:
-            date_condition = "DATE(o.creation_date) = %s"
-            base_params = [curr_date_str]
+            date_condition, base_params = build_creation_date_cond(curr_date_str, 'daily')
 
     models_sql = f"""
         SELECT DISTINCT v.model 
@@ -777,14 +822,15 @@ def daily_stats():
     sqlStatement = f"""
         SELECT v.modelYear, v.model, v.body, v.trim, e.engine_type, e.engine_rpo,
                t.transmission_type, d.drivetrain_type, c.color_name, c.rpo_code,
-               GROUP_CONCAT(DISTINCT se.special_desc SEPARATOR ', ') AS special_desc
+               (SELECT GROUP_CONCAT(DISTINCT se.special_desc SEPARATOR ', ')
+                FROM SpecialEditions se
+                WHERE se.vehicle_id = v.vehicle_id) AS special_desc
         FROM Vehicles v
         JOIN Orders o ON v.order_id = o.order_id
         LEFT JOIN Engines e ON v.engine_id = e.engine_id
         LEFT JOIN Transmissions t ON v.transmission_id = t.transmission_id
         LEFT JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id
         LEFT JOIN Colors c ON v.color_id = c.color_id
-        LEFT JOIN SpecialEditions se ON v.vehicle_id = se.vehicle_id
         WHERE {date_condition}
     """
     
@@ -803,11 +849,7 @@ def daily_stats():
         params.append(trim_filter)
 
     sqlStatement += order_cond
-        
-    sqlStatement += """
-        GROUP BY v.vehicle_id, v.modelYear, v.model, v.body, v.trim, 
-                 e.engine_type, e.engine_rpo, t.transmission_type, d.drivetrain_type, c.color_name, c.rpo_code
-    """
+
     
     if params:
         rows = execute_read_query(conn, sqlStatement, params)
@@ -903,29 +945,37 @@ def stats():
     if trans: conditions.append("t.transmission_type = %s"); params.append(trans)
     if drivetrain: conditions.append("d.drivetrain_type = %s"); params.append(drivetrain)
     where_clause = f"WHERE {' AND '.join(conditions)}" if conditions else ""
-    join_clause = """
-        JOIN Colors c ON v.color_id = c.color_id
-        JOIN Engines e ON v.engine_id = e.engine_id
-        JOIN Transmissions t ON v.transmission_id = t.transmission_id
-        JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id
-    """
+    filter_only_joins = []
+    if engine:
+        filter_only_joins.append("JOIN Engines e ON v.engine_id = e.engine_id")
+    if trans:
+        filter_only_joins.append("JOIN Transmissions t ON v.transmission_id = t.transmission_id")
+    if drivetrain:
+        filter_only_joins.append("JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id")
+    filter_only_join_clause = "\n        ".join(filter_only_joins)
 
     conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
 
     if category == 'color':
         sqlStatement = f"""
-            WITH ColorCounts AS (
+            WITH VehColorCounts AS (
+                SELECT v.color_id, (v.modelYear >= 2026) AS is_2026_plus, COUNT(*) AS cnt
+                FROM Vehicles v
+                {filter_only_join_clause}
+                {where_clause}
+                GROUP BY v.color_id, is_2026_plus
+            ),
+            ColorCounts AS (
                 SELECT
                     CASE
-                        WHEN c.color_name = 'BLADE SILVER METALLIC' AND v.modelYear >= '2026' THEN 'GKA'
+                        WHEN c.color_name = 'BLADE SILVER METALLIC' AND vc.is_2026_plus THEN 'GKA'
                         WHEN c.rpo_code = 'N/A' THEN c.color_name
                         ELSE c.rpo_code
                     END AS rpo_code,
-                    COUNT(*) AS total_count,
+                    CAST(SUM(vc.cnt) AS UNSIGNED) AS total_count,
                     GROUP_CONCAT(DISTINCT c.color_name ORDER BY c.color_name SEPARATOR ', ') AS color_names
-                FROM Vehicles v
-                {join_clause}
-                {where_clause}
+                FROM VehColorCounts vc
+                JOIN Colors c ON vc.color_id = c.color_id
                 GROUP BY 1
             ),
             Ranked AS (
@@ -964,7 +1014,7 @@ def stats():
                     COUNT(*) AS total_count
                 FROM Vehicles v
                 JOIN Options opt ON v.vehicle_id = opt.vehicle_id
-                {join_clause}
+                {filter_only_join_clause}
                 {where_clause}
                 {rpo_where}
                 GROUP BY opt.option_code
@@ -983,14 +1033,20 @@ def stats():
         """
     elif category == 'engine':
         sqlStatement = f"""
-            WITH EngineCounts AS (
+            WITH VehEngineCounts AS (
+                SELECT v.engine_id, COUNT(*) AS cnt
+                FROM Vehicles v
+                {filter_only_join_clause}
+                {where_clause}
+                GROUP BY v.engine_id
+            ),
+            EngineCounts AS (
                 SELECT
                     e.engine_rpo,
                     e.engine_type,
-                    COUNT(*) AS total_count
-                FROM Vehicles v
-                {join_clause}
-                {where_clause}
+                    CAST(SUM(vc.cnt) AS UNSIGNED) AS total_count
+                FROM VehEngineCounts vc
+                JOIN Engines e ON vc.engine_id = e.engine_id
                 GROUP BY e.engine_rpo, e.engine_type
             ),
             Ranked AS (
@@ -1017,6 +1073,7 @@ def stats():
             SELECT DATE_FORMAT(o.creation_date, '%%Y-%%m-%%d') AS label, COUNT(*) AS total_count
             FROM Vehicles v
             JOIN Orders o ON v.order_id = o.order_id
+            {filter_only_join_clause}
             {full_where}
             GROUP BY label ORDER BY label ASC;
         """
@@ -1027,17 +1084,21 @@ def stats():
                 dl.dealer_name,
                 dl.location,
                 dl.sitedealer_code,
-                COUNT(*) AS total_count
-            FROM Vehicles v
-            JOIN Dealers dl ON v.dealer_id = dl.dealer_id
-            {join_clause}
-            {where_clause}
-            GROUP BY dl.dealer_id, dl.dealer_name, dl.location, dl.sitedealer_code
-            ORDER BY total_count DESC;
+                vc.total_count
+            FROM (
+                SELECT v.dealer_id, COUNT(*) AS total_count
+                FROM Vehicles v
+                {filter_only_join_clause}
+                {where_clause}
+                GROUP BY v.dealer_id
+            ) AS vc
+            JOIN Dealers dl ON vc.dealer_id = dl.dealer_id
+            ORDER BY vc.total_count DESC;
         """
     else:
         close_connection(conn)
         return jsonify([])
+
 
     states_list = []
     dealer_summary = {}
@@ -1200,15 +1261,21 @@ def stats():
 
     year_where = f"WHERE {' AND '.join(year_agnostic_conds)}" if year_agnostic_conds else ""
 
-    year_sql = f"SELECT DISTINCT v.modelYear FROM Vehicles v {join_clause} {year_where} ORDER BY v.modelYear DESC"
+    year_sql = f"SELECT DISTINCT v.modelYear FROM Vehicles v {filter_only_join_clause} {year_where} ORDER BY v.modelYear DESC"
     all_years_raw = execute_read_query(conn, year_sql, year_agnostic_params) or []
     all_years = [r['modelYear'] for r in all_years_raw if r.get('modelYear')]
 
     distinct_sql = f"""
-        SELECT DISTINCT v.model, v.body, v.trim, e.engine_type, t.transmission_type, d.drivetrain_type
-        FROM Vehicles v
-        {join_clause}
-        {where_clause}
+        SELECT DISTINCT vc.model, vc.body, vc.trim, e.engine_type, t.transmission_type, d.drivetrain_type
+        FROM (
+            SELECT DISTINCT v.model, v.body, v.trim, v.engine_id, v.transmission_id, v.drivetrain_id
+            FROM Vehicles v
+            {filter_only_join_clause}
+            {where_clause}
+        ) AS vc
+        JOIN Engines e ON vc.engine_id = e.engine_id
+        JOIN Transmissions t ON vc.transmission_id = t.transmission_id
+        JOIN Drivetrains d ON vc.drivetrain_id = d.drivetrain_id
     """
     distinct_results = execute_read_query(conn, distinct_sql, params) or []
 
@@ -1272,6 +1339,12 @@ def wheel_stats():
 @app.route('/about', methods=['GET'])
 def about_stats():
     distinct_sql = """
+        WITH LatestModelYears AS (
+            SELECT v.model, MAX(v.modelYear) AS max_yr
+            FROM Vehicles v
+            WHERE v.model IS NOT NULL
+            GROUP BY v.model
+        )
         SELECT
             CASE
                 WHEN v.model LIKE 'CORVETTE%' THEN 'CORVETTE'
@@ -1279,7 +1352,8 @@ def about_stats():
                 ELSE v.model
             END AS model_group,
             DATE_FORMAT(MAX(o.creation_date), '%M %e, %Y') AS latest_date
-        FROM Vehicles v
+        FROM LatestModelYears lmy
+        JOIN Vehicles v ON v.model = lmy.model AND v.modelYear >= lmy.max_yr - 1
         JOIN Orders o ON v.order_id = o.order_id
         GROUP BY model_group
     """
@@ -1291,9 +1365,19 @@ def about_stats():
     stats_map = {r['model_group'].replace(' ', '_'): r['latest_date'] for r in results}
     return jsonify(stats_map)
 
+
 #========================= View Pages #=========================
+
+def _warm_startup_cache():
+    try:
+        with app.test_request_context('/vehicles'):
+            sort_price()
+        with app.test_request_context('/about'):
+            about_stats()
+    except Exception as e:
+        print(f"Startup cache warm-up skipped: {e}")
+
+_warm_startup_cache()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
-
-

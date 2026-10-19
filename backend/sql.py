@@ -5,7 +5,7 @@ import os
 import time
 
 QUERY_CACHE = {}
-CACHE_TTL = 300 # 5 minutes
+CACHE_TTL = 3600 # 1 hour
 
 def get_cache_key(query, params):
     try:

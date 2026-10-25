@@ -783,6 +783,7 @@ app.get('/search', searchLimiter, async (req, res) => {
             colorMap: modules.colorMap,
             intColor: modules.intColor,
             vinIntColor: modules.vinIntColor,
+            vinExtColor: modules.vinExtColor,
             pagePath: '/search',
             canonicalPath: `/search?vin=${vinQuery}`
         });

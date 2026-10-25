@@ -501,6 +501,14 @@ SELECT * FROM Colors where color_name = 'PLUTO';
 SELECT * FROM Vehicles where vin = '1G6D35R69TA710030';
 UPDATE Vehicles SET color_id = 186 where vin = '1G6D35R69TA710030';
 
+-- Curated by Cadillac vehicle color updates
+INSERT INTO Colors (color_name, rpo_code) VALUES ('KOMODO METALLIC', 'N/A')
+ON DUPLICATE KEY UPDATE color_name = color_name;
+
+UPDATE Vehicles SET color_id = (SELECT color_id FROM Colors WHERE color_name = 'KOMODO METALLIC' LIMIT 1) WHERE vin = '1G6D25R66TA760032';
+UPDATE Vehicles SET color_id = (SELECT color_id FROM Colors WHERE color_name = 'CARNELIAN METALLIC' LIMIT 1) WHERE vin = '1G6D25R68TA760050';
+UPDATE Vehicles SET color_id = (SELECT color_id FROM Colors WHERE color_name = 'DARK MOON METALLIC' LIMIT 1) WHERE vin = '1G6D35R60TA710031';
+
 -- Set Engine RPO
 select * from Engines;
 update Engines SET engine_rpo = "LS6" WHERE engine_id = 24;

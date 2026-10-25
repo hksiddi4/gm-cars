@@ -118,7 +118,7 @@
                   </tr>
                   <tr>
                     <th scope="row" class="label-column"><strong>EXTERIOR COLOR</strong></th>
-                    <td id="extColorCell"><%= data.color_name || 'N/A' %></td>
+                    <td id="extColorCell"><%= (typeof vinExtColor !== 'undefined' && vinExtColor[data.vin]) ? vinExtColor[data.vin] : (data.color_name || 'N/A') %></td>
                   </tr>
                   <% if (data.rpo_codes) { %>
                     <%
@@ -329,6 +329,7 @@
       const localRpoImageMap = <%- JSON.stringify(localRpoImageMap || {}) %>;
       const intColor = <%- JSON.stringify(intColor) %>;
       const vinIntColor = <%- JSON.stringify(vinIntColor || {}) %>;
+      const vinExtColor = <%- JSON.stringify(vinExtColor || {}) %>;
       const colorMap = <%- JSON.stringify(colorMap) %>;
       const camaroRpo = <%- JSON.stringify(camaroRpo) %>;
       const corvetteRpo = <%- JSON.stringify(corvetteRpo) %>;
@@ -695,10 +696,11 @@
       const unsupportedColorNames = [
         'BLACK MEETS KETTLE', 'COPPERTINO METALLIC', 'CHARTREUSE METALLIC', 'ABALONE WHITE',
         'TACTICAL TINT', 'BARB WIRE', 'KIMONO METALLIC', 'SEEKER METALLIC', 'HIGH VOLTAGE TINT',
-        'BAEGE METALLIC', 'SEYCHELLES METALLIC', 'HYPERSONIC METALLIC', 'CHARTREUSE MATTE'
+        'BAEGE METALLIC', 'SEYCHELLES METALLIC', 'HYPERSONIC METALLIC', 'CHARTREUSE MATTE',
+        'KOMODO METALLIC'
       ];
       let unsupportedInts = null;
-      const colorName = vin_data[0].color_name;
+      const colorName = (typeof vinExtColor !== 'undefined' && vinExtColor[vin.vin]) || vin_data[0].color_name;
 
       if (colorName === 'BLADE SILVER METALLIC' && modelYear >= 2026) {
         if (color === 'GAN') color = 'GKA';

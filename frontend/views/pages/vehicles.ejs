@@ -350,9 +350,10 @@
                                 <td scope="row" style="text-align: left; align-items: center;">
                                     <% 
                                         // Determine the RPO code for the image source
-                                        let imageRpoCode = colorMap[data.color_name];
+                                        const displayColorName = (typeof vinExtColor !== 'undefined' && vinExtColor[data.vin]) ? vinExtColor[data.vin] : data.color_name;
+                                        let imageRpoCode = colorMap[displayColorName];
 
-                                        if (data.color_name === 'BLADE SILVER METALLIC' && Number(data.modelYear) >= 2026) {
+                                        if (displayColorName === 'BLADE SILVER METALLIC' && Number(data.modelYear) >= 2026) {
                                             imageRpoCode = 'GKA';
                                         }
 
@@ -367,7 +368,7 @@
                                         height="20"
                                         data-fallback="../../img/extColors/default.webp"
                                     >
-                                    <%= data.color_name %>
+                                    <%= displayColorName %>
                                 </td>
                                 <td scope="row" class="accounting-format">
                                     <% if (data.msrp == 0) { %>

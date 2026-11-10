@@ -119,6 +119,43 @@ const sendDiscordAlert = async (type, payload) => {
         console.error("Discord webhook failed:", err.message);
     }
 };
+const notifyHoneypotTriggered = async (payload) => {
+    // 1. Send Discord alert if configured
+    if (process.env.DISCORD_RATELIMIT_URL) {
+        await sendDiscordAlert('honeypot', payload);
+        return;
+    }
+
+    // 2. Email alert fallback if Discord webhook is not set
+    if (process.env.SMTP_PASS) {
+        try {
+            const transporter = nodemailer.createTransport({
+                host: 'smtp.mail.me.com',
+                port: 587,
+                secure: false,
+                auth: {
+                    user: 'hussainks92@icloud.com',
+                    pass: process.env.SMTP_PASS
+                }
+            });
+
+            await transporter.sendMail({
+                from: '"GM Build Counts Security" <contact@gmbuildcounts.com>',
+                to: 'contact@gmbuildcounts.com',
+                subject: `🍯 Honeypot Alert: Bot trapped from ${payload.rawIp || payload.ip}`,
+                text: `Honeypot Trap Triggered!\n\n` +
+                      `IP: ${payload.rawIp || payload.ip}\n` +
+                      `Path: ${payload.method} ${payload.path}\n` +
+                      `User-Agent: ${payload.userAgent}\n` +
+                      `Referer: ${payload.referer}\n` +
+                      `Trap Field Value: ${payload.honeypotValue}\n` +
+                      `Timestamp: ${new Date().toISOString()}`
+            });
+        } catch (mailErr) {
+            console.error('Honeypot email alert error:', mailErr.message);
+        }
+    }
+};
 
 const authLimiter = rateLimit({
     windowMs: 5 * 60 * 1000,
@@ -294,6 +331,45 @@ app.use(compression());
 app.set('trust proxy', 1);
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
+// Honeypot Bot Detection Middleware (zero latency for real users)
+app.use((req, res, next) => {
+    const hpValue = (req.body && req.body.website_hp) || (req.query && req.query.website_hp);
+    if (hpValue) {
+        const ip = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.ip;
+        const userAgent = req.get('user-agent') || 'Unknown';
+        const referer = req.get('referer') || 'None';
+        const path = req.originalUrl;
+        const method = req.method;
+
+        // Fire notification in the background (asynchronous, non-blocking)
+        notifyHoneypotTriggered({
+            ip: typeof ipKeyGenerator === 'function' ? ipKeyGenerator(ip) : ip,
+            rawIp: ip,
+            path,
+            method,
+            userAgent,
+            referer,
+            honeypotValue: String(hpValue).slice(0, 100)
+        }).catch(err => console.error('Honeypot notification error:', err.message));
+
+        // Fake a success for /contact so bots believe the submission succeeded and don't retry
+        if (req.path === '/contact') {
+            return res.render('pages/contact', {
+                success: true,
+                pagePath: '/contact',
+                canonicalPath: '/contact'
+            });
+        }
+
+        // For GET forms or other paths, safely redirect home or return 200
+        if (req.method === 'GET') {
+            return res.redirect('/');
+        }
+        return res.status(200).json({ success: true });
+    }
+    next();
+});
 app.use(express.static('public', {
     maxAge: '30d',
     etag: true,
@@ -540,55 +616,33 @@ app.post('/contact', contactLimiter, async (req, res) => {
     const trimmedMessage = typeof message === 'string' ? message.trim() : '';
     const formData = { name: trimmedName, email: trimmedEmail, message: trimmedMessage };
 
-    // --- A. Validate Text Limits and Required Fields ---
-    if (!trimmedName) {
-        return res.render('pages/contact', { 
-            error: 'Please enter your name.',
-            formData,
-            pagePath: '/contact',
-            canonicalPath: '/contact'
-        });
+    const genericValidationError = 'Please provide a valid name, email address, and message.';
+
+    // --- A. Validate Text Limits, Formats, and Gibberish (Unified Message) ---
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const excessiveRepetition = /(.)\1{5,}/i;
+    const emailUser = trimmedEmail.split('@')[0];
+    const uniqueChars = new Set(trimmedMessage.toLowerCase().replace(/\s/g, '')).size;
+    const words = trimmedMessage.split(/\s+/);
+    const hasRunOnSpam = words.some(w => w.length > 60 && !w.startsWith('http://') && !w.startsWith('https://'));
+
+    const invalidFields = [];
+    if (!trimmedName || trimmedName.length > 80 || excessiveRepetition.test(trimmedName)) {
+        invalidFields.push('name');
+    }
+    if (!trimmedEmail || trimmedEmail.length > 100 || !emailRegex.test(trimmedEmail) || excessiveRepetition.test(emailUser)) {
+        invalidFields.push('email');
+    }
+    if (!trimmedMessage || trimmedMessage.length > 1000 || /(.)\1{7,}/i.test(trimmedMessage) ||
+        (trimmedMessage.length > 30 && uniqueChars < 5) ||
+        (trimmedMessage.length > 60 && hasRunOnSpam)) {
+        invalidFields.push('message');
     }
 
-    if (trimmedName.length > 80) {
+    if (invalidFields.length > 0) {
         return res.render('pages/contact', { 
-            error: 'Name cannot exceed 80 characters.',
-            formData,
-            pagePath: '/contact',
-            canonicalPath: '/contact'
-        });
-    }
-
-    if (!trimmedEmail) {
-        return res.render('pages/contact', { 
-            error: 'Please enter your email address.',
-            formData,
-            pagePath: '/contact',
-            canonicalPath: '/contact'
-        });
-    }
-
-    if (trimmedEmail.length > 100) {
-        return res.render('pages/contact', { 
-            error: 'Email address cannot exceed 100 characters.',
-            formData,
-            pagePath: '/contact',
-            canonicalPath: '/contact'
-        });
-    }
-
-    if (!trimmedMessage) {
-        return res.render('pages/contact', { 
-            error: 'Please enter a message.',
-            formData,
-            pagePath: '/contact',
-            canonicalPath: '/contact'
-        });
-    }
-
-    if (trimmedMessage.length > 1000) {
-        return res.render('pages/contact', { 
-            error: 'Message cannot exceed 1,000 characters.',
+            error: genericValidationError,
+            invalidFields,
             formData,
             pagePath: '/contact',
             canonicalPath: '/contact'

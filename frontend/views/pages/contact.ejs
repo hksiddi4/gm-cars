@@ -32,14 +32,20 @@
 
                         <div class="p-4 rounded border" style="background-color: #2b2b2b; border-color: #444 !important;">
                             <form action="/contact" method="POST">
+                                <!-- Honeypot trap for automated spam bots (hidden from real users) -->
+                                <div class="visually-hidden" aria-hidden="true" style="display:none !important; position:absolute; left:-9999px;">
+                                    <label for="website_hp">Leave this field empty</label>
+                                    <input type="text" id="website_hp" name="website_hp" tabindex="-1" autocomplete="off">
+                                </div>
+
                                 <div class="mb-3">
                                     <div class="d-flex justify-content-between align-items-center mb-1">
                                         <label for="name" class="form-label text-white mb-0">Name</label>
                                         <span class="text-secondary small">Max 80 characters</span>
                                     </div>
-                                    <input type="text" class="form-control" id="name" name="name" required maxlength="80"
+                                    <input type="text" class="form-control <%= typeof invalidFields !== 'undefined' && invalidFields.includes('name') ? 'is-invalid' : '' %>" id="name" name="name" required maxlength="80"
                                            value="<%= typeof formData !== 'undefined' && formData && formData.name ? formData.name : '' %>"
-                                           style="background-color: #1e1e1e; color: #d4d4d4; border-color: #444;">
+                                           style="background-color: #1e1e1e; color: #d4d4d4; <%= typeof invalidFields !== 'undefined' && invalidFields.includes('name') ? 'border-color: #dc3545 !important; box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);' : 'border-color: #444;' %>">
                                 </div>
 
                                 <div class="mb-3">
@@ -47,9 +53,9 @@
                                         <label for="email" class="form-label text-white mb-0">Email Address</label>
                                         <span class="text-secondary small">Max 100 characters</span>
                                     </div>
-                                    <input type="email" class="form-control" id="email" name="email" required maxlength="100"
+                                    <input type="email" class="form-control <%= typeof invalidFields !== 'undefined' && invalidFields.includes('email') ? 'is-invalid' : '' %>" id="email" name="email" required maxlength="100"
                                            value="<%= typeof formData !== 'undefined' && formData && formData.email ? formData.email : '' %>"
-                                           style="background-color: #1e1e1e; color: #d4d4d4; border-color: #444;">
+                                           style="background-color: #1e1e1e; color: #d4d4d4; <%= typeof invalidFields !== 'undefined' && invalidFields.includes('email') ? 'border-color: #dc3545 !important; box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);' : 'border-color: #444;' %>">
                                 </div>
 
                                 <div class="mb-3">
@@ -57,8 +63,8 @@
                                         <label for="message" class="form-label text-white mb-0">Message</label>
                                         <span id="messageCounter" class="text-secondary small">0 / 1000</span>
                                     </div>
-                                    <textarea class="form-control" id="message" name="message" rows="5" required maxlength="1000"
-                                              style="background-color: #1e1e1e; color: #d4d4d4; border-color: #444;"><%= typeof formData !== 'undefined' && formData && formData.message ? formData.message : '' %></textarea>
+                                    <textarea class="form-control <%= typeof invalidFields !== 'undefined' && invalidFields.includes('message') ? 'is-invalid' : '' %>" id="message" name="message" rows="5" required maxlength="1000"
+                                              style="background-color: #1e1e1e; color: #d4d4d4; <%= typeof invalidFields !== 'undefined' && invalidFields.includes('message') ? 'border-color: #dc3545 !important; box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);' : 'border-color: #444;' %>"><%= typeof formData !== 'undefined' && formData && formData.message ? formData.message : '' %></textarea>
                                 </div>
 
                                 <!-- Cloudflare Turnstile Box -->
@@ -98,6 +104,20 @@
                 messageInput.addEventListener('input', updateCounter);
                 updateCounter();
             }
+
+            // Remove invalid highlight when user starts typing
+            ['name', 'email', 'message'].forEach(function(fieldId) {
+                const inputEl = document.getElementById(fieldId);
+                if (inputEl) {
+                    inputEl.addEventListener('input', function() {
+                        if (inputEl.classList.contains('is-invalid')) {
+                            inputEl.classList.remove('is-invalid');
+                            inputEl.style.setProperty('border-color', '#444', 'important');
+                            inputEl.style.boxShadow = 'none';
+                        }
+                    });
+                }
+            });
         })();
     </script>
 </body>

@@ -27,6 +27,9 @@
             <ul class="nav flex-column mt-2">
                 <li class="nav-item mb-3">
                     <form id="searchVIN" action="/search" method="GET" class="d-flex">
+                        <div class="visually-hidden" aria-hidden="true" style="display:none !important; position:absolute; left:-9999px;">
+                            <input type="text" name="website_hp" tabindex="-1" autocomplete="off">
+                        </div>
                         <input type="text" id="searchInput" name="vin" class="form-control" placeholder="Search VIN..." aria-label="Search by Vehicle Identification Number (VIN)">
                         <button type="submit" class="btn btn-secondary ms-2">Search</button>
                     </form>

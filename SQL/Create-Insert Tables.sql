@@ -515,6 +515,7 @@ INSERT INTO Colors (color_name, rpo_code) VALUES ('CAYMAN', 'N/A')
 ON DUPLICATE KEY UPDATE color_name = color_name;
 
 UPDATE Vehicles SET color_id = (SELECT color_id FROM Colors WHERE color_name = 'CAYMAN' LIMIT 1) WHERE vin = '1G6D25R68TA760033';
+UPDATE Vehicles SET color_id = (SELECT color_id FROM Colors WHERE color_name = 'MANHATTAN NOIR METALLIC' LIMIT 1) WHERE vin = '1G6D25R65TA760037';
 
 -- Set Engine RPO
 select * from Engines;

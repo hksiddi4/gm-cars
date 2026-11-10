@@ -33,21 +33,32 @@
                         <div class="p-4 rounded border" style="background-color: #2b2b2b; border-color: #444 !important;">
                             <form action="/contact" method="POST">
                                 <div class="mb-3">
-                                    <label for="name" class="form-label text-white">Name</label>
-                                    <input type="text" class="form-control" id="name" name="name" required 
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <label for="name" class="form-label text-white mb-0">Name</label>
+                                        <span class="text-secondary small">Max 80 characters</span>
+                                    </div>
+                                    <input type="text" class="form-control" id="name" name="name" required maxlength="80"
+                                           value="<%= typeof formData !== 'undefined' && formData && formData.name ? formData.name : '' %>"
                                            style="background-color: #1e1e1e; color: #d4d4d4; border-color: #444;">
                                 </div>
 
                                 <div class="mb-3">
-                                    <label for="email" class="form-label text-white">Email Address</label>
-                                    <input type="email" class="form-control" id="email" name="email" required 
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <label for="email" class="form-label text-white mb-0">Email Address</label>
+                                        <span class="text-secondary small">Max 100 characters</span>
+                                    </div>
+                                    <input type="email" class="form-control" id="email" name="email" required maxlength="100"
+                                           value="<%= typeof formData !== 'undefined' && formData && formData.email ? formData.email : '' %>"
                                            style="background-color: #1e1e1e; color: #d4d4d4; border-color: #444;">
                                 </div>
 
                                 <div class="mb-3">
-                                    <label for="message" class="form-label text-white">Message</label>
-                                    <textarea class="form-control" id="message" name="message" rows="5" required 
-                                              style="background-color: #1e1e1e; color: #d4d4d4; border-color: #444;"></textarea>
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <label for="message" class="form-label text-white mb-0">Message</label>
+                                        <span id="messageCounter" class="text-secondary small">0 / 1000</span>
+                                    </div>
+                                    <textarea class="form-control" id="message" name="message" rows="5" required maxlength="1000"
+                                              style="background-color: #1e1e1e; color: #d4d4d4; border-color: #444;"><%= typeof formData !== 'undefined' && formData && formData.message ? formData.message : '' %></textarea>
                                 </div>
 
                                 <!-- Cloudflare Turnstile Box -->
@@ -67,5 +78,27 @@
     </main>
 
     <%- include('../partials/footer'); %>
+
+    <script nonce="<%= nonce %>">
+        (function() {
+            const messageInput = document.getElementById('message');
+            const messageCounter = document.getElementById('messageCounter');
+            if (messageInput && messageCounter) {
+                const updateCounter = () => {
+                    const len = messageInput.value.length;
+                    messageCounter.textContent = `${len} / 1000`;
+                    if (len >= 1000) {
+                        messageCounter.classList.add('text-warning');
+                        messageCounter.classList.remove('text-secondary');
+                    } else {
+                        messageCounter.classList.add('text-secondary');
+                        messageCounter.classList.remove('text-warning');
+                    }
+                };
+                messageInput.addEventListener('input', updateCounter);
+                updateCounter();
+            }
+        })();
+    </script>
 </body>
 </html>

@@ -535,10 +535,71 @@ app.get('/contact', (req, res) => {
 app.post('/contact', contactLimiter, async (req, res) => {
     const { name, email, message, 'cf-turnstile-response': turnstileToken } = req.body;
 
-    // --- A. Verify Cloudflare Turnstile ---
+    const trimmedName = typeof name === 'string' ? name.trim() : '';
+    const trimmedEmail = typeof email === 'string' ? email.trim() : '';
+    const trimmedMessage = typeof message === 'string' ? message.trim() : '';
+    const formData = { name: trimmedName, email: trimmedEmail, message: trimmedMessage };
+
+    // --- A. Validate Text Limits and Required Fields ---
+    if (!trimmedName) {
+        return res.render('pages/contact', { 
+            error: 'Please enter your name.',
+            formData,
+            pagePath: '/contact',
+            canonicalPath: '/contact'
+        });
+    }
+
+    if (trimmedName.length > 80) {
+        return res.render('pages/contact', { 
+            error: 'Name cannot exceed 80 characters.',
+            formData,
+            pagePath: '/contact',
+            canonicalPath: '/contact'
+        });
+    }
+
+    if (!trimmedEmail) {
+        return res.render('pages/contact', { 
+            error: 'Please enter your email address.',
+            formData,
+            pagePath: '/contact',
+            canonicalPath: '/contact'
+        });
+    }
+
+    if (trimmedEmail.length > 100) {
+        return res.render('pages/contact', { 
+            error: 'Email address cannot exceed 100 characters.',
+            formData,
+            pagePath: '/contact',
+            canonicalPath: '/contact'
+        });
+    }
+
+    if (!trimmedMessage) {
+        return res.render('pages/contact', { 
+            error: 'Please enter a message.',
+            formData,
+            pagePath: '/contact',
+            canonicalPath: '/contact'
+        });
+    }
+
+    if (trimmedMessage.length > 1000) {
+        return res.render('pages/contact', { 
+            error: 'Message cannot exceed 1,000 characters.',
+            formData,
+            pagePath: '/contact',
+            canonicalPath: '/contact'
+        });
+    }
+
+    // --- B. Verify Cloudflare Turnstile ---
     if (!turnstileToken) {
         return res.render('pages/contact', { 
             error: 'Please complete the bot check.',
+            formData,
             pagePath: '/contact',
             canonicalPath: '/contact'
         });
@@ -553,6 +614,7 @@ app.post('/contact', contactLimiter, async (req, res) => {
         if (!verifyResponse.data.success) {
             return res.render('pages/contact', { 
                 error: 'Bot verification failed. Please try again.',
+                formData,
                 pagePath: '/contact',
                 canonicalPath: '/contact'
             });
@@ -561,12 +623,13 @@ app.post('/contact', contactLimiter, async (req, res) => {
         console.error('Turnstile verification error:', err);
         return res.render('pages/contact', { 
             error: 'Security service unavailable. Try again later.',
+            formData,
             pagePath: '/contact',
             canonicalPath: '/contact'
         });
     }
 
-    // --- B. Send the Email ---
+    // --- C. Send the Email ---
     try {
         const transporter = nodemailer.createTransport({
             host: 'smtp.mail.me.com',
@@ -578,7 +641,7 @@ app.post('/contact', contactLimiter, async (req, res) => {
             }
         });
 
-        const safeMessageHtml = String(message || '')
+        const safeMessageHtml = String(trimmedMessage || '')
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
@@ -589,9 +652,9 @@ app.post('/contact', contactLimiter, async (req, res) => {
         const mailOptions = {
             from: '"GM Build Counts" <contact@gmbuildcounts.com>', 
             to: 'contact@gmbuildcounts.com',                      
-            replyTo: email,                                       
-            subject: `New Contact Form Submission from ${name}`,
-            text: `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
+            replyTo: trimmedEmail,                                       
+            subject: `New Contact Form Submission from ${trimmedName}`,
+            text: `Name: ${trimmedName}\nEmail: ${trimmedEmail}\n\nMessage:\n${trimmedMessage}`,
             html: `<p>${safeMessageHtml}</p>`
         };
 
@@ -608,6 +671,7 @@ app.post('/contact', contactLimiter, async (req, res) => {
         console.error('Email sending error:', err);
         res.render('pages/contact', { 
             error: 'Failed to send message. Please try again later.',
+            formData,
             pagePath: '/contact',
             canonicalPath: '/contact'
         });

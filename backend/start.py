@@ -298,7 +298,9 @@ QUERY_STOPWORDS = {
     "editions", "special", "option", "options", "transmission", "trans", "trim",
     "model", "models", "year", "years", "only", "return", "values", "value",
     "distinct", "unique", "vin", "vins", "how", "many", "count", "total",
-    "number", "cadillac", "chevrolet", "chevy", "gmc", "gm", "series"
+    "number", "cadillac", "chevrolet", "chevy", "gmc", "gm", "series",
+    "similar", "like", "matching", "same", "as", "spec", "specs",
+    "configuration", "build", "builds", "twin", "twins"
 }
 
 
@@ -348,6 +350,7 @@ def parse_nl_query_intent(user_prompt):
     models_found = []
     trims_found = []
     years_found = []
+    target_vin = None
     order_by = ""
 
     # 1. Detect query mode (count vs distinct vs vehicle list)
@@ -375,12 +378,12 @@ def parse_nl_query_intent(user_prompt):
             distinct_cols = parsed_cols
             mark_span(*distinct_match.span())
 
-    # 2. Detect VIN exact or substring matches (e.g., have "N5RW" in the VIN)
+    # 2. Detect 17-character VIN (for similar-vehicle matching) or VIN substring matches
     for m in re.finditer(r"\b([A-HJ-NPR-Z0-9]{17})\b", raw, re.IGNORECASE):
-        if span_free(*m.span()):
-            vin_val = m.group(1).upper()
-            conditions.append(f"v.vin = '{vin_val}'")
+        if span_free(*m.span()) and any(ch.isdigit() for ch in m.group(1)):
+            target_vin = m.group(1).upper()
             mark_span(*m.span())
+            break
 
     vin_sub_patterns = [
         r'(?:have|has|with|containing|contains|like)\s+["\']([A-Za-z0-9]{2,17})["\']\s+(?:in\s+(?:the\s+)?vin)',
@@ -682,7 +685,7 @@ def parse_nl_query_intent(user_prompt):
         tok.lower() for tok in re.findall(r"[a-zA-Z0-9]+", unconsumed_chars)
         if tok.lower() not in QUERY_STOPWORDS
     ]
-    is_complete = (len(leftover_tokens) == 0) and (len(conditions) > 0 or bool(order_by))
+    is_complete = (len(leftover_tokens) == 0) and (len(conditions) > 0 or bool(order_by) or bool(target_vin))
 
     return {
         "conditions": conditions,
@@ -694,7 +697,97 @@ def parse_nl_query_intent(user_prompt):
         "models_found": models_found,
         "trims_found": trims_found,
         "years_found": years_found,
+        "target_vin": target_vin,
     }
+
+
+def resolve_vin_similarity_intent(conn, intent):
+    """
+    When a 17-character VIN is present in the prompt, resolve it to matching vehicle attributes:
+    - If the VIN exists in Vehicles: match Year, Model, Body, Trim, Engine, Trans, Drivetrain,
+      Exterior Color, and Package/Edition (with the queried VIN ordered first).
+    - If the VIN is not in Vehicles: fall back to matching VIN characters 1-8 + character 10 (Model Year).
+    """
+    target_vin = intent.get("target_vin")
+    if not target_vin:
+        return intent
+
+    lookup_sql = """
+        SELECT v.vehicle_id, v.modelYear, v.model, v.body, v.trim,
+               e.engine_type, t.transmission_type, d.drivetrain_type, c.color_name,
+               (SELECT GROUP_CONCAT(se.special_desc SEPARATOR '||')
+                FROM SpecialEditions se WHERE se.vehicle_id = v.vehicle_id) AS raw_special_list
+        FROM Vehicles v
+        LEFT JOIN Engines e ON v.engine_id = e.engine_id
+        LEFT JOIN Transmissions t ON v.transmission_id = t.transmission_id
+        LEFT JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id
+        LEFT JOIN Colors c ON v.color_id = c.color_id
+        WHERE v.vin = %s
+        LIMIT 1
+    """
+    rows = execute_read_query(conn, lookup_sql, (target_vin,)) if conn else None
+    existing_str = " ".join(intent["conditions"])
+    vin_conds = []
+
+    if rows:
+        ref = rows[0]
+        if ref.get("modelYear") is not None and "v.modelYear" not in existing_str:
+            vin_conds.append(f"v.modelYear = {int(ref['modelYear'])}")
+        if ref.get("model") and "v.model" not in existing_str:
+            esc = str(ref["model"]).replace("'", "''")
+            vin_conds.append(f"v.model = '{esc}'")
+        if ref.get("body") and "v.body" not in existing_str:
+            esc = str(ref["body"]).replace("'", "''")
+            vin_conds.append(f"v.body = '{esc}'")
+        if ref.get("trim") and "v.trim" not in existing_str:
+            esc = str(ref["trim"]).replace("'", "''")
+            vin_conds.append(f"v.trim = '{esc}'")
+        if ref.get("engine_type") and "e.engine_type" not in existing_str:
+            esc = str(ref["engine_type"]).replace("'", "''")
+            vin_conds.append(f"e.engine_type = '{esc}'")
+        if ref.get("transmission_type") and "t.transmission_type" not in existing_str:
+            esc = str(ref["transmission_type"]).replace("'", "''")
+            vin_conds.append(f"t.transmission_type = '{esc}'")
+        if ref.get("drivetrain_type") and "d.drivetrain_type" not in existing_str:
+            esc = str(ref["drivetrain_type"]).replace("'", "''")
+            vin_conds.append(f"d.drivetrain_type = '{esc}'")
+        if ref.get("color_name") and "c.color_name" not in existing_str:
+            esc = str(ref["color_name"]).replace("'", "''")
+            vin_conds.append(f"c.color_name = '{esc}'")
+        if "SpecialEditions" not in existing_str:
+            raw_specials = [
+                s.strip() for s in (ref.get("raw_special_list") or "").split("||")
+                if s.strip() and s.strip() not in ("Pre-Production Vehicle", "Show Vehicle")
+            ]
+            if raw_specials:
+                for desc in sorted(set(raw_specials)):
+                    base_desc = re.sub(r"\s*#\d+$", "", desc)
+                    if base_desc != desc:
+                        esc = base_desc.replace("'", "''")
+                        vin_conds.append(
+                            f"EXISTS (SELECT 1 FROM SpecialEditions se WHERE se.vehicle_id = v.vehicle_id AND se.special_desc LIKE '{esc}%')"
+                        )
+                    else:
+                        esc = desc.replace("'", "''")
+                        vin_conds.append(
+                            f"EXISTS (SELECT 1 FROM SpecialEditions se WHERE se.vehicle_id = v.vehicle_id AND se.special_desc = '{esc}')"
+                        )
+            else:
+                vin_conds.append(
+                    "NOT EXISTS (SELECT 1 FROM SpecialEditions se WHERE se.vehicle_id = v.vehicle_id "
+                    "AND se.special_desc NOT IN ('Pre-Production Vehicle', 'Show Vehicle'))"
+                )
+        if intent["mode"] == "vehicles" and not intent["order_by"]:
+            intent["order_by"] = f"ORDER BY (v.vin = '{target_vin}') DESC, v.vin ASC"
+    else:
+        # Fallback when VIN is not in DB: match platform/series/body/trans/engine (chars 1-8) + Model Year (char 10)
+        prefix_pattern = f"{target_vin[:8]}_{target_vin[9]}%"
+        vin_conds.append(f"v.vin LIKE '{prefix_pattern}'")
+        if intent["mode"] == "vehicles" and not intent["order_by"]:
+            intent["order_by"] = "ORDER BY v.vin ASC"
+
+    intent["conditions"] = vin_conds + intent["conditions"]
+    return intent
 
 
 def build_sql_from_intent(intent):
@@ -796,10 +889,14 @@ def natural_language_query():
     cache_key = user_prompt.lower()
     now = time.time()
     cached_entry = AI_SQL_CACHE.get(cache_key)
+    conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
+
     if cached_entry and (now - cached_entry['time'] < AI_SQL_CACHE_TTL):
         generated_sql = cached_entry['sql']
     else:
         intent = parse_nl_query_intent(user_prompt)
+        if intent.get("target_vin"):
+            intent = resolve_vin_similarity_intent(conn, intent)
 
         if intent["is_complete"]:
             # Fast-path: 100% of tokens mapped to exact schema predicates (< 1ms)
@@ -829,6 +926,7 @@ def natural_language_query():
                 response.raise_for_status()
                 generated_sql = sanitize_and_repair_ai_sql(response.json().get('response', ''), intent)
             except Exception as e:
+                close_connection(conn)
                 app.logger.error("Failed to communicate with AI model: %s", e)
                 return jsonify({'error': 'Failed to communicate with AI model'}), 500
 
@@ -840,9 +938,9 @@ def natural_language_query():
         re.IGNORECASE
     )
     if not re.match(r"^(SELECT|WITH)\b", generated_sql, re.IGNORECASE) or ";" in unquoted_sql or destructive_pattern.search(unquoted_sql):
+        close_connection(conn)
         return jsonify({'error': 'Security restriction: Only single read-only SELECT queries are permitted', 'generated_sql': generated_sql}), 403
 
-    conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
     try:
         db_results = execute_read_query(conn, generated_sql)
         if db_results is None:

@@ -1036,7 +1036,8 @@ app.get('/query', authLimiter, requireAdmin, (req, res) => {
     res.render('pages/query', {
         canonicalPath: '/query',
         pagePath: '/query',
-        colorMap: modules.colorMap || {} 
+        colorMap: modules.colorMap || {},
+        vinExtColor: modules.vinExtColor || {}
     });
 });
 

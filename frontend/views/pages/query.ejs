@@ -155,6 +155,7 @@
 
     <script nonce="<%= nonce %>">
         const colorMap = <%- JSON.stringify(colorMap || {}) %>;
+        const vinExtColor = <%- JSON.stringify(vinExtColor || {}) %>;
 
         document.getElementById('promptInput').addEventListener('keydown', function(event) {
             // Check if the Enter key is pressed and Shift is NOT being held down
@@ -237,7 +238,6 @@
                 currentElapsedTime = (currentElapsedMs / 1000).toFixed(2);
                 
                 renderTable();
-                setTimeout(updateTopInnerWidth, 100);
 
             } catch (err) {
                 const errorBox = document.getElementById('errorAlert');
@@ -364,24 +364,27 @@
                     else if (col === 'Exterior_Color') {
                         td.style.textAlign = 'left';
                         td.style.alignItems = 'center';
-                        
-                        let imageRpoCode = colorMap[cellValue];
+
+                        const displayColorName = (data['VIN'] && vinExtColor[data['VIN']]) ? vinExtColor[data['VIN']] : cellValue;
+                        let imageRpoCode = colorMap[displayColorName];
 
                         // Exception logic ported directly from vehicles.ejs
-                        if (cellValue === 'BLADE SILVER METALLIC' && Number(data['Year']) >= 2026) {
+                        if (displayColorName === 'BLADE SILVER METALLIC' && Number(data['Year']) >= 2026) {
                             imageRpoCode = 'GKA';
                         }
                         
                         const finalImageSrcRPO = imageRpoCode || 'default';
 
-                        td.innerHTML = `
-                            <img id="sample" 
-                                 src="../../img/extColors/${finalImageSrcRPO}.webp" 
-                                 alt="Color Code: ${finalImageSrcRPO}" 
-                                 width="20" height="20" 
-                                 data-fallback="../../img/extColors/default.webp">
-                            ${cellValue || 'N/A'}
-                        `;
+                        const img = document.createElement('img');
+                        img.id = 'sample';
+                        img.src = `../../img/extColors/${finalImageSrcRPO}.webp`;
+                        img.alt = `Color Code: ${finalImageSrcRPO}`;
+                        img.width = 20;
+                        img.height = 20;
+                        img.setAttribute('data-fallback', '../../img/extColors/default.webp');
+
+                        td.appendChild(img);
+                        td.appendChild(document.createTextNode(` ${displayColorName || 'N/A'}`));
                     } 
                     // 3. MSRP Logic
                     else if (col.toUpperCase() === 'MSRP') {

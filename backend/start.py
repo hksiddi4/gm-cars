@@ -115,77 +115,675 @@ def format_percent(count, total):
 
 OLLAMA_URL = "http://192.168.1.126:11434/api/generate"
 AI_MODEL = "qwen2.5-coder:7b"
+AI_SQL_CACHE = {}
+AI_SQL_CACHE_TTL = 3600
 
-# Cleaned, tightly-formatted schema context
-DB_SCHEMA_CONTEXT = """You are a MySQL database assistant for GM vehicle build counts. Output ONLY a single valid raw MySQL SELECT statement. No markdown, no backticks around the query, no trailing semicolon, no explanations.
+VEHICLE_SELECT_SQL = (
+    "SELECT v.vin AS `VIN`, v.modelYear AS `Year`, v.model AS `Model`, "
+    "v.body AS `Body`, v.trim AS `Trim`, e.engine_type AS `Engine`, "
+    "t.transmission_type AS `Trans`, d.drivetrain_type AS `Drivetrain`, "
+    "c.color_name AS `Exterior_Color`, v.msrp AS `MSRP`, "
+    "IFNULL((SELECT GROUP_CONCAT(se.special_desc) FROM SpecialEditions se WHERE se.vehicle_id = v.vehicle_id), '') AS `Package_Option`, "
+    "o.country AS `Country`"
+)
 
-Schema:
-Colors (color_id, color_name, rpo_code)
-Dealers (dealer_id, dealer_name, location, sitedealer_code)
-Drivetrains (drivetrain_id, drivetrain_type)
-Engines (engine_id, engine_type, engine_rpo)
-MMC_Codes (mmc_code_id, mmc_code)
-Orders (order_id, order_number, creation_date, mmc_code_id, sell_source, country)
+VEHICLE_BASE_JOINS_SQL = (
+    "FROM Vehicles v\n"
+    "LEFT JOIN Colors c ON v.color_id = c.color_id\n"
+    "LEFT JOIN Engines e ON v.engine_id = e.engine_id\n"
+    "LEFT JOIN Transmissions t ON v.transmission_id = t.transmission_id\n"
+    "LEFT JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id\n"
+    "LEFT JOIN Orders o ON v.order_id = o.order_id"
+)
+
+# Compact, fast-decode schema context for Ollama fallback
+DB_SCHEMA_CONTEXT = """You are a MySQL query generator for GM vehicle build counts.
+Output ONLY raw SQL on a single line. No markdown, no backticks around the query, no semicolon, no explanation.
+- For vehicle listing queries, output ONLY: WHERE <conditions> (the SELECT and LEFT JOINs are added automatically).
+- For count queries ("how many..."), output: SELECT COUNT(*) AS `Count` FROM Vehicles v <needed LEFT JOINs> WHERE <conditions>
+- For DISTINCT column queries, output: SELECT DISTINCT <columns> FROM Vehicles v <needed LEFT JOINs> WHERE <conditions> LIMIT 500
+
+Aliases & Tables:
+v = Vehicles (vehicle_id, vin, modelYear, model, body, trim, engine_id, transmission_id, drivetrain_id, color_id, msrp, dealer_id, order_id)
+c = Colors (color_id, color_name, rpo_code)
+e = Engines (engine_id, engine_type, engine_rpo)
+t = Transmissions (transmission_id, transmission_type)
+d = Drivetrains (drivetrain_id, drivetrain_type)
+dealer = Dealers (dealer_id, dealer_name, location, sitedealer_code)
+o = Orders (order_id, order_number, creation_date, mmc_code_id, sell_source, country)
+m = MMC_Codes (mmc_code_id, mmc_code)
 SpecialEditions (special_id, vehicle_id, special_desc)
-Transmissions (transmission_id, transmission_type)
-Vehicles (vehicle_id, vin, modelYear, model, body, trim, engine_id, transmission_id, drivetrain_id, color_id, msrp, dealer_id, order_id)
+Options (option_id, vehicle_id, option_code)
 
-Known Values & Mapping Rules:
-1. ONLY output a single SELECT query. Do NOT append a semicolon.
-2. Default SELECT layout when returning vehicle rows (use these exact column aliases):
-   SELECT v.vin AS `VIN`, v.modelYear AS `Year`, v.model AS `Model`, v.body AS `Body`, v.trim AS `Trim`, e.engine_type AS `Engine`, t.transmission_type AS `Trans`, d.drivetrain_type AS `Drivetrain`, c.color_name AS `Exterior_Color`, v.msrp AS `MSRP`, IFNULL((SELECT GROUP_CONCAT(se.special_desc) FROM SpecialEditions se WHERE se.vehicle_id = v.vehicle_id), '') AS `Package_Option`, o.country AS `Country`
-   - If the user asks "how many" or for a count, use `SELECT COUNT(*) AS `Count` ...` (without LIMIT 500).
-   - If the user explicitly asks for `DISTINCT` specific columns, select only those columns with `SELECT DISTINCT ...`.
-3. ALWAYS use `LEFT JOIN` for all table relationships:
-   - LEFT JOIN Colors c ON v.color_id = c.color_id
-   - LEFT JOIN Engines e ON v.engine_id = e.engine_id
-   - LEFT JOIN Transmissions t ON v.transmission_id = t.transmission_id
-   - LEFT JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id
-   - LEFT JOIN Dealers dealer ON v.dealer_id = dealer.dealer_id
-   - LEFT JOIN Orders o ON v.order_id = o.order_id
-   - LEFT JOIN MMC_Codes m ON o.mmc_code_id = m.mmc_code_id
-4. Do NOT join SpecialEditions in the FROM clause. NEVER use GROUP BY unless aggregating counts.
-5. Append `LIMIT 500` on non-aggregate queries.
-6. Model Year (`v.modelYear`): ALWAYS filter 4-digit years explicitly (e.g., `v.modelYear = 2022`). Never ignore the year.
-7. Models (`v.model`): Values are UPPERCASE.
-   - Exact models: 'CAMARO', 'CT4', 'CT5', 'CT6', 'ESCALADE', 'ESCALADE IQ', 'HUMMER EV SUV', 'HUMMER EV PICKUP', 'SIERRA EV', 'SILVERADO EV'.
-   - Corvette variants: 'CORVETTE STINGRAY', 'CORVETTE Z06', 'CORVETTE E-RAY', 'CORVETTE ZR1', 'CORVETTE ZR1X', 'CORVETTE GRAND SPORT'. Use `v.model LIKE 'CORVETTE%'` ONLY when the user says "Corvette" without a specific variant; use `v.model = 'CORVETTE Z06'`, `v.model = 'CORVETTE ZR1'`, etc. when a variant is specified.
-   - NEVER use `CORVETTE` when the user asks for Camaro, CT4, CT5, Escalade, Hummer, etc.
-8. Trims (`v.trim`): Store ONLY the trim level (e.g., '1LS', '1LT', '2LT', '3LT', '1SS', '2SS', 'ZL1', 'LT1', '1LZ', '2LZ', '3LZ', 'V-SERIES', 'V-SERIES BLACKWING', 'LUXURY', 'PREMIUM LUXURY', 'SPORT', '3X').
-   - NEVER combine trim + package + transmission into `v.trim` (e.g., for "2SS 1LE A10", `v.trim = '2SS'`, `t.transmission_type = 'A10'`, and `1LE` goes in `SpecialEditions`).
-   - "CT5V Blackwing" / "CT5-V Blackwing" => `v.model = 'CT5' AND v.trim = 'V-SERIES BLACKWING'`.
-   - "CT4V Blackwing" / "CT4-V Blackwing" => `v.model = 'CT4' AND v.trim = 'V-SERIES BLACKWING'`.
-9. Transmissions (`t.transmission_type`): Short codes like 'A10', 'A8', 'M6', 'M7'.
-   - Specific code (e.g., A10, M6, A8): `t.transmission_type = 'A10'`.
-   - Generic "automatic": `t.transmission_type LIKE 'A%'`. Generic "manual": `t.transmission_type LIKE 'M%'`.
-10. Drivetrains (`d.drivetrain_type`): 'RWD', 'AWD', '4WD'. Body (`v.body`): 'COUPE', 'CONVERTIBLE', 'SEDAN', 'SUV'. Country (`o.country`): 'USA', 'CANADA', 'MEXICO'.
-11. Colors (`c.color_name`): Uppercase, use `LIKE` (e.g., `c.color_name LIKE '%SUMMIT WHITE%'`, `c.color_name LIKE '%BLUE%'`). For "matte" or "frost" paint, use `(c.color_name LIKE '%MATTE%' OR c.color_name LIKE '%FROST%')`.
-12. Packages & Special Editions (`SpecialEditions`): NEVER put packages in `v.trim`. ALWAYS filter using:
-    `EXISTS (SELECT 1 FROM SpecialEditions se WHERE se.vehicle_id = v.vehicle_id AND se.special_desc LIKE '%Keyword%')`
-    Keywords: '1LE', 'Collectors Edition', 'Garage 56', 'Hendrick', 'Indy 500', 'Redline', 'Shock and Steel', 'C8.R', 'ZTK', 'Z07', 'Z51', 'Z52', 'Grand Sport Launch', '70th Anniversary', 'Stars & Steel', 'Quail Silver', 'Watkins Glen', 'Sebring', 'Road Atlanta', 'Arrival Edition', 'Impact Edition', 'Elevation Edition', '120th Anniversary', '20th Anniversary', 'Petit Pataud', 'Le Monstre', 'Precision Package', 'Deep Ocean', 'Curated by Cadillac', 'Omega Edition', 'Extreme Off-Road', 'Pre-Production', 'Show Vehicle'.
+Rules:
+1. Year: `v.modelYear = 2022`.
+2. Model (`v.model`): 'CAMARO', 'CT4', 'CT5', 'CT6', 'ESCALADE', 'ESCALADE IQ', 'HUMMER EV SUV', 'HUMMER EV PICKUP', 'SIERRA EV', 'SILVERADO EV', 'CORVETTE STINGRAY', 'CORVETTE Z06', 'CORVETTE E-RAY', 'CORVETTE ZR1', 'CORVETTE ZR1X', 'CORVETTE GRAND SPORT'. Use `v.model LIKE 'CORVETTE%'` ONLY for generic Corvette requests.
+3. Trim (`v.trim`): ONLY the trim ('1LS', '1LT', '2LT', '3LT', '1SS', '2SS', 'ZL1', 'LT1', '1LZ', '2LZ', '3LZ', 'V-SERIES', 'V-SERIES BLACKWING', 'LUXURY', 'PREMIUM LUXURY', 'SPORT', '3X'). Never put packages (1LE, Z51) or transmissions (A10, M6) in `v.trim`. "CT5V Blackwing" => `v.model = 'CT5' AND v.trim = 'V-SERIES BLACKWING'`.
+4. Transmission (`t.transmission_type`): 'A10', 'A8', 'M6', 'M7', or `LIKE 'A%'` (automatic), `LIKE 'M%'` (manual).
+5. Drivetrain (`d.drivetrain_type`): 'RWD', 'AWD', '4WD'. Body (`v.body`): 'COUPE', 'CONVERTIBLE', 'SEDAN', 'SUV'. Country (`o.country`): 'USA', 'CANADA', 'MEXICO'.
+6. Color (`c.color_name`): `c.color_name LIKE '%SUMMIT WHITE%'`. Matte/frost: `(c.color_name LIKE '%MATTE%' OR c.color_name LIKE '%FROST%')`.
+7. SpecialEditions: `EXISTS (SELECT 1 FROM SpecialEditions se WHERE se.vehicle_id = v.vehicle_id AND se.special_desc LIKE '%Keyword%')`.
+8. Options (3-char RPO): `EXISTS (SELECT 1 FROM Options opt WHERE opt.vehicle_id = v.vehicle_id AND opt.option_code = 'E60')`.
 
 Examples:
 User Request: 2022 Camaro 2SS 1LE A10 in Summit White
-SQL Query: SELECT v.vin AS `VIN`, v.modelYear AS `Year`, v.model AS `Model`, v.body AS `Body`, v.trim AS `Trim`, e.engine_type AS `Engine`, t.transmission_type AS `Trans`, d.drivetrain_type AS `Drivetrain`, c.color_name AS `Exterior_Color`, v.msrp AS `MSRP`, IFNULL((SELECT GROUP_CONCAT(se.special_desc) FROM SpecialEditions se WHERE se.vehicle_id = v.vehicle_id), '') AS `Package_Option`, o.country AS `Country` FROM Vehicles v LEFT JOIN Colors c ON v.color_id = c.color_id LEFT JOIN Engines e ON v.engine_id = e.engine_id LEFT JOIN Transmissions t ON v.transmission_id = t.transmission_id LEFT JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id LEFT JOIN Dealers dealer ON v.dealer_id = dealer.dealer_id LEFT JOIN Orders o ON v.order_id = o.order_id WHERE v.modelYear = 2022 AND v.model = 'CAMARO' AND v.trim = '2SS' AND t.transmission_type = 'A10' AND c.color_name LIKE '%SUMMIT WHITE%' AND EXISTS (SELECT 1 FROM SpecialEditions se WHERE se.vehicle_id = v.vehicle_id AND se.special_desc LIKE '%1LE%') LIMIT 500
+SQL Query: WHERE v.modelYear = 2022 AND v.model = 'CAMARO' AND v.trim = '2SS' AND t.transmission_type = 'A10' AND c.color_name LIKE '%SUMMIT WHITE%' AND EXISTS (SELECT 1 FROM SpecialEditions se WHERE se.vehicle_id = v.vehicle_id AND se.special_desc LIKE '%1LE%')
 
 User Request: Show me all CT5V Blackwing in matte paint
-SQL Query: SELECT v.vin AS `VIN`, v.modelYear AS `Year`, v.model AS `Model`, v.body AS `Body`, v.trim AS `Trim`, e.engine_type AS `Engine`, t.transmission_type AS `Trans`, d.drivetrain_type AS `Drivetrain`, c.color_name AS `Exterior_Color`, v.msrp AS `MSRP`, IFNULL((SELECT GROUP_CONCAT(se.special_desc) FROM SpecialEditions se WHERE se.vehicle_id = v.vehicle_id), '') AS `Package_Option`, o.country AS `Country` FROM Vehicles v LEFT JOIN Colors c ON v.color_id = c.color_id LEFT JOIN Engines e ON v.engine_id = e.engine_id LEFT JOIN Transmissions t ON v.transmission_id = t.transmission_id LEFT JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id LEFT JOIN Dealers dealer ON v.dealer_id = dealer.dealer_id LEFT JOIN Orders o ON v.order_id = o.order_id WHERE v.model = 'CT5' AND v.trim = 'V-SERIES BLACKWING' AND (c.color_name LIKE '%MATTE%' OR c.color_name LIKE '%FROST%') LIMIT 500
+SQL Query: WHERE v.model = 'CT5' AND v.trim = 'V-SERIES BLACKWING' AND (c.color_name LIKE '%MATTE%' OR c.color_name LIKE '%FROST%')
 
 User Request: How many green Corvette ZR1s are there
 SQL Query: SELECT COUNT(*) AS `Count` FROM Vehicles v LEFT JOIN Colors c ON v.color_id = c.color_id WHERE v.model = 'CORVETTE ZR1' AND c.color_name LIKE '%GREEN%'
-
-User Request: Show me all CT4 or CT5s that have "N5RW" in the VIN
-SQL Query: SELECT v.vin AS `VIN`, v.modelYear AS `Year`, v.model AS `Model`, v.body AS `Body`, v.trim AS `Trim`, e.engine_type AS `Engine`, t.transmission_type AS `Trans`, d.drivetrain_type AS `Drivetrain`, c.color_name AS `Exterior_Color`, v.msrp AS `MSRP`, IFNULL((SELECT GROUP_CONCAT(se.special_desc) FROM SpecialEditions se WHERE se.vehicle_id = v.vehicle_id), '') AS `Package_Option`, o.country AS `Country` FROM Vehicles v LEFT JOIN Colors c ON v.color_id = c.color_id LEFT JOIN Engines e ON v.engine_id = e.engine_id LEFT JOIN Transmissions t ON v.transmission_id = t.transmission_id LEFT JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id LEFT JOIN Dealers dealer ON v.dealer_id = dealer.dealer_id LEFT JOIN Orders o ON v.order_id = o.order_id WHERE v.model IN ('CT4', 'CT5') AND v.vin LIKE '%N5RW%' LIMIT 500
 """
 
-def sanitize_ai_sql(raw_sql):
-    """Extract and clean a single SELECT statement from LLM output."""
-    text = (raw_sql or '').strip()
+SPECIAL_EDITION_PATTERNS = [
+    (r"\bcurated\s+by\s+cadillac\b|\bwox\b", "Curated by Cadillac", None),
+    (r"\bcollector'?s?\s+edition\b", "Collectors Edition", None),
+    (r"\bgarage\s*56(?:\s+special\s+edition)?\b", "Garage 56", None),
+    (r"\bhertz\b|\bhendrick(?:\s+motorsports)?(?:\s+edition)?\b", "Hendrick", None),
+    (r"\b2026\s+indianapolis\s+500\b|\bindy\s*500\s+festival\b", "2026 Indianapolis 500 Festival Vehicle", None),
+    (r"\bindy\s*500\s+pace\s+car\b", None, "Z4Z"),
+    (r"\bredline(?:\s+edition)?\b", None, "WBL"),
+    (r"\bshock\s+(?:and|&)\s+steel(?:\s+edition)?\b", None, "B2E"),
+    (r"\bc8\.?r(?:\s+edition)?\b|\bimsa\s+gtlm\b", "C8.R", None),
+    (r"\bztk(?:\s+track)?(?:\s+performance)?(?:\s+package)?\b", "ZTK", None),
+    (r"\bz07(?:\s+performance)?(?:\s+package)?\b", "Z07", None),
+    (r"\bz51(?:\s+performance)?(?:\s+package)?\b", "Z51", None),
+    (r"\bz52\s+sport\b", "Z52 Sport", None),
+    (r"\bz52\s+track\b", "Z52 Track", None),
+    (r"\bz52\b", "Z52", None),
+    (r"\bgrand\s+sport\s+launch(?:\s+edition)?\b", "Grand Sport Launch", None),
+    (r"\b70th\s+anniversary(?:\s+edition)?\b", "70th Anniversary", None),
+    (r"\bstars\s+(?:and|&)\s+steel(?:\s+limited)?(?:\s+edition)?\b", "Stars & Steel", None),
+    (r"\bquail\s+silver(?:\s+limited)?(?:\s+edition)?\b", "Quail Silver", None),
+    (r"\bwatkins\s+glen(?:\s+imsa)?(?:\s+edition)?\b", "Watkins Glen", None),
+    (r"\bsebring\s+imsa(?:\s+edition)?\b", "Sebring IMSA", None),
+    (r"\broad\s+atlanta(?:\s+imsa)?(?:\s+edition)?\b", "Road Atlanta", None),
+    (r"\barrival\s+edition\b", "Arrival Edition", None),
+    (r"\bimpact\s+edition\b", "Impact Edition", None),
+    (r"\belevation\s+edition\b", "Elevation Edition", None),
+    (r"\bpetit\s+pataud(?:\s+special)?(?:\s+edition)?\b", "Petit Pataud", None),
+    (r"\ble\s+monstre(?:\s+special)?(?:\s+edition)?\b", "Le Monstre", None),
+    (r"\b120th\s+anniversary(?:\s+edition)?\b", "120th Anniversary", None),
+    (r"\b20th\s+anniversary(?:\s+of\s+v-series)?(?:\s+special)?(?:\s+edition)?\b", "20th Anniversary", None),
+    (r"\bprecision\s+package\b", "Precision Package", None),
+    (r"\bdeep\s+ocean\s+appearance(?:\s+package)?\b", "Deep Ocean Appearance", None),
+    (r"\bomega\s+edition\b", "Omega Edition", None),
+    (r"\bextreme\s+off[\s-]*road(?:\s+package)?\b", "Extreme Off-Road", None),
+    (r"\bpre[\s-]*production(?:\s+vehicle)?\b", "Pre-Production Vehicle", None),
+    (r"\bshow\s+vehicle\b", "Show Vehicle", None),
+    (r"\bfront\s+lift\b", None, "E60"),
+    (r"\b1le(?:\s+extreme)?(?:\s+track)?(?:\s+performance)?(?:\s+package)?\b", "1LE", None),
+]
+
+SPECIFIC_COLOR_PHRASES = [
+    "PANTHER BLACK MATTE", "PANTHER BLACK METALLIC TINTCOAT", "WHITE PEARL METALLIC TRICOAT",
+    "LONG BEACH RED METALLIC TINTCOAT", "CORVETTE RACING YELLOW TINTCOAT", "SATIN STEEL GRAY METALLIC",
+    "CERAMIC MATRIX GRAY METALLIC", "ACCELERATE YELLOW METALLIC", "COMPETITION YELLOW TINTCOAT",
+    "ELKHART LAKE BLUE METALLIC", "MAGNUS GRAY MATTE METALLIC", "RED MIST METALLIC TINTCOAT",
+    "WATKINS GLEN GRAY METALLIC", "ZEPHYR BLUE MATTE METALLIC", "AMPLIFY ORANGE TINTCOAT",
+    "HYPERSONIC GRAY METALLIC", "HYSTERIA PURPLE METALLIC", "MANHATTAN NOIR METALLIC",
+    "MERCURY SILVER METALLIC", "MIDNIGHT STEEL METALLIC", "RADIANT SILVER METALLIC",
+    "RIVERSIDE BLUE METALLIC", "SEBRING ORANGE TINTCOAT", "STELLAR BLACK METALLIC",
+    "ARGENT SILVER METALLIC", "BLACK DIAMOND TRICOAT", "BLADE SILVER METALLIC",
+    "BLAZE ORANGE METALLIC", "CARBON FLASH METALLIC", "COASTAL BLUE METALLIC",
+    "CRYSTAL WHITE TRICOAT", "CYBER YELLOW METALLIC", "DARK MOON METALLIC",
+    "DEEP AMETHYST METALLIC", "EMERALD ISLE METALLIC", "GARNET RED TINTCOAT",
+    "MIDNIGHT SKY METALLIC", "MOONSHOT GREEN MATTE", "MOSAIC BLACK METALLIC",
+    "NITRO YELLOW METALLIC", "RADIANT RED TINTCOAT", "RALLY GREEN METALLIC",
+    "RED HORIZON TINTCOAT", "RED OBSESSION TINTCOAT", "RIPTIDE BLUE METALLIC",
+    "ROSWELL GREEN METALLIC", "ROYAL SPICE METALLIC", "SATIN STEEL METALLIC",
+    "SEA WOLF GRAY TRICOAT", "SHADOW GRAY METALLIC", "SILVER FLARE METALLIC",
+    "VIBRANT WHITE TRICOAT", "VIVID ORANGE METALLIC", "WILD CHERRY TINTCOAT",
+    "ZEUS BRONZE METALLIC", "ADMIRAL BLUE METALLIC", "AFTERBURNER TINTCOAT",
+    "BARBED WIRE METALLIC", "BLACK CHERRY TINTCOAT", "BLADE SILVER MATTE",
+    "BLUE SMOKE METALLIC", "BOYSENBERRY METALLIC", "BRONZE DUNE METALLIC",
+    "CARNELLIAN METALLIC", "CARNELIAN METALLIC", "DARK EMBER TINTCOAT",
+    "DARK EMERALD FROST", "DEEP AURORA METALLIC", "DEEP OCEAN METALLIC",
+    "DEEP OCEAN TINTCOAT", "DEEP SPACE METALLIC", "GALACTIC GRAY METALLIC",
+    "GRAPHITE BLUE METALLIC", "INTERSTELLAR WHITE", "KINGFISHER METALLIC",
+    "LIQUID STEEL TRICOAT", "MAGNUS METAL FROST", "MANHATTAN METALLIC",
+    "MAVERICK NOIR FROST", "METEORITE METALLIC", "MIDNIGHT STEEL FROST",
+    "NEPTUNE BLUE MATTE", "PITCH GRAY METALLIC", "POLAR WHITE TRICOAT",
+    "SILVER ICE METALLIC", "SLATE GRAY METALLIC", "SUPERNOVA METALLIC",
+    "ARC BLUE METALLIC", "BARBED WIRE FROST", "BLACK RAVEN FROST",
+    "BLUE GLO METALLIC", "CAFFEINE METALLIC", "CELESTIAL METALLIC",
+    "DEEP SEA METALLIC", "EVERGREEN METALLIC", "FITZ GRAY TRICOAT",
+    "HYDRANGEA METALLIC", "INFRARED TINTCOAT", "SEA WOLF TRICOAT",
+    "SHARKSKIN METALLIC", "SHIBORI METALLIC", "THUNDER METALLIC",
+    "THUNDERSTORM GRAY", "TYPHOON METALLIC", "VERMILLION METALLIC",
+    "AMPLIFY ORANGE", "SEBRING ORANGE", "HABANERO ORANGE", "MONARCH ORANGE",
+    "SOLAR ORANGE", "SUMMIT WHITE", "ARCTIC WHITE", "ABALONE WHITE",
+    "WHITE SANDS", "DEEP NOIR FROST", "ARC BLUE FROST", "ROSE GOLD FROST",
+    "SHIBORI FROST", "ADOBE FROST", "MOONLIGHT MATTE", "KOMODO METALLIC",
+    "GARNET METALLIC", "SHADOW METALLIC", "VIXEN METALLIC", "WILDER METALLIC",
+    "DRIFT METALLIC", "FLARE METALLIC", "LATTE METALLIC", "LUNA METALLIC",
+    "MAUI METALLIC", "MOSS METALLIC", "TIDE METALLIC", "WAVE METALLIC",
+    "RIFT METALLIC", "CAROLINA BLUE", "ELECTRIC BLUE", "RAPID BLUE",
+    "BLACK RAVEN", "ONYX BLACK", "VOID BLACK", "TORCH RED", "VELOCITY RED",
+    "RED HOT", "CACTI GREEN", "CASPIA TRICOAT", "SIKU TRICOAT",
+    "MAVERICK NOIR", "AEGEAN STONE", "SANDSTONE", "SHIBORI", "CAYMAN",
+    "LAGOON", "PLUTO", "VENOM", "CRUSH", "SHOCK"
+]
+
+GENERIC_COLOR_WORDS = [
+    "WHITE", "BLACK", "BLUE", "RED", "GREEN", "ORANGE", "YELLOW",
+    "GRAY", "GREY", "SILVER", "PURPLE", "BRONZE", "BROWN", "GOLD"
+]
+
+DISTINCT_COLUMN_MAP = {
+    "vin": ("v.vin AS `VIN`", "v"),
+    "year": ("v.modelYear AS `Year`", "v"),
+    "modelyear": ("v.modelYear AS `Year`", "v"),
+    "model": ("v.model AS `Model`", "v"),
+    "body": ("v.body AS `Body`", "v"),
+    "trim": ("v.trim AS `Trim`", "v"),
+    "engine": ("e.engine_type AS `Engine`", "e"),
+    "trans": ("t.transmission_type AS `Trans`", "t"),
+    "transmission": ("t.transmission_type AS `Trans`", "t"),
+    "drivetrain": ("d.drivetrain_type AS `Drivetrain`", "d"),
+    "color": ("c.color_name AS `Exterior_Color`", "c"),
+    "exterior_color": ("c.color_name AS `Exterior_Color`", "c"),
+    "msrp": ("v.msrp AS `MSRP`", "v"),
+    "country": ("o.country AS `Country`", "o"),
+    "dealer": ("dealer.dealer_name AS `Dealer`", "dealer"),
+}
+
+QUERY_STOPWORDS = {
+    "show", "me", "all", "the", "cars", "car", "vehicles", "vehicle", "built",
+    "made", "produced", "with", "in", "and", "or", "that", "which", "have",
+    "has", "are", "is", "were", "was", "there", "find", "list", "get", "fetch",
+    "give", "for", "of", "from", "a", "an", "to", "on", "at", "by", "paint",
+    "painted", "color", "colored", "exterior", "package", "packages", "edition",
+    "editions", "special", "option", "options", "transmission", "trans", "trim",
+    "model", "models", "year", "years", "only", "return", "values", "value",
+    "distinct", "unique", "vin", "vins", "how", "many", "count", "total",
+    "number", "cadillac", "chevrolet", "chevy", "gmc", "gm", "series"
+}
+
+
+def build_full_vehicle_sql(where_clause, order_by_clause="", limit=500):
+    """Assemble the canonical 12-column vehicle query with only needed extra joins."""
+    where_clean = (where_clause or "").strip()
+    if where_clean and not re.match(r"^WHERE\b", where_clean, re.IGNORECASE):
+        where_clean = f"WHERE {where_clean}"
+    joins = [VEHICLE_BASE_JOINS_SQL]
+    combined = f"{where_clean} {order_by_clause}"
+    if re.search(r"\bdealer\.", combined, re.IGNORECASE):
+        joins.append("LEFT JOIN Dealers dealer ON v.dealer_id = dealer.dealer_id")
+    if re.search(r"\bm\.", combined, re.IGNORECASE):
+        joins.append("LEFT JOIN MMC_Codes m ON o.mmc_code_id = m.mmc_code_id")
+    parts = [VEHICLE_SELECT_SQL, "\n".join(joins)]
+    if where_clean:
+        parts.append(where_clean)
+    if order_by_clause:
+        parts.append(order_by_clause.strip())
+    if limit:
+        parts.append(f"LIMIT {int(limit)}")
+    return "\n".join(parts)
+
+
+def parse_nl_query_intent(user_prompt):
+    """
+    Extract exact database conditions from a natural language query.
+    Returns a dict with:
+      - conditions: list of SQL WHERE predicates
+      - mode: 'vehicles' | 'count' | 'distinct'
+      - distinct_cols: list of (select_expr, table_alias)
+      - order_by: optional ORDER BY clause
+      - is_complete: True if 100% of non-stopword tokens in the prompt were matched
+      - summary_hints: human-readable SQL hints for LLM fallback
+    """
+    raw = (user_prompt or "").strip()
+    consumed = [False] * len(raw)
+
+    def mark_span(start, end):
+        for i in range(max(0, start), min(len(raw), end)):
+            consumed[i] = True
+
+    def span_free(start, end):
+        return not any(consumed[i] for i in range(max(0, start), min(len(raw), end)))
+
+    conditions = []
+    models_found = []
+    trims_found = []
+    years_found = []
+    order_by = ""
+
+    # 1. Detect query mode (count vs distinct vs vehicle list)
+    mode = "vehicles"
+    distinct_cols = []
+
+    for m in re.finditer(r"\b(?:how\s+many|total\s+number\s+of|count\s+of)\b", raw, re.IGNORECASE):
+        mode = "count"
+        mark_span(*m.span())
+
+    distinct_match = re.search(
+        r"\b(?:return\s+(?:only\s+)?(?:the\s+)?)?(?:distinct|unique)\s+(?:values?\s+for\s+)?([a-z0-9_,\s]+?)(?:$|\.)",
+        raw, re.IGNORECASE
+    )
+    if distinct_match:
+        col_text = distinct_match.group(1)
+        parsed_cols = []
+        for token in re.findall(r"[a-zA-Z_]+", col_text.lower()):
+            if token in ("and", "or", "the", "for", "of"):
+                continue
+            if token in DISTINCT_COLUMN_MAP and DISTINCT_COLUMN_MAP[token] not in parsed_cols:
+                parsed_cols.append(DISTINCT_COLUMN_MAP[token])
+        if parsed_cols:
+            mode = "distinct"
+            distinct_cols = parsed_cols
+            mark_span(*distinct_match.span())
+
+    # 2. Detect VIN exact or substring matches (e.g., have "N5RW" in the VIN)
+    for m in re.finditer(r"\b([A-HJ-NPR-Z0-9]{17})\b", raw, re.IGNORECASE):
+        if span_free(*m.span()):
+            vin_val = m.group(1).upper()
+            conditions.append(f"v.vin = '{vin_val}'")
+            mark_span(*m.span())
+
+    vin_sub_patterns = [
+        r'(?:have|has|with|containing|contains|like)\s+["\']([A-Za-z0-9]{2,17})["\']\s+(?:in\s+(?:the\s+)?vin)',
+        r'vin\s+(?:containing|contains|with|like|having)\s+["\']?([A-Za-z0-9]{2,17})["\']?',
+        r'["\']([A-Za-z0-9]{3,16})["\']\s+in\s+(?:the\s+)?vin',
+    ]
+    for pat in vin_sub_patterns:
+        for m in re.finditer(pat, raw, re.IGNORECASE):
+            if span_free(*m.span()):
+                sub = m.group(1).upper()
+                conditions.append(f"v.vin LIKE '%{sub}%'")
+                mark_span(*m.span())
+
+    # 3. Detect Year ranges and individual 4-digit years
+    for m in re.finditer(r"\b(?:between\s+)?(20[12]\d)\s*(?:to|through|and|-)\s*(20[12]\d)\b", raw, re.IGNORECASE):
+        if span_free(*m.span()):
+            y1, y2 = int(m.group(1)), int(m.group(2))
+            conditions.append(f"v.modelYear BETWEEN {min(y1, y2)} AND {max(y1, y2)}")
+            mark_span(*m.span())
+
+    for m in re.finditer(r"\b(20[12]\d)\b", raw):
+        if span_free(*m.span()):
+            # Avoid matching "2026 Indianapolis 500" as modelYear if part of Indy 500 festival phrase
+            after = raw[m.end():m.end() + 20].lower()
+            if after.startswith(" indianapolis 500") or after.startswith(" indy 500"):
+                continue
+            years_found.append(int(m.group(1)))
+            mark_span(*m.span())
+    if len(years_found) == 1:
+        conditions.append(f"v.modelYear = {years_found[0]}")
+    elif len(years_found) > 1:
+        yr_list = ", ".join(str(y) for y in sorted(set(years_found)))
+        conditions.append(f"v.modelYear IN ({yr_list})")
+
+    # 4. Detect Special Editions & RPO packages before models/trims so multi-word names don't collide
+    special_conditions = []
+    has_1le = False
+    for pat, se_desc, rpo_code in SPECIAL_EDITION_PATTERNS:
+        for m in re.finditer(pat, raw, re.IGNORECASE):
+            if span_free(*m.span()):
+                if se_desc == "1LE":
+                    has_1le = True
+                elif se_desc:
+                    special_conditions.append(
+                        f"EXISTS (SELECT 1 FROM SpecialEditions se WHERE se.vehicle_id = v.vehicle_id AND se.special_desc LIKE '%{se_desc}%')"
+                    )
+                elif rpo_code:
+                    special_conditions.append(
+                        f"EXISTS (SELECT 1 FROM Options opt WHERE opt.vehicle_id = v.vehicle_id AND opt.option_code = '{rpo_code}')"
+                    )
+                mark_span(*m.span())
+
+    # Explicit "RPO <3-char>" or "option <3-char>"
+    for m in re.finditer(r"\b(?:rpo|option\s+code|option)\s+([A-Z0-9]{3})\b", raw, re.IGNORECASE):
+        if span_free(*m.span()):
+            code = m.group(1).upper()
+            special_conditions.append(
+                f"EXISTS (SELECT 1 FROM Options opt WHERE opt.vehicle_id = v.vehicle_id AND opt.option_code = '{code}')"
+            )
+            mark_span(*m.span())
+
+    # 5. Detect Combined Model+Trim & Models
+    combined_model_trim_patterns = [
+        (r"\bct5[\s-]*v(?:\s*-?\s*series)?\s+blackwing(?:s)?\b|\bct5\s+blackwing(?:s)?\b", "CT5", "V-SERIES BLACKWING"),
+        (r"\bct4[\s-]*v(?:\s*-?\s*series)?\s+blackwing(?:s)?\b|\bct4\s+blackwing(?:s)?\b", "CT4", "V-SERIES BLACKWING"),
+        (r"\bct5[\s-]*v(?:\s*-?\s*series)?\b", "CT5", "V-SERIES"),
+        (r"\bct4[\s-]*v(?:\s*-?\s*series)?\b", "CT4", "V-SERIES"),
+        (r"\bct6[\s-]*v(?:\s*-?\s*series)?\b", "CT6", "V-SERIES"),
+    ]
+    for pat, mdl, trm in combined_model_trim_patterns:
+        for m in re.finditer(pat, raw, re.IGNORECASE):
+            if span_free(*m.span()):
+                if mdl not in models_found:
+                    models_found.append(mdl)
+                if trm not in trims_found:
+                    trims_found.append(trm)
+                mark_span(*m.span())
+
+    model_patterns = [
+        (r"\b(?:corvette\s+)?zr1x(?:s)?\b", "exact", "CORVETTE ZR1X"),
+        (r"\b(?:corvette(?:s)?\s+)?zr1(?:s)?\b", "exact", "CORVETTE ZR1"),
+        (r"\b(?:corvette(?:s)?\s+)?z06(?:s)?\b", "exact", "CORVETTE Z06"),
+        (r"\b(?:corvette(?:s)?\s+)?e[\s-]*ray(?:s)?\b", "exact", "CORVETTE E-RAY"),
+        (r"\b(?:corvette\s+)?grand\s+sport\s+x\b", "exact", "CORVETTE GRAND SPORT X"),
+        (r"\b(?:corvette\s+)?grand\s+sport(?:s)?\b", "cond", "v.model LIKE 'CORVETTE GRAND SPORT%'"),
+        (r"\b(?:corvette\s+)?stingray(?:s)?\b", "cond", "v.model LIKE 'CORVETTE STINGRAY%'"),
+        (r"\bc8\s+corvette(?:s)?\b|\bcorvette(?:s)?\s+c8\b|\bc8s?\b", "cond", "(v.model LIKE 'CORVETTE%' AND v.modelYear >= 2020)"),
+        (r"\bc7\s+corvette(?:s)?\b|\bcorvette(?:s)?\s+c7\b|\bc7s?\b", "cond", "(v.model LIKE 'CORVETTE%' AND v.modelYear <= 2019)"),
+        (r"\bcorvette(?:s)?\b", "cond", "v.model LIKE 'CORVETTE%'"),
+        (r"\bescalade\s+iql\b", "exact", "ESCALADE IQL"),
+        (r"\bescalade\s+iq\b", "exact", "ESCALADE IQ"),
+        (r"\bescalade(?:s)?\b", "exact", "ESCALADE"),
+        (r"\bhummer(?:\s+ev)?\s+suv(?:s)?\b", "exact", "HUMMER EV SUV"),
+        (r"\bhummer(?:\s+ev)?\s+(?:pickup|truck|sut)(?:s)?\b", "exact", "HUMMER EV PICKUP"),
+        (r"\bhummer(?:\s+ev)?(?:s)?\b", "cond", "v.model IN ('HUMMER EV SUV', 'HUMMER EV PICKUP')"),
+        (r"\bsierra\s+ev(?:s)?\b", "exact", "SIERRA EV"),
+        (r"\bsilverado\s+ev(?:s)?\b", "exact", "SILVERADO EV"),
+        (r"\bcamaro(?:s)?\b", "exact", "CAMARO"),
+        (r"\bct4(?:s)?\b", "exact", "CT4"),
+        (r"\bct5(?:s)?\b", "exact", "CT5"),
+        (r"\bct6(?:s)?\b", "exact", "CT6"),
+    ]
+    model_conds = []
+    for pat, kind, val in model_patterns:
+        for m in re.finditer(pat, raw, re.IGNORECASE):
+            if span_free(*m.span()):
+                if kind == "exact":
+                    if val not in models_found:
+                        models_found.append(val)
+                else:
+                    if val not in model_conds:
+                        model_conds.append(val)
+                mark_span(*m.span())
+
+    if len(models_found) == 1 and not model_conds:
+        conditions.append(f"v.model = '{models_found[0]}'")
+    elif len(models_found) > 1 and not model_conds:
+        m_list = ", ".join(f"'{m}'" for m in models_found)
+        conditions.append(f"v.model IN ({m_list})")
+    elif model_conds and not models_found:
+        conditions.extend(model_conds)
+    elif models_found and model_conds:
+        m_list = [f"v.model = '{m}'" for m in models_found] + model_conds
+        conditions.append("(" + " OR ".join(m_list) + ")")
+
+    # 6. Detect Trims
+    trim_patterns = [
+        (r"\bv[\s-]*series\s+blackwing\b|\bblackwing(?:s)?\b", "V-SERIES BLACKWING"),
+        (r"\bv[\s-]*series\b", "V-SERIES"),
+        (r"\bpremium\s+luxury\b", "PREMIUM LUXURY"),
+        (r"\b1ls\b", "1LS"),
+        (r"\b1lt\b", "1LT"),
+        (r"\b2lt\b", "2LT"),
+        (r"\b3lt\b", "3LT"),
+        (r"\blt1\b", "LT1"),
+        (r"\b1ss\b", "1SS"),
+        (r"\b2ss\b", "2SS"),
+        (r"\bzl1\b", "ZL1"),
+        (r"\b1lz\b", "1LZ"),
+        (r"\b2lz\b", "2LZ"),
+        (r"\b3lz\b", "3LZ"),
+        (r"\b3x\b", "3X"),
+        (r"\b2x\b", "2X"),
+    ]
+    for pat, trm in trim_patterns:
+        for m in re.finditer(pat, raw, re.IGNORECASE):
+            if span_free(*m.span()):
+                if trm not in trims_found:
+                    trims_found.append(trm)
+                mark_span(*m.span())
+
+    if len(trims_found) == 1:
+        conditions.append(f"v.trim = '{trims_found[0]}'")
+    elif len(trims_found) > 1:
+        t_list = ", ".join(f"'{t}'" for t in trims_found)
+        conditions.append(f"v.trim IN ({t_list})")
+
+    # Resolve 1LE after trims are known
+    if has_1le:
+        if "ZL1" in trims_found:
+            special_conditions.append(
+                "(EXISTS (SELECT 1 FROM SpecialEditions se WHERE se.vehicle_id = v.vehicle_id AND se.special_desc LIKE '%1LE%') "
+                "OR EXISTS (SELECT 1 FROM Options opt WHERE opt.vehicle_id = v.vehicle_id AND opt.option_code = 'A1Z'))"
+            )
+        else:
+            special_conditions.append(
+                "EXISTS (SELECT 1 FROM SpecialEditions se WHERE se.vehicle_id = v.vehicle_id AND se.special_desc LIKE '%1LE%')"
+            )
+    conditions.extend(special_conditions)
+
+    # 7. Detect Transmissions
+    trans_patterns = [
+        (r"\b(?:a10|10[\s-]*speed(?:\s+auto(?:matic)?)?)\b", "t.transmission_type = 'A10'"),
+        (r"\b(?:a8|8[\s-]*speed(?:\s+auto(?:matic)?)?)\b", "t.transmission_type = 'A8'"),
+        (r"\b(?:m6|6[\s-]*speed(?:\s+manual)?)\b", "t.transmission_type = 'M6'"),
+        (r"\b(?:m7|7[\s-]*speed(?:\s+manual)?)\b", "t.transmission_type = 'M7'"),
+        (r"\b(?:manual(?:\s+transmission|\s+trans)?|stick\s+shift|6mt|7mt)\b", "t.transmission_type LIKE 'M%'"),
+        (r"\b(?:automatic(?:\s+transmission|\s+trans)?|auto\s+trans(?:mission)?|auto)\b", "t.transmission_type LIKE 'A%'"),
+    ]
+    for pat, cond in trans_patterns:
+        for m in re.finditer(pat, raw, re.IGNORECASE):
+            if span_free(*m.span()):
+                if cond not in conditions:
+                    conditions.append(cond)
+                mark_span(*m.span())
+
+    # 8. Detect Drivetrains & Body styles & Countries
+    dt_patterns = [
+        (r"\b(?:rwd|rear[\s-]*wheel[\s-]*drive)\b", "d.drivetrain_type = 'RWD'"),
+        (r"\b(?:awd|all[\s-]*wheel[\s-]*drive)\b", "d.drivetrain_type = 'AWD'"),
+        (r"\b(?:4wd|4x4|four[\s-]*wheel[\s-]*drive)\b", "d.drivetrain_type = '4WD'"),
+    ]
+    for pat, cond in dt_patterns:
+        for m in re.finditer(pat, raw, re.IGNORECASE):
+            if span_free(*m.span()):
+                conditions.append(cond)
+                mark_span(*m.span())
+
+    body_patterns = [
+        (r"\bcoupe(?:s)?\b", "COUPE"),
+        (r"\bconvertible(?:s)?\b|\bcabriolet(?:s)?\b", "CONVERTIBLE"),
+        (r"\bsedan(?:s)?\b", "SEDAN"),
+        (r"\bsuv(?:s)?\b", "SUV"),
+    ]
+    bodies_found = []
+    for pat, bval in body_patterns:
+        for m in re.finditer(pat, raw, re.IGNORECASE):
+            if span_free(*m.span()):
+                if bval not in bodies_found:
+                    bodies_found.append(bval)
+                mark_span(*m.span())
+    if len(bodies_found) == 1:
+        conditions.append(f"v.body = '{bodies_found[0]}'")
+    elif len(bodies_found) > 1:
+        b_list = ", ".join(f"'{b}'" for b in bodies_found)
+        conditions.append(f"v.body IN ({b_list})")
+
+    country_patterns = [
+        (r"\b(?:usa|u\.s\.a\.|united\s+states|us\s+market)\b", "o.country = 'USA'"),
+        (r"\b(?:canada|canadian)\b", "o.country = 'CANADA'"),
+        (r"\b(?:mexico|mexican)\b", "o.country = 'MEXICO'"),
+    ]
+    for pat, cond in country_patterns:
+        for m in re.finditer(pat, raw, re.IGNORECASE):
+            if span_free(*m.span()):
+                conditions.append(cond)
+                mark_span(*m.span())
+
+    # 9. Detect MSRP comparisons & ordering
+    for m in re.finditer(r"\b(?:msrp\s+)?(?:over|above|greater\s+than|more\s+than)\s+\$?([\d,]+)(k)?\b", raw, re.IGNORECASE):
+        if span_free(*m.span()):
+            val = int(m.group(1).replace(",", "")) * (1000 if m.group(2) else 1)
+            conditions.append(f"v.msrp > {val}")
+            mark_span(*m.span())
+
+    for m in re.finditer(r"\b(?:msrp\s+)?(?:under|below|less\s+than)\s+\$?([\d,]+)(k)?\b", raw, re.IGNORECASE):
+        if span_free(*m.span()):
+            val = int(m.group(1).replace(",", "")) * (1000 if m.group(2) else 1)
+            conditions.append(f"v.msrp < {val}")
+            mark_span(*m.span())
+
+    for m in re.finditer(r"\b(?:most\s+expensive|highest\s+msrp|highest\s+price)\b", raw, re.IGNORECASE):
+        if span_free(*m.span()):
+            order_by = "ORDER BY v.msrp DESC"
+            mark_span(*m.span())
+
+    for m in re.finditer(r"\b(?:least\s+expensive|cheapest|lowest\s+msrp|lowest\s+price)\b", raw, re.IGNORECASE):
+        if span_free(*m.span()):
+            order_by = "ORDER BY v.msrp ASC"
+            mark_span(*m.span())
+
+    # 10. Detect Colors (specific multi-word colors first, then matte/frost, then generic color words)
+    colors_matched = []
+    for phrase in SPECIFIC_COLOR_PHRASES:
+        pat = r"\b" + re.escape(phrase) + r"\b"
+        for m in re.finditer(pat, raw, re.IGNORECASE):
+            if span_free(*m.span()):
+                colors_matched.append(phrase.upper())
+                mark_span(*m.span())
+
+    matte_frost_matched = False
+    for m in re.finditer(r"\b(?:matte|frost)(?:\s+paint|\s+finish|\s+color)?\b", raw, re.IGNORECASE):
+        if span_free(*m.span()):
+            matte_frost_matched = True
+            mark_span(*m.span())
+
+    generic_colors_matched = []
+    for cword in GENERIC_COLOR_WORDS:
+        pat = r"\b" + cword + r"\b"
+        for m in re.finditer(pat, raw, re.IGNORECASE):
+            if span_free(*m.span()):
+                norm = "GRAY" if cword == "GREY" else cword
+                if norm not in generic_colors_matched:
+                    generic_colors_matched.append(norm)
+                mark_span(*m.span())
+
+    if len(colors_matched) == 1:
+        conditions.append(f"c.color_name LIKE '%{colors_matched[0]}%'")
+    elif len(colors_matched) > 1:
+        c_or = " OR ".join(f"c.color_name LIKE '%{c}%'" for c in colors_matched)
+        conditions.append(f"({c_or})")
+
+    if matte_frost_matched:
+        conditions.append("(c.color_name LIKE '%MATTE%' OR c.color_name LIKE '%FROST%')")
+
+    if len(generic_colors_matched) == 1:
+        c = generic_colors_matched[0]
+        if c == "GRAY":
+            conditions.append("(c.color_name LIKE '%GRAY%' OR c.color_name LIKE '%GREY%')")
+        else:
+            conditions.append(f"c.color_name LIKE '%{c}%'")
+    elif len(generic_colors_matched) > 1:
+        c_or = " OR ".join(f"c.color_name LIKE '%{c}%'" for c in generic_colors_matched)
+        conditions.append(f"({c_or})")
+
+    # Check if any unrecognized non-stopword tokens remain
+    unconsumed_chars = "".join(ch if not consumed[i] else " " for i, ch in enumerate(raw))
+    leftover_tokens = [
+        tok.lower() for tok in re.findall(r"[a-zA-Z0-9]+", unconsumed_chars)
+        if tok.lower() not in QUERY_STOPWORDS
+    ]
+    is_complete = (len(leftover_tokens) == 0) and (len(conditions) > 0 or bool(order_by))
+
+    return {
+        "conditions": conditions,
+        "mode": mode,
+        "distinct_cols": distinct_cols,
+        "order_by": order_by,
+        "is_complete": is_complete,
+        "leftover_tokens": leftover_tokens,
+        "models_found": models_found,
+        "trims_found": trims_found,
+        "years_found": years_found,
+    }
+
+
+def build_sql_from_intent(intent):
+    """Construct complete SQL from a fully resolved intent dict."""
+    where_clause = "WHERE " + " AND ".join(intent["conditions"]) if intent["conditions"] else ""
+    if intent["mode"] == "count":
+        joins = []
+        if "c." in where_clause:
+            joins.append("LEFT JOIN Colors c ON v.color_id = c.color_id")
+        if "e." in where_clause:
+            joins.append("LEFT JOIN Engines e ON v.engine_id = e.engine_id")
+        if "t." in where_clause:
+            joins.append("LEFT JOIN Transmissions t ON v.transmission_id = t.transmission_id")
+        if "d." in where_clause:
+            joins.append("LEFT JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id")
+        if "o." in where_clause:
+            joins.append("LEFT JOIN Orders o ON v.order_id = o.order_id")
+        if "dealer." in where_clause:
+            joins.append("LEFT JOIN Dealers dealer ON v.dealer_id = dealer.dealer_id")
+        if "m." in where_clause:
+            if "o." not in where_clause:
+                joins.append("LEFT JOIN Orders o ON v.order_id = o.order_id")
+            joins.append("LEFT JOIN MMC_Codes m ON o.mmc_code_id = m.mmc_code_id")
+        join_sql = ("\n" + "\n".join(joins)) if joins else ""
+        return f"SELECT COUNT(*) AS `Count`\nFROM Vehicles v{join_sql}\n{where_clause}".strip()
+
+    if intent["mode"] == "distinct" and intent["distinct_cols"]:
+        select_exprs = ", ".join(expr for expr, _ in intent["distinct_cols"])
+        needed_aliases = {alias for _, alias in intent["distinct_cols"]}
+        for alias in ("c", "e", "t", "d", "o", "dealer", "m"):
+            if f"{alias}." in where_clause:
+                needed_aliases.add(alias)
+        joins = []
+        if "c" in needed_aliases:
+            joins.append("LEFT JOIN Colors c ON v.color_id = c.color_id")
+        if "e" in needed_aliases:
+            joins.append("LEFT JOIN Engines e ON v.engine_id = e.engine_id")
+        if "t" in needed_aliases:
+            joins.append("LEFT JOIN Transmissions t ON v.transmission_id = t.transmission_id")
+        if "d" in needed_aliases:
+            joins.append("LEFT JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id")
+        if "o" in needed_aliases or "m" in needed_aliases:
+            joins.append("LEFT JOIN Orders o ON v.order_id = o.order_id")
+        if "dealer" in needed_aliases:
+            joins.append("LEFT JOIN Dealers dealer ON v.dealer_id = dealer.dealer_id")
+        if "m" in needed_aliases:
+            joins.append("LEFT JOIN MMC_Codes m ON o.mmc_code_id = m.mmc_code_id")
+        join_sql = ("\n" + "\n".join(joins)) if joins else ""
+        return f"SELECT DISTINCT {select_exprs}\nFROM Vehicles v{join_sql}\n{where_clause}\nLIMIT 500".strip()
+
+    return build_full_vehicle_sql(where_clause, intent["order_by"], limit=500)
+
+
+def sanitize_and_repair_ai_sql(raw_sql, intent):
+    """Clean LLM output, expand WHERE-only responses, and repair common 7B hallucinations."""
+    text = (raw_sql or "").strip()
     fence_match = re.search(r"```(?:sql)?\s*(.*?)```", text, re.DOTALL | re.IGNORECASE)
     if fence_match:
         text = fence_match.group(1).strip()
     text = re.sub(r"^(?:SQL\s*Query|SQL)\s*:\s*", "", text, flags=re.IGNORECASE).strip()
-    return text.rstrip("; \n\t")
+    text = text.rstrip("; \n\t")
+
+    # If the model output a compact WHERE clause, expand it to full vehicle SQL
+    if re.match(r"^WHERE\b", text, re.IGNORECASE):
+        text = re.sub(r"\s+LIMIT\s+\d+\s*$", "", text, flags=re.IGNORECASE)
+        text = build_full_vehicle_sql(text, intent.get("order_by", ""), limit=500)
+
+    # Auto-repair common 7B mistakes using extracted intent
+    if intent.get("models_found"):
+        # Fix hallucinated CORVETTE% when a non-Corvette model was explicitly requested
+        non_corvette = [m for m in intent["models_found"] if not m.startswith("CORVETTE")]
+        if non_corvette and re.search(r"v\.model\s+LIKE\s+'CORVETTE%'", text, re.IGNORECASE):
+            if len(non_corvette) == 1:
+                text = re.sub(r"v\.model\s+LIKE\s+'CORVETTE%'", f"v.model = '{non_corvette[0]}'", text, flags=re.IGNORECASE)
+            else:
+                m_list = ", ".join(f"'{m}'" for m in non_corvette)
+                text = re.sub(r"v\.model\s+LIKE\s+'CORVETTE%'", f"v.model IN ({m_list})", text, flags=re.IGNORECASE)
+
+    if len(intent.get("trims_found", [])) == 1:
+        exact_trim = intent["trims_found"][0]
+        # Fix stuffed trim like v.trim LIKE '%2SS 1LE A10%'
+        text = re.sub(r"v\.trim\s+(?:LIKE|=)\s+'[^']*'", f"v.trim = '{exact_trim}'", text, flags=re.IGNORECASE)
+
+    if len(intent.get("years_found", [])) == 1 and "modelYear" not in text:
+        yr = intent["years_found"][0]
+        text = re.sub(r"\bWHERE\s+", f"WHERE v.modelYear = {yr} AND ", text, count=1, flags=re.IGNORECASE)
+
+    return text
+
 
 @app.route('/ai-query', methods=['POST'])
 def natural_language_query():
@@ -195,26 +793,46 @@ def natural_language_query():
     if not user_prompt:
         return jsonify({'error': 'No prompt provided'}), 400
 
-    system_combined_prompt = f"{DB_SCHEMA_CONTEXT}\nUser Request: {user_prompt}\nSQL Query:"
-    
-    payload = {
-        "model": AI_MODEL,
-        "prompt": system_combined_prompt,
-        "stream": False,
-        "keep_alive": -1,
-        "options": {
-            "temperature": 0.0,
-            "num_predict": 1024
-        }
-    }
+    cache_key = user_prompt.lower()
+    now = time.time()
+    cached_entry = AI_SQL_CACHE.get(cache_key)
+    if cached_entry and (now - cached_entry['time'] < AI_SQL_CACHE_TTL):
+        generated_sql = cached_entry['sql']
+    else:
+        intent = parse_nl_query_intent(user_prompt)
 
-    try:
-        response = requests.post(OLLAMA_URL, json=payload, timeout=120)
-        response.raise_for_status()
-        generated_sql = sanitize_ai_sql(response.json().get('response', ''))
-    except Exception as e:
-        app.logger.error("Failed to communicate with AI model: %s", e)
-        return jsonify({'error': 'Failed to communicate with AI model'}), 500
+        if intent["is_complete"]:
+            # Fast-path: 100% of tokens mapped to exact schema predicates (< 1ms)
+            generated_sql = build_sql_from_intent(intent)
+        else:
+            # Fallback to Ollama with pre-resolved entity hints and compact WHERE output
+            hint_block = ""
+            if intent["conditions"]:
+                hint_block = "\nMatched Filter Hints (MUST include in WHERE): " + " AND ".join(intent["conditions"])
+            system_combined_prompt = f"{DB_SCHEMA_CONTEXT}{hint_block}\nUser Request: {user_prompt}\nSQL Query:"
+
+            payload = {
+                "model": AI_MODEL,
+                "prompt": system_combined_prompt,
+                "stream": False,
+                "keep_alive": -1,
+                "options": {
+                    "temperature": 0.0,
+                    "num_ctx": 2048,
+                    "num_predict": 256,
+                    "stop": [";", "\n\n", "User Request:"]
+                }
+            }
+
+            try:
+                response = requests.post(OLLAMA_URL, json=payload, timeout=120)
+                response.raise_for_status()
+                generated_sql = sanitize_and_repair_ai_sql(response.json().get('response', ''), intent)
+            except Exception as e:
+                app.logger.error("Failed to communicate with AI model: %s", e)
+                return jsonify({'error': 'Failed to communicate with AI model'}), 500
+
+        AI_SQL_CACHE[cache_key] = {'time': now, 'sql': generated_sql}
 
     unquoted_sql = re.sub(r"'(?:\\.|''|[^'])*'", "''", generated_sql)
     destructive_pattern = re.compile(

@@ -123,7 +123,7 @@ VEHICLE_SELECT_SQL = (
     "v.body AS `Body`, v.trim AS `Trim`, e.engine_type AS `Engine`, "
     "t.transmission_type AS `Trans`, d.drivetrain_type AS `Drivetrain`, "
     "c.color_name AS `Exterior_Color`, v.msrp AS `MSRP`, "
-    "IFNULL((SELECT GROUP_CONCAT(se.special_desc) FROM SpecialEditions se WHERE se.vehicle_id = v.vehicle_id), '') AS `Package_Option`, "
+    "IFNULL((SELECT GROUP_CONCAT(se.special_desc ORDER BY se.special_desc ASC SEPARATOR ', ') FROM SpecialEditions se WHERE se.vehicle_id = v.vehicle_id), '') AS `Package/Edition`, "
     "o.country AS `Country`"
 )
 

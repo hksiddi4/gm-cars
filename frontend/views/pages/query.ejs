@@ -305,7 +305,9 @@
             columns.forEach(col => {
                 const th = document.createElement('th');
                 th.setAttribute('scope', 'col');
-                const cleanName = col.replace(/_/g, ' '); 
+                const cleanName = (col === 'Package_Option' || col === 'Package/Edition')
+                    ? 'Package/Edition'
+                    : col.replace(/_/g, ' ');
 
                 // Inject sorting logic specifically for VIN and MSRP
                 if (col.toUpperCase() === 'VIN' || col.toUpperCase() === 'MSRP') {
@@ -315,9 +317,6 @@
                     let iconHtml = '';
                     if (sortState.column === col) {
                         iconHtml = ` <i class="bi bi-chevron-${sortState.direction === 'asc' ? 'up' : 'down'}"></i>`;
-                    } else {
-                        // Invisible placeholder so the column width doesn't shift when clicked
-                        iconHtml = ` <i class="bi bi-chevron-down" style="opacity: 0.2;"></i>`;
                     }
                     
                     th.innerHTML = `${cleanName}${iconHtml}`;
@@ -351,7 +350,8 @@
                     // 1. VIN Logic
                     if (col.toUpperCase() === 'VIN' && typeof cellValue === 'string') {
                         td.style.textAlign = 'left';
-                        const isPreProd = data['Package_Option'] && data['Package_Option'].includes('Pre-Production Vehicle');
+                        const pkgValue = data['Package/Edition'] || data['Package_Option'] || '';
+                        const isPreProd = pkgValue.includes('Pre-Production Vehicle');
                         if (isPreProd) td.className = 'highlight';
                         
                         if (cellValue.length === 17) {
@@ -407,11 +407,15 @@
                             td.textContent = cellValue || '';
                         }
                     } 
-                    // 5. Year columns (avoid thousands commas like 2,026)
+                    // 5. Package/Edition column (ensure comma+space separation)
+                    else if (col === 'Package_Option' || col === 'Package/Edition') {
+                        td.textContent = typeof cellValue === 'string' ? cellValue.replace(/,\s*/g, ', ') : (cellValue ?? '');
+                    }
+                    // 6. Year columns (avoid thousands commas like 2,026)
                     else if (['YEAR', 'MODELYEAR', 'MODEL_YEAR'].includes(col.toUpperCase())) {
                         td.textContent = cellValue ?? '';
                     }
-                    // 6. Standard text/numeric columns (handles COUNT queries and standard text)
+                    // 7. Standard text/numeric columns (handles COUNT queries and standard text)
                     else {
                         if (typeof cellValue === 'number') {
                             // Format integers/counts with thousands commas (e.g., 12197 -> 12,197)

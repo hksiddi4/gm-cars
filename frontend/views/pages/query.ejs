@@ -407,7 +407,11 @@
                             td.textContent = cellValue || '';
                         }
                     } 
-                    // 5. Standard text/numeric columns (handles COUNT queries and standard text)
+                    // 5. Year columns (avoid thousands commas like 2,026)
+                    else if (['YEAR', 'MODELYEAR', 'MODEL_YEAR'].includes(col.toUpperCase())) {
+                        td.textContent = cellValue ?? '';
+                    }
+                    // 6. Standard text/numeric columns (handles COUNT queries and standard text)
                     else {
                         if (typeof cellValue === 'number') {
                             // Format integers/counts with thousands commas (e.g., 12197 -> 12,197)

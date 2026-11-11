@@ -117,7 +117,7 @@ OLLAMA_URL = "http://192.168.1.126:11434/api/generate"
 AI_MODEL = "qwen2.5-coder:7b"
 
 # Cleaned, tightly-formatted schema context
-DB_SCHEMA_CONTEXT = """You are a MySQL database assistant. Output ONLY a valid raw MySQL SELECT statement. No markdown, no triple backticks, no explanations.
+DB_SCHEMA_CONTEXT = """You are a MySQL database assistant for GM vehicle build counts. Output ONLY a single valid raw MySQL SELECT statement. No markdown, no backticks around the query, no trailing semicolon, no explanations.
 
 Schema:
 Colors (color_id, color_name, rpo_code)
@@ -130,11 +130,13 @@ SpecialEditions (special_id, vehicle_id, special_desc)
 Transmissions (transmission_id, transmission_type)
 Vehicles (vehicle_id, vin, modelYear, model, body, trim, engine_id, transmission_id, drivetrain_id, color_id, msrp, dealer_id, order_id)
 
-Rules:
-1. ONLY SELECT queries. Do NOT append a semicolon at the end of the query.
-2. Mandatory column layout when returning vehicles (Note the backticks):
+Known Values & Mapping Rules:
+1. ONLY output a single SELECT query. Do NOT append a semicolon.
+2. Default SELECT layout when returning vehicle rows (use these exact column aliases):
    SELECT v.vin AS `VIN`, v.modelYear AS `Year`, v.model AS `Model`, v.body AS `Body`, v.trim AS `Trim`, e.engine_type AS `Engine`, t.transmission_type AS `Trans`, d.drivetrain_type AS `Drivetrain`, c.color_name AS `Exterior_Color`, v.msrp AS `MSRP`, IFNULL((SELECT GROUP_CONCAT(se.special_desc) FROM SpecialEditions se WHERE se.vehicle_id = v.vehicle_id), '') AS `Package_Option`, o.country AS `Country`
-3. ALWAYS use `LEFT JOIN` for all table relationships to prevent dropping vehicles with missing data. Use these exact links:
+   - If the user asks "how many" or for a count, use `SELECT COUNT(*) AS `Count` ...` (without LIMIT 500).
+   - If the user explicitly asks for `DISTINCT` specific columns, select only those columns with `SELECT DISTINCT ...`.
+3. ALWAYS use `LEFT JOIN` for all table relationships:
    - LEFT JOIN Colors c ON v.color_id = c.color_id
    - LEFT JOIN Engines e ON v.engine_id = e.engine_id
    - LEFT JOIN Transmissions t ON v.transmission_id = t.transmission_id
@@ -142,15 +144,48 @@ Rules:
    - LEFT JOIN Dealers dealer ON v.dealer_id = dealer.dealer_id
    - LEFT JOIN Orders o ON v.order_id = o.order_id
    - LEFT JOIN MMC_Codes m ON o.mmc_code_id = m.mmc_code_id
-4. Do NOT join SpecialEditions in the FROM clause. NEVER use GROUP BY.
-5. Append `LIMIT 500` (without a semicolon) unless executing aggregate functions.
-6. Transmission: Automatic `t.transmission_type LIKE 'A%'`, Manual `t.transmission_type LIKE 'M%'`. Drivetrains: 'RWD', 'AWD', '4WD'.
-7. Use wildcard `LIKE` for generic color matching (e.g., c.color_name LIKE '%ORANGE%').
-8. Trims vs Special Editions: Trims are in `v.trim`. Packages like '1LE', 'ZTK' are in SpecialEditions. 
-9. Package Filtering: To filter by a package or special edition, you MUST use a correlated EXISTS subquery in the WHERE clause: `EXISTS (SELECT 1 FROM SpecialEditions se WHERE se.vehicle_id = v.vehicle_id AND se.special_desc LIKE '%Keyword%')`.
-10. Package Keywords Reference: Map user requests to these descriptions: 'Collector', 'Garage 56', '1LE', 'Hendrick', 'Indy 500', 'Redline', 'Shock and Steel', 'C8.R', 'ZTK', 'Z07', 'Z51', 'Grand Sport', '70th Anniversary', 'Stars & Steel', 'Quail Silver', 'Watkins Glen', 'Sebring', 'Blackwing', 'Omega Edition', 'Extreme Off-Road'.
-11. Corvettes: Models use `v.model LIKE 'CORVETTE%'`.
+4. Do NOT join SpecialEditions in the FROM clause. NEVER use GROUP BY unless aggregating counts.
+5. Append `LIMIT 500` on non-aggregate queries.
+6. Model Year (`v.modelYear`): ALWAYS filter 4-digit years explicitly (e.g., `v.modelYear = 2022`). Never ignore the year.
+7. Models (`v.model`): Values are UPPERCASE.
+   - Exact models: 'CAMARO', 'CT4', 'CT5', 'CT6', 'ESCALADE', 'ESCALADE IQ', 'HUMMER EV SUV', 'HUMMER EV PICKUP', 'SIERRA EV', 'SILVERADO EV'.
+   - Corvette variants: 'CORVETTE STINGRAY', 'CORVETTE Z06', 'CORVETTE E-RAY', 'CORVETTE ZR1', 'CORVETTE ZR1X', 'CORVETTE GRAND SPORT'. Use `v.model LIKE 'CORVETTE%'` ONLY when the user says "Corvette" without a specific variant; use `v.model = 'CORVETTE Z06'`, `v.model = 'CORVETTE ZR1'`, etc. when a variant is specified.
+   - NEVER use `CORVETTE` when the user asks for Camaro, CT4, CT5, Escalade, Hummer, etc.
+8. Trims (`v.trim`): Store ONLY the trim level (e.g., '1LS', '1LT', '2LT', '3LT', '1SS', '2SS', 'ZL1', 'LT1', '1LZ', '2LZ', '3LZ', 'V-SERIES', 'V-SERIES BLACKWING', 'LUXURY', 'PREMIUM LUXURY', 'SPORT', '3X').
+   - NEVER combine trim + package + transmission into `v.trim` (e.g., for "2SS 1LE A10", `v.trim = '2SS'`, `t.transmission_type = 'A10'`, and `1LE` goes in `SpecialEditions`).
+   - "CT5V Blackwing" / "CT5-V Blackwing" => `v.model = 'CT5' AND v.trim = 'V-SERIES BLACKWING'`.
+   - "CT4V Blackwing" / "CT4-V Blackwing" => `v.model = 'CT4' AND v.trim = 'V-SERIES BLACKWING'`.
+9. Transmissions (`t.transmission_type`): Short codes like 'A10', 'A8', 'M6', 'M7'.
+   - Specific code (e.g., A10, M6, A8): `t.transmission_type = 'A10'`.
+   - Generic "automatic": `t.transmission_type LIKE 'A%'`. Generic "manual": `t.transmission_type LIKE 'M%'`.
+10. Drivetrains (`d.drivetrain_type`): 'RWD', 'AWD', '4WD'. Body (`v.body`): 'COUPE', 'CONVERTIBLE', 'SEDAN', 'SUV'. Country (`o.country`): 'USA', 'CANADA', 'MEXICO'.
+11. Colors (`c.color_name`): Uppercase, use `LIKE` (e.g., `c.color_name LIKE '%SUMMIT WHITE%'`, `c.color_name LIKE '%BLUE%'`). For "matte" or "frost" paint, use `(c.color_name LIKE '%MATTE%' OR c.color_name LIKE '%FROST%')`.
+12. Packages & Special Editions (`SpecialEditions`): NEVER put packages in `v.trim`. ALWAYS filter using:
+    `EXISTS (SELECT 1 FROM SpecialEditions se WHERE se.vehicle_id = v.vehicle_id AND se.special_desc LIKE '%Keyword%')`
+    Keywords: '1LE', 'Collectors Edition', 'Garage 56', 'Hendrick', 'Indy 500', 'Redline', 'Shock and Steel', 'C8.R', 'ZTK', 'Z07', 'Z51', 'Z52', 'Grand Sport Launch', '70th Anniversary', 'Stars & Steel', 'Quail Silver', 'Watkins Glen', 'Sebring', 'Road Atlanta', 'Arrival Edition', 'Impact Edition', 'Elevation Edition', '120th Anniversary', '20th Anniversary', 'Petit Pataud', 'Le Monstre', 'Precision Package', 'Deep Ocean', 'Curated by Cadillac', 'Omega Edition', 'Extreme Off-Road', 'Pre-Production', 'Show Vehicle'.
+
+Examples:
+User Request: 2022 Camaro 2SS 1LE A10 in Summit White
+SQL Query: SELECT v.vin AS `VIN`, v.modelYear AS `Year`, v.model AS `Model`, v.body AS `Body`, v.trim AS `Trim`, e.engine_type AS `Engine`, t.transmission_type AS `Trans`, d.drivetrain_type AS `Drivetrain`, c.color_name AS `Exterior_Color`, v.msrp AS `MSRP`, IFNULL((SELECT GROUP_CONCAT(se.special_desc) FROM SpecialEditions se WHERE se.vehicle_id = v.vehicle_id), '') AS `Package_Option`, o.country AS `Country` FROM Vehicles v LEFT JOIN Colors c ON v.color_id = c.color_id LEFT JOIN Engines e ON v.engine_id = e.engine_id LEFT JOIN Transmissions t ON v.transmission_id = t.transmission_id LEFT JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id LEFT JOIN Dealers dealer ON v.dealer_id = dealer.dealer_id LEFT JOIN Orders o ON v.order_id = o.order_id WHERE v.modelYear = 2022 AND v.model = 'CAMARO' AND v.trim = '2SS' AND t.transmission_type = 'A10' AND c.color_name LIKE '%SUMMIT WHITE%' AND EXISTS (SELECT 1 FROM SpecialEditions se WHERE se.vehicle_id = v.vehicle_id AND se.special_desc LIKE '%1LE%') LIMIT 500
+
+User Request: Show me all CT5V Blackwing in matte paint
+SQL Query: SELECT v.vin AS `VIN`, v.modelYear AS `Year`, v.model AS `Model`, v.body AS `Body`, v.trim AS `Trim`, e.engine_type AS `Engine`, t.transmission_type AS `Trans`, d.drivetrain_type AS `Drivetrain`, c.color_name AS `Exterior_Color`, v.msrp AS `MSRP`, IFNULL((SELECT GROUP_CONCAT(se.special_desc) FROM SpecialEditions se WHERE se.vehicle_id = v.vehicle_id), '') AS `Package_Option`, o.country AS `Country` FROM Vehicles v LEFT JOIN Colors c ON v.color_id = c.color_id LEFT JOIN Engines e ON v.engine_id = e.engine_id LEFT JOIN Transmissions t ON v.transmission_id = t.transmission_id LEFT JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id LEFT JOIN Dealers dealer ON v.dealer_id = dealer.dealer_id LEFT JOIN Orders o ON v.order_id = o.order_id WHERE v.model = 'CT5' AND v.trim = 'V-SERIES BLACKWING' AND (c.color_name LIKE '%MATTE%' OR c.color_name LIKE '%FROST%') LIMIT 500
+
+User Request: How many green Corvette ZR1s are there
+SQL Query: SELECT COUNT(*) AS `Count` FROM Vehicles v LEFT JOIN Colors c ON v.color_id = c.color_id WHERE v.model = 'CORVETTE ZR1' AND c.color_name LIKE '%GREEN%'
+
+User Request: Show me all CT4 or CT5s that have "N5RW" in the VIN
+SQL Query: SELECT v.vin AS `VIN`, v.modelYear AS `Year`, v.model AS `Model`, v.body AS `Body`, v.trim AS `Trim`, e.engine_type AS `Engine`, t.transmission_type AS `Trans`, d.drivetrain_type AS `Drivetrain`, c.color_name AS `Exterior_Color`, v.msrp AS `MSRP`, IFNULL((SELECT GROUP_CONCAT(se.special_desc) FROM SpecialEditions se WHERE se.vehicle_id = v.vehicle_id), '') AS `Package_Option`, o.country AS `Country` FROM Vehicles v LEFT JOIN Colors c ON v.color_id = c.color_id LEFT JOIN Engines e ON v.engine_id = e.engine_id LEFT JOIN Transmissions t ON v.transmission_id = t.transmission_id LEFT JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id LEFT JOIN Dealers dealer ON v.dealer_id = dealer.dealer_id LEFT JOIN Orders o ON v.order_id = o.order_id WHERE v.model IN ('CT4', 'CT5') AND v.vin LIKE '%N5RW%' LIMIT 500
 """
+
+def sanitize_ai_sql(raw_sql):
+    """Extract and clean a single SELECT statement from LLM output."""
+    text = (raw_sql or '').strip()
+    fence_match = re.search(r"```(?:sql)?\s*(.*?)```", text, re.DOTALL | re.IGNORECASE)
+    if fence_match:
+        text = fence_match.group(1).strip()
+    text = re.sub(r"^(?:SQL\s*Query|SQL)\s*:\s*", "", text, flags=re.IGNORECASE).strip()
+    return text.rstrip("; \n\t")
 
 @app.route('/ai-query', methods=['POST'])
 def natural_language_query():
@@ -168,7 +203,7 @@ def natural_language_query():
         "stream": False,
         "keep_alive": -1,
         "options": {
-            "temperature": 0.1,
+            "temperature": 0.0,
             "num_predict": 1024
         }
     }
@@ -176,17 +211,18 @@ def natural_language_query():
     try:
         response = requests.post(OLLAMA_URL, json=payload, timeout=120)
         response.raise_for_status()
-        generated_sql = response.json().get('response', '').strip()
+        generated_sql = sanitize_ai_sql(response.json().get('response', ''))
     except Exception as e:
         app.logger.error("Failed to communicate with AI model: %s", e)
         return jsonify({'error': 'Failed to communicate with AI model'}), 500
 
-    if generated_sql.startswith("```"):
-        generated_sql = generated_sql.replace("```sql", "").replace("```", "").strip()
-
-    destructive_keywords = ["drop", "delete", "truncate", "update", "alter", "insert", "grant"]
-    if any(keyword in generated_sql.lower() for keyword in destructive_keywords):
-        return jsonify({'error': 'Security restriction: Destructive SQL detected', 'generated_sql': generated_sql}), 403
+    unquoted_sql = re.sub(r"'(?:\\.|''|[^'])*'", "''", generated_sql)
+    destructive_pattern = re.compile(
+        r"\b(drop|delete|truncate|update|alter|insert|grant|create|replace|call|exec)\b",
+        re.IGNORECASE
+    )
+    if not re.match(r"^(SELECT|WITH)\b", generated_sql, re.IGNORECASE) or ";" in unquoted_sql or destructive_pattern.search(unquoted_sql):
+        return jsonify({'error': 'Security restriction: Only single read-only SELECT queries are permitted', 'generated_sql': generated_sql}), 403
 
     conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
     try:

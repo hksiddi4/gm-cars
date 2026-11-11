@@ -1,4 +1,5 @@
 from gevent import monkey
+from gevent.lock import BoundedSemaphore
 monkey.patch_all()
 
 import sql
@@ -117,6 +118,9 @@ OLLAMA_URL = "http://192.168.1.126:11434/api/generate"
 AI_MODEL = "qwen2.5-coder:7b"
 AI_SQL_CACHE = {}
 AI_SQL_CACHE_TTL = 3600
+# Limit concurrent CPU LLM requests to 1 so i7-12700K P-cores are never oversubscribed
+# alongside Scrypted, Immich, Jellyfin, Nextcloud, and MySQL.
+_OLLAMA_SEMAPHORE = BoundedSemaphore(1)
 
 VEHICLE_SELECT_SQL = (
     "SELECT v.vin AS `VIN`, v.modelYear AS `Year`, v.model AS `Model`, "
@@ -300,7 +304,9 @@ QUERY_STOPWORDS = {
     "distinct", "unique", "vin", "vins", "how", "many", "count", "total",
     "number", "cadillac", "chevrolet", "chevy", "gmc", "gm", "series",
     "similar", "like", "matching", "same", "as", "spec", "specs",
-    "configuration", "build", "builds", "twin", "twins"
+    "configuration", "build", "builds", "twin", "twins", "engine", "engines",
+    "motor", "dealer", "dealers", "state", "located", "delivered", "sold",
+    "msrp", "price", "priced"
 }
 
 
@@ -554,7 +560,7 @@ def parse_nl_query_intent(user_prompt):
             )
     conditions.extend(special_conditions)
 
-    # 7. Detect Transmissions
+    # 7. Detect Transmissions & Engines
     trans_patterns = [
         (r"\b(?:a10|10[\s-]*speed(?:\s+auto(?:matic)?)?)\b", "t.transmission_type = 'A10'"),
         (r"\b(?:a8|8[\s-]*speed(?:\s+auto(?:matic)?)?)\b", "t.transmission_type = 'A8'"),
@@ -570,7 +576,36 @@ def parse_nl_query_intent(user_prompt):
                     conditions.append(cond)
                 mark_span(*m.span())
 
-    # 8. Detect Drivetrains & Body styles & Countries
+    engine_patterns = [
+        (r"\b(?:lt2)\b", "e.engine_rpo = 'LT2'"),
+        (r"\b(?:lt4)\b", "e.engine_rpo = 'LT4'"),
+        (r"\b(?:lt6)\b", "e.engine_rpo = 'LT6'"),
+        (r"\b(?:lt7)\b", "e.engine_rpo = 'LT7'"),
+        (r"\b(?:lf4)\b", "e.engine_rpo = 'LF4'"),
+        (r"\b(?:lgx)\b", "e.engine_rpo = 'LGX'"),
+        (r"\b(?:lsy)\b", "e.engine_rpo = 'LSY'"),
+        (r"\b(?:l87)\b", "e.engine_rpo = 'L87'"),
+        (r"\b(?:lm2)\b", "e.engine_rpo = 'LM2'"),
+        (r"\b(?:lz0)\b", "e.engine_rpo = 'LZ0'"),
+        (r"\bsupercharged(?:\s+v8)?\b", "e.engine_type LIKE '%SUPERCHARGED%'"),
+        (r"\btwin[\s-]*turbo(?:\s+v6|\s+v8)?\b", "e.engine_type LIKE '%TWIN TURBO%'"),
+        (r"\b6\.2\s*l?(?:\s+v8)?\b", "e.engine_type LIKE '%6.2L%'"),
+        (r"\b5\.5\s*l?(?:\s+v8)?\b", "e.engine_type LIKE '%5.5L%'"),
+        (r"\b3\.6\s*l?(?:\s+v6)?\b", "e.engine_type LIKE '%3.6L%'"),
+        (r"\b3\.0\s*l?(?:\s+v6)?\b", "e.engine_type LIKE '%3.0L%'"),
+        (r"\b2\.7\s*l?\b", "e.engine_type LIKE '%2.7L%'"),
+        (r"\b2\.0\s*l?\b", "e.engine_type LIKE '%2.0L%'"),
+        (r"\bv8\b", "e.engine_type LIKE '%V8%'"),
+        (r"\bv6\b", "e.engine_type LIKE '%V6%'"),
+    ]
+    for pat, cond in engine_patterns:
+        for m in re.finditer(pat, raw, re.IGNORECASE):
+            if span_free(*m.span()):
+                if cond not in conditions:
+                    conditions.append(cond)
+                mark_span(*m.span())
+
+    # 8. Detect Drivetrains, Body styles, Countries, and US States / Canadian Provinces
     dt_patterns = [
         (r"\b(?:rwd|rear[\s-]*wheel[\s-]*drive)\b", "d.drivetrain_type = 'RWD'"),
         (r"\b(?:awd|all[\s-]*wheel[\s-]*drive)\b", "d.drivetrain_type = 'AWD'"),
@@ -612,7 +647,23 @@ def parse_nl_query_intent(user_prompt):
                 conditions.append(cond)
                 mark_span(*m.span())
 
-    # 9. Detect MSRP comparisons & ordering
+    # Detect full State/Province names (e.g. "in Texas", "from California", "delivered to Florida")
+    for st_code, st_name in sorted(STATE_NAMES.items(), key=lambda x: len(x[1]), reverse=True):
+        if st_code in ("PQ", "NF"):
+            continue
+        pat = r"\b(?:in|from|to|at)\s+" + re.escape(st_name) + r"\b"
+        for m in re.finditer(pat, raw, re.IGNORECASE):
+            if span_free(*m.span()):
+                conditions.append(f"dealer.location LIKE '%, {st_code}%'")
+                mark_span(*m.span())
+
+    # 9. Detect MSRP ranges, comparisons & ordering
+    for m in re.finditer(r"\b(?:msrp\s+)?between\s+\$?([\d,]+)(k)?\s+and\s+\$?([\d,]+)(k)?\b", raw, re.IGNORECASE):
+        if span_free(*m.span()):
+            v1 = int(m.group(1).replace(",", "")) * (1000 if m.group(2) else 1)
+            v2 = int(m.group(3).replace(",", "")) * (1000 if m.group(4) else 1)
+            conditions.append(f"v.msrp BETWEEN {min(v1, v2)} AND {max(v1, v2)}")
+            mark_span(*m.span())
     for m in re.finditer(r"\b(?:msrp\s+)?(?:over|above|greater\s+than|more\s+than)\s+\$?([\d,]+)(k)?\b", raw, re.IGNORECASE):
         if span_free(*m.span()):
             val = int(m.group(1).replace(",", "")) * (1000 if m.group(2) else 1)
@@ -885,6 +936,8 @@ def natural_language_query():
     
     if not user_prompt:
         return jsonify({'error': 'No prompt provided'}), 400
+    if len(user_prompt) > 200:
+        return jsonify({'error': 'Query is too long (maximum 200 characters).'}), 400
 
     cache_key = user_prompt.lower()
     now = time.time()
@@ -899,7 +952,7 @@ def natural_language_query():
             intent = resolve_vin_similarity_intent(conn, intent)
 
         if intent["is_complete"]:
-            # Fast-path: 100% of tokens mapped to exact schema predicates (< 1ms)
+            # Fast-path: 100% of tokens mapped to exact schema predicates (< 1ms, zero Ollama CPU load)
             generated_sql = build_sql_from_intent(intent)
         else:
             # Fallback to Ollama with pre-resolved entity hints and compact WHERE output
@@ -915,20 +968,28 @@ def natural_language_query():
                 "keep_alive": -1,
                 "options": {
                     "temperature": 0.0,
-                    "num_ctx": 2048,
-                    "num_predict": 256,
+                    "num_thread": 8,  # Pin to the 8 P-cores on i7-12700K; keeps E-cores free for Scrypted/Immich/Jellyfin
+                    "num_ctx": 1024,
+                    "num_predict": 128,
                     "stop": [";", "\n\n", "User Request:"]
                 }
             }
 
+            acquired = _OLLAMA_SEMAPHORE.acquire(timeout=15)
+            if not acquired:
+                close_connection(conn)
+                return jsonify({'error': 'AI engine is currently busy processing another query. Please try again in a few seconds.'}), 429
+
             try:
-                response = requests.post(OLLAMA_URL, json=payload, timeout=120)
+                response = requests.post(OLLAMA_URL, json=payload, timeout=45)
                 response.raise_for_status()
                 generated_sql = sanitize_and_repair_ai_sql(response.json().get('response', ''), intent)
             except Exception as e:
                 close_connection(conn)
                 app.logger.error("Failed to communicate with AI model: %s", e)
                 return jsonify({'error': 'Failed to communicate with AI model'}), 500
+            finally:
+                _OLLAMA_SEMAPHORE.release()
 
         AI_SQL_CACHE[cache_key] = {'time': now, 'sql': generated_sql}
 

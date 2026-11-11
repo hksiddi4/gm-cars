@@ -48,7 +48,8 @@ app.use(helmet({
                 "https://analytics.google.com",
                 "https://stats.g.doubleclick.net",
                 "https://cdn.jsdelivr.net",
-                "https://www.google.com"
+                "https://www.google.com",
+                "https://challenges.cloudflare.com"
             ],
             fontSrc: ["'self'", "https://cdn.jsdelivr.net"],
             objectSrc: ["'none'"],
@@ -236,8 +237,8 @@ const searchLimiter = rateLimit({
 });
 
 const apiLimiter = rateLimit({
-    windowMs: 5 * 60 * 1000,
-    max: 3,
+    windowMs: 60 * 1000, // 1 minute window
+    max: 5, // Limit each IP to 5 queries per minute
     standardHeaders: true,
     legacyHeaders: false,
     keyGenerator: (req, res) => {
@@ -245,14 +246,96 @@ const apiLimiter = rateLimit({
         return ipKeyGenerator(ip);
     },
     handler: (req, res) => {
+        const ip = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.ip;
+        const userAgent = req.headers['user-agent'] || 'Unknown';
+        sendDiscordAlert('ratelimit', { ip, path: req.originalUrl, userAgent });
         res.status(429).json({ 
-            error: 'Rate limit exceeded', 
-            details: 'Too many queries sent. Please wait a moment and try again.' 
+            error: 'Rate limit exceeded: Maximum 5 queries per minute allowed. Please wait a moment and try again.'
         });
-    },
-    standardHeaders: true,
-    legacyHeaders: false,
+    }
 });
+
+// --- Turnstile Session Verification for /query (validate once per user session) ---
+const TURNSTILE_COOKIE_NAME = 'cf_query_verified';
+const TURNSTILE_SESSION_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
+const TURNSTILE_HMAC_SECRET = crypto
+    .createHash('sha256')
+    .update(String(process.env.TURNSTILE_SECRET_KEY || process.env.ADMIN_PASS || 'gm-query-turnstile-secret'))
+    .digest();
+
+function getClientIpKey(req) {
+    const rawIp = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.ip || 'unknown';
+    return String(ipKeyGenerator(rawIp));
+}
+
+function getCookieValue(req, name) {
+    const rawCookie = req.headers.cookie;
+    if (!rawCookie) return null;
+    for (const part of rawCookie.split(';')) {
+        const idx = part.indexOf('=');
+        if (idx === -1) continue;
+        const k = part.slice(0, idx).trim();
+        if (k === name) {
+            return decodeURIComponent(part.slice(idx + 1).trim());
+        }
+    }
+    return null;
+}
+
+function isTurnstileQueryVerified(req) {
+    try {
+        const token = getCookieValue(req, TURNSTILE_COOKIE_NAME);
+        if (!token) return false;
+        const parts = token.split('.');
+        if (parts.length !== 3) return false;
+        const [ipHash, expStr, sig] = parts;
+        const exp = Number(expStr);
+        if (!Number.isFinite(exp) || Date.now() > exp) return false;
+
+        const expectedIpHash = crypto
+            .createHmac('sha256', TURNSTILE_HMAC_SECRET)
+            .update(getClientIpKey(req))
+            .digest('hex')
+            .slice(0, 24);
+        if (ipHash !== expectedIpHash) return false;
+
+        const payload = `${ipHash}.${expStr}`;
+        const expectedSig = crypto
+            .createHmac('sha256', TURNSTILE_HMAC_SECRET)
+            .update(payload)
+            .digest('hex');
+
+        const sigBuf = Buffer.from(sig, 'hex');
+        const expBuf = Buffer.from(expectedSig, 'hex');
+        if (sigBuf.length !== expBuf.length) return false;
+        return crypto.timingSafeEqual(sigBuf, expBuf);
+    } catch {
+        return false;
+    }
+}
+
+function setTurnstileQueryCookie(req, res) {
+    const exp = Date.now() + TURNSTILE_SESSION_TTL_MS;
+    const ipHash = crypto
+        .createHmac('sha256', TURNSTILE_HMAC_SECRET)
+        .update(getClientIpKey(req))
+        .digest('hex')
+        .slice(0, 24);
+    const payload = `${ipHash}.${exp}`;
+    const sig = crypto
+        .createHmac('sha256', TURNSTILE_HMAC_SECRET)
+        .update(payload)
+        .digest('hex');
+    const isSecure = req.secure || req.headers['x-forwarded-proto'] === 'https';
+
+    res.cookie(TURNSTILE_COOKIE_NAME, `${payload}.${sig}`, {
+        maxAge: TURNSTILE_SESSION_TTL_MS,
+        httpOnly: true,
+        sameSite: 'strict',
+        secure: Boolean(isSecure),
+        path: '/'
+    });
+}
 
 // --- Security Middleware to block direct API access ---
 const blockDirectApiAccess = (req, res, next) => {
@@ -360,6 +443,10 @@ app.use((req, res, next) => {
                 pagePath: '/contact',
                 canonicalPath: '/contact'
             });
+        }
+
+        if (req.path === '/ai-query') {
+            return res.status(200).json({ generated_sql: '', results: [], turnstileVerified: true });
         }
 
         // For GET forms or other paths, safely redirect home or return 200
@@ -1037,34 +1124,89 @@ app.get('/query', authLimiter, requireAdmin, (req, res) => {
         canonicalPath: '/query',
         pagePath: '/query',
         colorMap: modules.colorMap || {},
-        vinExtColor: modules.vinExtColor || {}
+        vinExtColor: modules.vinExtColor || {},
+        turnstileVerified: isTurnstileQueryVerified(req)
     });
 });
 
-app.post('/ai-query', apiLimiter, requireAdmin, async (req, res) => {
+app.post('/ai-query', apiLimiter, requireAdmin, blockDirectApiAccess, async (req, res) => {
     try {
-        const userPrompt = req.body.prompt;
+        const userPrompt = typeof req.body.prompt === 'string' ? req.body.prompt.trim() : '';
 
-        // --- NEW LOGGING LOGIC ---
+        if (!userPrompt) {
+            return res.status(400).json({ error: 'Please enter a valid query.' });
+        }
+
+        if (userPrompt.length > 200) {
+            return res.status(400).json({ error: 'Query is too long (maximum 200 characters).' });
+        }
+
+        // Reject obvious keyboard-mash / repeated-char spam before hitting backend
+        if (/(.)\1{7,}/i.test(userPrompt) || /^[^\s]{60,}$/.test(userPrompt)) {
+            return res.status(400).json({ error: 'Invalid query format.' });
+        }
+
+        // Verify Cloudflare Turnstile on the user's first query (subsequent queries in session skip captcha)
+        let verifiedSession = isTurnstileQueryVerified(req);
+        if (!verifiedSession) {
+            const turnstileToken = req.body.turnstileToken || req.body['cf-turnstile-response'];
+            if (!turnstileToken) {
+                return res.status(403).json({
+                    error: 'Please complete the Cloudflare security check before running your first query.',
+                    requireTurnstile: true
+                });
+            }
+
+            const remoteip = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.ip;
+            const verifyParams = new URLSearchParams();
+            verifyParams.append('secret', process.env.TURNSTILE_SECRET_KEY || '');
+            verifyParams.append('response', turnstileToken);
+            if (remoteip) verifyParams.append('remoteip', remoteip);
+
+            const verifyRes = await axios.post(
+                'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+                verifyParams
+            );
+
+            if (!verifyRes.data || !verifyRes.data.success) {
+                return res.status(403).json({
+                    error: 'Security check failed or expired. Please complete the Cloudflare check again.',
+                    requireTurnstile: true
+                });
+            }
+
+            setTurnstileQueryCookie(req, res);
+            verifiedSession = true;
+        }
+
+        // --- LOGGING LOGIC ---
         const timestamp = new Date().toLocaleString('en-US', { timeZone: 'America/Chicago' }); 
-        const logEntry = `[${timestamp}] ${userPrompt}\n`;
+        const sanitizedPromptLog = userPrompt.replace(/[\r\n]+/g, ' ');
+        const logEntry = `[${timestamp}] ${sanitizedPromptLog}\n`;
         const logFilePath = path.join(__dirname, 'query_logs.txt');
 
         fs.appendFile(logFilePath, logEntry, (err) => {
             if (err) console.error("Failed to write to query log:", err);
         });
-        // -------------------------
+        // ---------------------
 
         const response = await axiosInstance.post(`${baseURL}/ai-query`, { 
             prompt: userPrompt 
         });
 
-        res.json(response.data);
+        res.json({
+            ...response.data,
+            turnstileVerified: true
+        });
     } catch (error) {
         console.error("AI Query Error:", error.response?.data || error.message);
-        res.status(500).json({ 
-            error: 'AI query failed', 
-            details: error.response?.data?.error || 'Unknown error' 
+        const statusCode = error.response?.status || 500;
+        const backendError = error.response?.data?.error;
+        res.status(statusCode).json({ 
+            error: backendError || 'AI query failed', 
+            details: error.response?.data?.details || error.message || 'Unknown error',
+            generated_sql: error.response?.data?.generated_sql,
+            turnstileVerified: isTurnstileQueryVerified(req)
         });
     }
 });

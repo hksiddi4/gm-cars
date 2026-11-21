@@ -74,6 +74,7 @@ app.use((req, res, next) => {
     next();
 });
 
+const http = require('http');
 const axios = require('axios');
 const TurndownService = require('turndown');
 const turndownService = new TurndownService();
@@ -391,10 +392,24 @@ const rpoWheelsDir = path.join(__dirname, 'public', 'img', 'rpos');
 
 const baseURL = 'http://backend:5000';
 
-// Axios instance with default timeout
-const axiosInstance = axios.create({ timeout: 240000 });
+// Axios instance with default timeout and dedicated HTTP agent
+// Disable keep-alive for local Docker backend calls to prevent stale-socket
+// ECONNRESET / "socket hang up" races between Node's agent and Gunicorn.
+const backendHttpAgent = new http.Agent({ keepAlive: false });
+const axiosInstance = axios.create({
+    timeout: 240000,
+    httpAgent: backendHttpAgent
+});
 
-// API Request Caching
+const RETRYABLE_AXIOS_CODES = new Set(['ECONNRESET', 'EPIPE']);
+const formatBackendError = (err) => {
+    if (!err) return 'Unknown error';
+    const status = err.response?.status ? `HTTP ${err.response.status}` : null;
+    const code = err.code || null;
+    return [code, status, err.message].filter(Boolean).join(' - ');
+};
+
+// API Request Caching with single retry on transient socket hang-ups
 const apiCache = new Map();
 const originalGet = axiosInstance.get;
 axiosInstance.get = async (url, config) => {
@@ -403,7 +418,16 @@ axiosInstance.get = async (url, config) => {
     if (cached && Date.now() - cached.timestamp < 5 * 60 * 1000) {
         return { data: cached.data };
     }
-    const response = await originalGet.call(axiosInstance, url, config);
+    let response;
+    try {
+        response = await originalGet.call(axiosInstance, url, config);
+    } catch (err) {
+        const isTransientReset =
+            !err.response &&
+            (RETRYABLE_AXIOS_CODES.has(err.code) || /socket hang up/i.test(err.message || ''));
+        if (!isTransientReset) throw err;
+        response = await originalGet.call(axiosInstance, url, config);
+    }
     if (apiCache.size > 1000) apiCache.clear();
     apiCache.set(key, { timestamp: Date.now(), data: response.data });
     return response;
@@ -863,7 +887,7 @@ app.get('/about', async (req, res) => {
             pagePath: '/about'
         });
     } catch (err) {
-        console.error("About Route Error:", err);
+        console.error(`About Route Error (${req.originalUrl}):`, formatBackendError(err));
         res.status(500).render('pages/errors/500', { pagePath: '/about', canonicalPath: '/about' });
     }
 });
@@ -920,7 +944,7 @@ app.get('/vehicles', async (req, res) => {
             canonicalPath: req.originalUrl
         });
     } catch (error) {
-        console.error("Vehicles Route Error:", error);
+        console.error(`Vehicles Route Error (${req.originalUrl}):`, formatBackendError(error));
         res.status(500).render('pages/errors/500', { pagePath: '/vehicles', canonicalPath: req.originalUrl });
     }
 });
@@ -1007,7 +1031,7 @@ app.get('/calendar-activity', blockDirectApiAccess, async (req, res) => {
         const response = await axiosInstance.get(`${baseURL}/calendar-activity`, { params: req.query });
         res.json(response.data);
     } catch (error) {
-        console.error("Calendar Activity Error:", error);
+        console.error(`Calendar Activity Error (${req.originalUrl}):`, formatBackendError(error));
         res.status(500).json({ error: 'Failed to fetch calendar activity' });
     }
 });
@@ -1017,7 +1041,7 @@ app.get('/daily-stats', blockDirectApiAccess, async (req, res) => {
         const response = await axiosInstance.get(`${baseURL}/daily-stats`, { params: req.query });
         res.json(response.data);
     } catch (error) {
-        console.error("Daily Stats API Error:", error);
+        console.error(`Daily Stats API Error (${req.originalUrl}):`, formatBackendError(error));
         res.status(500).json({ error: 'Failed to fetch daily stats' });
     }
 });
@@ -1027,7 +1051,7 @@ app.get('/model-bounds', blockDirectApiAccess, async (req, res) => {
         const response = await axiosInstance.get(`${baseURL}/model-bounds`, { params: req.query });
         res.json(response.data);
     } catch (error) {
-        console.error("Model Bounds API Error:", error);
+        console.error(`Model Bounds API Error (${req.originalUrl}):`, formatBackendError(error));
         res.status(500).json({ error: 'Failed to fetch bounds' });
     }
 });
@@ -1096,7 +1120,7 @@ app.get('/stats', async (req, res) => {
             });
         }
     } catch (error) {
-        console.error('Error in /stats:', error);
+        console.error(`Error in /stats (${req.originalUrl}):`, formatBackendError(error));
         res.status(500).render('pages/errors/500', { error: 'Internal Server Error', pagePath: '/stats', canonicalPath: req.originalUrl });
     }
 });
@@ -1114,7 +1138,7 @@ app.get('/wheels', async (req, res) => {
             canonicalPath: '/wheels'
         });
     } catch (error) {
-        console.error('Error in /wheels:', error);
+        console.error(`Error in /wheels (${req.originalUrl}):`, formatBackendError(error));
         res.status(500).render('pages/errors/500', { error: 'Internal Server Error' });
     }
 });

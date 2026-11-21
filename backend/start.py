@@ -943,6 +943,8 @@ def natural_language_query():
     now = time.time()
     cached_entry = AI_SQL_CACHE.get(cache_key)
     conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
+    if conn is None:
+        return jsonify({'error': 'Database is temporarily unavailable. Please try again shortly.'}), 503
 
     if cached_entry and (now - cached_entry['time'] < AI_SQL_CACHE_TTL):
         generated_sql = cached_entry['sql']
@@ -1056,6 +1058,8 @@ def search_inv():
         WHERE v.vin = %s
     """
     conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
+    if conn is None:
+        return jsonify({'error': 'Database is temporarily unavailable. Please try again shortly.'}), 503
     rows = execute_read_query(conn, sqlStatement, (vin,))
     close_connection(conn)
 
@@ -1321,15 +1325,17 @@ def sort_price():
     inner_group_by = "GROUP BY v.vehicle_id" if needs_group_by else ""
 
     conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
+    if conn is None:
+        return jsonify({'error': 'Database is temporarily unavailable. Please try again shortly.'}), 503
 
     def get_all_distinct_values(db_conn, current_where, current_params, current_rpo_clause):
         if not current_where:
             veh_distinct = execute_read_query(db_conn, "SELECT DISTINCT modelYear, model, body, trim FROM Vehicles") or []
-            engines = execute_read_query(db_conn, "SELECT engine_rpo AS rpo, engine_type AS name FROM Engines ORDER BY engine_rpo ASC")
-            trans = execute_read_query(db_conn, "SELECT DISTINCT transmission_type FROM Transmissions ORDER BY transmission_type ASC")
-            drivetrains = execute_read_query(db_conn, "SELECT DISTINCT drivetrain_type FROM Drivetrains ORDER BY drivetrain_type ASC")
-            colors = execute_read_query(db_conn, "SELECT DISTINCT color_name FROM Colors ORDER BY color_name ASC")
-            countries = execute_read_query(db_conn, "SELECT DISTINCT country FROM Orders ORDER BY country ASC")
+            engines = execute_read_query(db_conn, "SELECT engine_rpo AS rpo, engine_type AS name FROM Engines ORDER BY engine_rpo ASC") or []
+            trans = execute_read_query(db_conn, "SELECT DISTINCT transmission_type FROM Transmissions ORDER BY transmission_type ASC") or []
+            drivetrains = execute_read_query(db_conn, "SELECT DISTINCT drivetrain_type FROM Drivetrains ORDER BY drivetrain_type ASC") or []
+            colors = execute_read_query(db_conn, "SELECT DISTINCT color_name FROM Colors ORDER BY color_name ASC") or []
+            countries = execute_read_query(db_conn, "SELECT DISTINCT country FROM Orders ORDER BY country ASC") or []
 
             years_set = {r['modelYear'] for r in veh_distinct if r.get('modelYear') is not None}
             models_set = {r['model'] for r in veh_distinct if r.get('model') is not None}
@@ -1474,9 +1480,14 @@ def sort_price():
                     FROM Vehicles v {minimal_join_clause}
                     {where_clause}
                 """
-            total_items = execute_read_query(conn, totalSql, params)[0]['total']
+            total_rows = execute_read_query(conn, totalSql, params)
         else:
-            total_items = execute_read_query(conn, "SELECT COUNT(vehicle_id) AS total FROM Vehicles")[0]['total']
+            total_rows = execute_read_query(conn, "SELECT COUNT(vehicle_id) AS total FROM Vehicles")
+
+        if not total_rows:
+            close_connection(conn)
+            return jsonify({'error': 'Database query failed'}), 503
+        total_items = total_rows[0]['total']
 
         if len(_VEHICLE_FILTER_CACHE) > 256:
             _VEHICLE_FILTER_CACHE.clear()
@@ -1527,6 +1538,9 @@ def sort_price():
 
     close_connection(conn)
 
+    if viewTable is None:
+        return jsonify({'error': 'Database query failed'}), 503
+
     return jsonify({
         'data': viewTable,
         'total': total_items,
@@ -1552,6 +1566,8 @@ def calendar_activity():
         return jsonify({'error': 'Year required'}), 400
 
     conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
+    if conn is None:
+        return jsonify({'error': 'Database is temporarily unavailable. Please try again shortly.'}), 503
     
     params = []
     model_join = ""
@@ -1623,6 +1639,8 @@ def daily_stats():
     trim_filter = request.args.get('trim') # NEW: Capture trim param
     
     conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
+    if conn is None:
+        return jsonify({'error': 'Database is temporarily unavailable. Please try again shortly.'}), 503
     from datetime import date
     
     # NEW: Get all available model years for the dropdown
@@ -1814,6 +1832,8 @@ def stats():
     filter_only_join_clause = "\n        ".join(filter_only_joins)
 
     conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
+    if conn is None:
+        return jsonify({'error': 'Database is temporarily unavailable. Please try again shortly.'}), 503
 
     if category == 'color':
         sqlStatement = f"""
@@ -2186,7 +2206,9 @@ def wheel_stats():
     """
 
     conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
-    distinct_results = execute_read_query(conn, distinct_sql, params)
+    if conn is None:
+        return jsonify({'error': 'Database is temporarily unavailable. Please try again shortly.'}), 503
+    distinct_results = execute_read_query(conn, distinct_sql, params) or []
     model_list = sorted(set(r['model'] for r in distinct_results if r['model']))
 
     close_connection(conn)
@@ -2218,7 +2240,9 @@ def about_stats():
     """
 
     conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
-    results = execute_read_query(conn, distinct_sql)
+    if conn is None:
+        return jsonify({'error': 'Database is temporarily unavailable. Please try again shortly.'}), 503
+    results = execute_read_query(conn, distinct_sql) or []
     close_connection(conn)
 
     stats_map = {r['model_group'].replace(' ', '_'): r['latest_date'] for r in results}
@@ -2228,13 +2252,26 @@ def about_stats():
 #========================= View Pages #=========================
 
 def _warm_startup_cache():
-    try:
-        with app.test_request_context('/vehicles'):
-            sort_price()
-        with app.test_request_context('/about'):
-            about_stats()
-    except Exception as e:
-        print(f"Startup cache warm-up skipped: {e}")
+    max_attempts = 10
+    retry_delay = 2
+    for attempt in range(1, max_attempts + 1):
+        conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
+        if conn is not None:
+            close_connection(conn)
+            try:
+                with app.test_request_context('/vehicles'):
+                    sort_price()
+                with app.test_request_context('/about'):
+                    about_stats()
+                print("Startup cache warm-up completed.", flush=True)
+                return
+            except Exception as e:
+                print(f"Startup cache warm-up skipped: {e}", flush=True)
+                return
+        if attempt < max_attempts:
+            print(f"Waiting for MySQL before cache warm-up (attempt {attempt}/{max_attempts})...", flush=True)
+            time.sleep(retry_delay)
+    print("Startup cache warm-up skipped: database unavailable at startup.", flush=True)
 
 _warm_startup_cache()
 

@@ -29,10 +29,11 @@ def create_connection(host_name, user_name, user_password, db_name):
             host = host_name,
             user = user_name,
             password = user_password,
-            database = db_name
+            database = db_name,
+            connect_timeout = 10
         )
     except MySQLError as e:
-        print(f"Unsuccessful DB Connection, the error: {e} occurred.")
+        print(f"Unsuccessful DB Connection, the error: {e} occurred.", flush=True)
     return connection
 
 def execute_read_query(connection, query, params=None):
@@ -51,6 +52,9 @@ def execute_read_query(connection, query, params=None):
         if now - QUERY_CACHE[cache_key]['time'] < CACHE_TTL:
             return QUERY_CACHE[cache_key]['result']
 
+    if connection is None:
+        return None
+
     result = None
     cursor = None
     try:
@@ -66,7 +70,7 @@ def execute_read_query(connection, query, params=None):
             QUERY_CACHE[cache_key] = {'time': now, 'result': result}
             
     except Exception as e:
-        print(f"The error {e} occurred.")
+        print(f"The error {e} occurred.", flush=True)
     finally:
         if cursor:
             cursor.close()

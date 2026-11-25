@@ -63,7 +63,7 @@
               <div id="loading-animation" class="shimmer" style="position: absolute; inset: 0; z-index: 5; display: none; border-radius: 4px;">
                 <div class="shimmer-box" style="width: 100%; height: 100%; border-radius: 4px;"></div>
               </div>
-              <img id="carousel-image" alt="" aria-live="polite" aria-atomic="true" style="display: block !important; position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; transition: opacity 0.2s ease-in-out; opacity: 0; z-index: 1; border-radius: 4px;">
+              <img id="carousel-image" alt="" fetchpriority="high" decoding="async" aria-live="polite" aria-atomic="true" style="display: block !important; position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; transition: opacity 0.2s ease-in-out; opacity: 0; z-index: 1; border-radius: 4px;">
             </div>
 
             <button id="prev" style="display: none;" aria-label="Previous Image">&#10094;</button>
@@ -505,7 +505,7 @@
             : `<div style="color: gray; font-style: italic;">No description available</div>`;
 
           card.innerHTML = `
-            <img src="${imgSrc}" alt="${rpoCode}" data-fallback="${fallbackPath}" >
+            <img src="${imgSrc}" alt="${rpoCode}" data-fallback="${fallbackPath}" loading="lazy" decoding="async">
             <p>${rpoCode}</p>
             <div class="rpo-description">${descHTML}</div>
           `;
@@ -820,7 +820,7 @@
 
           fetch('/report-missing-image', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
               body: JSON.stringify({
                   vin: vin.vin || 'Unknown',
                   model: derivedModel || 'Unknown Model',
@@ -849,6 +849,8 @@
             thumbWrapper.style.cursor = 'pointer';
             
             const thumb = document.createElement('img');
+            thumb.loading = 'lazy';
+            thumb.decoding = 'async';
             thumb.style.width = '100%';
             thumb.style.display = 'block';
             thumb.style.opacity = '0';

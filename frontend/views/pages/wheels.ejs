@@ -196,6 +196,8 @@
                         const tdImage = document.createElement('td');
                         const img = document.createElement('img');
                         img.className = 'wheel-image';
+                        img.loading = 'lazy';
+                        img.decoding = 'async';
                         img.dataset.rpo = imgRpo;
                         
                         // Wrapping the source in the URL constructor ensures it forms a valid URL instead of executing rogue text

@@ -73,5 +73,9 @@ CREATE INDEX idx_orders_date ON Orders (creation_date, order_id, country);
 ALTER TABLE Dealers ADD UNIQUE KEY idx_dealer_unique (dealer_name, location, sitedealer_code);
 CREATE INDEX idx_veh_model_year ON Vehicles (model, modelYear, trim, body, order_id);
 CREATE INDEX idx_veh_dealer ON Vehicles (dealer_id);
+-- Covering index for Orders -> Vehicles joins (/daily-stats, /calendar-activity, date & country lookups)
+CREATE INDEX idx_veh_order_id ON Vehicles (order_id, model, modelYear, trim, body, engine_id, transmission_id, drivetrain_id, color_id);
+-- Reverse covering index for RPO-first lookups (/vehicles?rpo=..., /stats?category=interior, SLL/SLM orderType)
+CREATE INDEX idx_options_code_veh ON Options (option_code, vehicle_id);
 
-ANALYZE TABLE Vehicles, Orders, SpecialEditions, Dealers, Colors, Engines, Transmissions, Drivetrains;
+ANALYZE TABLE Vehicles, Orders, SpecialEditions, Options, Dealers, Colors, Engines, Transmissions, Drivetrains;

@@ -84,17 +84,23 @@ const nodemailer = require('nodemailer');
 const basicAuth = require('express-basic-auth');
 const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
 
+const getClientIp = (req) => {
+    const cfIp = req.headers['cf-connecting-ip'];
+    if (cfIp) return String(cfIp).trim();
+    const xff = req.headers['x-forwarded-for'];
+    if (xff) return String(xff).split(',')[0].trim();
+    return req.ip || 'unknown';
+};
+const getClientIpKey = (req) => String(ipKeyGenerator(getClientIp(req)));
+
 const contactLimiter = rateLimit({
-    windowMs: 60 * 60 * 1000, 
-    max: 3, 
+    windowMs: 60 * 60 * 1000,
+    max: 3,
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req, res) => {
-        const ip = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.ip;
-        return ipKeyGenerator(ip);
-    },
+    keyGenerator: getClientIpKey,
     handler: (req, res) => {
-        res.status(429).render('pages/contact', { 
+        res.status(429).render('pages/contact', {
             error: 'Too many messages sent from this connection. Please wait an hour before trying again.',
             pagePath: '/contact',
             canonicalPath: '/contact'
@@ -102,46 +108,66 @@ const contactLimiter = rateLimit({
     }
 });
 
+let _mailTransporter = null;
+const getMailTransporter = () => {
+    if (!_mailTransporter) {
+        _mailTransporter = nodemailer.createTransport({
+            host: 'smtp.mail.me.com',
+            port: 587,
+            secure: false, // MUST be false for port 587
+            pool: true,
+            auth: {
+                user: 'hussainks92@icloud.com',
+                pass: process.env.SMTP_PASS
+            }
+        });
+    }
+    return _mailTransporter;
+};
+
+const verifyTurnstile = async (token, remoteip) => {
+    const params = new URLSearchParams();
+    params.append('secret', process.env.TURNSTILE_SECRET_KEY || '');
+    params.append('response', String(token || ''));
+    if (remoteip) params.append('remoteip', remoteip);
+    const res = await axios.post(
+        'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+        params,
+        { timeout: 10000 }
+    );
+    return Boolean(res.data && res.data.success);
+};
+
 // --- Discord Alerts ---
 const sendDiscordAlert = async (type, payload) => {
     const webhookUrl = process.env.DISCORD_RATELIMIT_URL;
     if (!webhookUrl) return;
 
     let content = '';
-
     if (type === 'ratelimit') {
         content = `🚨 **Inhuman Search Pace Detected** 🚨\n**IP:** \`${payload.ip}\`\n**Path:** \`${payload.path}\`\n**User-Agent:** \`${payload.userAgent || 'Unknown'}\``;
     } else if (type === 'image') {
         content = `⚠️ **ImageGen Blocked** ⚠️\n**VIN:** \`${payload.vin}\`\n**Model:** ${payload.model}\n**Missing:** ${payload.missing}`;
+    } else if (type === 'honeypot') {
+        content = `🍯 **Honeypot Triggered** 🍯\n**IP:** \`${payload.rawIp || payload.ip}\`\n**Path:** \`${payload.method} ${payload.path}\`\n**User-Agent:** \`${payload.userAgent || 'Unknown'}\``;
     }
+    if (!content) return;
 
     try {
-        await axios.post(webhookUrl, { content });
+        await axios.post(webhookUrl, { content, allowed_mentions: { parse: [] } }, { timeout: 5000 });
     } catch (err) {
         console.error("Discord webhook failed:", err.message);
     }
 };
 const notifyHoneypotTriggered = async (payload) => {
-    // 1. Send Discord alert if configured
     if (process.env.DISCORD_RATELIMIT_URL) {
         await sendDiscordAlert('honeypot', payload);
         return;
     }
 
-    // 2. Email alert fallback if Discord webhook is not set
     if (process.env.SMTP_PASS) {
         try {
-            const transporter = nodemailer.createTransport({
-                host: 'smtp.mail.me.com',
-                port: 587,
-                secure: false,
-                auth: {
-                    user: 'hussainks92@icloud.com',
-                    pass: process.env.SMTP_PASS
-                }
-            });
-
-            await transporter.sendMail({
+            await getMailTransporter().sendMail({
                 from: '"GM Build Counts Security" <contact@gmbuildcounts.com>',
                 to: 'contact@gmbuildcounts.com',
                 subject: `🍯 Honeypot Alert: Bot trapped from ${payload.rawIp || payload.ip}`,
@@ -164,10 +190,7 @@ const authLimiter = rateLimit({
     max: 3,
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req, res) => {
-        const ip = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.ip;
-        return ipKeyGenerator(ip);
-    },
+    keyGenerator: getClientIpKey,
     handler: (req, res) => {
         res.status(429).send(`
             <!DOCTYPE html>
@@ -194,24 +217,22 @@ const authLimiter = rateLimit({
             </body>
             </html>
         `);
-    },
-    standardHeaders: true,
-    legacyHeaders: false,
+    }
 });
 
 const renderRateLimitPage = (req, res) => {
-    const ip = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.ip;
+    const ip = getClientIp(req);
     const rayId = req.headers['cf-ray'] || (crypto.randomBytes(8).toString('hex') + '-ORD');
     const host = req.headers.host || 'www.gmbuildcounts.com';
     const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
 
-    res.status(429).render('pages/errors/429', { 
+    res.status(429).render('pages/errors/429', {
         rayId,
         clientIp: ip,
         host,
         timestamp,
         nonce: res.locals.nonce || '',
-        pagePath: req.path || '/search', 
+        pagePath: req.path || '/search',
         canonicalPath: req.originalUrl || '/search'
     });
 };
@@ -221,18 +242,11 @@ const searchLimiter = rateLimit({
     max: 25,
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req, res) => {
-        const ip = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.ip;
-        return ipKeyGenerator(ip);
-    },
+    keyGenerator: getClientIpKey,
     handler: (req, res) => {
-        const ip = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.ip;
+        const ip = getClientIp(req);
         const userAgent = req.headers['user-agent'] || 'Unknown';
-        
-        // 1. Fire the Discord alert silently in the background
         sendDiscordAlert('ratelimit', { ip, path: req.originalUrl, userAgent });
-        
-        // 2. Serve the user the Cloudflare 1015 rate limit error page
         renderRateLimitPage(req, res);
     }
 });
@@ -242,32 +256,32 @@ const apiLimiter = rateLimit({
     max: 5, // Limit each IP to 5 queries per minute
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req, res) => {
-        const ip = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.ip;
-        return ipKeyGenerator(ip);
-    },
+    keyGenerator: getClientIpKey,
     handler: (req, res) => {
-        const ip = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.ip;
+        const ip = getClientIp(req);
         const userAgent = req.headers['user-agent'] || 'Unknown';
         sendDiscordAlert('ratelimit', { ip, path: req.originalUrl, userAgent });
-        res.status(429).json({ 
+        res.status(429).json({
             error: 'Rate limit exceeded: Maximum 5 queries per minute allowed. Please wait a moment and try again.'
         });
     }
 });
 
+const imageReportLimiter = rateLimit({
+    windowMs: 10 * 60 * 1000,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: getClientIpKey
+});
+const reportedMissingVins = new Set();
+
 // --- Turnstile Session Verification for /query (validate once per user session) ---
 const TURNSTILE_COOKIE_NAME = 'cf_query_verified';
 const TURNSTILE_SESSION_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
-const TURNSTILE_HMAC_SECRET = crypto
-    .createHash('sha256')
-    .update(String(process.env.TURNSTILE_SECRET_KEY || process.env.ADMIN_PASS || 'gm-query-turnstile-secret'))
-    .digest();
-
-function getClientIpKey(req) {
-    const rawIp = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.ip || 'unknown';
-    return String(ipKeyGenerator(rawIp));
-}
+const TURNSTILE_HMAC_SECRET = process.env.TURNSTILE_SECRET_KEY || process.env.ADMIN_PASS
+    ? crypto.createHash('sha256').update(String(process.env.TURNSTILE_SECRET_KEY || process.env.ADMIN_PASS)).digest()
+    : crypto.randomBytes(32);
 
 function getCookieValue(req, name) {
     const rawCookie = req.headers.cookie;
@@ -351,10 +365,11 @@ const blockDirectApiAccess = (req, res, next) => {
     }
 };
 
+const adminUsers = (process.env.ADMIN_USER && process.env.ADMIN_PASS)
+    ? { [process.env.ADMIN_USER]: process.env.ADMIN_PASS }
+    : {};
 const requireAdmin = basicAuth({
-    users: {
-        [process.env.ADMIN_USER]: process.env.ADMIN_PASS
-    },
+    users: adminUsers,
     challenge: true,
     unauthorizedResponse: (req) => {
         return `
@@ -413,51 +428,89 @@ const logBackendError = (label, req, err) => {
     console.error('%s (%s): %s', label, safeUrl, formatBackendError(err));
 };
 
-// API Request Caching with single retry on transient socket hang-ups
+// API Request Caching with canonical keys, in-flight deduplication, and transient socket retry
 const apiCache = new Map();
+const apiInFlight = new Map();
+const API_CACHE_TTL_MS = 5 * 60 * 1000;
+const API_CACHE_MAX_SIZE = 1000;
 const originalGet = axiosInstance.get;
+const buildCacheKey = (url, params) => {
+    if (!params || typeof params !== 'object') return url;
+    const sorted = Object.keys(params).sort().reduce((acc, k) => {
+        acc[k] = params[k];
+        return acc;
+    }, {});
+    return url + '?' + JSON.stringify(sorted);
+};
 axiosInstance.get = async (url, config) => {
-    const key = url + JSON.stringify(config?.params || {});
+    const key = buildCacheKey(url, config?.params);
     const cached = apiCache.get(key);
-    if (cached && Date.now() - cached.timestamp < 5 * 60 * 1000) {
+    if (cached && Date.now() - cached.timestamp < API_CACHE_TTL_MS) {
         return { data: cached.data };
     }
-    let response;
-    try {
-        response = await originalGet.call(axiosInstance, url, config);
-    } catch (err) {
-        const isTransientReset =
-            !err.response &&
-            (RETRYABLE_AXIOS_CODES.has(err.code) || /socket hang up/i.test(err.message || ''));
-        if (!isTransientReset) throw err;
-        response = await originalGet.call(axiosInstance, url, config);
+    if (apiInFlight.has(key)) {
+        return apiInFlight.get(key);
     }
-    if (apiCache.size > 1000) apiCache.clear();
-    apiCache.set(key, { timestamp: Date.now(), data: response.data });
-    return response;
+    const fetchPromise = (async () => {
+        let response;
+        try {
+            response = await originalGet.call(axiosInstance, url, config);
+        } catch (err) {
+            const isTransientReset =
+                !err.response &&
+                (RETRYABLE_AXIOS_CODES.has(err.code) || /socket hang up/i.test(err.message || ''));
+            if (!isTransientReset) throw err;
+            response = await originalGet.call(axiosInstance, url, config);
+        }
+        if (apiCache.size >= API_CACHE_MAX_SIZE) {
+            apiCache.delete(apiCache.keys().next().value);
+        }
+        apiCache.set(key, { timestamp: Date.now(), data: response.data });
+        return { data: response.data };
+    })().finally(() => {
+        apiInFlight.delete(key);
+    });
+    apiInFlight.set(key, fetchPromise);
+    return fetchPromise;
 };
 
 // App Configuration
 app.use(compression());
 app.set('trust proxy', 1);
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+
+// Serve static media/CSS/PDFs before body parsers and honeypot checks for fast delivery
+app.use(express.static('public', {
+    maxAge: '30d',
+    etag: true,
+    setHeaders: (res, filePath) => {
+        if (/\.(webp|png|jpe?g|svg|woff2?|ico)$/i.test(filePath)) {
+            res.setHeader('Cache-Control', 'public, max-age=2592000, immutable');
+        } else if (filePath.endsWith('.pdf')) {
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', 'inline');
+            res.setHeader('Cache-Control', 'public, max-age=2592000, immutable');
+        }
+    }
+}));
+
+app.use(express.urlencoded({ extended: true, limit: '32kb' }));
+app.use(express.json({ limit: '32kb' }));
 
 // Honeypot Bot Detection Middleware (zero latency for real users)
 app.use((req, res, next) => {
     const hpValue = (req.body && req.body.website_hp) || (req.query && req.query.website_hp);
     if (hpValue) {
-        const ip = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.ip;
+        const ip = getClientIp(req);
         const userAgent = req.get('user-agent') || 'Unknown';
         const referer = req.get('referer') || 'None';
-        const path = req.originalUrl;
+        const reqPath = req.originalUrl;
         const method = req.method;
 
         // Fire notification in the background (asynchronous, non-blocking)
         notifyHoneypotTriggered({
             ip: typeof ipKeyGenerator === 'function' ? ipKeyGenerator(ip) : ip,
             rawIp: ip,
-            path,
+            path: reqPath,
             method,
             userAgent,
             referer,
@@ -485,17 +538,6 @@ app.use((req, res, next) => {
     }
     next();
 });
-app.use(express.static('public', {
-    maxAge: '30d',
-    etag: true,
-    setHeaders: (res, path, stat) => {
-        // Force browsers to view PDFs inline instead of downloading
-        if (path.endsWith('.pdf')) {
-            res.setHeader('Content-Type', 'application/pdf');
-            res.setHeader('Content-Disposition', 'inline');
-        }
-    }
-}));
 app.set('view engine', 'ejs');
 // Agent Content Negotiation Middleware
 app.use((req, res, next) => {
@@ -646,9 +688,9 @@ function getLocalImageRPOs() {
             const entries = fs.readdirSync(currentPath, { withFileTypes: true });
             entries.forEach(entry => {
                 if (entry.isDirectory()) {
-                    scanDirectory(require('path').join(currentPath, entry.name), prefix ? `${prefix}/${entry.name}` : entry.name, urlBase);
+                    scanDirectory(path.join(currentPath, entry.name), prefix ? `${prefix}/${entry.name}` : entry.name, urlBase);
                 } else if (/\.(webp|png|jpe?g)$/i.test(entry.name)) {
-                    const rpoCode = require('path').parse(entry.name).name.toUpperCase();
+                    const rpoCode = path.parse(entry.name).name.toUpperCase();
                     const imagePath = `${urlBase}${prefix ? prefix + '/' : ''}${entry.name}`;
                     
                     if (prefix) {
@@ -659,18 +701,14 @@ function getLocalImageRPOs() {
                         if (!localRpoImages[rpoCode]) {
                             localRpoImages[rpoCode] = imagePath;
                         }
-                    } else {
-                        if (!localRpoImages[rpoCode]) {
-                            localRpoImages[rpoCode] = imagePath;
-                        }
+                    } else if (!localRpoImages[rpoCode]) {
+                        localRpoImages[rpoCode] = imagePath;
                     }
                 }
             });
         }
         scanDirectory(rpoWheelsDir, '', '/img/rpos/');
-        
-        const extColorsDir = require('path').join(__dirname, 'public', 'img', 'extColors');
-        scanDirectory(extColorsDir, '', '/img/extColors/');
+        scanDirectory(path.join(__dirname, 'public', 'img', 'extColors'), '', '/img/extColors/');
         
     } catch (error) {
         console.warn(`Warning: Could not read RPO image directories: ${error.message}`);
@@ -683,14 +721,18 @@ function formatCurrency(number) {
     return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
-// Initial Data Caching
+// Initial Data Caching (stored once on app.locals to avoid per-request copying)
 const cachedHeaderImages = getHeaderImages();
 const localRpoImageMap = getLocalImageRPOs();
+Object.assign(app.locals, modules, {
+    headerImages: cachedHeaderImages,
+    localRpoImageMap,
+    getRpoImageCandidates,
+    formatCurrency
+});
 
 // --- GLOBAL MIDDLEWARE ---
-// This handles maintenance and makes common variables available to ALL templates
 app.use((req, res, next) => {
-    // 1. Maintenance Logic
     if (maintenanceMode && req.path !== '/maintenance' && !req.path.startsWith('/css') && !req.path.startsWith('/img')) {
         return res.redirect('/maintenance');
     }
@@ -698,17 +740,8 @@ app.use((req, res, next) => {
         return res.redirect('/');
     }
 
-    // 2. Global View Variables (res.locals)
     res.locals.req = req;
-    res.locals.headerImages = cachedHeaderImages;
     res.locals.currentHeaderImage = cachedHeaderImages[Math.floor(Math.random() * cachedHeaderImages.length)];
-    res.locals.localRpoImageMap = localRpoImageMap;
-    res.locals.getRpoImageCandidates = getRpoImageCandidates;
-    res.locals.formatCurrency = formatCurrency;
-    
-    // 3. Inject all RPO modules (camaroRpo, corvetteRpo, etc.)
-    Object.assign(res.locals, modules);
-    
     next();
 });
 
@@ -775,13 +808,9 @@ app.post('/contact', contactLimiter, async (req, res) => {
     }
 
     try {
-        const verifyUrl = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
-        const verifyResponse = await axios.post(verifyUrl, `secret=${process.env.TURNSTILE_SECRET_KEY}&response=${turnstileToken}`, {
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-        });
-
-        if (!verifyResponse.data.success) {
-            return res.render('pages/contact', { 
+        const verified = await verifyTurnstile(turnstileToken, getClientIp(req));
+        if (!verified) {
+            return res.render('pages/contact', {
                 error: 'Bot verification failed. Please try again.',
                 formData,
                 pagePath: '/contact',
@@ -790,7 +819,7 @@ app.post('/contact', contactLimiter, async (req, res) => {
         }
     } catch (err) {
         console.error('Turnstile verification error:', err);
-        return res.render('pages/contact', { 
+        return res.render('pages/contact', {
             error: 'Security service unavailable. Try again later.',
             formData,
             pagePath: '/contact',
@@ -800,16 +829,6 @@ app.post('/contact', contactLimiter, async (req, res) => {
 
     // --- C. Send the Email ---
     try {
-        const transporter = nodemailer.createTransport({
-            host: 'smtp.mail.me.com',
-            port: 587,
-            secure: false, // MUST be false for port 587
-            auth: {
-                user: 'hussainks92@icloud.com', 
-                pass: process.env.SMTP_PASS
-            }
-        });
-
         const safeMessageHtml = String(trimmedMessage || '')
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
@@ -819,26 +838,26 @@ app.post('/contact', contactLimiter, async (req, res) => {
             .replace(/\n/g, '<br>');
 
         const mailOptions = {
-            from: '"GM Build Counts" <contact@gmbuildcounts.com>', 
-            to: 'contact@gmbuildcounts.com',                      
-            replyTo: trimmedEmail,                                       
+            from: '"GM Build Counts" <contact@gmbuildcounts.com>',
+            to: 'contact@gmbuildcounts.com',
+            replyTo: trimmedEmail,
             subject: `New Contact Form Submission from ${trimmedName}`,
             text: `Name: ${trimmedName}\nEmail: ${trimmedEmail}\n\nMessage:\n${trimmedMessage}`,
             html: `<p>${safeMessageHtml}</p>`
         };
 
-        await transporter.sendMail(mailOptions);
-        
+        await getMailTransporter().sendMail(mailOptions);
+
         // Render success state
-        res.render('pages/contact', { 
+        res.render('pages/contact', {
             success: true,
             pagePath: '/contact',
-            canonicalPath: '/contact' 
+            canonicalPath: '/contact'
         });
 
     } catch (err) {
         console.error('Email sending error:', err);
-        res.render('pages/contact', { 
+        res.render('pages/contact', {
             error: 'Failed to send message. Please try again later.',
             formData,
             pagePath: '/contact',
@@ -847,24 +866,28 @@ app.post('/contact', contactLimiter, async (req, res) => {
     }
 });
 
-app.post('/report-missing-image', express.json(), async (req, res) => {
+app.post('/report-missing-image', imageReportLimiter, blockDirectApiAccess, async (req, res) => {
     try {
-        const { vin, model, missing } = req.body;
-        
-        // Prevent abuse by ensuring the payload exists
-        if (!vin || !missing) {
-            return res.status(400).send('Invalid payload');
+        const vin = typeof req.body?.vin === 'string' ? req.body.vin.trim().toUpperCase() : '';
+        const model = typeof req.body?.model === 'string' ? req.body.model.trim().slice(0, 64) : 'Unknown Model';
+        const missing = typeof req.body?.missing === 'string' ? req.body.missing.trim().slice(0, 128) : '';
+
+        if (!/^[A-HJ-NPR-Z0-9]{17}$/.test(vin) || !missing) {
+            return res.status(400).json({ error: 'Invalid payload' });
         }
 
-        // Fire your existing Discord webhook function
-        if (typeof sendDiscordAlert === 'function') {
+        if (!reportedMissingVins.has(vin)) {
+            if (reportedMissingVins.size >= 500) {
+                reportedMissingVins.delete(reportedMissingVins.values().next().value);
+            }
+            reportedMissingVins.add(vin);
             await sendDiscordAlert('image', { vin, model, missing });
         }
-        
-        res.status(200).send({ success: true });
+
+        res.status(200).json({ success: true });
     } catch (error) {
-        console.error('Error sending Discord image alert:', error);
-        res.status(500).send({ success: false });
+        console.error('Error sending Discord image alert:', error.message);
+        res.status(500).json({ success: false });
     }
 });
 
@@ -1185,18 +1208,8 @@ app.post('/ai-query', apiLimiter, requireAdmin, blockDirectApiAccess, async (req
                 });
             }
 
-            const remoteip = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.ip;
-            const verifyParams = new URLSearchParams();
-            verifyParams.append('secret', process.env.TURNSTILE_SECRET_KEY || '');
-            verifyParams.append('response', turnstileToken);
-            if (remoteip) verifyParams.append('remoteip', remoteip);
-
-            const verifyRes = await axios.post(
-                'https://challenges.cloudflare.com/turnstile/v0/siteverify',
-                verifyParams
-            );
-
-            if (!verifyRes.data || !verifyRes.data.success) {
+            const verified = await verifyTurnstile(turnstileToken, getClientIp(req));
+            if (!verified) {
                 return res.status(403).json({
                     error: 'Security check failed or expired. Please complete the Cloudflare check again.',
                     requireTurnstile: true
@@ -1230,9 +1243,9 @@ app.post('/ai-query', apiLimiter, requireAdmin, blockDirectApiAccess, async (req
         console.error("AI Query Error:", error.response?.data || error.message);
         const statusCode = error.response?.status || 500;
         const backendError = error.response?.data?.error;
-        res.status(statusCode).json({ 
-            error: backendError || 'AI query failed', 
-            details: error.response?.data?.details || error.message || 'Unknown error',
+        res.status(statusCode).json({
+            error: backendError || 'AI query failed',
+            details: error.response?.data?.details || 'Unable to process AI query.',
             generated_sql: error.response?.data?.generated_sql,
             turnstileVerified: isTurnstileQueryVerified(req)
         });
@@ -1263,7 +1276,7 @@ app.use((err, req, res, next) => {
         return renderRateLimitPage(req, res);
     }
     res.status(500).render('pages/errors/500', {
-        error: err.message || err,
+        error: 'Internal Server Error',
         pagePath: '/500',
         canonicalPath: req.originalUrl
     });

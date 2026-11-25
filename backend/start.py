@@ -118,6 +118,8 @@ OLLAMA_URL = "http://192.168.1.126:11434/api/generate"
 AI_MODEL = "qwen2.5-coder:7b"
 AI_SQL_CACHE = {}
 AI_SQL_CACHE_TTL = 3600
+AI_SQL_CACHE_MAX_SIZE = 512
+_OLLAMA_SESSION = requests.Session()
 # Limit concurrent CPU LLM requests to 1 so i7-12700K P-cores are never oversubscribed
 # alongside Scrypted, Immich, Jellyfin, Nextcloud, and MySQL.
 _OLLAMA_SEMAPHORE = BoundedSemaphore(1)
@@ -1066,7 +1068,7 @@ def natural_language_query():
                 return jsonify({'error': 'AI engine is currently busy processing another query. Please try again in a few seconds.'}), 429
 
             try:
-                response = requests.post(OLLAMA_URL, json=payload, timeout=45)
+                response = _OLLAMA_SESSION.post(OLLAMA_URL, json=payload, timeout=45)
                 response.raise_for_status()
                 generated_sql = sanitize_and_repair_ai_sql(response.json().get('response', ''), intent)
             except Exception as e:
@@ -1076,6 +1078,8 @@ def natural_language_query():
             finally:
                 _OLLAMA_SEMAPHORE.release()
 
+        if len(AI_SQL_CACHE) >= AI_SQL_CACHE_MAX_SIZE:
+            AI_SQL_CACHE.pop(next(iter(AI_SQL_CACHE)), None)
         AI_SQL_CACHE[cache_key] = {'time': now, 'sql': generated_sql}
 
     if not is_safe_readonly_sql(generated_sql):
@@ -1112,71 +1116,63 @@ def natural_language_query():
 @app.route('/search', methods=['GET'])
 def search_inv():
     vin = request.args.get('vin')
-    join_clause = """
+    if not vin:
+        return jsonify([])
+    sqlStatement = """
+        SELECT v.vehicle_id, v.vin, v.modelYear, v.model, v.body, v.trim, e.engine_type,
+               t.transmission_type, d.drivetrain_type, c.color_name, v.msrp,
+               o.country, o.order_number, mc.mmc_code,
+               UPPER(DATE_FORMAT(o.creation_date, '%%W, %%d %%M %%Y')) AS formatted_date,
+               dl.dealer_name, dl.location,
+               (SELECT GROUP_CONCAT(DISTINCT se.special_desc ORDER BY se.special_desc ASC SEPARATOR ', ')
+                FROM SpecialEditions se WHERE se.vehicle_id = v.vehicle_id) AS special_descs
+        FROM Vehicles v
         JOIN Engines e ON v.engine_id = e.engine_id
         JOIN Transmissions t ON v.transmission_id = t.transmission_id
         JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id
         JOIN Colors c ON v.color_id = c.color_id
         JOIN Orders o ON v.order_id = o.order_id
         JOIN Dealers dl ON v.dealer_id = dl.dealer_id
-        LEFT JOIN SpecialEditions se ON v.vehicle_id = se.vehicle_id
-        LEFT JOIN Options opt ON v.vehicle_id = opt.vehicle_id
         LEFT JOIN MMC_Codes mc ON o.mmc_code_id = mc.mmc_code_id
-    """
-    sqlStatement = f"""
-        SELECT v.vin, v.modelYear, v.model, v.body, v.trim, e.engine_type,
-               t.transmission_type, d.drivetrain_type, c.color_name, v.msrp,
-               o.country, o.order_number, mc.mmc_code,
-               UPPER(DATE_FORMAT(o.creation_date, '%%W, %%d %%M %%Y')) AS formatted_date,
-               dl.dealer_name, dl.location,
-               se.special_desc,
-               opt.option_code
-        FROM Vehicles v
-        {join_clause}
         WHERE v.vin = %s
+        LIMIT 1
     """
     conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
     if conn is None:
         return jsonify({'error': 'Database is temporarily unavailable. Please try again shortly.'}), 503
     rows = execute_read_query(conn, sqlStatement, (vin,))
-    close_connection(conn)
-
     if not rows:
+        close_connection(conn)
         return jsonify([])
 
-    vehicle = {}
-    rpo_codes = []
-    special_descs = []
+    row = rows[0]
+    opt_rows = execute_read_query(
+        conn,
+        "SELECT option_code FROM Options WHERE vehicle_id = %s ORDER BY option_code ASC",
+        (row['vehicle_id'],),
+    ) or []
+    close_connection(conn)
 
-    for row in rows:
-        if not vehicle:
-            vehicle = {
-                'vin': row['vin'],
-                'modelYear': row['modelYear'],
-                'model': row['model'],
-                'body': row['body'],
-                'trim': row['trim'],
-                'engine_type': row['engine_type'],
-                'transmission_type': row['transmission_type'],
-                'drivetrain_type': row['drivetrain_type'],
-                'color_name': row['color_name'],
-                'msrp': row['msrp'],
-                'country': row['country'],
-                'order_number': row['order_number'],
-                'mmc_code': row['mmc_code'],
-                'formatted_date': row['formatted_date'],
-                'dealer_name': row['dealer_name'],
-                'location': row['location']
-            }
-
-        if row['option_code']:
-            rpo_codes.append(row['option_code'])
-        if row['special_desc']:
-            special_descs.append(row['special_desc'])
-
-    vehicle['rpo_codes'] = sorted(set(rpo_codes))
-    vehicle['special_descs'] = ', '.join(sorted(set(special_descs))) if special_descs else 'NA'
-
+    vehicle = {
+        'vin': row['vin'],
+        'modelYear': row['modelYear'],
+        'model': row['model'],
+        'body': row['body'],
+        'trim': row['trim'],
+        'engine_type': row['engine_type'],
+        'transmission_type': row['transmission_type'],
+        'drivetrain_type': row['drivetrain_type'],
+        'color_name': row['color_name'],
+        'msrp': row['msrp'],
+        'country': row['country'],
+        'order_number': row['order_number'],
+        'mmc_code': row['mmc_code'],
+        'formatted_date': row['formatted_date'],
+        'dealer_name': row['dealer_name'],
+        'location': row['location'],
+        'rpo_codes': [r['option_code'] for r in opt_rows if r.get('option_code')],
+        'special_descs': row['special_descs'] or 'NA',
+    }
     return jsonify([vehicle])
 
 @app.route('/vehicles', methods=['GET'])
@@ -1202,7 +1198,7 @@ def sort_price():
     
     limit = 100
     try:
-        page = int(page)
+        page = max(1, int(page))
         offset = (page - 1) * limit
     except (ValueError, TypeError):
         page = 1
@@ -1634,6 +1630,22 @@ def sort_price():
         'limit': limit
     })
 
+def _order_type_cond(order_type_filter):
+    if order_type_filter == 'retail':
+        return " AND EXISTS (SELECT 1 FROM Options opt WHERE opt.vehicle_id = v.vehicle_id AND opt.option_code = 'SLL')"
+    if order_type_filter == 'stock':
+        return " AND EXISTS (SELECT 1 FROM Options opt WHERE opt.vehicle_id = v.vehicle_id AND opt.option_code = 'SLM')"
+    return ""
+
+
+def _model_filter_cond(model_filter):
+    if not model_filter:
+        return "", []
+    if model_filter == 'CORVETTE (C8)':
+        return " AND v.model LIKE %s AND v.modelYear >= '2020'", ['CORVETTE%']
+    return " AND v.model = %s", [model_filter]
+
+
 @app.route('/calendar-activity', methods=['GET'])
 def calendar_activity():
     year = request.args.get('year')
@@ -1646,32 +1658,10 @@ def calendar_activity():
     conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
     if conn is None:
         return jsonify({'error': 'Database is temporarily unavailable. Please try again shortly.'}), 503
-    
-    params = []
-    model_join = ""
-    model_cond = ""
-    
-    if model_filter:
-        model_join = "JOIN Vehicles v ON o.order_id = v.order_id"
-        if model_filter == 'CORVETTE (C8)':
-            model_cond = "AND v.model LIKE %s AND v.modelYear >= '2020'"
-            params.append('CORVETTE%')
-        else:
-            model_cond = "AND v.model = %s"
-            params.append(model_filter)
 
-    # --- NEW: Order Type Logic ---
-    order_type_filter = request.args.get('orderType')
-    order_cond = ""
-    if order_type_filter == 'retail':
-        order_cond = " AND EXISTS (SELECT 1 FROM Options opt WHERE opt.vehicle_id = v.vehicle_id AND opt.option_code = 'SLL')"
-    elif order_type_filter == 'stock':
-        order_cond = " AND EXISTS (SELECT 1 FROM Options opt WHERE opt.vehicle_id = v.vehicle_id AND opt.option_code = 'SLM')"
-        
-    # Ensure Vehicles table is joined if EITHER model_filter OR order_cond is active
-    if model_filter or order_cond:
-        model_join = "JOIN Vehicles v ON o.order_id = v.order_id"
-    # -----------------------------
+    model_cond, params = _model_filter_cond(model_filter)
+    order_cond = _order_type_cond(request.args.get('orderType'))
+    model_join = "JOIN Vehicles v ON o.order_id = v.order_id" if (model_filter or order_cond) else ""
             
     if category == 'yearly':
         sqlStatement = f"""
@@ -1713,27 +1703,24 @@ def daily_stats():
     model_filter = request.args.get('model')
     date_filter = request.args.get('date')
     category = request.args.get('category', 'daily')
-    model_year_filter = request.args.get('modelYear') # NEW: Capture modelYear param
-    trim_filter = request.args.get('trim') # NEW: Capture trim param
+    model_year_filter = request.args.get('modelYear')
+    trim_filter = request.args.get('trim')
     
     conn = create_connection(myCreds.conString, myCreds.userName, myCreds.password, myCreds.dbName)
     if conn is None:
         return jsonify({'error': 'Database is temporarily unavailable. Please try again shortly.'}), 503
     from datetime import date
     
-    # NEW: Get all available model years for the dropdown
-    my_sql = "SELECT DISTINCT modelYear FROM Vehicles WHERE modelYear IS NOT NULL ORDER BY modelYear DESC"
-    my_rows = execute_read_query(conn, my_sql)
+    my_rows = execute_read_query(conn, "SELECT DISTINCT modelYear FROM Vehicles WHERE modelYear IS NOT NULL ORDER BY modelYear DESC")
     available_model_years = [str(r['modelYear']) for r in my_rows] if my_rows else []
 
-    bounds_params = []
     if model_filter:
-        if model_filter == 'CORVETTE (C8)':
-            bounds_sql = "SELECT DATE_FORMAT(MIN(o.creation_date), '%%Y-%%m-%%d') as min_date, DATE_FORMAT(MAX(o.creation_date), '%%Y-%%m-%%d') as max_date FROM Orders o JOIN Vehicles v ON o.order_id = v.order_id WHERE v.model LIKE %s AND v.modelYear >= '2020' AND o.creation_date IS NOT NULL"
-            bounds_params.append('CORVETTE%')
-        else:
-            bounds_sql = "SELECT DATE_FORMAT(MIN(o.creation_date), '%%Y-%%m-%%d') as min_date, DATE_FORMAT(MAX(o.creation_date), '%%Y-%%m-%%d') as max_date FROM Orders o JOIN Vehicles v ON o.order_id = v.order_id WHERE v.model = %s AND o.creation_date IS NOT NULL"
-            bounds_params.append(model_filter)
+        m_cond, bounds_params = _model_filter_cond(model_filter)
+        bounds_sql = (
+            "SELECT DATE_FORMAT(MIN(o.creation_date), '%%Y-%%m-%%d') as min_date, "
+            "DATE_FORMAT(MAX(o.creation_date), '%%Y-%%m-%%d') as max_date "
+            f"FROM Orders o JOIN Vehicles v ON o.order_id = v.order_id WHERE o.creation_date IS NOT NULL{m_cond}"
+        )
     else:
         bounds_sql = "SELECT DATE_FORMAT(MIN(creation_date), '%Y-%m-%d') as min_date, DATE_FORMAT(MAX(creation_date), '%Y-%m-%d') as max_date FROM Orders WHERE creation_date IS NOT NULL"
         bounds_params = None
@@ -1743,121 +1730,113 @@ def daily_stats():
     max_date = bounds_rows[0]['max_date'] if bounds_rows else None
 
     curr_date_str = date_filter or max_date or date.today().strftime('%Y-%m-%d')
-    
-    # --- NEW: Order Type Filter Logic ---
-    order_type_filter = request.args.get('orderType')
-    order_cond = ""
-    if order_type_filter == 'retail':
-        order_cond = " AND EXISTS (SELECT 1 FROM Options opt WHERE opt.vehicle_id = v.vehicle_id AND opt.option_code = 'SLL')"
-    elif order_type_filter == 'stock':
-        order_cond = " AND EXISTS (SELECT 1 FROM Options opt WHERE opt.vehicle_id = v.vehicle_id AND opt.option_code = 'SLM')"
-    # ------------------------------------
+    order_cond = _order_type_cond(request.args.get('orderType'))
 
     if model_year_filter:
         date_condition = "v.modelYear = %s"
         base_params = [model_year_filter]
+        order_join = ""
     else:
-        if category == 'monthly':
-            date_condition, base_params = build_creation_date_cond(curr_date_str, 'monthly')
-        elif category == 'yearly':
-            date_condition, base_params = build_creation_date_cond(curr_date_str, 'yearly')
-        else:
-            date_condition, base_params = build_creation_date_cond(curr_date_str, 'daily')
+        date_condition, base_params = build_creation_date_cond(
+            curr_date_str, category if category in ('monthly', 'yearly') else 'daily'
+        )
+        order_join = "JOIN Orders o ON v.order_id = o.order_id"
 
     models_sql = f"""
-        SELECT DISTINCT v.model 
-        FROM Vehicles v 
-        JOIN Orders o ON v.order_id = o.order_id 
+        SELECT DISTINCT v.model
+        FROM Vehicles v
+        {order_join}
         WHERE {date_condition} AND v.model IS NOT NULL {order_cond}
         ORDER BY v.model ASC
     """
     model_rows = execute_read_query(conn, models_sql, base_params)
     available_models = [r['model'] for r in model_rows] if model_rows else []
 
-    sqlStatement = f"""
-        SELECT v.modelYear, v.model, v.body, v.trim, e.engine_type, e.engine_rpo,
-               t.transmission_type, d.drivetrain_type, c.color_name, c.rpo_code,
-               (SELECT GROUP_CONCAT(se.special_desc SEPARATOR ', ')
-                FROM SpecialEditions se
-                WHERE se.vehicle_id = v.vehicle_id) AS special_desc
-        FROM Vehicles v
-        JOIN Orders o ON v.order_id = o.order_id
-        LEFT JOIN Engines e ON v.engine_id = e.engine_id
-        LEFT JOIN Transmissions t ON v.transmission_id = t.transmission_id
-        LEFT JOIN Drivetrains d ON v.drivetrain_id = d.drivetrain_id
-        LEFT JOIN Colors c ON v.color_id = c.color_id
-        WHERE {date_condition}
-    """
-    
-    params = list(base_params)
-
-    if model_filter:
-        if model_filter == 'CORVETTE (C8)':
-            sqlStatement += " AND v.model LIKE %s AND v.modelYear >= '2020'"
-            params.append('CORVETTE%')
-        else:
-            sqlStatement += " AND v.model = %s"
-            params.append(model_filter)
-
+    extra_cond, extra_params = _model_filter_cond(model_filter)
+    params = list(base_params) + extra_params
     if trim_filter:
-        sqlStatement += " AND v.trim = %s"
+        extra_cond += " AND v.trim = %s"
         params.append(trim_filter)
+    where_full = f"WHERE {date_condition}{extra_cond}{order_cond}"
 
-    sqlStatement += order_cond
-
-    
-    if params:
-        rows = execute_read_query(conn, sqlStatement, params)
-    else:
-        rows = execute_read_query(conn, sqlStatement)
-        
+    # Aggregate in SQL instead of streaming up to 100k+ individual vehicle rows & correlated subqueries
+    agg_sql = f"""
+        SELECT agg.modelYear, agg.model, agg.body, agg.trim,
+               e.engine_type, e.engine_rpo, t.transmission_type,
+               d.drivetrain_type, c.color_name, c.rpo_code, agg.cnt
+        FROM (
+            SELECT v.modelYear, v.model, v.body, v.trim,
+                   v.engine_id, v.transmission_id, v.drivetrain_id, v.color_id,
+                   COUNT(*) AS cnt
+            FROM Vehicles v
+            {order_join}
+            {where_full}
+            GROUP BY v.modelYear, v.model, v.body, v.trim,
+                     v.engine_id, v.transmission_id, v.drivetrain_id, v.color_id
+        ) AS agg
+        LEFT JOIN Engines e ON agg.engine_id = e.engine_id
+        LEFT JOIN Transmissions t ON agg.transmission_id = t.transmission_id
+        LEFT JOIN Drivetrains d ON agg.drivetrain_id = d.drivetrain_id
+        LEFT JOIN Colors c ON agg.color_id = c.color_id
+    """
+    se_sql = f"""
+        SELECT se.special_desc, COUNT(*) AS cnt
+        FROM Vehicles v
+        {order_join}
+        JOIN SpecialEditions se ON se.vehicle_id = v.vehicle_id
+        {where_full}
+        GROUP BY se.special_desc
+        ORDER BY cnt DESC
+    """
+    rows = execute_read_query(conn, agg_sql, params or None) or []
+    se_rows = execute_read_query(conn, se_sql, params or None) or []
     close_connection(conn)
 
     stats = {
-        'total': len(rows) if rows else 0,
+        'total': 0,
         'current_date': curr_date_str,
         'min_date': min_date,
         'max_date': max_date,
         'available_models': available_models,
-        'available_model_years': available_model_years, # NEW: Send to frontend
+        'available_model_years': available_model_years,
         'modelYear': {}, 'model': {}, 'body': {}, 'trim': {},
         'engine': {}, 'trans': {}, 'drivetrain': {}, 'color': {}, 'specialedition': {}
     }
 
-    if rows:
-        for r in rows:
-            my = str(r['modelYear']) if r['modelYear'] else 'Unknown'
-            mod = r['model'] or 'Unknown'
-            bdy = r['body'] or 'Unknown'
-            trm = r['trim'] or 'Unknown'
-            
-            eng_type = r['engine_type'] or 'Unknown'
-            eng_rpo = r['engine_rpo']
-            eng = f"{eng_rpo} - {eng_type}" if eng_rpo and eng_rpo != 'N/A' else eng_type
-            
-            clr_name = r['color_name'] or 'Unknown'
-            clr_rpo = r['rpo_code']
-            clr = f"{clr_rpo} - {clr_name}" if clr_rpo and clr_rpo != 'N/A' else clr_name
+    for r in rows:
+        cnt = r['cnt'] or 0
+        stats['total'] += cnt
+        my = str(r['modelYear']) if r['modelYear'] else 'Unknown'
+        mod = r['model'] or 'Unknown'
+        bdy = r['body'] or 'Unknown'
+        trm = r['trim'] or 'Unknown'
 
-            trn = r['transmission_type'] or 'Unknown'
-            drv = r['drivetrain_type'] or 'Unknown'
+        eng_type = r['engine_type'] or 'Unknown'
+        eng_rpo = r['engine_rpo']
+        eng = f"{eng_rpo} - {eng_type}" if eng_rpo and eng_rpo != 'N/A' else eng_type
 
-            stats['modelYear'][my] = stats['modelYear'].get(my, 0) + 1
-            stats['model'][mod] = stats['model'].get(mod, 0) + 1
-            stats['body'][bdy] = stats['body'].get(bdy, 0) + 1
-            stats['trim'][trm] = stats['trim'].get(trm, 0) + 1
-            stats['engine'][eng] = stats['engine'].get(eng, 0) + 1
-            stats['trans'][trn] = stats['trans'].get(trn, 0) + 1
-            stats['drivetrain'][drv] = stats['drivetrain'].get(drv, 0) + 1
-            stats['color'][clr] = stats['color'].get(clr, 0) + 1
-            
-            if r['special_desc']:
-                for sp in r['special_desc'].split(', '):
-                    stats['specialedition'][sp] = stats['specialedition'].get(sp, 0) + 1
+        clr_name = r['color_name'] or 'Unknown'
+        clr_rpo = r['rpo_code']
+        clr = f"{clr_rpo} - {clr_name}" if clr_rpo and clr_rpo != 'N/A' else clr_name
 
-    for key in stats:
-        if key not in ['total', 'current_date', 'min_date', 'max_date', 'available_models', 'available_model_years']:
-            stats[key] = dict(sorted(stats[key].items(), key=lambda item: item[1], reverse=True))
+        trn = r['transmission_type'] or 'Unknown'
+        drv = r['drivetrain_type'] or 'Unknown'
+
+        stats['modelYear'][my] = stats['modelYear'].get(my, 0) + cnt
+        stats['model'][mod] = stats['model'].get(mod, 0) + cnt
+        stats['body'][bdy] = stats['body'].get(bdy, 0) + cnt
+        stats['trim'][trm] = stats['trim'].get(trm, 0) + cnt
+        stats['engine'][eng] = stats['engine'].get(eng, 0) + cnt
+        stats['trans'][trn] = stats['trans'].get(trn, 0) + cnt
+        stats['drivetrain'][drv] = stats['drivetrain'].get(drv, 0) + cnt
+        stats['color'][clr] = stats['color'].get(clr, 0) + cnt
+
+    for sr in se_rows:
+        if sr.get('special_desc'):
+            stats['specialedition'][sr['special_desc']] = sr['cnt']
+
+    for key in ('modelYear', 'model', 'body', 'trim', 'engine', 'trans', 'drivetrain', 'color'):
+        stats[key] = dict(sorted(stats[key].items(), key=lambda item: item[1], reverse=True))
 
     return jsonify(stats)
 
@@ -1875,7 +1854,7 @@ def stats():
     year_cond = None
     params = []
 
-    if model == "CORVETTE (C8)" and year and int(year) < 2020:
+    if model == "CORVETTE (C8)" and year and year.isdigit() and int(year) < 2020:
         year = None
         target_year = "2026"
     else:

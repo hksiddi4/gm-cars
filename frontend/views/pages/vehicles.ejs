@@ -366,6 +366,8 @@
                                         alt="Color Code: <%= finalImageSrcRPO %>" 
                                         width="20" 
                                         height="20"
+                                        loading="lazy"
+                                        decoding="async"
                                         data-fallback="../../img/extColors/default.webp"
                                     >
                                     <%= displayColorName %>
@@ -382,11 +384,11 @@
                                 <td scope="row"><%= data.special_desc %></td>
                                 <td scope="row">
                                     <% if (data.country == "USA") { %>
-                                        <img src="../../img/flags/usa_flag.webp" alt="USA Flag" width="20">
+                                        <img src="../../img/flags/usa_flag.webp" alt="USA Flag" width="20" loading="lazy" decoding="async">
                                     <% } else if (data.country == "CANADA") { %>
-                                        <img src="../../img/flags/canada_flag.webp" alt="Canada Flag" width="20">
+                                        <img src="../../img/flags/canada_flag.webp" alt="Canada Flag" width="20" loading="lazy" decoding="async">
                                     <% } else { %>
-                                        <img src="../../img/flags/mexico_flag.webp" alt="Mexico Flag" width="20">
+                                        <img src="../../img/flags/mexico_flag.webp" alt="Mexico Flag" width="20" loading="lazy" decoding="async">
                                     <% } %>
                                 </td>
                             </tr>

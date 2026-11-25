@@ -929,6 +929,75 @@ def sanitize_and_repair_ai_sql(raw_sql, intent):
     return text
 
 
+_SQL_DELIM_RE = re.compile(r"['\"`#/-]")
+_SQL_QUOTE_END_RE = {
+    "'": re.compile(r"['\\]"),
+    '"': re.compile(r'["\\]'),
+    "`": re.compile(r"`"),
+}
+_SQL_READONLY_PREFIX_RE = re.compile(r"^(SELECT|WITH)\b", re.IGNORECASE)
+_SQL_DESTRUCTIVE_RE = re.compile(
+    r"\b(drop|delete|truncate|update|alter|insert|grant|revoke|create|replace|"
+    r"call|exec|execute|prepare|deallocate|rename|lock|unlock|handler|"
+    r"shutdown|load_file|outfile|dumpfile|into)\b",
+    re.IGNORECASE,
+)
+
+
+def is_safe_readonly_sql(sql):
+    """Single-pass O(n) check ensuring sql is a single read-only SELECT/WITH query."""
+    if not sql:
+        return False
+    n, i, out = len(sql), 0, []
+    while i < n:
+        m = _SQL_DELIM_RE.search(sql, i)
+        if m is None:
+            out.append(sql[i:])
+            break
+        pos = m.start()
+        ch = sql[pos]
+        if ch in _SQL_QUOTE_END_RE:
+            end_search, j = _SQL_QUOTE_END_RE[ch].search, pos + 1
+            while True:
+                qm = end_search(sql, j)
+                if qm is None:
+                    return False  # Unclosed string literal or backtick identifier
+                k = qm.start()
+                if sql[k] == "\\" or (k + 1 < n and sql[k + 1] == ch):
+                    if k + 1 >= n:
+                        return False  # Dangling backslash escape at end of input
+                    j = k + 2
+                else:
+                    out.extend((sql[i:pos], ch + ch))
+                    i = k + 1
+                    break
+        elif ch == "/" and pos + 1 < n and sql[pos + 1] == "*":
+            end = sql.find("*/", pos + 2)
+            if end == -1 or (pos + 2 < n and sql[pos + 2] == "!"):
+                return False  # Unclosed or MySQL executable comment (/*! ... */)
+            out.extend((sql[i:pos], " "))
+            i = end + 2
+        elif ch == "#" or (
+            ch == "-"
+            and pos + 1 < n
+            and sql[pos + 1] == "-"
+            and (pos + 2 == n or ord(sql[pos + 2]) <= 32 or sql[pos + 2].isspace())
+        ):
+            end = sql.find("\n", pos + 1)
+            out.extend((sql[i:pos], " "))
+            i = n if end == -1 else end + 1
+        else:
+            out.append(sql[i:pos + 1])
+            i = pos + 1
+
+    unquoted = "".join(out)
+    return (
+        bool(_SQL_READONLY_PREFIX_RE.match(unquoted.lstrip()))
+        and ";" not in unquoted
+        and not _SQL_DESTRUCTIVE_RE.search(unquoted)
+    )
+
+
 @app.route('/ai-query', methods=['POST'])
 def natural_language_query():
     data = request.json or {}
@@ -995,12 +1064,7 @@ def natural_language_query():
 
         AI_SQL_CACHE[cache_key] = {'time': now, 'sql': generated_sql}
 
-    unquoted_sql = re.sub(r"'(?:\\.|''|[^'])*'", "''", generated_sql)
-    destructive_pattern = re.compile(
-        r"\b(drop|delete|truncate|update|alter|insert|grant|create|replace|call|exec)\b",
-        re.IGNORECASE
-    )
-    if not re.match(r"^(SELECT|WITH)\b", generated_sql, re.IGNORECASE) or ";" in unquoted_sql or destructive_pattern.search(unquoted_sql):
+    if not is_safe_readonly_sql(generated_sql):
         close_connection(conn)
         return jsonify({'error': 'Security restriction: Only single read-only SELECT queries are permitted', 'generated_sql': generated_sql}), 403
 

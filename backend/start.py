@@ -331,6 +331,13 @@ def build_full_vehicle_sql(where_clause, order_by_clause="", limit=500):
     return "\n".join(parts)
 
 
+_DISTINCT_TRIGGER_RE = re.compile(
+    r"\b(?:return\s+(?:only\s+)?(?:the\s+)?)?(?:distinct|unique)\s+(?:values?\s+for\s+)?",
+    re.IGNORECASE,
+)
+_DISTINCT_COL_RE = re.compile(r"[a-z0-9_,\s]+", re.IGNORECASE)
+
+
 def parse_nl_query_intent(user_prompt):
     """
     Extract exact database conditions from a natural language query.
@@ -367,22 +374,29 @@ def parse_nl_query_intent(user_prompt):
         mode = "count"
         mark_span(*m.span())
 
-    distinct_match = re.search(
-        r"\b(?:return\s+(?:only\s+)?(?:the\s+)?)?(?:distinct|unique)\s+(?:values?\s+for\s+)?([a-z0-9_,\s]+?)(?:$|\.)",
-        raw, re.IGNORECASE
-    )
-    if distinct_match:
-        col_text = distinct_match.group(1)
-        parsed_cols = []
-        for token in re.findall(r"[a-zA-Z_]+", col_text.lower()):
-            if token in ("and", "or", "the", "for", "of"):
-                continue
-            if token in DISTINCT_COLUMN_MAP and DISTINCT_COLUMN_MAP[token] not in parsed_cols:
-                parsed_cols.append(DISTINCT_COLUMN_MAP[token])
-        if parsed_cols:
-            mode = "distinct"
-            distinct_cols = parsed_cols
-            mark_span(*distinct_match.span())
+    pos = 0
+    while pos < len(raw):
+        m = _DISTINCT_TRIGGER_RE.search(raw, pos)
+        if not m:
+            break
+        col_match = _DISTINCT_COL_RE.match(raw, m.end())
+        if not col_match:
+            pos = m.end() + 1
+            continue
+        stop = col_match.end()
+        if stop == len(raw) or raw[stop] == ".":
+            parsed_cols = []
+            for token in re.findall(r"[a-zA-Z_]+", col_match.group().lower()):
+                if token in ("and", "or", "the", "for", "of"):
+                    continue
+                if token in DISTINCT_COLUMN_MAP and DISTINCT_COLUMN_MAP[token] not in parsed_cols:
+                    parsed_cols.append(DISTINCT_COLUMN_MAP[token])
+            if parsed_cols:
+                mode = "distinct"
+                distinct_cols = parsed_cols
+                mark_span(m.start(), stop + (1 if stop < len(raw) else 0))
+            break
+        pos = stop + 1
 
     # 2. Detect 17-character VIN (for similar-vehicle matching) or VIN substring matches
     for m in re.finditer(r"\b([A-HJ-NPR-Z0-9]{17})\b", raw, re.IGNORECASE):

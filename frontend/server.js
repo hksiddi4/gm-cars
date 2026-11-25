@@ -408,6 +408,10 @@ const formatBackendError = (err) => {
     const code = err.code || null;
     return [code, status, err.message].filter(Boolean).join(' - ');
 };
+const logBackendError = (label, req, err) => {
+    const safeUrl = String(req?.originalUrl || '').replace(/[\r\n]/g, '');
+    console.error('%s (%s): %s', label, safeUrl, formatBackendError(err));
+};
 
 // API Request Caching with single retry on transient socket hang-ups
 const apiCache = new Map();
@@ -887,7 +891,7 @@ app.get('/about', async (req, res) => {
             pagePath: '/about'
         });
     } catch (err) {
-        console.error(`About Route Error (${req.originalUrl}):`, formatBackendError(err));
+        logBackendError('About Route Error', req, err);
         res.status(500).render('pages/errors/500', { pagePath: '/about', canonicalPath: '/about' });
     }
 });
@@ -944,7 +948,7 @@ app.get('/vehicles', async (req, res) => {
             canonicalPath: req.originalUrl
         });
     } catch (error) {
-        console.error(`Vehicles Route Error (${req.originalUrl}):`, formatBackendError(error));
+        logBackendError('Vehicles Route Error', req, error);
         res.status(500).render('pages/errors/500', { pagePath: '/vehicles', canonicalPath: req.originalUrl });
     }
 });
@@ -1031,7 +1035,7 @@ app.get('/calendar-activity', blockDirectApiAccess, async (req, res) => {
         const response = await axiosInstance.get(`${baseURL}/calendar-activity`, { params: req.query });
         res.json(response.data);
     } catch (error) {
-        console.error(`Calendar Activity Error (${req.originalUrl}):`, formatBackendError(error));
+        logBackendError('Calendar Activity Error', req, error);
         res.status(500).json({ error: 'Failed to fetch calendar activity' });
     }
 });
@@ -1041,7 +1045,7 @@ app.get('/daily-stats', blockDirectApiAccess, async (req, res) => {
         const response = await axiosInstance.get(`${baseURL}/daily-stats`, { params: req.query });
         res.json(response.data);
     } catch (error) {
-        console.error(`Daily Stats API Error (${req.originalUrl}):`, formatBackendError(error));
+        logBackendError('Daily Stats API Error', req, error);
         res.status(500).json({ error: 'Failed to fetch daily stats' });
     }
 });
@@ -1051,7 +1055,7 @@ app.get('/model-bounds', blockDirectApiAccess, async (req, res) => {
         const response = await axiosInstance.get(`${baseURL}/model-bounds`, { params: req.query });
         res.json(response.data);
     } catch (error) {
-        console.error(`Model Bounds API Error (${req.originalUrl}):`, formatBackendError(error));
+        logBackendError('Model Bounds API Error', req, error);
         res.status(500).json({ error: 'Failed to fetch bounds' });
     }
 });
@@ -1120,7 +1124,7 @@ app.get('/stats', async (req, res) => {
             });
         }
     } catch (error) {
-        console.error(`Error in /stats (${req.originalUrl}):`, formatBackendError(error));
+        logBackendError('Error in /stats', req, error);
         res.status(500).render('pages/errors/500', { error: 'Internal Server Error', pagePath: '/stats', canonicalPath: req.originalUrl });
     }
 });
@@ -1138,7 +1142,7 @@ app.get('/wheels', async (req, res) => {
             canonicalPath: '/wheels'
         });
     } catch (error) {
-        console.error(`Error in /wheels (${req.originalUrl}):`, formatBackendError(error));
+        logBackendError('Error in /wheels', req, error);
         res.status(500).render('pages/errors/500', { error: 'Internal Server Error' });
     }
 });
